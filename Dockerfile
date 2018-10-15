@@ -17,6 +17,13 @@ RUN go get -v ./... && \
     CGO_ENABLED=0 GOOS=linux go build -a -ldflags="-s -w" -installsuffix cgo -o updater .
 
 FROM scratch
+LABEL maintainer="quentin.mcgaw@gmail.com" \
+      description="Lightweight scratch based container updating DNS A records periodically for GoDaddy, Namecheap and DuckDNS" \
+      download="???MB" \
+      size="???MB" \
+      ram="???MB" \
+      cpu_usage="Very low" \
+      github="https://github.com/qdm12/ddns-updater"
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/src/ddns-updater/updater /updater
 COPY --from=builder /go/src/healthcheck/healthcheck /healthcheck

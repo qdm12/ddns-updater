@@ -83,7 +83,7 @@ The following environement variables are available:
 | --- | --- | --- |
 | `DELAY` | `300` | Delay between updates in seconds |
 | `ROOTURL` | `/` | URL path to append to all paths (i.e. `/ddns` for accessing `https://example.com/ddns`) |
-| LISTENINGPORT | `80` | Internal TCP listening port for the web UI |
+| `LISTENINGPORT` | `80` | Internal TCP listening port for the web UI |
 | `RECORDi` | | A record to update in the form `domain_name,host,provider,ip_method,password` |
 
 - The environement variables `RECORD1`, `RECORD2`, etc. are domains to update the IP address for
@@ -131,6 +131,8 @@ For **each domain name** you want to add, replace *example.com* in the following
 
     ![https://ap.www.namecheap.com/Domains/DomainControlPanel/mealracle.com/advancedns](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/namecheap4.png)
 
+***
+
 ### GoDaddy
 
 [![GoDaddy Website](https://github.com/qdm12/ddns-updater/raw/master/readme/godaddy.png)](https://godaddy.com)
@@ -151,13 +153,15 @@ Obtain the **key** and **secret** of that production key.
 
 In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret is `GuUFdVFj8nJ1M79RtdwmkZ`.
 
+***
+
 ### DuckDNS
 
 [![Namecheap Website](https://github.com/qdm12/ddns-updater/raw/master/readme/duckdns.png)](https://duckdns.org)
 
 ## Testing
 
-- The automated healthcheck verifies all your records are up to date [using DNS lookups](https://github.com/qdm12/ddns-updater/master/healthcheck/main.go)
+- The automated healthcheck verifies all your records are up to date [using DNS lookups](https://github.com/qdm12/ddns-updater/blob/master/healthcheck/main.go)
 - You can check manually at:
   - GoDaddy: https://dcc.godaddy.com/manage/yourdomain.com/dns (replace yourdomain.com)
 
@@ -169,10 +173,9 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 ## TODOs
 
-- Add favicon.ico
-- Finish readme
-- Delete old repos
-- Live update of website
-- Unit tests
-- Other types or records
-- Better HTML webpage with possibility to change settings
+- [] Add favicon.ico
+- [] Finish readme
+- [] Unit tests
+- [] Live update of website
+- [] Other types or records
+- [] Better HTML webpage with possibility to change settings

@@ -173,9 +173,9 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 ## TODOs
 
-- [] Add favicon.ico
-- [] Finish readme
-- [] Unit tests
-- [] Live update of website
-- [] Other types or records
-- [] Better HTML webpage with possibility to change settings
+- [ ] Add favicon.ico
+- [ ] Finish readme
+- [ ] Unit tests
+- [ ] Live update of website
+- [ ] Other types or records
+- [ ] Better HTML webpage with possibility to change settings

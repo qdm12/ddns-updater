@@ -7,7 +7,7 @@ WORKDIR /go/src/healthcheck
 COPY healthcheck/*.go ./
 RUN go get -v ./... && \
     go test -v && \
-    CGO_ENABLED=0 GOOS=linux go build -a -ldflags="-s -w" -installsuffix cgo -o healthcheck .
+    CGO_ENABLED=0 GOOS=linux go build -a -ldflags="-s -w" -installsuffix cgo -o healthcheck . && \
     upx -v --best --ultra-brute --overlay=strip healthcheck && \
     upx -t healthcheck
 WORKDIR /go/src/ddns-updater

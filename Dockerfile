@@ -19,9 +19,9 @@ RUN go get -v ./... && \
 FROM scratch
 LABEL maintainer="quentin.mcgaw@gmail.com" \
       description="Lightweight scratch based container updating DNS A records periodically for GoDaddy, Namecheap and DuckDNS" \
-      download="???MB" \
-      size="???MB" \
-      ram="???MB" \
+      download="4.1MB" \
+      size="8.65MB" \
+      ram="13MB" \
       cpu_usage="Very low" \
       github="https://github.com/qdm12/ddns-updater"
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

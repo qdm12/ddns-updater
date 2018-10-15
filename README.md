@@ -20,7 +20,7 @@ Lightweight scratch based container updating DNS A records periodically for GoDa
 
 | Download size | Image size | RAM usage | CPU usage |
 | --- | --- | --- | --- |
-| ???MB | ???MB | ???MB | Very low |
+| 4.1MB | 8.65MB | 13MB | Very low |
 
 ## Features
 
@@ -47,7 +47,9 @@ You can then run this container with either Docker:
 docker run -d -p 80:80 -e RECORD1=example.com,@,namecheap,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater
 ```
 
-or with [Docker Compose](https://raw.githubusercontent.com/qdm12/ddns-updater/master/docker-compose.yml):
+
+Or with [Docker Compose](https://raw.githubusercontent.com/qdm12/ddns-updater/master/docker-compose.yml):
+
 
 ```yml
 version: '3'
@@ -73,9 +75,13 @@ services:
     restart: always
 ```
 
+
+And the command
+
 ```bash
 docker-compose up -d
 ```
+
 
 The following environement variables are available:
 

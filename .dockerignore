@@ -1,0 +1,7 @@
+.gitignore
+.travis.yml
+.git/
+*.exe
+README.md
+docker-compose.yml
+readme/

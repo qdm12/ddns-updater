@@ -83,7 +83,7 @@ func main() {
 
 func (updates *Updates) getIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// TODO: Forms to change existing updates or add some
-	htmlData := updatesToHtml(updates)
+	htmlData := updatesToHTML(updates)
 	t := template.Must(template.ParseFiles("/index.html"))
 	err := t.ExecuteTemplate(w, "index.html", htmlData) // TODO Without pointer?
 	if err != nil {

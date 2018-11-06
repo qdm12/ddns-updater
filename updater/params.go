@@ -17,7 +17,7 @@ const (
 
 var regexDomain = regexp.MustCompile(`^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$`).MatchString
 var regexGodaddyKeySecret = regexp.MustCompile(`^[A-Za-z0-9]{12}\_[A-Za-z0-9]{22}\:[A-Za-z0-9]{22}$`).MatchString
-var regexDuckDnsToken = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$`).MatchString
+var regexDuckDNSToken = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$`).MatchString
 var regexNamecheapPassword = regexp.MustCompile(`^[a-f0-9]{32}$`).MatchString
 
 func parseEnvConfig() (listeningPort, rootURL string, delay time.Duration, updates []*updateType) {
@@ -90,7 +90,7 @@ func parseEnvConfig() (listeningPort, rootURL string, delay time.Duration, updat
 		if x[2] == "godaddy" && !regexGodaddyKeySecret(x[4]) {
 			log.Fatal("The GoDaddy password (key:secret) query parameter is not valid for entry '" + config + "'")
 		}
-		if x[2] == "duckdns" && !regexDuckDnsToken(x[4]) {
+		if x[2] == "duckdns" && !regexDuckDNSToken(x[4]) {
 			log.Fatal("The DuckDNS password (token) query parameter is not valid for entry '" + config + "'")
 		}
 		var u updateType

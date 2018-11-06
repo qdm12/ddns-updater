@@ -1,8 +1,11 @@
 package main
 
-import "time"
+import (
+	"strconv"
+	"time"
+)
 
-type HtmlData struct {
+type HTMLData struct {
 	Updates []UpdateType
 }
 
@@ -10,23 +13,35 @@ type UpdateType struct { // exported for HTML template
 	Domain   string
 	Host     string
 	Provider string
-	IpMethod string
+	IPMethod string
 	Status   string
-	Duration string
 	IP       string   // current set ip
 	IPs      []string // previous ips
 }
 
-func updatesToHtml(updates *Updates) (htmlData *HtmlData) {
-	htmlData = new(HtmlData)
+func durationString(t time.Time) (durationStr string) {
+	duration := time.Since(t)
+	if duration < time.Minute {
+		return strconv.FormatFloat(duration.Round(time.Second).Seconds(), 'f', -1, 64) + "s"
+	} else if duration < time.Hour {
+		return strconv.FormatFloat(duration.Round(time.Minute).Minutes(), 'f', -1, 64) + "m"
+	} else if duration < 24*time.Hour {
+		return strconv.FormatFloat(duration.Round(time.Hour).Hours(), 'f', -1, 64) + "h"
+	} else {
+		return strconv.FormatFloat(duration.Round(time.Hour*24).Hours()/24, 'f', -1, 64) + "d"
+	}
+}
+
+func updatesToHTML(updates *Updates) (htmlData *HTMLData) {
+	htmlData = new(HTMLData)
 	for _, u := range *updates {
 		var U UpdateType
 		U.Domain = u.settings.htmlDomain()
 		U.Host = u.settings.host // TODO html method
 		U.Provider = u.settings.htmlProvider()
-		U.IpMethod = u.settings.htmlIpmethod()
+		U.IPMethod = u.settings.htmlIpmethod()
 		if u.status.code == UPTODATE {
-			u.status.message = "No IP change for " + time.Since(u.extras.tSuccess).Round(time.Second).String()
+			u.status.message = "No IP change for " + durationString(u.extras.tSuccess)
 		}
 		U.Status = u.status.html()
 		if len(u.extras.ips) > 0 {

@@ -1,8 +1,12 @@
 version: '3'
 services:
   ddns-updater:
+    build: https://github.com/qdm12/ddns-updater.git
     image: qmcgaw/ddns-updater
     container_name: ddns-updater
+    network_mode: bridge
+    ports:
+      - 8000:80/tcp
     environment:
       - DELAY=300
       - ROOTURL=
@@ -15,7 +19,4 @@ services:
       - RECORD6=example.app,@,godaddy,duckduckgo,dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5:GuUFdVFj8nJ1M79RtdwmkZ
       - RECORD7=example.duckdns.org,@,duckdns,provider,064a0540-864c-4f0f-8bf5-23857452b0c1
       - RECORD8=example2.duckdns.org,@,duckdns,opendns,064a0540-864c-4f0f-8bf5-23857452b0c1
-    ports:
-      - 8000:80/tcp
-    network_mode: bridge
     restart: always

@@ -1,6 +1,6 @@
 # Lightweight DDNS Updater with Docker and web UI
 
-Lightweight scratch based container updating DNS A records periodically for GoDaddy, Namecheap and DuckDNS.
+*Lightweight container updating DNS A records periodically for GoDaddy, Namecheap and DuckDNS*
 
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker/qmcgaw/ddns-updater)
 
@@ -15,25 +15,23 @@ Lightweight scratch based container updating DNS A records periodically for GoDa
 [![Docker Stars](https://img.shields.io/docker/stars/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 [![Docker Automated](https://img.shields.io/docker/automated/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
-[![](https://images.microbadger.com/badges/image/qmcgaw/ddns-updater.svg)](https://microbadger.com/images/qmcgaw/ddns-updater)
-[![](https://images.microbadger.com/badges/version/qmcgaw/ddns-updater.svg)](https://microbadger.com/images/qmcgaw/ddns-updater)
+[![Image size](https://images.microbadger.com/badges/image/qmcgaw/ddns-updater.svg)](https://microbadger.com/images/qmcgaw/ddns-updater)
+[![Image version](https://images.microbadger.com/badges/version/qmcgaw/ddns-updater.svg)](https://microbadger.com/images/qmcgaw/ddns-updater)
 
-| Download size | Image size | RAM usage | CPU usage |
-| --- | --- | --- | --- |
-| 4.1MB | 8.65MB | 13MB | Very low |
+| Image size | RAM usage | CPU usage |
+| --- | --- | --- |
+| 8.65MB | 13MB | Very low |
 
 ## Features
 
 - Updates periodically A records for different DNS providers: Namecheap, GoDaddy, DuckDNS (ask for more)
-- Integrated Docker healthcheck program
 - Web User interface
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
-- Very lightweight
-    - Scratch with two Golang binaries
-        - Healthcheck (UPX-compressed)
-        - Main program
+- Very lightweight based on **Scratch** with:
+    - Static Golang healthcheck binary (UPX-compressed)
+    - Static Golang updater binary
     - Ca-Certificates
 - Emojis :+1:
 
@@ -41,49 +39,21 @@ Lightweight scratch based container updating DNS A records periodically for GoDa
 
 To setup your domains initially, see the [Domain set up](#domain-set-up) section.
 
-You can then run this container with either Docker:
+Use the following command:
 
 ```bash
 docker run -d -p 80:80 -e RECORD1=example.com,@,namecheap,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater
 ```
 
 
-Or with [Docker Compose](https://raw.githubusercontent.com/qdm12/ddns-updater/master/docker-compose.yml):
+or use [docker-compose.yml](https://github.com/qdm12/ddns-updater/blob/master/docker-compose.yml) with:
 
-
-```yml
-version: '3'
-services:
-  ddns-updater:
-    image: qmcgaw/ddns-updater
-    container_name: ddns-updater
-    environment:
-      - DELAY=300
-      - ROOTURL=
-      - LISTENINGPORT=80
-      - RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547
-      - RECORD2=example.info,@,namecheap,duckduckgo,157fd2a9c45a4fe88313bcc2234bfd58
-      - RECORD3=example,www,namecheap,opendns,0e4512a9c45a4fe88313bcc2234bf547      
-      - RECORD4=example.info,subdomain,namecheap,222.145.121.59,4a67d2a9c45a4fe88313bcc2234bfd62
-      - RECORD5=example.org,*,godaddy,opendns,dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5:GuUFdVFj8nJ1M79RtdwmkZ
-      - RECORD6=example.app,@,godaddy,duckduckgo,dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5:GuUFdVFj8nJ1M79RtdwmkZ
-      - RECORD7=example.duckdns.org,@,duckdns,provider,064a0540-864c-4f0f-8bf5-23857452b0c1
-      - RECORD8=example2.duckdns.org,@,duckdns,opendns,064a0540-864c-4f0f-8bf5-23857452b0c1
-    ports:
-      - 8000:80/tcp
-    network_mode: bridge
-    restart: always
-```
-
-
-And the command
 
 ```bash
 docker-compose up -d
 ```
 
-
-The following environement variables are available:
+### Environment variables
 
 | Environment variable | Default | Description |
 | --- | --- | --- |
@@ -104,10 +74,13 @@ The following environement variables are available:
     - [http://localhost:8000](http://localhost:8000) is the main UI list
     - [http://localhost:8000/update](http://localhost:8000/update) is to force the update of your domains
 
-For additional firewall purposes, this container needs the following ports:
+### Host firewall
+
+This container needs the following ports:
+
 - TCP 443 outbound
 - UDP 53 outbound
-- TCP 8000 inbound (or other) for the WebUI
+- TCP 80 inbound (or other) for the WebUI
 
 ## Domain set up
 

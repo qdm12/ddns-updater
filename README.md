@@ -20,7 +20,7 @@
 
 | Image size | RAM usage | CPU usage |
 | --- | --- | --- |
-| 8.65MB | 13MB | Very low |
+| 8.66MB | 13MB | Very low |
 
 ## Features
 

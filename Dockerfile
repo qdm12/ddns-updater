@@ -25,7 +25,7 @@ LABEL org.label-schema.schema-version="1.0.0-rc1" \
       org.label-schema.docker.cmd.devel="docker run -it --rm -p 8000:8000/tcp -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater" \
       org.label-schema.docker.params="" \
       org.label-schema.version="" \
-      image-size="8.65MB" \
+      image-size="8.66MB" \
       ram-usage="13MB" \
       cpu-usage="Very Low"
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

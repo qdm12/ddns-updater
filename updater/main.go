@@ -5,6 +5,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"text/template"
 	"time"
 
@@ -16,11 +18,20 @@ const httpGetTimeout = 10000 // 10 seconds
 
 // Global to access with other HTTP GET requests
 var rootURL = ""
+var fsLocation = ""
 
 type Updates []*updateType
 type Channels struct {
 	forceCh chan bool
 	quitCh  chan struct{}
+}
+
+func init() {
+	ex, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fsLocation = filepath.Dir(ex)
 }
 
 func main() {
@@ -84,7 +95,7 @@ func main() {
 func (updates *Updates) getIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// TODO: Forms to change existing updates or add some
 	htmlData := updatesToHTML(updates)
-	t := template.Must(template.ParseFiles("/index.html"))
+	t := template.Must(template.ParseFiles(fsLocation + "/index.html"))
 	err := t.ExecuteTemplate(w, "index.html", htmlData) // TODO Without pointer?
 	if err != nil {
 		log.Println(err.Error())

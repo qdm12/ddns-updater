@@ -42,7 +42,7 @@ To setup your domains initially, see the [Domain set up](#domain-set-up) section
 Use the following command:
 
 ```bash
-docker run -d -p 80:80 -e RECORD1=example.com,@,namecheap,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater
+docker run -d -p 8000:80 -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater
 ```
 
 
@@ -80,7 +80,7 @@ This container needs the following ports:
 
 - TCP 443 outbound
 - UDP 53 outbound
-- TCP 80 inbound (or other) for the WebUI
+- TCP 8000 inbound (or other) for the WebUI
 
 ## Domain set up
 

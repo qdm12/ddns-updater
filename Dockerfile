@@ -8,8 +8,7 @@ WORKDIR /tmp/gobuild
 
 FROM alpine:${ALPINE_VERSION} AS alpine
 RUN apk --update add ca-certificates && \
-    echo "nonrootuser:x:1000:1000:Non root user:/:" > /passwd && \
-    echo "nonrootgroup:x:1000:nonrootuser" > /group
+    echo "nonrootuser:x:1000:1000:Non root user:/:" > /passwd
 
 FROM scratch AS final
 ARG BUILD_DATE
@@ -22,8 +21,8 @@ LABEL org.label-schema.schema-version="1.0.0-rc1" \
       org.label-schema.url="https://github.com/qdm12/ddns-updater" \
       org.label-schema.vcs-description="Lightweight container updating DNS A records periodically for GoDaddy, Namecheap and DuckDNS" \
       org.label-schema.vcs-usage="https://github.com/qdm12/ddns-updater/blob/master/README.md#setup" \
-      org.label-schema.docker.cmd="docker run -d -p 8000:80 -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater" \
-      org.label-schema.docker.cmd.devel="docker run -it --rm -p 8000:80 -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater" \
+      org.label-schema.docker.cmd="docker run -d -p 8000:8000/tcp -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater" \
+      org.label-schema.docker.cmd.devel="docker run -it --rm -p 8000:8000/tcp -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater" \
       org.label-schema.docker.params="" \
       org.label-schema.version="" \
       image-size="8.65MB" \
@@ -31,9 +30,9 @@ LABEL org.label-schema.schema-version="1.0.0-rc1" \
       cpu-usage="Very Low"
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=alpine /passwd /etc/passwd
-COPY --from=alpine /group /etc/group
-EXPOSE 80
+EXPOSE 8000
 HEALTHCHECK --interval=300s --timeout=5s --start-period=5s --retries=1 CMD ["/healthcheck/app"]
+USER nonrootuser
 ENTRYPOINT ["/updater/app"]
 
 FROM builder AS builder-healthcheck
@@ -53,4 +52,3 @@ FROM final
 COPY --from=builder-healthcheck /tmp/gobuild/app /healthcheck/app
 COPY --from=builder-updater /tmp/gobuild/app /updater/app
 COPY updater/index.html /updater/index.html
-USER nonrootuser

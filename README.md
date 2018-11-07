@@ -42,7 +42,7 @@ To setup your domains initially, see the [Domain set up](#domain-set-up) section
 Use the following command:
 
 ```bash
-docker run -d -p 8000:80 -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater
+docker run -d -p 8000:8000/tcp -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater
 ```
 
 
@@ -59,7 +59,7 @@ docker-compose up -d
 | --- | --- | --- |
 | `DELAY` | `300` | Delay between updates in seconds |
 | `ROOTURL` | `/` | URL path to append to all paths (i.e. `/ddns` for accessing `https://example.com/ddns`) |
-| `LISTENINGPORT` | `80` | Internal TCP listening port for the web UI |
+| `LISTENINGPORT` | `8000` | Internal TCP listening port for the web UI |
 | `RECORDi` | | A record to update in the form `domain_name,host,provider,ip_method,password` |
 
 - The environement variables `RECORD1`, `RECORD2`, etc. are domains to update the IP address for
@@ -70,7 +70,7 @@ docker-compose up -d
         - `duckduckgo` finds your public IP using [https://duckduckgo.com/?q=ip](https://duckduckgo.com/?q=ip)
         - `opendns` finds your public IP using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
         - `154.251.67.58` sets your public IP as fixed
-- The port mapping `8000:80` is for the web interface
+- The port mapping `8000:8000/tcp` is for the web interface
     - [http://localhost:8000](http://localhost:8000) is the main UI list
     - [http://localhost:8000/update](http://localhost:8000/update) is to force the update of your domains
 

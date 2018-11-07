@@ -53,3 +53,4 @@ FROM final
 COPY --from=builder-healthcheck /tmp/gobuild/app /healthcheck/app
 COPY --from=builder-updater /tmp/gobuild/app /updater/app
 COPY updater/index.html /updater/index.html
+USER nonrootuser

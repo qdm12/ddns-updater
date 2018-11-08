@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const defaultListeningPort = "80"
+const defaultListeningPort = "8000"
 const defaultRootURL = "/"
 
 // Error codes:

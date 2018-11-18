@@ -38,7 +38,7 @@ func main() {
 	fmt.Println("#################################")
 	fmt.Println("##### DDNS Universal Updater ####")
 	fmt.Println("######## by Quentin McGaw #######")
-	fmt.Println("######## Give some " + emoji.Sprint(":heart:") + "at ########")
+	fmt.Println("######## Give some " + emoji.Sprint(":heart:") + "at #########")
 	fmt.Println("# github.com/qdm12/ddns-updater #")
 	fmt.Print("#################################\n\n")
 	var updates Updates
@@ -95,10 +95,10 @@ func main() {
 func (updates *Updates) getIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// TODO: Forms to change existing updates or add some
 	htmlData := updatesToHTML(updates)
-	t := template.Must(template.ParseFiles(fsLocation + "/index.html"))
+	t := template.Must(template.ParseFiles(fsLocation + "/ui/index.html"))
 	err := t.ExecuteTemplate(w, "index.html", htmlData) // TODO Without pointer?
 	if err != nil {
-		log.Println(err.Error())
+		log.Println(err)
 		fmt.Fprint(w, "An error occurred creating this webpage: "+err.Error())
 	}
 }

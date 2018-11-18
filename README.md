@@ -152,7 +152,7 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 ## TODOs
 
-- [ ] Add favicon.ico
+- [ ] Unset env variables
 - [ ] Finish readme
 - [ ] Unit tests
 - [ ] Live update of website

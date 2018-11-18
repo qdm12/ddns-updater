@@ -22,8 +22,8 @@ func main() {
 	if len(listeningPort) == 0 {
 		listeningPort = defaultListeningPort
 	} else {
-		_, err := strconv.ParseInt(listeningPort, 10, 64)
-		if err != nil {
+		value, err := strconv.ParseInt(listeningPort, 10, 64)
+		if err != nil || value < 1 || value > 65535 {
 			os.Exit(4)
 		}
 	}

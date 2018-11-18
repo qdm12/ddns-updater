@@ -27,14 +27,22 @@ func parseEnvConfig() (listeningPort, rootURL string, delay time.Duration, updat
 	if len(listeningPort) == 0 {
 		listeningPort = defaultListeningPort
 	} else {
-		value, err := strconv.ParseInt(listeningPort, 10, 64)
+		value, err := strconv.Atoi(listeningPort)
 		if err != nil {
 			log.Fatal(emoji.Sprint(":x:") + " LISTENINGPORT environment variable '" + listeningPort +
 				"' is not a valid integer")
 		}
 		if value < 1024 {
-			log.Fatal(emoji.Sprint(":x:") + " LISTENINGPORT environment variable '" + listeningPort +
-				"' can't be lower than 1024 (reserved system ports)")
+			if os.Geteuid() == 0 {
+				log.Println(emoji.Sprint(":warning:") + "LISTENINGPORT environment variable '" + listeningPort +
+					"' allowed to be in the reserved system ports range as you are running as root.")
+			} else if os.Geteuid() == -1 {
+				log.Println(emoji.Sprint(":warning:") + "LISTENINGPORT environment variable '" + listeningPort +
+					"' allowed to be in the reserved system ports range as you are running in Windows.")
+			} else {
+				log.Fatal(emoji.Sprint(":x:") + " LISTENINGPORT environment variable '" + listeningPort +
+					"' can't be in the reserved system ports range (1 to 1023) when running without root.")
+			}
 		}
 		if value > 65535 {
 			log.Fatal(emoji.Sprint(":x:") + " LISTENINGPORT environment variable '" + listeningPort +

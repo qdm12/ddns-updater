@@ -7,8 +7,7 @@ RUN go get -u -v golang.org/x/vgo
 WORKDIR /tmp/gobuild
 
 FROM alpine:${ALPINE_VERSION} AS alpine
-RUN apk --update add ca-certificates && \
-    echo "nonrootuser:x:1000:1000:Non root user:/:" > /passwd
+RUN apk --update add ca-certificates
 
 FROM scratch AS final
 ARG BUILD_DATE
@@ -29,16 +28,16 @@ LABEL org.label-schema.schema-version="1.0.0-rc1" \
       ram-usage="13MB" \
       cpu-usage="Very Low"
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=alpine /passwd /etc/passwd
 EXPOSE 8000
 HEALTHCHECK --interval=300s --timeout=5s --start-period=5s --retries=1 CMD ["/healthcheck/app"]
-USER nonrootuser
+USER 1000
 ENTRYPOINT ["/updater/app"]
 
 FROM builder AS builder-healthcheck
 COPY healthcheck/*.go ./
 RUN go test -v
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags="-s -w" -o app .
+# RAM usage is negligent for a few milliseconds of healthcheck periodically so we use UPX
 RUN upx -v --best --ultra-brute --overlay=strip app && upx -t app
 
 FROM builder AS builder-updater
@@ -51,4 +50,4 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflag
 FROM final
 COPY --from=builder-healthcheck /tmp/gobuild/app /healthcheck/app
 COPY --from=builder-updater /tmp/gobuild/app /updater/app
-COPY updater/index.html /updater/index.html
+COPY updater/ui/* /updater/ui/

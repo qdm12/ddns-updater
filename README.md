@@ -20,7 +20,7 @@
 
 | Image size | RAM usage | CPU usage |
 | --- | --- | --- |
-| 8.66MB | 13MB | Very low |
+| 7.36MB | 13MB | Very low |
 
 ## Features
 
@@ -30,8 +30,7 @@
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
 - Very lightweight based on **Scratch** with:
-    - Static Golang healthcheck binary (UPX-compressed)
-    - Static Golang updater binary
+    - Static Golang binary
     - Ca-Certificates
 - Emojis :+1:
 

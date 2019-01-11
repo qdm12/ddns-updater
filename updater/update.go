@@ -58,7 +58,7 @@ func buildRequest(host, domain, provider, password, ip string) (r *http.Request,
 	return r, nil
 }
 
-func update(u *updateType) {
+func (u *updateType) update() {
 	if u.status.code == UPDATING {
 		log.Println(u.String())
 		return

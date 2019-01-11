@@ -20,8 +20,8 @@ const httpGetTimeout = 10000 // 10 seconds
 var rootURL = ""
 var fsLocation = ""
 
-type Updates []*updateType
-type Channels struct {
+type updatesType []updateType
+type channelsType struct {
 	forceCh chan bool
 	quitCh  chan struct{}
 }
@@ -34,55 +34,59 @@ func init() {
 	fsLocation = filepath.Dir(ex)
 }
 
+func healthcheckMode() bool {
+	args := os.Args
+	if len(args) > 1 {
+		if len(args) > 2 {
+			log.Fatal(emoji.Sprint(":x:") + " Too many arguments provided")
+		}
+		if args[1] == "healthcheck" {
+			return true
+		}
+		log.Fatal(emoji.Sprint(":x:") + " Argument 1 can only be 'healthcheck', not " + args[1])
+	}
+	return false
+}
+
+func healthcheck(listeningPort, rootURL string) {
+	request, err := http.NewRequest(http.MethodGet, "http://127.0.0.1:"+listeningPort+rootURL+"healthcheck", nil)
+	if err != nil {
+		fmt.Println("Can't build HTTP request")
+		os.Exit(1)
+	}
+	client := &http.Client{Timeout: time.Duration(1000) * time.Millisecond}
+	response, err := client.Do(request)
+	if err != nil {
+		fmt.Println("Can't execute HTTP request")
+		os.Exit(1)
+	}
+	if response.StatusCode != 200 {
+		fmt.Println("Status code is " + response.Status)
+		os.Exit(1)
+	}
+	os.Exit(0)
+}
+
 func main() {
+	if healthcheckMode() {
+		listeningPort := getListeningPort()
+		rootURL := getRootURL()
+		healthcheck(listeningPort, rootURL)
+	}
 	fmt.Println("#################################")
 	fmt.Println("##### DDNS Universal Updater ####")
 	fmt.Println("######## by Quentin McGaw #######")
 	fmt.Println("######## Give some " + emoji.Sprint(":heart:") + "at #########")
 	fmt.Println("# github.com/qdm12/ddns-updater #")
 	fmt.Print("#################################\n\n")
-	var updates Updates
-	listeningPort, rootURL, delay, updates := parseEnvConfig()
+	var updates updatesType
+	listeningPort, rootURL, delay, updates := getConfig()
 	connectivityTest()
-	channels := Channels{
+	channels := channelsType{
 		forceCh: make(chan bool, 1),
 		quitCh:  make(chan struct{}),
 	}
-	ticker := time.NewTicker(delay * time.Second)
-	defer func() {
-		ticker.Stop()
-		close(channels.quitCh)
-	}()
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				for i := range updates {
-					go update(updates[i])
-				}
-			case <-channels.forceCh:
-				for i := range updates {
-					go update(updates[i])
-				}
-			case <-channels.quitCh:
-				for {
-					allUpdatesFinished := true
-					for i := range updates {
-						if updates[i].status.code == UPDATING {
-							allUpdatesFinished = false
-						}
-					}
-					if allUpdatesFinished {
-						break
-					}
-					log.Println("Waiting for updates to complete...")
-					time.Sleep(time.Duration(400) * time.Millisecond)
-				}
-				ticker.Stop()
-				return
-			}
-		}
-	}()
+	go triggerUpdates(&updates, delay, channels.forceCh, channels.quitCh)
 	channels.forceCh <- true
 	router := httprouter.New()
 	router.GET(rootURL, updates.getIndex)
@@ -92,9 +96,45 @@ func main() {
 	log.Fatal(http.ListenAndServe("0.0.0.0:"+listeningPort, router))
 }
 
-func (updates *Updates) getIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func triggerUpdates(updates *updatesType, delay time.Duration, forceCh chan bool, quitCh chan struct{}) {
+	ticker := time.NewTicker(delay * time.Second)
+	defer func() {
+		ticker.Stop()
+		close(quitCh)
+	}()
+	for {
+		select {
+		case <-ticker.C:
+			for i := range *updates {
+				go (*updates)[i].update()
+			}
+		case <-forceCh:
+			for i := range *updates {
+				go (*updates)[i].update()
+			}
+		case <-quitCh:
+			for {
+				allUpdatesFinished := true
+				for _, u := range *updates {
+					if u.status.code == UPDATING {
+						allUpdatesFinished = false
+					}
+				}
+				if allUpdatesFinished {
+					break
+				}
+				log.Println("Waiting for updates to complete...")
+				time.Sleep(time.Duration(400) * time.Millisecond)
+			}
+			ticker.Stop()
+			return
+		}
+	}
+}
+
+func (updates *updatesType) getIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// TODO: Forms to change existing updates or add some
-	htmlData := updatesToHTML(updates)
+	htmlData := updates.toHTML()
 	t := template.Must(template.ParseFiles(fsLocation + "/ui/index.html"))
 	err := t.ExecuteTemplate(w, "index.html", htmlData) // TODO Without pointer?
 	if err != nil {
@@ -103,14 +143,14 @@ func (updates *Updates) getIndex(w http.ResponseWriter, r *http.Request, _ httpr
 	}
 }
 
-func (channels *Channels) getUpdate(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (channels *channelsType) getUpdate(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	channels.forceCh <- true
-	log.Println("Update started manually" + emoji.Sprint(" :repeat:"))
+	log.Println("Update started manually " + emoji.Sprint(":repeat:"))
 	http.Redirect(w, r, rootURL, 301)
 }
 
-func (updates *Updates) getHealthcheck(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	for _, u := range *updates {
+func (updates updatesType) getHealthcheck(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	for _, u := range updates {
 		if u.status.code == FAIL {
 			log.Println("Responded with error to Healthcheck (" + u.String() + ")")
 			w.WriteHeader(http.StatusInternalServerError)

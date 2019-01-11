@@ -22,38 +22,35 @@ var regexGodaddyKeySecret = regexp.MustCompile(`^[A-Za-z0-9]{12}\_[A-Za-z0-9]{22
 var regexDuckDNSToken = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$`).MatchString
 var regexNamecheapPassword = regexp.MustCompile(`^[a-f0-9]{32}$`).MatchString
 
-func parseEnvConfig() (listeningPort, rootURL string, delay time.Duration, updates []*updateType) {
+func getListeningPort() (listeningPort string) {
 	listeningPort = os.Getenv("LISTENINGPORT")
 	if len(listeningPort) == 0 {
 		listeningPort = defaultListeningPort
 	} else {
 		value, err := strconv.Atoi(listeningPort)
 		if err != nil {
-			log.Fatal(emoji.Sprint(":x:") + " LISTENINGPORT environment variable '" + listeningPort +
-				"' is not a valid integer")
-		}
-		if value < 1024 {
+			log.Fatal(emoji.Sprint(":x:") + " LISTENINGPORT environment variable '" + listeningPort + "' is not a valid integer")
+		} else if value < 1 {
+			log.Fatal(emoji.Sprint(":x:") + " LISTENINGPORT environment variable '" + listeningPort + "' can't be lower than 1")
+		} else if value < 1024 {
 			if os.Geteuid() == 0 {
-				log.Println(emoji.Sprint(":warning:") + "LISTENINGPORT environment variable '" + listeningPort +
-					"' allowed to be in the reserved system ports range as you are running as root.")
+				log.Println(emoji.Sprint(":warning:") + "LISTENINGPORT environment variable '" + listeningPort + "' allowed to be in the reserved system ports range as you are running as root.")
 			} else if os.Geteuid() == -1 {
-				log.Println(emoji.Sprint(":warning:") + "LISTENINGPORT environment variable '" + listeningPort +
-					"' allowed to be in the reserved system ports range as you are running in Windows.")
+				log.Println(emoji.Sprint(":warning:") + "LISTENINGPORT environment variable '" + listeningPort + "' allowed to be in the reserved system ports range as you are running in Windows.")
 			} else {
-				log.Fatal(emoji.Sprint(":x:") + " LISTENINGPORT environment variable '" + listeningPort +
-					"' can't be in the reserved system ports range (1 to 1023) when running without root.")
+				log.Fatal(emoji.Sprint(":x:") + " LISTENINGPORT environment variable '" + listeningPort + "' can't be in the reserved system ports range (1 to 1023) when running without root.")
 			}
-		}
-		if value > 65535 {
-			log.Fatal(emoji.Sprint(":x:") + " LISTENINGPORT environment variable '" + listeningPort +
-				"' can't be higher than 65535")
-		}
-		if value > 49151 {
+		} else if value > 65535 {
+			log.Fatal(emoji.Sprint(":x:") + " LISTENINGPORT environment variable '" + listeningPort + "' can't be higher than 65535")
+		} else if value > 49151 {
 			// dynamic and/or private ports.
-			log.Println(emoji.Sprint(":warning:") + "LISTENINGPORT environment variable '" + listeningPort +
-				"' is in the dynamic/private ports range (above 49151)")
+			log.Println(emoji.Sprint(":warning:") + "LISTENINGPORT environment variable '" + listeningPort + "' is in the dynamic/private ports range (above 49151)")
 		}
 	}
+	return listeningPort
+}
+
+func getRootURL() (rootURL string) {
 	rootURL = os.Getenv("ROOTURL")
 	if len(rootURL) == 0 {
 		rootURL = defaultRootURL
@@ -63,17 +60,24 @@ func parseEnvConfig() (listeningPort, rootURL string, delay time.Duration, updat
 	if rootURL[len(rootURL)-1] != '/' {
 		rootURL += "/"
 	}
+	return rootURL
+}
+
+func getDelay() (delay time.Duration) {
 	delayStr := os.Getenv("DELAY")
 	if len(delayStr) == 0 {
 		delay = defaultDelay
 	} else {
 		delayUint, err := strconv.ParseUint(delayStr, 10, 64)
 		if err != nil {
-			log.Fatal(emoji.Sprint(":x:") + " DELAY environment variable '" + delayStr +
-				"' is not a valid positive integer")
+			log.Fatal(emoji.Sprint(":x:") + " DELAY environment variable '" + delayStr + "' is not a valid positive integer")
 		}
 		delay = time.Duration(int64(delayUint))
 	}
+	return delay
+}
+
+func getUpdates() (updates []updateType) {
 	var i uint64 = 1
 	for {
 		config := os.Getenv("RECORD" + strconv.FormatUint(i, 10))
@@ -82,8 +86,7 @@ func parseEnvConfig() (listeningPort, rootURL string, delay time.Duration, updat
 		}
 		x := strings.Split(config, ",")
 		if len(x) != 5 {
-			log.Fatal(emoji.Sprint(":x:") + " The configuration entry '" + config +
-				"' should be in the format 'domain,host,provider,ipmethod,password'")
+			log.Fatal(emoji.Sprint(":x:") + " The configuration entry '" + config + "' should be in the format 'domain,host,provider,ipmethod,password'")
 		}
 		if !regexDomain(x[0]) {
 			log.Fatal(emoji.Sprint(":x:") + " The domain name '" + x[0] + "' is not valid for entry '" + config + "'")
@@ -101,12 +104,9 @@ func parseEnvConfig() (listeningPort, rootURL string, delay time.Duration, updat
 			if x[3] != "duckduckgo" && x[3] != "opendns" && regexIP(x[3]) == "" && x[3] != "provider" {
 				log.Fatal(emoji.Sprint(":x:") + " The IP query method '" + x[3] + "' is not valid for entry '" + config + "'")
 			}
-		} else {
-			if x[3] != "duckduckgo" && x[3] != "opendns" && regexIP(x[3]) == "" {
-				log.Fatal(emoji.Sprint(":x:") + " The IP query method '" + x[3] + "' is not valid for entry '" + config + "'")
-			}
+		} else if x[3] != "duckduckgo" && x[3] != "opendns" && regexIP(x[3]) == "" {
+			log.Fatal(emoji.Sprint(":x:") + " The IP query method '" + x[3] + "' is not valid for entry '" + config + "'")
 		}
-
 		if x[2] == "namecheap" && !regexNamecheapPassword(x[4]) {
 			log.Fatal(emoji.Sprint(":x:") + " The Namecheap password query parameter is not valid for entry '" + config + "'")
 		}
@@ -122,11 +122,19 @@ func parseEnvConfig() (listeningPort, rootURL string, delay time.Duration, updat
 		u.settings.provider = x[2]
 		u.settings.ipmethod = x[3]
 		u.settings.password = x[4]
-		updates = append(updates, &u)
+		updates = append(updates, u)
 		i++
 	}
 	if len(updates) == 0 {
 		log.Fatal(emoji.Sprint(":x:") + " No record to update was found in the environment variable RECORD1")
 	}
+	return updates
+}
+
+func getConfig() (listeningPort, rootURL string, delay time.Duration, updates []updateType) {
+	listeningPort = getListeningPort()
+	rootURL = getRootURL()
+	delay = getDelay()
+	updates = getUpdates()
 	return listeningPort, rootURL, delay, updates
 }

@@ -2,7 +2,7 @@
 
 *Lightweight container updating DNS A records periodically for GoDaddy, Namecheap and DuckDNS*
 
-[![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker/qmcgaw/ddns-updater)
+[![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
 [![Build Status](https://travis-ci.org/qdm12/ddns-updater.svg?branch=master)](https://travis-ci.org/qdm12/ddns-updater)
 [![Docker Build Status](https://img.shields.io/docker/build/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
@@ -44,9 +44,7 @@ Use the following command:
 docker run -d -p 8000:8000/tcp -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater
 ```
 
-
 or use [docker-compose.yml](https://github.com/qdm12/ddns-updater/blob/master/docker-compose.yml) with:
-
 
 ```bash
 docker-compose up -d
@@ -119,11 +117,11 @@ For **each domain name** you want to add, replace *example.com* in the following
 
 [![GoDaddy Developer Login](https://github.com/qdm12/ddns-updater/raw/master/readme/godaddy1.gif)](https://developer.godaddy.com/keys)
 
-2. Generate a Test key and secret.
+1. Generate a Test key and secret.
 
 [![GoDaddy Developer Test Key](https://github.com/qdm12/ddns-updater/raw/master/readme/godaddy2.gif)](https://developer.godaddy.com/keys)
 
-3. Generate a **Production** key and secret.
+1. Generate a **Production** key and secret.
 
 [![GoDaddy Developer Production Key](https://github.com/qdm12/ddns-updater/raw/master/readme/godaddy3.gif)](https://developer.godaddy.com/keys)
 
@@ -151,7 +149,7 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 ## TODOs
 
-- [ ] Unset env variables
+- [ ] Read parameters from JSON file
 - [ ] Finish readme
 - [ ] Unit tests
 - [ ] Live update of website

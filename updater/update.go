@@ -33,6 +33,11 @@ type dreamhostData struct {
 	Value    string `json:"value"`
 }
 
+type dreamhostReponse struct {
+	Result string `json:"result"`
+	Data   string `json:"data"`
+}
+
 func (u *updateType) update() {
 	if u.status.code == UPDATING {
 		log.Println(u.String())
@@ -243,22 +248,22 @@ func (u *updateType) update() {
 			log.Println(u.String())
 			return
 		}
-		var parsedJSON dreamhostList
-		err = json.Unmarshal(content, &parsedJSON)
+		var dhList dreamhostList
+		err = json.Unmarshal(content, &dhList)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
 			log.Println(u.String())
 			return
-		} else if parsedJSON.Result != "success" {
+		} else if dhList.Result != "success" {
 			u.status.code = FAIL
-			u.status.message = parsedJSON.Result
+			u.status.message = dhList.Result
 			log.Println(u.String())
 			return
 		}
 		var oldIP string
 		var found bool
-		for _, data := range parsedJSON.Data {
+		for _, data := range dhList.Data {
 			if data.Type == "A" && data.Record == u.settings.buildDomainName() {
 				if data.Editable == "0" {
 					u.status.code = FAIL
@@ -298,15 +303,19 @@ func (u *updateType) update() {
 				log.Println(u.String())
 				return
 			}
-			// TODO
-			// If value is wrong
-			// {"result":"error","data":"no_such_value"}
-
-			// If value is not editable
-			// {"result":"error","data":"not_editable"}
-
-			// If value is right
-			// {"data":"record_removed","result":"success"}
+			var dhResponse dreamhostReponse
+			err = json.Unmarshal(content, &dhResponse)
+			if err != nil {
+				u.status.code = FAIL
+				u.status.message = err.Error()
+				log.Println(u.String())
+				return
+			} else if dhResponse.Result != "success" { // this should not happen
+				u.status.code = FAIL
+				u.status.message = dhResponse.Result + " - " + dhResponse.Data
+				log.Println(u.String())
+				return
+			}
 		}
 		url = dreamhostURL + "?key=" + u.settings.password + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-add_record&record=" + strings.ToLower(u.settings.domain) + "&type=A&value=" + ip
 		r, err = buildHTTPGet(url)
@@ -323,8 +332,25 @@ func (u *updateType) update() {
 			log.Println(u.String())
 			return
 		}
-		// TODO status processing
-		// TODO {"data":"record_added","result":"success"}
+		if status != "200" {
+			u.status.code = FAIL
+			u.status.message = "HTTP " + status
+			log.Println(u.String())
+			return
+		}
+		var dhResponse dreamhostReponse
+		err = json.Unmarshal(content, &dhResponse)
+		if err != nil {
+			u.status.code = FAIL
+			u.status.message = err.Error()
+			log.Println(u.String())
+			return
+		} else if dhResponse.Result != "success" {
+			u.status.code = FAIL
+			u.status.message = dhResponse.Result + " - " + dhResponse.Data
+			log.Println(u.String())
+			return
+		}
 	}
 	if len(u.extras.ips) > 0 && ip == u.extras.ips[0] { // same IP
 		u.status.code = UPTODATE

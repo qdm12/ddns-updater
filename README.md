@@ -149,6 +149,7 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 ## TODOs
 
+- [ ] Sqlite database
 - [ ] Read parameters from JSON file
 - [ ] Finish readme
 - [ ] Unit tests

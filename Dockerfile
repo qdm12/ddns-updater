@@ -1,5 +1,5 @@
 ARG ALPINE_VERSION=3.8
-ARG GO_VERSION=1.11.4
+ARG GO_VERSION=1.11.5
 
 FROM alpine:${ALPINE_VERSION} AS alpine
 RUN apk --update add ca-certificates
@@ -40,4 +40,4 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflag
 
 FROM final
 COPY --from=builder /tmp/gobuild/app /updater/app
-COPY updater/ui/* /updater/ui/
+COPY --chown=1000 updater/ui/* /updater/ui/

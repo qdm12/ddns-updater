@@ -1,6 +1,6 @@
 # Lightweight DDNS Updater with Docker and web UI
 
-*Lightweight container updating DNS A records periodically for GoDaddy, Namecheap and DuckDNS*
+*Lightweight container updating DNS A records periodically for GoDaddy, Namecheap, Dreamhost and DuckDNS*
 
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
@@ -20,11 +20,11 @@
 
 | Image size | RAM usage | CPU usage |
 | --- | --- | --- |
-| 7.36MB | 13MB | Very low |
+| 7.4MB | 13MB | Very low |
 
 ## Features
 
-- Updates periodically A records for different DNS providers: Namecheap, GoDaddy, DuckDNS (ask for more)
+- Updates periodically A records for different DNS providers: Namecheap, GoDaddy, Dreamhost, DuckDNS (ask for more)
 - Web User interface
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
@@ -133,7 +133,11 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 ### DuckDNS
 
-[![Namecheap Website](https://github.com/qdm12/ddns-updater/raw/master/readme/duckdns.png)](https://duckdns.org)
+[![DuckDNS Website](https://github.com/qdm12/ddns-updater/raw/master/readme/duckdns.png)](https://duckdns.org)
+
+### Dreamhost
+
+*Awaiting a contribution*
 
 ## Testing
 
@@ -149,6 +153,7 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 ## TODOs
 
+- [ ] Dreamhost documentation
 - [ ] Sqlite database
 - [ ] Read parameters from JSON file
 - [ ] Finish readme

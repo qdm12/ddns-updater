@@ -13,13 +13,13 @@ LABEL org.label-schema.schema-version="1.0.0-rc1" \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.vcs-url="https://github.com/qdm12/ddns-updater" \
       org.label-schema.url="https://github.com/qdm12/ddns-updater" \
-      org.label-schema.vcs-description="Lightweight container updating DNS A records periodically for GoDaddy, Namecheap and DuckDNS" \
+      org.label-schema.vcs-description="Lightweight container updating DNS A records periodically for GoDaddy, Namecheap, Dreamhost and DuckDNS" \
       org.label-schema.vcs-usage="https://github.com/qdm12/ddns-updater/blob/master/README.md#setup" \
       org.label-schema.docker.cmd="docker run -d -p 8000:8000/tcp -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater" \
       org.label-schema.docker.cmd.devel="docker run -it --rm -p 8000:8000/tcp -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater" \
-      org.label-schema.docker.params="" \
+      org.label-schema.docker.params="See readme" \
       org.label-schema.version="" \
-      image-size="7.36MB" \
+      image-size="7.4MB" \
       ram-usage="13MB" \
       cpu-usage="Very Low"
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

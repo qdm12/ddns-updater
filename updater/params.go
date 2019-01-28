@@ -21,6 +21,7 @@ var regexDomain = regexp.MustCompile(`^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|(
 var regexGodaddyKeySecret = regexp.MustCompile(`^[A-Za-z0-9]{12}\_[A-Za-z0-9]{22}\:[A-Za-z0-9]{22}$`).MatchString
 var regexDuckDNSToken = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$`).MatchString
 var regexNamecheapPassword = regexp.MustCompile(`^[a-f0-9]{32}$`).MatchString
+var regexDreamhostKey = regexp.MustCompile(`^[A-Z0-9]{16}$`).MatchString
 
 func getListeningPort() (listeningPort string) {
 	listeningPort = os.Getenv("LISTENINGPORT")
@@ -94,10 +95,10 @@ func getUpdates() (updates []updateType) {
 		if len(x[1]) == 0 {
 			log.Fatal(emoji.Sprint(":x:") + " The host for entry '" + config + "' must have one character at least")
 		} // TODO test when it does not exist
-		if x[2] == "duckdns" && x[1] != "@" {
+		if (x[2] == "duckdns" || x[2] == "dreamhost") && x[1] != "@" {
 			log.Fatal(emoji.Sprint(":x:") + " The host '" + x[1] + "' can only be '@' for the DuckDNS entry '" + config + "'")
 		}
-		if x[2] != "namecheap" && x[2] != "godaddy" && x[2] != "duckdns" {
+		if x[2] != "namecheap" && x[2] != "godaddy" && x[2] != "duckdns" && x[2] != "dreamhost" {
 			log.Fatal(emoji.Sprint(":x:") + " The DNS provider '" + x[2] + "' is not supported for entry '" + config + "'")
 		}
 		if x[2] == "namecheap" || x[2] == "duckdns" {
@@ -115,6 +116,9 @@ func getUpdates() (updates []updateType) {
 		}
 		if x[2] == "duckdns" && !regexDuckDNSToken(x[4]) {
 			log.Fatal(emoji.Sprint(":x:") + " The DuckDNS password (token) query parameter is not valid for entry '" + config + "'")
+		}
+		if x[2] == "dreamhost" && !regexDreamhostKey(x[4]) {
+			log.Fatal(emoji.Sprint(":x:") + " The Dreamhost password (key) query parameter is not valid for entry '" + config + "'")
 		}
 		var u updateType
 		u.settings.domain = x[0]

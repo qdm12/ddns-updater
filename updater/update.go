@@ -4,58 +4,33 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"log"
-	"net/http"
 	"strings"
 	"time"
+
+	uuid "github.com/google/uuid"
 )
 
 const (
 	namecheapURL = "https://dynamicdns.park-your-domain.com/update"
 	godaddyURL   = "https://api.godaddy.com/v1/domains"
 	duckdnsURL   = "https://www.duckdns.org/update"
+	dreamhostURL = "https://api.dreamhost.com"
 )
 
-type GoDaddyPutBody struct {
+type goDaddyPutBody struct {
 	Data string `json:"data"` // IP address to update to
 }
 
-func buildRequest(host, domain, provider, password, ip string) (r *http.Request, err error) {
-	if provider == "namecheap" {
-		url := namecheapURL + "?host=" + strings.ToLower(host) +
-			"&domain=" + strings.ToLower(domain) + "&password=" + strings.ToLower(password)
-		if ip != "provider" {
-			url += "&ip=" + ip
-		}
-		r, err = buildHTTPGet(url)
-		if err != nil {
-			return nil, err
-		}
-	} else if provider == "godaddy" {
-		url := godaddyURL + "/" + strings.ToLower(domain) + "/records/A/" + strings.ToLower(host)
-		r, err = buildHTTPPutJSONAuth(
-			url,
-			"sso-key "+password, // password is key:secret here
-			[]GoDaddyPutBody{
-				GoDaddyPutBody{
-					ip,
-				},
-			},
-		)
-		if err != nil {
-			return nil, err
-		}
-	} else { // duckdns
-		url := duckdnsURL + "?domains=" + strings.ToLower(domain) +
-			"&token=" + password + "&verbose=true"
-		if ip != "provider" {
-			url += "&ip=" + ip
-		}
-		r, err = buildHTTPGet(url)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return r, nil
+type dreamhostList struct {
+	Result string          `json:"result"`
+	Data   []dreamhostData `json:"data"`
+}
+
+type dreamhostData struct {
+	Editable string `json:"editable"`
+	Type     string `json:"type"`
+	Record   string `json:"record"`
+	Value    string `json:"value"`
 }
 
 func (u *updateType) update() {
@@ -102,25 +77,30 @@ func (u *updateType) update() {
 		return
 	}
 
-	// Build the dynamic DNS request to update the IP address
-	req, err := buildRequest(u.settings.host, u.settings.domain, u.settings.provider, u.settings.password, ip)
-	if err != nil {
-		u.status.code = FAIL
-		u.status.message = err.Error()
-		log.Println(u.String())
-		return
-	}
-	status, content, err := doHTTPRequest(req, httpGetTimeout)
-	if err != nil {
-		u.status.code = FAIL
-		u.status.message = err.Error()
-		log.Println(u.String())
-		return
-	}
+	// Update the record
 	if u.settings.provider == "namecheap" {
+		url := namecheapURL + "?host=" + strings.ToLower(u.settings.host) +
+			"&domain=" + strings.ToLower(u.settings.domain) + "&password=" + strings.ToLower(u.settings.password)
+		if ip != "provider" {
+			url += "&ip=" + ip
+		}
+		r, err := buildHTTPGet(url)
+		if err != nil {
+			u.status.code = FAIL
+			u.status.message = err.Error()
+			log.Println(u.String())
+			return
+		}
+		status, content, err := doHTTPRequest(r, httpGetTimeout)
+		if err != nil {
+			u.status.code = FAIL
+			u.status.message = err.Error()
+			log.Println(u.String())
+			return
+		}
 		if status != "200" { // TODO test / combine with below
 			u.status.code = FAIL
-			u.status.message = req.URL.String() + " responded with status " + status
+			u.status.message = r.URL.String() + " responded with status " + status
 			log.Println(u.String())
 			return
 		}
@@ -157,6 +137,29 @@ func (u *updateType) update() {
 		}
 		ip = parsedXML.IP
 	} else if u.settings.provider == "godaddy" {
+		url := godaddyURL + "/" + strings.ToLower(u.settings.domain) + "/records/A/" + strings.ToLower(u.settings.host)
+		r, err := buildHTTPPutJSONAuth(
+			url,
+			"sso-key "+u.settings.password, // password is key:secret here
+			[]goDaddyPutBody{
+				goDaddyPutBody{
+					ip,
+				},
+			},
+		)
+		if err != nil {
+			u.status.code = FAIL
+			u.status.message = err.Error()
+			log.Println(u.String())
+			return
+		}
+		status, content, err := doHTTPRequest(r, httpGetTimeout)
+		if err != nil {
+			u.status.code = FAIL
+			u.status.message = err.Error()
+			log.Println(u.String())
+			return
+		}
 		if status != "200" {
 			u.status.code = FAIL
 			u.status.message = "HTTP " + status
@@ -172,7 +175,32 @@ func (u *updateType) update() {
 			log.Println(u.String())
 			return
 		}
-	} else { // duckdns
+	} else if u.settings.provider == "duckdns" {
+		url := duckdnsURL + "?domains=" + strings.ToLower(u.settings.domain) +
+			"&token=" + u.settings.password + "&verbose=true"
+		if ip != "provider" {
+			url += "&ip=" + ip
+		}
+		r, err := buildHTTPGet(url)
+		if err != nil {
+			u.status.code = FAIL
+			u.status.message = err.Error()
+			log.Println(u.String())
+			return
+		}
+		status, content, err := doHTTPRequest(r, httpGetTimeout)
+		if err != nil {
+			u.status.code = FAIL
+			u.status.message = err.Error()
+			log.Println(u.String())
+			return
+		}
+		if status != "200" {
+			u.status.code = FAIL
+			u.status.message = "HTTP " + status
+			log.Println(u.String())
+			return
+		}
 		s := string(content)
 		if s[0:2] == "KO" {
 			u.status.code = FAIL
@@ -193,6 +221,110 @@ func (u *updateType) update() {
 			log.Println(u.String())
 			return
 		}
+	} else if u.settings.provider == "dreamhost" {
+		url := dreamhostURL + "/?key=" + u.settings.password + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-list_records"
+		r, err := buildHTTPGet(url)
+		if err != nil {
+			u.status.code = FAIL
+			u.status.message = err.Error()
+			log.Println(u.String())
+			return
+		}
+		status, content, err := doHTTPRequest(r, httpGetTimeout)
+		if err != nil {
+			u.status.code = FAIL
+			u.status.message = err.Error()
+			log.Println(u.String())
+			return
+		}
+		if status != "200" {
+			u.status.code = FAIL
+			u.status.message = "HTTP " + status
+			log.Println(u.String())
+			return
+		}
+		var parsedJSON dreamhostList
+		err = json.Unmarshal(content, &parsedJSON)
+		if err != nil {
+			u.status.code = FAIL
+			u.status.message = err.Error()
+			log.Println(u.String())
+			return
+		} else if parsedJSON.Result != "success" {
+			u.status.code = FAIL
+			u.status.message = parsedJSON.Result
+			log.Println(u.String())
+			return
+		}
+		var oldIP string
+		var found bool
+		for _, data := range parsedJSON.Data {
+			if data.Type == "A" && data.Record == u.settings.buildDomainName() {
+				if data.Editable == "0" {
+					u.status.code = FAIL
+					u.status.message = "Record data is not editable"
+					log.Println(u.String())
+					return
+				}
+				oldIP := data.Value
+				if oldIP == ip {
+					u.status.code = UPTODATE
+					u.status.message = "No IP change for " + time.Since(u.extras.tSuccess).Round(time.Second).String()
+					return
+				}
+				found = true
+				break
+			}
+		}
+		if found {
+			url = dreamhostURL + "?key=" + u.settings.password + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-remove_record&record=" + strings.ToLower(u.settings.domain) + "&type=A&value=" + oldIP
+			r, err = buildHTTPGet(url)
+			if err != nil {
+				u.status.code = FAIL
+				u.status.message = err.Error()
+				log.Println(u.String())
+				return
+			}
+			status, content, err = doHTTPRequest(r, httpGetTimeout)
+			if err != nil {
+				u.status.code = FAIL
+				u.status.message = err.Error()
+				log.Println(u.String())
+				return
+			}
+			if status != "200" {
+				u.status.code = FAIL
+				u.status.message = "HTTP " + status
+				log.Println(u.String())
+				return
+			}
+			// TODO
+			// If value is wrong
+			// {"result":"error","data":"no_such_value"}
+
+			// If value is not editable
+			// {"result":"error","data":"not_editable"}
+
+			// If value is right
+			// {"data":"record_removed","result":"success"}
+		}
+		url = dreamhostURL + "?key=" + u.settings.password + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-add_record&record=" + strings.ToLower(u.settings.domain) + "&type=A&value=" + ip
+		r, err = buildHTTPGet(url)
+		if err != nil {
+			u.status.code = FAIL
+			u.status.message = err.Error()
+			log.Println(u.String())
+			return
+		}
+		status, content, err = doHTTPRequest(r, httpGetTimeout)
+		if err != nil {
+			u.status.code = FAIL
+			u.status.message = err.Error()
+			log.Println(u.String())
+			return
+		}
+		// TODO status processing
+		// TODO {"data":"record_added","result":"success"}
 	}
 	if len(u.extras.ips) > 0 && ip == u.extras.ips[0] { // same IP
 		u.status.code = UPTODATE

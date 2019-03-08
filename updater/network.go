@@ -8,15 +8,13 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/kyokomi/emoji"
 )
 
 const httpGetTimeout = 10000 // 10 seconds
-var httpClient = &http.Client{Timeout: time.Duration(httpGetTimeout) * time.Millisecond}
 
-func connectivityTest() {
+func connectivityTest(client *http.Client) {
 	_, err := net.LookupIP("google.com")
 	if err != nil {
 		log.Println(emoji.Sprint(":signal_strength:") + "Domain name resolution " + emoji.Sprint(":x:") + " is not working for google.com (" + err.Error() + ")")
@@ -27,7 +25,7 @@ func connectivityTest() {
 	if err != nil {
 		log.Println(emoji.Sprint(":signal_strength:") + "HTTP GET " + emoji.Sprint(":x:") + " " + err.Error())
 	}
-	status, _, err := doHTTPRequest(httpClient, req)
+	status, _, err := doHTTPRequest(client, req)
 	if err != nil {
 		log.Println(emoji.Sprint(":signal_strength:") + "HTTP GET " + emoji.Sprint(":x:") + " " + err.Error())
 	} else if status != "200" {

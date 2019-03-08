@@ -63,7 +63,7 @@ func (env *envType) update(i int) {
 	if u.settings.ipmethod == "provider" {
 		ip = ""
 	} else if u.settings.ipmethod == "duckduckgo" {
-		ip, err = getPublicIP(httpClient, "https://duckduckgo.com/?q=ip")
+		ip, err = getPublicIP(env.httpClient, "https://duckduckgo.com/?q=ip")
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
@@ -71,7 +71,7 @@ func (env *envType) update(i int) {
 			return
 		}
 	} else if u.settings.ipmethod == "opendns" {
-		ip, err = getPublicIP(httpClient, "https://diagnostic.opendns.com/myip")
+		ip, err = getPublicIP(env.httpClient, "https://diagnostic.opendns.com/myip")
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
@@ -101,7 +101,7 @@ func (env *envType) update(i int) {
 			log.Println(u.String())
 			return
 		}
-		status, content, err := doHTTPRequest(httpClient, r)
+		status, content, err := doHTTPRequest(env.httpClient, r)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
@@ -163,7 +163,7 @@ func (env *envType) update(i int) {
 			log.Println(u.String())
 			return
 		}
-		status, content, err := doHTTPRequest(httpClient, r)
+		status, content, err := doHTTPRequest(env.httpClient, r)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
@@ -198,7 +198,7 @@ func (env *envType) update(i int) {
 			log.Println(u.String())
 			return
 		}
-		status, content, err := doHTTPRequest(httpClient, r)
+		status, content, err := doHTTPRequest(env.httpClient, r)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
@@ -240,7 +240,7 @@ func (env *envType) update(i int) {
 			log.Println(u.String())
 			return
 		}
-		status, content, err := doHTTPRequest(httpClient, r)
+		status, content, err := doHTTPRequest(env.httpClient, r)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
@@ -295,7 +295,7 @@ func (env *envType) update(i int) {
 				log.Println(u.String())
 				return
 			}
-			status, content, err = doHTTPRequest(httpClient, r)
+			status, content, err = doHTTPRequest(env.httpClient, r)
 			if err != nil {
 				u.status.code = FAIL
 				u.status.message = err.Error()
@@ -330,7 +330,7 @@ func (env *envType) update(i int) {
 			log.Println(u.String())
 			return
 		}
-		status, content, err = doHTTPRequest(httpClient, r)
+		status, content, err = doHTTPRequest(env.httpClient, r)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()

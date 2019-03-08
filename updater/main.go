@@ -23,6 +23,7 @@ type envType struct {
 	forceCh     chan struct{}
 	quitCh      chan struct{}
 	dbContainer *DB
+	httpClient  *http.Client
 }
 
 func healthcheckMode() bool {
@@ -86,6 +87,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	env.httpClient = &http.Client{Timeout: time.Duration(httpGetTimeout) * time.Millisecond}
 	for i := range env.updates {
 		u := &env.updates[i]
 		var err error
@@ -96,7 +98,7 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	connectivityTest()
+	connectivityTest(env.httpClient)
 	go triggerUpdates(&env)
 	env.forceCh <- struct{}{}
 	router := httprouter.New()

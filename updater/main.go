@@ -91,7 +91,6 @@ func main() {
 		var err error
 		u.m.Lock()
 		u.extras.ips, u.extras.tSuccess, err = env.db.getIps(u.settings.domain, u.settings.host)
-		log.Println(u.extras.ips)
 		u.m.Unlock()
 		if err != nil {
 			log.Fatal(err)

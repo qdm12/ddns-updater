@@ -14,8 +14,6 @@ import (
 	"github.com/kyokomi/emoji"
 )
 
-const httpGetTimeout = 10000 // 10 seconds
-
 // Global to access with other HTTP GET requests
 var rootURL = ""
 var fsLocation = ""

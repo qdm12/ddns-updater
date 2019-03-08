@@ -13,6 +13,9 @@ import (
 	"github.com/kyokomi/emoji"
 )
 
+const httpGetTimeout = 10000 // 10 seconds
+var httpClient = &http.Client{Timeout: time.Duration(httpGetTimeout) * time.Millisecond}
+
 func connectivityTest() {
 	_, err := net.LookupIP("google.com")
 	if err != nil {
@@ -20,26 +23,18 @@ func connectivityTest() {
 	} else {
 		log.Println(emoji.Sprint(":signal_strength:") + "Domain name resolution " + emoji.Sprint(":heavy_check_mark:"))
 	}
-	req, err := buildHTTPGet("https://google.com")
+	req, err := http.NewRequest(http.MethodGet, "https://google.com", nil)
 	if err != nil {
 		log.Println(emoji.Sprint(":signal_strength:") + "HTTP GET " + emoji.Sprint(":x:") + " " + err.Error())
 	}
-	status, _, err := doHTTPRequest(req, httpGetTimeout)
+	status, _, err := doHTTPRequest(httpClient, req)
 	if err != nil {
 		log.Println(emoji.Sprint(":signal_strength:") + "HTTP GET " + emoji.Sprint(":x:") + " " + err.Error())
 	} else if status != "200" {
-		log.Println(emoji.Sprint(":signal_strength:") + "HTTP GET " + emoji.Sprint(":x:") + " " + " HTTP status " + status)
+		log.Println(emoji.Sprint(":signal_strength:") + "HTTP GET " + emoji.Sprint(":x:") + " HTTP status " + status)
 	} else {
 		log.Println(emoji.Sprint(":signal_strength:") + "HTTP GET " + emoji.Sprint(":heavy_check_mark:"))
 	}
-}
-
-func buildHTTPGet(url string) (request *http.Request, err error) {
-	request, err = http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	return request, nil
 }
 
 // GoDaddy
@@ -57,8 +52,7 @@ func buildHTTPPutJSONAuth(url, authorizationHeader string, body interface{}) (re
 	return request, nil
 }
 
-func doHTTPRequest(request *http.Request, timeout int) (status string, content []byte, err error) {
-	client := &http.Client{Timeout: time.Duration(timeout) * time.Millisecond}
+func doHTTPRequest(client *http.Client, request *http.Request) (status string, content []byte, err error) {
 	response, err := client.Do(request)
 	if err != nil {
 		return status, nil, err

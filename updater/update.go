@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -58,7 +59,7 @@ func (u *updateType) update() {
 	if u.settings.ipmethod == "provider" {
 		ip = ""
 	} else if u.settings.ipmethod == "duckduckgo" {
-		ip, err = getPublicIP("https://duckduckgo.com/?q=ip")
+		ip, err = getPublicIP(httpClient, "https://duckduckgo.com/?q=ip")
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
@@ -66,7 +67,7 @@ func (u *updateType) update() {
 			return
 		}
 	} else if u.settings.ipmethod == "opendns" {
-		ip, err = getPublicIP("https://diagnostic.opendns.com/myip")
+		ip, err = getPublicIP(httpClient, "https://diagnostic.opendns.com/myip")
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
@@ -89,14 +90,14 @@ func (u *updateType) update() {
 		if ip != "provider" {
 			url += "&ip=" + ip
 		}
-		r, err := buildHTTPGet(url)
+		r, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
 			log.Println(u.String())
 			return
 		}
-		status, content, err := doHTTPRequest(r, httpGetTimeout)
+		status, content, err := doHTTPRequest(httpClient, r)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
@@ -158,7 +159,7 @@ func (u *updateType) update() {
 			log.Println(u.String())
 			return
 		}
-		status, content, err := doHTTPRequest(r, httpGetTimeout)
+		status, content, err := doHTTPRequest(httpClient, r)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
@@ -186,14 +187,14 @@ func (u *updateType) update() {
 		if ip != "provider" {
 			url += "&ip=" + ip
 		}
-		r, err := buildHTTPGet(url)
+		r, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
 			log.Println(u.String())
 			return
 		}
-		status, content, err := doHTTPRequest(r, httpGetTimeout)
+		status, content, err := doHTTPRequest(httpClient, r)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
@@ -228,14 +229,14 @@ func (u *updateType) update() {
 		}
 	} else if u.settings.provider == "dreamhost" {
 		url := dreamhostURL + "/?key=" + u.settings.password + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-list_records"
-		r, err := buildHTTPGet(url)
+		r, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
 			log.Println(u.String())
 			return
 		}
-		status, content, err := doHTTPRequest(r, httpGetTimeout)
+		status, content, err := doHTTPRequest(httpClient, r)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
@@ -283,14 +284,14 @@ func (u *updateType) update() {
 		}
 		if found {
 			url = dreamhostURL + "?key=" + u.settings.password + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-remove_record&record=" + strings.ToLower(u.settings.domain) + "&type=A&value=" + oldIP
-			r, err = buildHTTPGet(url)
+			r, err := http.NewRequest(http.MethodGet, url, nil)
 			if err != nil {
 				u.status.code = FAIL
 				u.status.message = err.Error()
 				log.Println(u.String())
 				return
 			}
-			status, content, err = doHTTPRequest(r, httpGetTimeout)
+			status, content, err = doHTTPRequest(httpClient, r)
 			if err != nil {
 				u.status.code = FAIL
 				u.status.message = err.Error()
@@ -318,14 +319,14 @@ func (u *updateType) update() {
 			}
 		}
 		url = dreamhostURL + "?key=" + u.settings.password + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-add_record&record=" + strings.ToLower(u.settings.domain) + "&type=A&value=" + ip
-		r, err = buildHTTPGet(url)
+		r, err = http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()
 			log.Println(u.String())
 			return
 		}
-		status, content, err = doHTTPRequest(r, httpGetTimeout)
+		status, content, err = doHTTPRequest(httpClient, r)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = err.Error()

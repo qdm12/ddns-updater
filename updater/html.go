@@ -5,11 +5,15 @@ import (
 	"time"
 )
 
+// HTMLData is a list of HTML fields to be rendered.
+// It is exported so that the HTML template engine can render it.
 type HTMLData struct {
 	Updates []UpdateType
 }
 
-type UpdateType struct { // exported for HTML template
+// UpdateType contains HTML fields to be rendered
+// It is exported so that the HTML template engine can render it.
+type UpdateType struct {
 	Domain   string
 	Host     string
 	Provider string

@@ -38,7 +38,8 @@ func durationString(t time.Time) (durationStr string) {
 
 func (updates updatesType) toHTML() (htmlData *HTMLData) {
 	htmlData = new(HTMLData)
-	for _, u := range updates {
+	for i := range updates {
+		u := &updates[i]
 		var U UpdateType
 		U.Domain = u.settings.htmlDomain()
 		U.Host = u.settings.host // TODO html method

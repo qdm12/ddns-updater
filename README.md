@@ -20,7 +20,7 @@
 
 | Image size | RAM usage | CPU usage |
 | --- | --- | --- |
-| 7.4MB | 13MB | Very low |
+| 19.3MB | 13MB | Very low |
 
 ## Features
 
@@ -29,9 +29,10 @@
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
-- Very lightweight based on **Scratch** with:
-    - Static Golang binary
+- Lightweight based on **Alpine 3.9** with:
+    - Sqlite
     - Ca-Certificates
+- Persistence with a sqlite database
 - Emojis :+1:
 
 ## Setup
@@ -48,6 +49,13 @@ or use [docker-compose.yml](https://github.com/qdm12/ddns-updater/blob/master/do
 
 ```bash
 docker-compose up -d
+```
+
+You can add persitence by bind mounting the directory `/updater/data` by adding the flag `-v $(pwd)/data:/updater/data` for example. Make sure you set the right permissions and ownership to your host data folder:
+
+```bash
+chown 1000 data/
+chmod 700 data/
 ```
 
 ### Environment variables

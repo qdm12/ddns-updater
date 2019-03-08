@@ -14,22 +14,15 @@ import (
 	"github.com/kyokomi/emoji"
 )
 
-// Global to access with other HTTP GET requests
-var rootURL = ""
-var fsLocation = ""
-
 type updatesType []updateType
-type channelsType struct {
-	forceCh chan bool
-	quitCh  chan struct{}
-}
-
-func init() {
-	ex, err := os.Executable()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fsLocation = filepath.Dir(ex)
+type envType struct {
+	fsLocation string
+	rootURL    string
+	delay      time.Duration
+	updates    updatesType
+	forceCh    chan struct{}
+	quitCh     chan struct{}
+	db         *DB
 }
 
 func healthcheckMode() bool {
@@ -66,8 +59,8 @@ func healthcheck(listeningPort, rootURL string) {
 }
 
 func main() {
+	listeningPort := getListeningPort()
 	if healthcheckMode() {
-		listeningPort := getListeningPort()
 		rootURL := getRootURL()
 		healthcheck(listeningPort, rootURL)
 	}
@@ -77,43 +70,65 @@ func main() {
 	fmt.Println("######## Give some " + emoji.Sprint(":heart:") + "at #########")
 	fmt.Println("# github.com/qdm12/ddns-updater #")
 	fmt.Print("#################################\n\n")
-	var updates updatesType
-	listeningPort, rootURL, delay, updates := getConfig()
-	connectivityTest()
-	channels := channelsType{
-		forceCh: make(chan bool, 1),
-		quitCh:  make(chan struct{}),
+	var env envType
+	env.rootURL = getRootURL()
+	env.delay = getDelay()
+	env.updates = getUpdates()
+	env.forceCh = make(chan struct{})
+	env.quitCh = make(chan struct{})
+	ex, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
 	}
-	go triggerUpdates(&updates, delay, channels.forceCh, channels.quitCh)
-	channels.forceCh <- true
+	env.fsLocation = filepath.Dir(ex)
+	dataDir := getDataDir(env.fsLocation)
+	env.db, err = initializeDatabase(dataDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for i := range env.updates {
+		u := &env.updates[i]
+		var err error
+		u.m.Lock()
+		u.extras.ips, u.extras.tSuccess, err = env.db.getIps(u.settings.domain, u.settings.host)
+		log.Println(u.extras.ips)
+		u.m.Unlock()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	connectivityTest()
+	go triggerUpdates(&env)
+	env.forceCh <- struct{}{}
 	router := httprouter.New()
-	router.GET(rootURL, updates.getIndex)
-	router.GET(rootURL+"update", channels.getUpdate)
-	router.GET(rootURL+"healthcheck", updates.getHealthcheck)
+	router.GET(env.rootURL, env.getIndex)
+	router.GET(env.rootURL+"update", env.getUpdate)
+	router.GET(env.rootURL+"healthcheck", env.getHealthcheck)
 	log.Println("Web UI listening on 0.0.0.0:" + listeningPort + emoji.Sprint(" :ear:"))
 	log.Fatal(http.ListenAndServe("0.0.0.0:"+listeningPort, router))
 }
 
-func triggerUpdates(updates *updatesType, delay time.Duration, forceCh chan bool, quitCh chan struct{}) {
-	ticker := time.NewTicker(delay * time.Second)
+func triggerUpdates(env *envType) {
+	ticker := time.NewTicker(env.delay * time.Second)
 	defer func() {
 		ticker.Stop()
-		close(quitCh)
+		close(env.quitCh)
 	}()
 	for {
 		select {
 		case <-ticker.C:
-			for i := range *updates {
-				go (*updates)[i].update()
+			for i := range env.updates {
+				go env.update(i)
 			}
-		case <-forceCh:
-			for i := range *updates {
-				go (*updates)[i].update()
+		case <-env.forceCh:
+			for i := range env.updates {
+				go env.update(i)
 			}
-		case <-quitCh:
+		case <-env.quitCh:
 			for {
 				allUpdatesFinished := true
-				for _, u := range *updates {
+				for i := range env.updates {
+					u := &env.updates[i]
 					if u.status.code == UPDATING {
 						allUpdatesFinished = false
 					}
@@ -130,10 +145,10 @@ func triggerUpdates(updates *updatesType, delay time.Duration, forceCh chan bool
 	}
 }
 
-func (updates *updatesType) getIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (env *envType) getIndex(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// TODO: Forms to change existing updates or add some
-	htmlData := updates.toHTML()
-	t := template.Must(template.ParseFiles(fsLocation + "/ui/index.html"))
+	htmlData := env.updates.toHTML()
+	t := template.Must(template.ParseFiles(env.fsLocation + "/ui/index.html"))
 	err := t.ExecuteTemplate(w, "index.html", htmlData) // TODO Without pointer?
 	if err != nil {
 		log.Println(err)
@@ -141,14 +156,15 @@ func (updates *updatesType) getIndex(w http.ResponseWriter, r *http.Request, _ h
 	}
 }
 
-func (channels *channelsType) getUpdate(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	channels.forceCh <- true
+func (env *envType) getUpdate(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	env.forceCh <- struct{}{}
 	log.Println("Update started manually " + emoji.Sprint(":repeat:"))
-	http.Redirect(w, r, rootURL, 301)
+	http.Redirect(w, r, env.rootURL, 301)
 }
 
-func (updates updatesType) getHealthcheck(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	for _, u := range updates {
+func (env *envType) getHealthcheck(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	for i := range env.updates {
+		u := &env.updates[i]
 		if u.status.code == FAIL {
 			log.Println("Responded with error to Healthcheck (" + u.String() + ")")
 			w.WriteHeader(http.StatusInternalServerError)

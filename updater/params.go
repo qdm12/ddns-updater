@@ -78,6 +78,14 @@ func getDelay() (delay time.Duration) {
 	return delay
 }
 
+func getDataDir(fsLocation string) (dataDir string) {
+	dataDir = os.Getenv("DATA_DIR")
+	if len(dataDir) == 0 {
+		dataDir = fsLocation + "/data"
+	}
+	return dataDir
+}
+
 func getUpdates() (updates []updateType) {
 	var i uint64 = 1
 	for {
@@ -120,25 +128,19 @@ func getUpdates() (updates []updateType) {
 		if x[2] == "dreamhost" && !regexDreamhostKey(x[4]) {
 			log.Fatal(emoji.Sprint(":x:") + " The Dreamhost password (key) query parameter is not valid for entry '" + config + "'")
 		}
-		var u updateType
-		u.settings.domain = x[0]
-		u.settings.host = x[1]
-		u.settings.provider = x[2]
-		u.settings.ipmethod = x[3]
-		u.settings.password = x[4]
-		updates = append(updates, u)
+		updates = append(updates, updateType{
+			settings: updateSettings{
+				domain:   x[0],
+				host:     x[1],
+				provider: x[2],
+				ipmethod: x[3],
+				password: x[4],
+			},
+		})
 		i++
 	}
 	if len(updates) == 0 {
 		log.Fatal(emoji.Sprint(":x:") + " No record to update was found in the environment variable RECORD1")
 	}
 	return updates
-}
-
-func getConfig() (listeningPort, rootURL string, delay time.Duration, updates []updateType) {
-	listeningPort = getListeningPort()
-	rootURL = getRootURL()
-	delay = getDelay()
-	updates = getUpdates()
-	return listeningPort, rootURL, delay, updates
 }

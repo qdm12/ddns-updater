@@ -1,6 +1,9 @@
 package main
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type updateSettings struct {
 	domain   string
@@ -149,6 +152,7 @@ type updateType struct { // internal
 	settings updateSettings // fixed
 	status   updateStatus   // changes for each update
 	extras   updateExtras   // past information
+	m        sync.Mutex
 }
 
 func (u *updateType) String() string {

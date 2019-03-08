@@ -39,7 +39,11 @@ type dreamhostReponse struct {
 	Data   string `json:"data"`
 }
 
-func (u *updateType) update() {
+// i is the index of the update to update
+func (env *envType) update(i int) {
+	u := &env.updates[i]
+	u.m.Lock()
+	defer u.m.Unlock()
 	if u.status.code == UPDATING {
 		log.Println(u.String())
 		return
@@ -356,10 +360,21 @@ func (u *updateType) update() {
 	if len(u.extras.ips) > 0 && ip == u.extras.ips[0] { // same IP
 		u.status.code = UPTODATE
 		u.status.message = "No IP change for " + time.Since(u.extras.tSuccess).Round(time.Second).String()
+		err = env.db.updateIPTime(u.settings.domain, u.settings.host, ip)
+		if err != nil {
+			u.status.code = FAIL
+			u.status.message = "Cannot update database: " + err.Error()
+		}
 		return
 	}
+	// new IP
 	u.status.code = SUCCESS
 	u.status.message = ""
 	u.extras.tSuccess = time.Now()
 	u.extras.ips = append([]string{ip}, u.extras.ips...)
+	err = env.db.storeNewIP(u.settings.domain, u.settings.host, ip)
+	if err != nil {
+		u.status.code = FAIL
+		u.status.message = "Cannot update database: " + err.Error()
+	}
 }

@@ -1,10 +1,7 @@
-ARG ALPINE_VERSION=3.8
-ARG GO_VERSION=1.11.5
+ARG ALPINE_VERSION=3.9
+ARG GO_VERSION=1.12
 
-FROM alpine:${ALPINE_VERSION} AS alpine
-RUN apk --update add ca-certificates
-
-FROM scratch AS final
+FROM alpine:${ALPINE_VERSION} AS final
 ARG BUILD_DATE
 ARG VCS_REF
 LABEL org.label-schema.schema-version="1.0.0-rc1" \
@@ -19,10 +16,18 @@ LABEL org.label-schema.schema-version="1.0.0-rc1" \
       org.label-schema.docker.cmd.devel="docker run -it --rm -p 8000:8000/tcp -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater" \
       org.label-schema.docker.params="See readme" \
       org.label-schema.version="" \
-      image-size="7.4MB" \
+      image-size="19.3MB" \
       ram-usage="13MB" \
       cpu-usage="Very Low"
-COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+RUN apk add --update sqlite ca-certificates && \
+    mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2 && \
+    rm -rf /var/cache/apk/* && \
+    # Creating empty database file in case nothing is mounted
+    mkdir -p /updater/data && \
+    touch /updater/data/updates.db && \
+    chown -R 1000 /updater && \
+    chmod 700 /updater/data && \
+    chmod 700 /updater/data/updates.db
 EXPOSE 8000
 HEALTHCHECK --interval=300s --timeout=5s --start-period=5s --retries=1 CMD ["/updater/app", "healthcheck"]
 USER 1000
@@ -36,8 +41,8 @@ COPY updater/go.mod updater/go.sum ./
 RUN go mod download
 COPY updater/*.go ./
 #RUN go test -v
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags="-s -w" -o app .
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags="-s -w" -o app .
 
 FROM final
-COPY --from=builder /tmp/gobuild/app /updater/app
+COPY --from=builder --chown=1000 /tmp/gobuild/app /updater/app
 COPY --chown=1000 updater/ui/* /updater/ui/

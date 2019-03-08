@@ -360,7 +360,7 @@ func (env *envType) update(i int) {
 	if len(u.extras.ips) > 0 && ip == u.extras.ips[0] { // same IP
 		u.status.code = UPTODATE
 		u.status.message = "No IP change for " + time.Since(u.extras.tSuccess).Round(time.Second).String()
-		err = env.db.updateIPTime(u.settings.domain, u.settings.host, ip)
+		err = env.dbContainer.updateIPTime(u.settings.domain, u.settings.host, ip)
 		if err != nil {
 			u.status.code = FAIL
 			u.status.message = "Cannot update database: " + err.Error()
@@ -372,7 +372,7 @@ func (env *envType) update(i int) {
 	u.status.message = ""
 	u.extras.tSuccess = time.Now()
 	u.extras.ips = append([]string{ip}, u.extras.ips...)
-	err = env.db.storeNewIP(u.settings.domain, u.settings.host, ip)
+	err = env.dbContainer.storeNewIP(u.settings.domain, u.settings.host, ip)
 	if err != nil {
 		u.status.code = FAIL
 		u.status.message = "Cannot update database: " + err.Error()

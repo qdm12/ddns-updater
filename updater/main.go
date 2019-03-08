@@ -16,13 +16,13 @@ import (
 
 type updatesType []updateType
 type envType struct {
-	fsLocation string
-	rootURL    string
-	delay      time.Duration
-	updates    updatesType
-	forceCh    chan struct{}
-	quitCh     chan struct{}
-	db         *DB
+	fsLocation  string
+	rootURL     string
+	delay       time.Duration
+	updates     updatesType
+	forceCh     chan struct{}
+	quitCh      chan struct{}
+	dbContainer *DB
 }
 
 func healthcheckMode() bool {
@@ -82,7 +82,7 @@ func main() {
 	}
 	env.fsLocation = filepath.Dir(ex)
 	dataDir := getDataDir(env.fsLocation)
-	env.db, err = initializeDatabase(dataDir)
+	env.dbContainer, err = initializeDatabase(dataDir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,7 +90,7 @@ func main() {
 		u := &env.updates[i]
 		var err error
 		u.m.Lock()
-		u.extras.ips, u.extras.tSuccess, err = env.db.getIps(u.settings.domain, u.settings.host)
+		u.extras.ips, u.extras.tSuccess, err = env.dbContainer.getIps(u.settings.domain, u.settings.host)
 		u.m.Unlock()
 		if err != nil {
 			log.Fatal(err)

@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"strings"
+	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -14,7 +15,8 @@ import (
 // It is used so that methods are declared on it, in order
 // to mock the database easily, through the help of the Datastore interface
 type DB struct {
-	*sql.DB
+	db *sql.DB
+	m  sync.Mutex
 }
 
 // initializes the database schema if it does not exist yet.
@@ -34,11 +36,12 @@ func initializeDatabase(dataDir string) (*DB, error) {
 		current INTEGER DEFAULT 1 NOT NULL,
 		PRIMARY KEY(domain, host, ip, t_new)
 		);`)
-	return &DB{db}, err
+	return &DB{db: db}, err
 }
 
-func (db *DB) updateIPTime(domain, host, ip string) (err error) {
-	_, err = db.Exec(
+func (dbContainer *DB) updateIPTime(domain, host, ip string) (err error) {
+	dbContainer.m.Lock()
+	_, err = dbContainer.db.Exec(
 		`UPDATE updates_ips
 		SET t_last = ?
 		WHERE domain = ? AND host = ? AND ip = ? AND current = 1`,
@@ -47,23 +50,27 @@ func (db *DB) updateIPTime(domain, host, ip string) (err error) {
 		host,
 		ip,
 	)
+	dbContainer.m.Unlock()
 	return err
 }
 
-func (db *DB) storeNewIP(domain, host, ip string) (err error) {
+func (dbContainer *DB) storeNewIP(domain, host, ip string) (err error) {
 	// Disable the current IP
-	_, err = db.Exec(
+	dbContainer.m.Lock()
+	_, err = dbContainer.db.Exec(
 		`UPDATE updates_ips
 		SET current = 0
 		WHERE domain = ? AND host = ? AND current = 1`,
 		domain,
 		host,
 	)
+	dbContainer.m.Unlock()
 	if err != nil {
 		return err
 	}
 	// Inserts new IP
-	_, err = db.Exec(
+	dbContainer.m.Lock()
+	_, err = dbContainer.db.Exec(
 		`INSERT INTO updates_ips(domain,host,ip,t_new,t_last,current)
 		VALUES(?, ?, ?, ?, ?, ?);`,
 		domain,
@@ -73,11 +80,13 @@ func (db *DB) storeNewIP(domain, host, ip string) (err error) {
 		time.Now(),
 		1,
 	)
+	dbContainer.m.Unlock()
 	return err
 }
 
-func (db *DB) getIps(domain, host string) (ips []string, tNew time.Time, err error) {
-	rows, err := db.Query(
+func (dbContainer *DB) getIps(domain, host string) (ips []string, tNew time.Time, err error) {
+	dbContainer.m.Lock()
+	rows, err := dbContainer.db.Query(
 		`SELECT ip, t_new
 		FROM updates_ips
 		WHERE domain = ? AND host = ?
@@ -85,6 +94,7 @@ func (db *DB) getIps(domain, host string) (ips []string, tNew time.Time, err err
 		domain,
 		host,
 	)
+	dbContainer.m.Unlock()
 	if err != nil {
 		return nil, tNew, err
 	}

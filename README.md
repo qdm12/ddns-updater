@@ -1,6 +1,6 @@
 # Lightweight DDNS Updater with Docker and web UI
 
-*Lightweight container updating DNS A records periodically for GoDaddy, Namecheap, Dreamhost and DuckDNS*
+*Light container updating DNS A records periodically for GoDaddy, Namecheap, Dreamhost and DuckDNS*
 
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
@@ -29,9 +29,7 @@
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
-- Lightweight based on **Alpine 3.9** with:
-    - Sqlite
-    - Ca-Certificates
+- Lightweight based on **Alpine 3.9** with Sqlite and Ca-Certificates packages
 - Persistence with a sqlite database
 - Emojis :+1:
 
@@ -75,9 +73,6 @@ chmod 700 data/
         - `duckduckgo` finds your public IP using [https://duckduckgo.com/?q=ip](https://duckduckgo.com/?q=ip)
         - `opendns` finds your public IP using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
         - `154.251.67.58` sets your public IP as fixed
-- The port mapping `8000:8000/tcp` is for the web interface
-    - [http://localhost:8000](http://localhost:8000) is the main UI list
-    - [http://localhost:8000/update](http://localhost:8000/update) is to force the update of your domains
 
 ### Host firewall
 
@@ -143,6 +138,8 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 [![DuckDNS Website](https://github.com/qdm12/ddns-updater/raw/master/readme/duckdns.png)](https://duckdns.org)
 
+*See [duckdns website](https://duckdns.org)*
+
 ### Dreamhost
 
 *Awaiting a contribution*
@@ -161,11 +158,10 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 ## TODOs
 
-- [ ] Dreamhost documentation
-- [ ] Sqlite database
 - [ ] Read parameters from JSON file
-- [ ] Finish readme
 - [ ] Unit tests
-- [ ] Live update of website
+- [ ] Finish readme
 - [ ] Other types or records
-- [ ] Better HTML webpage with possibility to change settings
+- [ ] ReactJS frontend
+    - [ ] Live update of website
+    - [ ] Change settings

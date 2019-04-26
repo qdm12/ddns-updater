@@ -1,10 +1,10 @@
-package main
+package regex
 
 import (
 	"testing"
 )
 
-func Test_regexIP(t *testing.T) {
+func Test_IP(t *testing.T) {
 	cases := []struct {
 		s  string
 		ip string
@@ -15,9 +15,9 @@ func Test_regexIP(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		out := regexIP(c.s)
+		out := FindIP(c.s)
 		if out != c.ip {
-			t.Errorf("regexIP(%s) == %s want %s", c.s, out, c.ip)
+			t.Errorf("FindIP(%s) == %s want %s", c.s, out, c.ip)
 		}
 	}
 }

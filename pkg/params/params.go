@@ -1,0 +1,166 @@
+package params
+
+import (
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+	"fmt"
+
+	"ddns-updater/pkg/logging"
+	"ddns-updater/pkg/models"
+	"ddns-updater/pkg/regex"
+	"github.com/spf13/viper"
+)
+
+// GetListeningPort obtains and checks the listening port from Viper (env variable or config file, etc.)
+func GetListeningPort() (listeningPort string) {
+	listeningPort = viper.GetString("listeningPort")
+	value, err := strconv.Atoi(listeningPort)
+	if err != nil {
+		logging.Fatal("listening port %s is not a valid integer", listeningPort)
+	} else if value < 1 {
+		logging.Fatal("listening port %s cannot be lower than 1", listeningPort)
+	} else if value < 1024 {
+		if os.Geteuid() == 0 {
+			logging.Warn("listening port %s allowed to be in the reserved system ports range as you are running as root", listeningPort)
+		} else if os.Geteuid() == -1 {
+			logging.Warn("listening port %s allowed to be in the reserved system ports range as you are running in Windows", listeningPort)
+		} else {
+			logging.Fatal("listening port %s cannot be in the reserved system ports range (1 to 1023) when running without root", listeningPort)
+		}
+	} else if value > 65535 {
+		logging.Fatal("listening port %s cannot be higher than 65535", listeningPort)
+	} else if value > 49151 {
+		// dynamic and/or private ports.
+		logging.Warn("listening port %s is in the dynamic/private ports range (above 49151)", listeningPort)
+	} else if value == 9999 {
+		logging.Fatal("listening port %s cannot be set to the local healthcheck port 9999", listeningPort)
+	}
+	return listeningPort
+}
+
+// GetRootURL obtains and checks the root URL from Viper (env variable or config file, etc.)
+func GetRootURL() (rootURL string) {
+	rootURL = viper.GetString("rooturl")
+	if strings.ContainsAny(rootURL, " .?~#") {
+		logging.Fatal("root URL %s contains invalid characters", rootURL)
+	}
+	if strings.HasSuffix(rootURL, "/") {
+		strings.TrimSuffix(rootURL, "/")
+	}
+	return rootURL
+}
+
+// GetDelay obtains and delay duration between each updates from Viper (env variable or config file, etc.)
+func GetDelay() time.Duration {
+	delayStr := viper.GetString("delay")
+	delayInt, err := strconv.ParseInt(delayStr, 10, 64)
+	if err != nil {
+		logging.Fatal("delay %s is not a valid integer", delayStr)
+	}
+	if delayInt < 10 {
+		logging.Fatal("delay %d must be bigger than 10 seconds", delayInt)
+	}
+	return time.Duration(delayInt)
+}
+
+// GetDataDir obtains and data directory from Viper (env variable or config file, etc.)
+func GetDataDir(dir string) string {
+	dataDir := viper.GetString("data_dir")
+	if len(dataDir) == 0 {
+		dataDir = dir + "/data"
+	}
+	return dataDir
+}
+
+// GetDir obtains the executable directory
+func GetDir() (dir string) {
+	ex, err := os.Executable()
+	if err != nil {
+		logging.Fatal("%s", err)
+	}
+	return filepath.Dir(ex)
+}
+
+// GetLoggerMode obtains the logging mode from Viper (env variable or config file, etc.)
+func GetLoggerMode() logging.Mode {
+	kind := viper.GetString("logging")
+	if kind == "json" {
+		return logging.JSON
+	} else if kind == "human" {
+		return logging.Human
+	}
+	return logging.Default
+}
+
+// GetNodeID obtains the node instance ID from Viper (env variable or config file, etc.)
+func GetNodeID() int {
+	nodeID := viper.GetString("nodeid")
+	value, err := strconv.Atoi(nodeID)
+	if err != nil {
+		logging.Fatal("Node ID %s is not a valid integer", nodeID)
+	}
+	return value
+}
+
+// GetRecordConfigs get the DNS update configurations from the environment variables RECORD1, RECORD2, ...
+func GetRecordConfigs() (recordsConfigs []models.RecordConfigType) {
+	var i uint64 = 1
+	for {
+		config := os.Getenv(fmt.Sprintf("RECORD%d", i))
+		if config == "" {
+			break
+		}
+		x := strings.Split(config, ",")
+		if len(x) != 5 {
+			logging.Fatal("The configuration entry %s should be in the format 'domain,host,provider,ipmethod,password'", config)
+		}
+		if !regex.Domain(x[0]) {
+			logging.Fatal("The domain name %s is not valid for entry %s", x[0], config)
+		}
+		if len(x[1]) == 0 {
+			logging.Fatal("The host for entry %s must have one character at least", config)
+		} // TODO test when it does not exist
+		if (x[2] == "duckdns" || x[2] == "dreamhost") && x[1] != "@" {
+			logging.Fatal("The host %s can only be '@' for the DuckDNS entry %s", x[1], config)
+		}
+		if x[2] != "namecheap" && x[2] != "godaddy" && x[2] != "duckdns" && x[2] != "dreamhost" {
+			logging.Fatal("The DNS provider %s is not supported for entry %s", x[2], config)
+		}
+		if x[2] == "namecheap" || x[2] == "duckdns" {
+			if x[3] != "duckduckgo" && x[3] != "opendns" && regex.FindIP(x[3]) == "" && x[3] != "provider" {
+				logging.Fatal("The IP query method %s is not valid for entry %s", x[3], config)
+			}
+		} else if x[3] != "duckduckgo" && x[3] != "opendns" && regex.FindIP(x[3]) == "" {
+			logging.Fatal("The IP query method %s is not valid for entry %s", x[3], config)
+		}
+		if x[2] == "namecheap" && !regex.NamecheapPassword(x[4]) {
+			logging.Fatal("The Namecheap password query parameter is not valid for entry %s", config)
+		}
+		if x[2] == "godaddy" && !regex.GodaddyKeySecret(x[4]) {
+			logging.Fatal("The GoDaddy password (key:secret) query parameter is not valid for entry %s", config)
+		}
+		if x[2] == "duckdns" && !regex.DuckDNSToken(x[4]) {
+			logging.Fatal("The DuckDNS password (token) query parameter is not valid for entry %s", config)
+		}
+		if x[2] == "dreamhost" && !regex.DreamhostKey(x[4]) {
+			logging.Fatal("The Dreamhost password (key) query parameter is not valid for entry %s", config)
+		}
+		recordsConfigs = append(recordsConfigs, models.RecordConfigType{
+			Settings: models.SettingsType{
+				Domain:   x[0],
+				Host:     x[1],
+				Provider: x[2],
+				IPmethod: x[3],
+				Password: x[4],
+			},
+		})
+		i++
+	}
+	if len(recordsConfigs) == 0 {
+		logging.Fatal("No record to update was found in the environment variable RECORD1")
+	}
+	return recordsConfigs
+}

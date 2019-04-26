@@ -1,6 +1,6 @@
 # Lightweight DDNS Updater with Docker and web UI
 
-*Lightweight container updating DNS A records periodically for GoDaddy, Namecheap and DuckDNS*
+*Light container updating DNS A records periodically for GoDaddy, Namecheap, Dreamhost and DuckDNS*
 
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
@@ -20,18 +20,17 @@
 
 | Image size | RAM usage | CPU usage |
 | --- | --- | --- |
-| 7.36MB | 13MB | Very low |
+| 21.4MB | 13MB | Very low |
 
 ## Features
 
-- Updates periodically A records for different DNS providers: Namecheap, GoDaddy, DuckDNS (ask for more)
+- Updates periodically A records for different DNS providers: Namecheap, GoDaddy, Dreamhost, DuckDNS (ask for more)
 - Web User interface
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
-- Very lightweight based on **Scratch** with:
-    - Static Golang binary
-    - Ca-Certificates
+- Lightweight based on **Alpine 3.9** with Sqlite and Ca-Certificates packages
+- Persistence with a sqlite database
 - Emojis :+1:
 
 ## Setup
@@ -50,6 +49,13 @@ or use [docker-compose.yml](https://github.com/qdm12/ddns-updater/blob/master/do
 docker-compose up -d
 ```
 
+You can add persitence by bind mounting the directory `/updater/data` by adding the flag `-v $(pwd)/data:/updater/data` for example. Make sure you set the right permissions and ownership to your host data folder:
+
+```bash
+chown 1000 data/
+chmod 700 data/
+```
+
 ### Environment variables
 
 | Environment variable | Default | Description |
@@ -57,7 +63,9 @@ docker-compose up -d
 | `DELAY` | `300` | Delay between updates in seconds |
 | `ROOTURL` | `/` | URL path to append to all paths (i.e. `/ddns` for accessing `https://example.com/ddns`) |
 | `LISTENINGPORT` | `8000` | Internal TCP listening port for the web UI |
-| `RECORDi` | | A record to update in the form `domain_name,host,provider,ip_method,password` |
+| `RECORDi` | | A record `i` to update in the form `domain_name,host,provider,ip_method,password` |
+| `LOGGING` | `json` | Format of logging, `json` or `human` |
+| `NODEID` | `0` | Node ID (for distributed systems), can be any integer |
 
 - The environement variables `RECORD1`, `RECORD2`, etc. are domains to update the IP address for
     - The program reads them, starting at `RECORD1` and will stop as soon as `RECORDn` is not set
@@ -67,9 +75,6 @@ docker-compose up -d
         - `duckduckgo` finds your public IP using [https://duckduckgo.com/?q=ip](https://duckduckgo.com/?q=ip)
         - `opendns` finds your public IP using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
         - `154.251.67.58` sets your public IP as fixed
-- The port mapping `8000:8000/tcp` is for the web interface
-    - [http://localhost:8000](http://localhost:8000) is the main UI list
-    - [http://localhost:8000/update](http://localhost:8000/update) is to force the update of your domains
 
 ### Host firewall
 
@@ -133,7 +138,13 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 ### DuckDNS
 
-[![Namecheap Website](https://github.com/qdm12/ddns-updater/raw/master/readme/duckdns.png)](https://duckdns.org)
+[![DuckDNS Website](https://github.com/qdm12/ddns-updater/raw/master/readme/duckdns.png)](https://duckdns.org)
+
+*See [duckdns website](https://duckdns.org)*
+
+### Dreamhost
+
+*Awaiting a contribution*
 
 ## Testing
 
@@ -149,10 +160,12 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 ## TODOs
 
-- [ ] Sqlite database
+- [ ] ARM travis builds
+- [ ] Break update function (pkg/update/update.go)
 - [ ] Read parameters from JSON file
-- [ ] Finish readme
 - [ ] Unit tests
-- [ ] Live update of website
+- [ ] Finish readme
 - [ ] Other types or records
-- [ ] Better HTML webpage with possibility to change settings
+- [ ] ReactJS frontend
+    - [ ] Live update of website
+    - [ ] Change settings

@@ -20,7 +20,7 @@
 
 | Image size | RAM usage | CPU usage |
 | --- | --- | --- |
-| 19.3MB | 13MB | Very low |
+| 21.4MB | 13MB | Very low |
 
 ## Features
 
@@ -63,7 +63,9 @@ chmod 700 data/
 | `DELAY` | `300` | Delay between updates in seconds |
 | `ROOTURL` | `/` | URL path to append to all paths (i.e. `/ddns` for accessing `https://example.com/ddns`) |
 | `LISTENINGPORT` | `8000` | Internal TCP listening port for the web UI |
-| `RECORDi` | | A record to update in the form `domain_name,host,provider,ip_method,password` |
+| `RECORDi` | | A record `i` to update in the form `domain_name,host,provider,ip_method,password` |
+| `LOGGING` | `json` | Format of logging, `json` or `human` |
+| `NODEID` | `0` | Node ID (for distributed systems), can be any integer |
 
 - The environement variables `RECORD1`, `RECORD2`, etc. are domains to update the IP address for
     - The program reads them, starting at `RECORD1` and will stop as soon as `RECORDn` is not set
@@ -158,6 +160,8 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 ## TODOs
 
+- [ ] ARM travis builds
+- [ ] Break update function (pkg/update/update.go)
 - [ ] Read parameters from JSON file
 - [ ] Unit tests
 - [ ] Finish readme

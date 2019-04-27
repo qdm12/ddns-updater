@@ -23,7 +23,7 @@ func Serve(recordsConfigs []models.RecordConfigType) {
 	}
 	localRouter := httprouter.New()
 	localRouter.GET("/", params.get)
-	logging.Info("Private server listening on 127.0.0.1:9999")
+	logging.Info("Healthcheck server listening on 127.0.0.1:9999")
 	err := http.ListenAndServe("127.0.0.1:9999", localRouter)
 	if err != nil {
 		logging.Fatal("%s", err)
@@ -42,25 +42,25 @@ func (params *paramsType) get(w http.ResponseWriter, r *http.Request, ps httprou
 
 func getHandler(recordsConfigs []models.RecordConfigType) error {
 	for i := range recordsConfigs {
+		recordsConfigs[i].M.RLock()
+		defer recordsConfigs[i].M.RUnlock()
 		if recordsConfigs[i].Status.Code == models.FAIL {
 			return fmt.Errorf("%s", recordsConfigs[i].String())
 		}
-		if recordsConfigs[i].Status.Code != models.UPDATING {
-			ips, err := net.LookupIP(recordsConfigs[i].Settings.BuildDomainName())
-			if err != nil {
-				return fmt.Errorf("%s", err)
-			}
-			if len(recordsConfigs[i].History.IPs) == 0 {
-				return fmt.Errorf("no set IP address found")
-			}
-			for i := range ips {
-				if ips[i].String() != recordsConfigs[i].History.IPs[0] {
-					return fmt.Errorf(
-						"lookup IP address of %s is not %s",
-						recordsConfigs[i].Settings.BuildDomainName(),
-						recordsConfigs[i].History.IPs[0],
-					)
-				}
+		ips, err := net.LookupIP(recordsConfigs[i].Settings.BuildDomainName())
+		if err != nil {
+			return fmt.Errorf("%s", err)
+		}
+		if len(recordsConfigs[i].History.IPs) == 0 {
+			return fmt.Errorf("no set IP address found")
+		}
+		for i := range ips {
+			if ips[i].String() != recordsConfigs[i].History.IPs[0] {
+				return fmt.Errorf(
+					"lookup IP address of %s is not %s",
+					recordsConfigs[i].Settings.BuildDomainName(),
+					recordsConfigs[i].History.IPs[0],
+				)
 			}
 		}
 	}

@@ -29,9 +29,8 @@
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
-- Lightweight based on **Alpine 3.9** with Sqlite and Ca-Certificates packages
+- Lightweight based on Go and **Alpine 3.9** with Sqlite and Ca-Certificates packages
 - Persistence with a sqlite database
-- Emojis :+1:
 
 ## Setup
 
@@ -158,12 +157,15 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
   - Namecheap:
   - DuckDNS:
 
+## Used in external projects
+
+- [Starttoaster/docker-traefik](https://github.com/Starttoaster/docker-traefik#home-networks-extra-credit-dynamic-dns)
+
 ## TODOs
 
-- [ ] ARM travis builds
-- [ ] Break update function (pkg/update/update.go)
-- [ ] Read parameters from JSON file
 - [ ] Unit tests
+- [ ] Cloudflare DNS registrar
+- [ ] Read parameters from JSON file
 - [ ] Finish readme
 - [ ] Other types or records
 - [ ] ReactJS frontend

@@ -9,7 +9,6 @@ const (
 	FAIL statusCode = iota
 	SUCCESS
 	UPTODATE
-	UPDATING
 )
 
 func (code *statusCode) string() (s string) {
@@ -20,8 +19,6 @@ func (code *statusCode) string() (s string) {
 		return "Failure"
 	case UPTODATE:
 		return "Up to date"
-	case UPDATING:
-		return "Already updating..."
 	default:
 		return "Unknown status code!"
 	}
@@ -35,8 +32,6 @@ func (code *statusCode) toHTML() (s string) {
 		return `<font color="red">Failure</font>`
 	case UPTODATE:
 		return `<font color="#00CC66">Up to date</font>`
-	case UPDATING:
-		return `<font color="orange">Already updating...</font>`
 	default:
 		return `<font color="red">Unknown status code!</font>`
 	}

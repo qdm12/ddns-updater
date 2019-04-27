@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"ddns-updater/pkg/database"
-	
 	"ddns-updater/pkg/healthcheck"
 	"ddns-updater/pkg/logging"
 	"ddns-updater/pkg/params"
@@ -63,10 +62,10 @@ func main() {
 		if err != nil {
 			logging.Fatal("%s", err)
 		}
-		recordsConfigs[i].Lock()
+		recordsConfigs[i].M.Lock()
 		recordsConfigs[i].History.IPs = ips
 		recordsConfigs[i].History.TSuccess = tSuccess
-		recordsConfigs[i].Unlock()
+		recordsConfigs[i].M.Unlock()
 	}
 	forceCh := make(chan struct{})
 	quitCh := make(chan struct{})

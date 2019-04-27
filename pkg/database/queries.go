@@ -7,8 +7,12 @@ import (
 /* All these methods must be called by a single go routine as they are not
 thread safe because of SQLite */
 
+// UpdateIPTime updates the latest same IP update time for a certain
+// domain, host and IP tuple.
 func (db *DB) UpdateIPTime(domain, host, ip string) (err error) {
-	_, err = db.Exec(
+	db.Lock()
+	defer db.Unlock()
+	_, err = db.sqlite.Exec(
 		`UPDATE updates_ips
 		SET t_last = ?
 		WHERE domain = ? AND host = ? AND ip = ? AND current = 1`,
@@ -20,9 +24,13 @@ func (db *DB) UpdateIPTime(domain, host, ip string) (err error) {
 	return err
 }
 
+// StoreNewIP stores a new IP address for a certain
+// domain and host.
 func (db *DB) StoreNewIP(domain, host, ip string) (err error) {
 	// Disable the current IP
-	_, err = db.Exec(
+	db.Lock()
+	defer db.Unlock()
+	_, err = db.sqlite.Exec(
 		`UPDATE updates_ips
 		SET current = 0
 		WHERE domain = ? AND host = ? AND current = 1`,
@@ -33,7 +41,7 @@ func (db *DB) StoreNewIP(domain, host, ip string) (err error) {
 		return err
 	}
 	// Inserts new IP
-	_, err = db.Exec(
+	_, err = db.sqlite.Exec(
 		`INSERT INTO updates_ips(domain,host,ip,t_new,t_last,current)
 		VALUES(?, ?, ?, ?, ?, ?);`,
 		domain,
@@ -46,8 +54,12 @@ func (db *DB) StoreNewIP(domain, host, ip string) (err error) {
 	return err
 }
 
+// GetIps gets all the IP addresses history for a certain
+// domain and host.
 func (db *DB) GetIps(domain, host string) (ips []string, tNew time.Time, err error) {
-	rows, err := db.Query(
+	db.Lock()
+	defer db.Unlock()
+	rows, err := db.sqlite.Query(
 		`SELECT ip, t_new
 		FROM updates_ips
 		WHERE domain = ? AND host = ?

@@ -3,7 +3,6 @@ package update
 import (
 	"time"
 	"net/http"
-	"ddns-updater/pkg/logging"
 	"ddns-updater/pkg/models"
 	"ddns-updater/pkg/database"
 )
@@ -32,18 +31,12 @@ func TriggerServer(
 				go update(&recordsConfigs[i], httpClient, sqlDb)
 			}
 		case <-quitCh:
-			for {
-				allUpdatesFinished := true
-				for i := range recordsConfigs {
-					if recordsConfigs[i].Status.Code == models.UPDATING {
-						allUpdatesFinished = false
-					}
-				}
-				if allUpdatesFinished {
-					break
-				}
-				logging.Info("Waiting for updates to complete...")
-				time.Sleep(400 * time.Millisecond)
+			// Wait for all updates to stop updating or being read
+			for i := range recordsConfigs {
+				recordsConfigs[i].M.Lock()
+			}
+			for i := range recordsConfigs {
+				recordsConfigs[i].M.Unlock()
 			}
 			ticker.Stop()
 			return

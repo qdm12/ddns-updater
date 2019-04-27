@@ -9,14 +9,18 @@ type RecordConfigType struct { // internal
 	Settings SettingsType // fixed
 	Status   statusType   // changes for each update
 	History  historyType  // past information
-	sync.Mutex
+	M sync.RWMutex
 }
 
 func (conf *RecordConfigType) String() string {
+	conf.M.RLock()
+	defer conf.M.RUnlock()
 	return conf.Settings.string() + ": " + conf.Status.string() + "; " + conf.History.string()
 }
 
 func (conf *RecordConfigType) toHTML() HTMLRow {
+	conf.M.RLock()
+	defer conf.M.RUnlock()
 	row := HTMLRow{
 		Domain:   conf.Settings.getHTMLDomain(),
 		Host:     conf.Settings.Host,

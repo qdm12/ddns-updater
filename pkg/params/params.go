@@ -42,15 +42,13 @@ func GetListeningPort() (listeningPort string) {
 }
 
 // GetRootURL obtains and checks the root URL from Viper (env variable or config file, etc.)
-func GetRootURL() (rootURL string) {
-	rootURL = viper.GetString("rooturl")
+func GetRootURL() string {
+	rootURL := viper.GetString("rooturl")
 	if strings.ContainsAny(rootURL, " .?~#") {
 		logging.Fatal("root URL %s contains invalid characters", rootURL)
 	}
-	if strings.HasSuffix(rootURL, "/") {
-		strings.TrimSuffix(rootURL, "/")
-	}
-	return rootURL
+	rootURL = strings.ReplaceAll(rootURL, "//", "/")
+	return strings.TrimSuffix(rootURL, "/") // already have / from paths of router
 }
 
 // GetDelay obtains and delay duration between each updates from Viper (env variable or config file, etc.)

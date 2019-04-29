@@ -7,8 +7,13 @@ import (
 
 	"ddns-updater/pkg/logging"
 	"ddns-updater/pkg/models"
+	"ddns-updater/pkg/network"
 	"github.com/julienschmidt/httprouter"
 )
+
+type healthcheckParamsType struct {
+	recordsConfigs []models.RecordConfigType
+}
 
 type indexParamsType struct {
 	dir string
@@ -22,6 +27,9 @@ type updateParamsType struct {
 
 // CreateRouter returns a router with all the necessary routes configured
 func CreateRouter(rootURL, dir string, forceCh chan struct{}, recordsConfigs []models.RecordConfigType) *httprouter.Router {
+	healthcheckParams := healthcheckParamsType{
+		recordsConfigs: recordsConfigs,
+	}
 	indexParams := indexParamsType{
 		dir: dir,
 		recordsConfigs: recordsConfigs,
@@ -31,6 +39,7 @@ func CreateRouter(rootURL, dir string, forceCh chan struct{}, recordsConfigs []m
 		forceCh:   forceCh,
 	}
 	router := httprouter.New()
+	router.GET(rootURL+"/healthcheck", healthcheckParams.get)
 	router.GET(rootURL+"/", indexParams.get)
 	router.GET(rootURL+"/update", updateParams.get)
 	return router
@@ -46,6 +55,27 @@ func (params *indexParamsType) get(w http.ResponseWriter, _ *http.Request, _ htt
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, "An error occurred creating this webpage")
 	}
+}
+
+func (params *healthcheckParamsType) get(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	clientIP, err := network.GetClientIP(r)
+	if err != nil {
+		logging.Info("Cannot detect client IP: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	if clientIP != "127.0.0.1" && clientIP != "::1" {
+		logging.Info("IP address %s tried to perform the healthcheck", clientIP)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	err = healthcheckHandler(params.recordsConfigs)
+	if err != nil {
+		logging.Warn("Responded with error to healthcheck: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func (params *updateParamsType) get(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

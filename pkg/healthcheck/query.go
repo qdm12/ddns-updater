@@ -1,10 +1,12 @@
 package healthcheck
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"time"
+
+	"ddns-updater/pkg/params"
+	"ddns-updater/pkg/logging"
 )
 
 // Mode checks if the program is
@@ -12,9 +14,12 @@ import (
 func Mode() bool {
 	args := os.Args
 	if len(args) > 1 && args[1] == "healthcheck" {
+		// either healthcheck mode or failure
+		logging.SetGlobalLoggerMode(logging.JSON)
+		nodeID := params.GetNodeID()
+		logging.SetGlobalLoggerNodeID(nodeID)
 		if len(args) > 2 {
-			fmt.Println("Too many arguments provided for command healthcheck")
-			os.Exit(1)
+			logging.Fatal("Too many arguments provided for command healthcheck")
 		}
 		return true
 	}
@@ -25,20 +30,20 @@ func Mode() bool {
 // the other instance of the program's healthcheck
 // server route.
 func Query() {
-	request, err := http.NewRequest(http.MethodGet, "http://127.0.0.1:9999", nil)
+	rootURL := params.GetRootURL()
+	listeningPort := params.GetListeningPort()
+	targetURL := "http://127.0.0.1:"+listeningPort+rootURL+"/healthcheck"
+	request, err := http.NewRequest(http.MethodGet, targetURL, nil)
 	if err != nil {
-		fmt.Print("Cannot build HTTP request")
-		os.Exit(1)
+		logging.Fatal("Cannot build HTTP request: %s", err)
 	}
 	client := &http.Client{Timeout: time.Duration(1000) * time.Millisecond}
 	response, err := client.Do(request)
 	if err != nil {
-		fmt.Print("Cannot execute HTTP request")
-		os.Exit(1)
+		logging.Fatal("Cannot execute HTTP request: %s", err)
 	}
 	if response.StatusCode != 200 {
-		fmt.Print("Status code is " + response.Status)
-		os.Exit(1)
+		logging.Fatal("Status code is %s for %s", response.Status, targetURL)
 	}
 	os.Exit(0)
 }

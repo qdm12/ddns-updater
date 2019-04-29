@@ -44,7 +44,6 @@ func main() {
 	delay := params.GetDelay()
 	recordsConfigs := params.GetRecordConfigs()
 	logging.Info("Found %d records to update", len(recordsConfigs))
-	go healthcheck.Serve(recordsConfigs)
 	dataDir := params.GetDataDir(dir)
 	errs := network.ConnectivityChecks(httpClient, []string{"google.com"})
 	for _, err := range errs {
@@ -72,7 +71,7 @@ func main() {
 	go update.TriggerServer(delay, forceCh, quitCh, recordsConfigs, httpClient, sqlDb)
 	forceCh <- struct{}{}
 	router := server.CreateRouter(rootURL, dir, forceCh, recordsConfigs)
-	logging.Info("Web UI listening on 0.0.0.0:%s", listeningPort)
+	logging.Info("Web UI listening on 0.0.0.0:%s%s", listeningPort, rootURL)
 	err = http.ListenAndServe("0.0.0.0:"+listeningPort, router)
 	if err != nil {
 		logging.Fatal("%s", err)

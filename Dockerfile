@@ -2,6 +2,7 @@ ARG ALPINE_VERSION=3.9
 ARG GO_VERSION=1.12.4
 
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+ARG BINCOMPRESS
 RUN apk --update add git build-base upx
 RUN go get -u -v golang.org/x/vgo
 WORKDIR /tmp/gobuild
@@ -11,6 +12,7 @@ COPY pkg/ ./pkg/
 COPY main.go .
 #RUN go test -v
 RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags="-s -w" -o app .
+RUN [ "${BINCOMPRESS}" == "" ] || (upx -v --best --ultra-brute --overlay=strip app && upx -t app)
 
 FROM alpine:${ALPINE_VERSION} AS final
 ARG BUILD_DATE
@@ -40,7 +42,7 @@ RUN apk add --update sqlite ca-certificates && \
     chmod 700 /updater/data && \
     chmod 700 /updater/data/updates.db
 EXPOSE 8000
-HEALTHCHECK --interval=300s --timeout=5s --start-period=5s --retries=1 CMD ["/updater/app", "healthcheck"]
+HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=2 CMD ["/updater/app", "healthcheck"]
 USER 1000
 ENTRYPOINT ["/updater/app"]
 ENV DELAY= \

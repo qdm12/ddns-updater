@@ -65,6 +65,7 @@ func httpGetCheck(client *http.Client, URL string, chError chan error) {
 		chError <- fmt.Errorf("HTTP GET failed for %s: %s", URL, err)
 	} else if statusCode != 200 {
 		chError <- fmt.Errorf("HTTP GET failed for %s: HTTP Status %d", URL, statusCode)
+	} else {
+		chError <- nil
 	}
-	chError <- nil
 }

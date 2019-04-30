@@ -31,13 +31,13 @@ func main() {
 	fmt.Println("######## Give some " + emoji.Sprint(":heart:") + "at #########")
 	fmt.Println("# github.com/qdm12/ddns-updater #")
 	fmt.Print("#################################\n\n")
-	go waitForExit()
 	logging.SetGlobalLoggerLevel(logging.InfoLevel)
 	loggerMode := params.GetLoggerMode()
 	logging.SetGlobalLoggerMode(loggerMode)	
 	nodeID := params.GetNodeID()
 	logging.SetGlobalLoggerNodeID(nodeID)
 	httpClient := &http.Client{Timeout: 10 * time.Second}
+	go waitForExit(httpClient)
 	dir := params.GetDir()
 	listeningPort := params.GetListeningPort()
 	rootURL := params.GetRootURL()
@@ -78,7 +78,7 @@ func main() {
 	}
 }
 
-func waitForExit() {
+func waitForExit(httpClient *http.Client) {
 	signals := make(chan os.Signal)
 	signal.Notify(signals,
 		syscall.SIGINT,
@@ -88,5 +88,7 @@ func waitForExit() {
 	)
 	signal := <-signals
 	logging.Warn("Caught OS signal: %s", signal)
+	logging.Info("Closing HTTP client idle connections")
+	httpClient.CloseIdleConnections()
 	os.Exit(0)
 }

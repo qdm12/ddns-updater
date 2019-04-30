@@ -31,7 +31,6 @@ func main() {
 	fmt.Println("######## Give some " + emoji.Sprint(":heart:") + "at #########")
 	fmt.Println("# github.com/qdm12/ddns-updater #")
 	fmt.Print("#################################\n\n")
-	logging.SetGlobalLoggerLevel(logging.InfoLevel)
 	loggerMode := params.GetLoggerMode()
 	logging.SetGlobalLoggerMode(loggerMode)	
 	nodeID := params.GetNodeID()
@@ -39,6 +38,8 @@ func main() {
 	httpClient := &http.Client{Timeout: 10 * time.Second}
 	go waitForExit(httpClient)
 	dir := params.GetDir()
+	loggerLevel := params.GetLoggerLevel()
+	logging.SetGlobalLoggerLevel(loggerLevel)
 	listeningPort := params.GetListeningPort()
 	rootURL := params.GetRootURL()
 	delay := params.GetDelay()

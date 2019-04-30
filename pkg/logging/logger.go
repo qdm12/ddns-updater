@@ -12,16 +12,6 @@ type Logger struct {
 	human humanLogger
 }
 
-// Mode is the mode of the logger which can be Default, JSON or Human
-type Mode uint8
-
-// Different logger modes available
-const (
-	Default Mode = iota
-	JSON
-	Human
-)
-
 // CreateLogger returns the pointer to a Logger which can act as human 
 // readable logger or a JSON formatted logger
 func CreateLogger(mode Mode, level Level, nodeID int) *Logger {
@@ -43,9 +33,9 @@ func (logger *Logger) ChangeMode(mode Mode) {
 func (logger *Logger) Fatal(message string, fargs ...interface{}) {
 	logger.m.RLock()
 	defer logger.m.RUnlock()
-	if logger.mode == JSON || logger.mode == Default {
+	if logger.mode == MODEJSON || logger.mode == MODEDEFAULT {
 		logger.json.fatal(message, fargs...)
-	} else if logger.mode == Human {
+	} else if logger.mode == MODEHUMAN {
 		logger.human.fatal(message, fargs...)
 	}
 }
@@ -54,9 +44,9 @@ func (logger *Logger) Fatal(message string, fargs ...interface{}) {
 func (logger *Logger) Error(message string, fargs ...interface{}) {
 	logger.m.RLock()
 	defer logger.m.RUnlock()
-	if logger.mode == JSON || logger.mode == Default {
+	if logger.mode == MODEJSON || logger.mode == MODEDEFAULT {
 		logger.json.error(message, fargs...)
-	} else if logger.mode == Human {
+	} else if logger.mode == MODEHUMAN {
 		logger.human.error(message, fargs...)
 	}
 }
@@ -65,9 +55,9 @@ func (logger *Logger) Error(message string, fargs ...interface{}) {
 func (logger *Logger) Warn(message string, fargs ...interface{}) {
 	logger.m.RLock()
 	defer logger.m.RUnlock()
-	if logger.mode == JSON || logger.mode == Default {
+	if logger.mode == MODEJSON || logger.mode == MODEDEFAULT {
 		logger.json.warn(message, fargs...)
-	} else if logger.mode == Human {
+	} else if logger.mode == MODEHUMAN {
 		logger.human.warn(message, fargs...)
 	}
 }
@@ -76,9 +66,9 @@ func (logger *Logger) Warn(message string, fargs ...interface{}) {
 func (logger *Logger) Success(message string, fargs ...interface{}) {
 	logger.m.RLock()
 	defer logger.m.RUnlock()
-	if logger.mode == JSON || logger.mode == Default {
+	if logger.mode == MODEJSON || logger.mode == MODEDEFAULT {
 		logger.json.success(message, fargs...)
-	} else if logger.mode == Human {
+	} else if logger.mode == MODEHUMAN {
 		logger.human.success(message, fargs...)
 	}
 }
@@ -87,9 +77,9 @@ func (logger *Logger) Success(message string, fargs ...interface{}) {
 func (logger *Logger) Info(message string, fargs ...interface{}) {
 	logger.m.RLock()
 	defer logger.m.RUnlock()
-	if logger.mode == JSON || logger.mode == Default {
+	if logger.mode == MODEJSON || logger.mode == MODEDEFAULT {
 		logger.json.info(message, fargs...)
-	} else if logger.mode == Human {
+	} else if logger.mode == MODEHUMAN {
 		logger.human.info(message, fargs...)
 	}
 }

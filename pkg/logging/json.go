@@ -35,7 +35,7 @@ func makeJSON(level Level, nodeID int, message string, fargs ...interface{}) str
 	b, err := json.Marshal(payload)
 	if err != nil {
 		b, _ := json.Marshal(&jsonPayload{
-			Level:   ErrorLevel.string(),
+			Level:   LEVELERROR.string(),
 			Message: fmt.Sprintf("cannot make JSON (%s) for payload: %v", err, payload),
 			Time:    time.Now(),
 			NodeID:  nodeID,
@@ -46,30 +46,30 @@ func makeJSON(level Level, nodeID int, message string, fargs ...interface{}) str
 }
 
 func (logger *jsonLogger) fatal(message string, fargs ...interface{}) {
-	fmt.Println(makeJSON(FatalLevel, logger.nodeID, message, fargs...))
+	fmt.Println(makeJSON(LEVELFATAL, logger.nodeID, message, fargs...))
 	os.Exit(1)
 }
 
 func (logger *jsonLogger) error(message string, fargs ...interface{}) {
-	if logger.level >= ErrorLevel {
-		fmt.Println(makeJSON(ErrorLevel, logger.nodeID, message, fargs...))
+	if logger.level >= LEVELERROR {
+		fmt.Println(makeJSON(LEVELERROR, logger.nodeID, message, fargs...))
 	}
 }
 
 func (logger *jsonLogger) warn(message string, fargs ...interface{}) {
-	if logger.level >= WarningLevel {
-		fmt.Println(makeJSON(WarningLevel, logger.nodeID, message, fargs...))
+	if logger.level >= LEVELWARNING {
+		fmt.Println(makeJSON(LEVELWARNING, logger.nodeID, message, fargs...))
 	}
 }
 
 func (logger *jsonLogger) success(message string, fargs ...interface{}) {
-	if logger.level >= SuccessLevel {
-		fmt.Println(makeJSON(SuccessLevel, logger.nodeID, message, fargs...))
+	if logger.level >= LEVELSUCCESS {
+		fmt.Println(makeJSON(LEVELSUCCESS, logger.nodeID, message, fargs...))
 	}
 }
 
 func (logger *jsonLogger) info(message string, fargs ...interface{}) {
-	if logger.level >= InfoLevel {
-		fmt.Println(makeJSON(InfoLevel, logger.nodeID, message, fargs...))
+	if logger.level >= LEVELINFO {
+		fmt.Println(makeJSON(LEVELINFO, logger.nodeID, message, fargs...))
 	}
 }

@@ -4,9 +4,9 @@ var gLogger *Logger
 
 func init() {
 	gLogger = &Logger{
-		mode:  Default,
-		json:  createJSONLogger(InfoLevel, 0),
-		human: createHumanLogger(InfoLevel, 0),
+		mode:  MODEDEFAULT,
+		json:  createJSONLogger(LEVELDEFAULT, 0),
+		human: createHumanLogger(LEVELDEFAULT, 0),
 	}
 }
 
@@ -39,9 +39,9 @@ func SetGlobalLoggerNodeID(nodeID int) {
 func Fatal(message string, fargs ...interface{}) {
 	gLogger.m.RLock()
 	defer gLogger.m.RUnlock()
-	if gLogger.mode == JSON || gLogger.mode == Default {
+	if gLogger.mode == MODEJSON || gLogger.mode == MODEDEFAULT {
 		gLogger.json.fatal(message, fargs...)
-	} else if gLogger.mode == Human {
+	} else if gLogger.mode == MODEHUMAN {
 		gLogger.human.fatal(message, fargs...)
 	}
 }
@@ -50,9 +50,9 @@ func Fatal(message string, fargs ...interface{}) {
 func Error(message string, fargs ...interface{}) {
 	gLogger.m.RLock()
 	defer gLogger.m.RUnlock()
-	if gLogger.mode == JSON || gLogger.mode == Default {
+	if gLogger.mode == MODEJSON || gLogger.mode == MODEDEFAULT {
 		gLogger.json.error(message, fargs...)
-	} else if gLogger.mode == Human {
+	} else if gLogger.mode == MODEHUMAN {
 		gLogger.human.error(message, fargs...)
 	}
 }
@@ -61,9 +61,9 @@ func Error(message string, fargs ...interface{}) {
 func Warn(message string, fargs ...interface{}) {
 	gLogger.m.RLock()
 	defer gLogger.m.RUnlock()
-	if gLogger.mode == JSON || gLogger.mode == Default {
+	if gLogger.mode == MODEJSON || gLogger.mode == MODEDEFAULT {
 		gLogger.json.warn(message, fargs...)
-	} else if gLogger.mode == Human {
+	} else if gLogger.mode == MODEHUMAN {
 		gLogger.human.warn(message, fargs...)
 	}
 }
@@ -72,9 +72,9 @@ func Warn(message string, fargs ...interface{}) {
 func Success(message string, fargs ...interface{}) {
 	gLogger.m.RLock()
 	defer gLogger.m.RUnlock()
-	if gLogger.mode == JSON || gLogger.mode == Default {
+	if gLogger.mode == MODEJSON || gLogger.mode == MODEDEFAULT {
 		gLogger.json.success(message, fargs...)
-	} else if gLogger.mode == Human {
+	} else if gLogger.mode == MODEHUMAN {
 		gLogger.human.success(message, fargs...)
 	}
 }
@@ -83,9 +83,9 @@ func Success(message string, fargs ...interface{}) {
 func Info(message string, fargs ...interface{}) {
 	gLogger.m.RLock()
 	defer gLogger.m.RUnlock()
-	if gLogger.mode == JSON || gLogger.mode == Default {
+	if gLogger.mode == MODEJSON || gLogger.mode == MODEDEFAULT {
 		gLogger.json.info(message, fargs...)
-	} else if gLogger.mode == Human {
+	} else if gLogger.mode == MODEHUMAN {
 		gLogger.human.info(message, fargs...)
 	}
 }

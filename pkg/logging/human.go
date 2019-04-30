@@ -24,30 +24,30 @@ func makeLine(level Level, nodeID int, message string, fargs ...interface{}) str
 }
 
 func (logger *humanLogger) fatal(message string, fargs ...interface{}) {
-	log.Print(makeLine(logger.level, logger.nodeID, message, fargs...))
+	log.Print(makeLine(LEVELFATAL, logger.nodeID, message, fargs...))
 	os.Exit(1)
 }
 
 func (logger *humanLogger) error(message string, fargs ...interface{}) {
-	if logger.level >= ErrorLevel {
-		log.Print(makeLine(logger.level, logger.nodeID, message, fargs...))
+	if logger.level >= LEVELERROR {
+		log.Print(makeLine(LEVELERROR, logger.nodeID, message, fargs...))
 	}
 }
 
 func (logger *humanLogger) warn(message string, fargs ...interface{}) {
-	if logger.level >= WarningLevel {
-		log.Print(makeLine(logger.level, logger.nodeID, message, fargs...))
+	if logger.level >= LEVELWARNING {
+		log.Print(makeLine(LEVELWARNING, logger.nodeID, message, fargs...))
 	}
 }
 
 func (logger *humanLogger) success(message string, fargs ...interface{}) {
-	if logger.level >= SuccessLevel {
-		log.Print(makeLine(logger.level, logger.nodeID, message, fargs...))
+	if logger.level >= LEVELSUCCESS {
+		log.Print(makeLine(LEVELSUCCESS, logger.nodeID, message, fargs...))
 	}
 }
 
 func (logger *humanLogger) info(message string, fargs ...interface{}) {
-	if logger.level >= InfoLevel {
-		log.Print(makeLine(logger.level, logger.nodeID, message, fargs...))
+	if logger.level >= LEVELINFO {
+		log.Print(makeLine(LEVELINFO, logger.nodeID, message, fargs...))
 	}
 }

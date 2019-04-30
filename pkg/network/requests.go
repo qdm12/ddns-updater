@@ -39,7 +39,7 @@ func GetContent(httpClient *http.Client, URL string) ([]byte, error) {
 }
 
 // BuildHTTPPut is used for GoDaddy and Cloudflare only
-func BuildHTTPPut(URL, body interface{}) (request *http.Request, err error) {
+func BuildHTTPPut(URL string, body interface{}) (request *http.Request, err error) {
 	jsonData, err := json.Marshal(body)
 	if err != nil {
 		return nil, err

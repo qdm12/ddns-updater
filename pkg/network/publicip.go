@@ -1,9 +1,9 @@
 package network
 
 import (
-	"net/http"
 	"ddns-updater/pkg/regex"
 	"fmt"
+	"net/http"
 )
 
 // GetPublicIP downloads a webpage and extracts the IP address from it

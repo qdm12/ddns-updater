@@ -13,10 +13,10 @@ import (
 	"ddns-updater/pkg/database"
 	"ddns-updater/pkg/healthcheck"
 	"ddns-updater/pkg/logging"
-	"ddns-updater/pkg/params"
-	"ddns-updater/pkg/update"
 	"ddns-updater/pkg/network"
+	"ddns-updater/pkg/params"
 	"ddns-updater/pkg/server"
+	"ddns-updater/pkg/update"
 
 	"github.com/kyokomi/emoji"
 )
@@ -32,7 +32,7 @@ func main() {
 	fmt.Println("# github.com/qdm12/ddns-updater #")
 	fmt.Print("#################################\n\n")
 	loggerMode := params.GetLoggerMode()
-	logging.SetGlobalLoggerMode(loggerMode)	
+	logging.SetGlobalLoggerMode(loggerMode)
 	nodeID := params.GetNodeID()
 	logging.SetGlobalLoggerNodeID(nodeID)
 	httpClient := &http.Client{Timeout: 10 * time.Second}

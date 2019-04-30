@@ -21,10 +21,10 @@ func createJSONLogger(level Level, nodeID int) jsonLogger {
 
 func makeJSON(level Level, nodeID int, message string, fargs ...interface{}) string {
 	type jsonPayload struct {
-		Level   string `json:"level"`
-		Message string `json:"message"`
+		Level   string    `json:"level"`
+		Message string    `json:"message"`
 		Time    time.Time `json:"time"` // generated on the fly
-		NodeID  int `json:"node"`      // constant on the instance
+		NodeID  int       `json:"node"` // constant on the instance
 	}
 	payload := jsonPayload{
 		Level:   level.string(),

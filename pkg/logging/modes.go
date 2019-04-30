@@ -18,15 +18,15 @@ const MODEDEFAULT = MODEJSON
 func ParseMode(s string) Mode {
 	s = strings.ToLower(s)
 	switch s {
-		case "json":
-			return MODEJSON
-		case "human":
-			return MODEHUMAN
-		case "":
-			return MODEDEFAULT
-		default:
-			// uses the global logger
-			Warn("Unrecognized logging mode %s", s)
-			return MODEDEFAULT
+	case "json":
+		return MODEJSON
+	case "human":
+		return MODEHUMAN
+	case "":
+		return MODEDEFAULT
+	default:
+		// uses the global logger
+		Warn("Unrecognized logging mode %s", s)
+		return MODEDEFAULT
 	}
 }

@@ -3,13 +3,13 @@ package update
 import (
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
-	"fmt"
 
-	"ddns-updater/pkg/logging"
 	"ddns-updater/pkg/database"
+	"ddns-updater/pkg/logging"
 	"ddns-updater/pkg/models"
 	"ddns-updater/pkg/network"
 	"ddns-updater/pkg/regex"
@@ -115,7 +115,7 @@ func updateNamecheap(httpClient *http.Client, host, domain, password, ip string)
 		return "", fmt.Errorf("%s responded with status %d", r.URL.String(), status)
 	}
 	var parsedXML struct {
-		Errors struct{
+		Errors struct {
 			Error string `xml:"Err1"`
 		} `xml:"errors"`
 		IP string `xml:"IP"`
@@ -229,7 +229,7 @@ func updateDreamhost(httpClient *http.Client, host, domain, password, ip, domain
 			Type     string `json:"type"`
 			Record   string `json:"record"`
 			Value    string `json:"value"`
-		}             `json:"data"`
+		} `json:"data"`
 	}
 	err = json.Unmarshal(content, &dhList)
 	if err != nil {

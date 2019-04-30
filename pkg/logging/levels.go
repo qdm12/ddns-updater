@@ -61,18 +61,18 @@ func (level Level) formatHuman(message string) string {
 func ParseLevel(s string) Level {
 	s = strings.ToLower(s)
 	switch s {
-		case "info":
-			return LEVELINFO
-		case "success":
-			return LEVELSUCCESS
-		case "warning":
-			return LEVELWARNING
-		case "error":
-			return LEVELERROR
-		case "":
-			return LEVELDEFAULT
-		default:
-			Warn("Unrecognized logging level %s", s)
-			return LEVELDEFAULT
+	case "info":
+		return LEVELINFO
+	case "success":
+		return LEVELSUCCESS
+	case "warning":
+		return LEVELWARNING
+	case "error":
+		return LEVELERROR
+	case "":
+		return LEVELDEFAULT
+	default:
+		Warn("Unrecognized logging level %s", s)
+		return LEVELDEFAULT
 	}
 }

@@ -1,8 +1,8 @@
 package server
 
 import (
-	"fmt"
 	"ddns-updater/pkg/models"
+	"fmt"
 	"net"
 )
 

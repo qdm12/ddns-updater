@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"ddns-updater/pkg/params"
 	"ddns-updater/pkg/logging"
+	"ddns-updater/pkg/params"
 )
 
 // Mode checks if the program is
@@ -34,7 +34,7 @@ func Mode() bool {
 func Query() {
 	rootURL := params.GetRootURL()
 	listeningPort := params.GetListeningPort()
-	targetURL := "http://127.0.0.1:"+listeningPort+rootURL+"/healthcheck"
+	targetURL := "http://127.0.0.1:" + listeningPort + rootURL + "/healthcheck"
 	request, err := http.NewRequest(http.MethodGet, targetURL, nil)
 	if err != nil {
 		logging.Fatal("Cannot build HTTP request: %s", err)

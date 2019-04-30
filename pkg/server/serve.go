@@ -16,7 +16,7 @@ type healthcheckParamsType struct {
 }
 
 type indexParamsType struct {
-	dir string
+	dir            string
 	recordsConfigs []models.RecordConfigType
 }
 
@@ -31,12 +31,12 @@ func CreateRouter(rootURL, dir string, forceCh chan struct{}, recordsConfigs []m
 		recordsConfigs: recordsConfigs,
 	}
 	indexParams := indexParamsType{
-		dir: dir,
+		dir:            dir,
 		recordsConfigs: recordsConfigs,
 	}
 	updateParams := updateParamsType{
 		rootURL: rootURL,
-		forceCh:   forceCh,
+		forceCh: forceCh,
 	}
 	router := httprouter.New()
 	router.GET(rootURL+"/healthcheck", healthcheckParams.get)

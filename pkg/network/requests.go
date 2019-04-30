@@ -3,9 +3,9 @@ package network
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
-	"fmt"
 )
 
 // DoHTTPRequest performs an HTTP request and returns the status, content and eventual error

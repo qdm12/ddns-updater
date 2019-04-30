@@ -1,10 +1,10 @@
 package update
 
 import (
-	"time"
-	"net/http"
-	"ddns-updater/pkg/models"
 	"ddns-updater/pkg/database"
+	"ddns-updater/pkg/models"
+	"net/http"
+	"time"
 )
 
 // TriggerServer runs an infinite asynchronous periodic function that triggers updates

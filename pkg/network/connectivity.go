@@ -1,11 +1,10 @@
 package network
 
 import (
+	"fmt"
 	"net"
 	"net/http"
-	"fmt"
 )
-
 
 // ConnectivityChecks verifies the connection to the domains in terms of DNS, HTTP and HTTPS
 func ConnectivityChecks(client *http.Client, domains []string) (errs []error) {
@@ -16,7 +15,7 @@ func ConnectivityChecks(client *http.Client, domains []string) (errs []error) {
 	N := len(domains)
 	for N > 0 {
 		select {
-			case errs := <- chErrors:
+		case errs := <-chErrors:
 			errs = append(errs, errs...)
 			N--
 		}
@@ -34,7 +33,7 @@ func connectivityCheck(client *http.Client, domain string, chErrors chan []error
 	N := 3
 	for N > 0 {
 		select {
-			case err := <- chError:
+		case err := <-chError:
 			if err != nil {
 				errs = append(errs, err)
 			}

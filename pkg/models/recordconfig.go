@@ -9,7 +9,7 @@ type RecordConfigType struct { // internal
 	Settings SettingsType // fixed
 	Status   statusType   // changes for each update
 	History  historyType  // past information
-	M sync.RWMutex
+	M        sync.RWMutex
 }
 
 func (conf *RecordConfigType) String() string {

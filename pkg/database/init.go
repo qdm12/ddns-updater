@@ -34,7 +34,5 @@ func NewDb(dataDir string) (*DB, error) {
 		current INTEGER DEFAULT 1 NOT NULL,
 		PRIMARY KEY(domain, host, ip, t_new)
 		);`)
-	return &DB{sqlite:sqlite}, err
+	return &DB{sqlite: sqlite}, err
 }
-
-

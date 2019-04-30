@@ -6,13 +6,13 @@ import (
 
 // Logger is the structure for a logger instance and can contain multiple loggers
 type Logger struct {
-	mode Mode
-	m sync.RWMutex
+	mode  Mode
+	m     sync.RWMutex
 	json  jsonLogger
 	human humanLogger
 }
 
-// CreateLogger returns the pointer to a Logger which can act as human 
+// CreateLogger returns the pointer to a Logger which can act as human
 // readable logger or a JSON formatted logger
 func CreateLogger(mode Mode, level Level, nodeID int) *Logger {
 	return &Logger{

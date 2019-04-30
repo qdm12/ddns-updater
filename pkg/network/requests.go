@@ -38,8 +38,8 @@ func GetContent(httpClient *http.Client, URL string) ([]byte, error) {
 	return content, nil
 }
 
-// BuildHTTPPutGoDaddy is used for GoDaddy only
-func BuildHTTPPutGoDaddy(URL, authorizationHeader string, body interface{}) (request *http.Request, err error) {
+// BuildHTTPPut is used for GoDaddy and Cloudflare only
+func BuildHTTPPut(URL, body interface{}) (request *http.Request, err error) {
 	jsonData, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,6 @@ func BuildHTTPPutGoDaddy(URL, authorizationHeader string, body interface{}) (req
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Set("Authorization", authorizationHeader)
-	request.Header.Set("Content-Type", "application/json; charset=utf-8")
+	request.Header.Set("Content-Type", "application/json")
 	return request, nil
 }

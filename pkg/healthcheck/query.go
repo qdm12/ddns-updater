@@ -15,9 +15,11 @@ func Mode() bool {
 	args := os.Args
 	if len(args) > 1 && args[1] == "healthcheck" {
 		// either healthcheck mode or failure
-		logging.SetGlobalLoggerMode(logging.JSON)
 		nodeID := params.GetNodeID()
 		logging.SetGlobalLoggerNodeID(nodeID)
+		loggerMode := params.GetLoggerMode()
+		logging.SetGlobalLoggerMode(loggerMode)
+		// we don't care about the logger level as it will only be Fatal
 		if len(args) > 2 {
 			logging.Fatal("Too many arguments provided for command healthcheck")
 		}

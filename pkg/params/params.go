@@ -66,7 +66,7 @@ func GetDelay() time.Duration {
 
 // GetDataDir obtains and data directory from Viper (env variable or config file, etc.)
 func GetDataDir(dir string) string {
-	dataDir := viper.GetString("data_dir")
+	dataDir := viper.GetString("datadir")
 	if len(dataDir) == 0 {
 		dataDir = dir + "/data"
 	}

@@ -38,13 +38,13 @@ func GetContent(httpClient *http.Client, URL string) ([]byte, error) {
 	return content, nil
 }
 
-// Used for GoDaddy only
-func BuildHTTPPutJSONAuth(url, authorizationHeader string, body interface{}) (request *http.Request, err error) {
+// BuildHTTPPutGoDaddy is used for GoDaddy only
+func BuildHTTPPutGoDaddy(URL, authorizationHeader string, body interface{}) (request *http.Request, err error) {
 	jsonData, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
-	request, err = http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonData))
+	request, err = http.NewRequest(http.MethodPut, URL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
 	}

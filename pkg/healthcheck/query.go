@@ -21,7 +21,7 @@ func Mode() bool {
 		logging.SetGlobalLoggerMode(loggerMode)
 		// we don't care about the logger level as it will only be Fatal
 		if len(args) > 2 {
-			logging.Fatal("Too many arguments provided for command healthcheck")
+			logging.Fatal("Too many arguments provided for command healthcheck: %s", args[2:])
 		}
 		return true
 	}

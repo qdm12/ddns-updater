@@ -143,10 +143,9 @@ func updateGoDaddy(httpClient *http.Client, host, domain, password, ip string) e
 	type goDaddyPutBody struct {
 		Data string `json:"data"` // IP address to update to
 	}
-	url := godaddyURL + "/" + strings.ToLower(domain) + "/records/A/" + strings.ToLower(host)
-	r, err := network.BuildHTTPPutJSONAuth(
-		url,
-		"sso-key "+password, // password is key:secret here
+	URL := godaddyURL + "/" + strings.ToLower(domain) + "/records/A/" + strings.ToLower(host)
+	r, err := network.BuildHTTPPut(
+		URL,
 		[]goDaddyPutBody{
 			goDaddyPutBody{
 				ip,
@@ -156,6 +155,7 @@ func updateGoDaddy(httpClient *http.Client, host, domain, password, ip string) e
 	if err != nil {
 		return err
 	}
+	r.Header.Set("Authorization", "sso-key "+password) // password is key:secret here
 	status, content, err := network.DoHTTPRequest(httpClient, r)
 	if err != nil {
 		return err

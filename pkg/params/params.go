@@ -104,6 +104,15 @@ func GetNodeID() int {
 	return value
 }
 
+func stringInAny(s string, ss ...string) bool {
+	for _, x := range ss {
+		if s == x {
+			return true
+		}
+	}
+	return false
+}
+
 // GetRecordConfigs get the DNS update configurations from the environment variables RECORD1, RECORD2, ...
 func GetRecordConfigs() (recordsConfigs []models.RecordConfigType) {
 	var i uint64 = 1
@@ -122,17 +131,17 @@ func GetRecordConfigs() (recordsConfigs []models.RecordConfigType) {
 		if len(x[1]) == 0 {
 			logging.Fatal("The host for entry %s must have one character at least", config)
 		} // TODO test when it does not exist
-		if (x[2] == "duckdns" || x[2] == "dreamhost") && x[1] != "@" {
-			logging.Fatal("The host %s can only be '@' for the DuckDNS entry %s", x[1], config)
+		if stringInAny(x[2], "duckdns", "dreamhost") && x[1] != "@" {
+			logging.Fatal("The host %s can only be '@' for entry %s", x[1], config)
 		}
-		if x[2] != "namecheap" && x[2] != "godaddy" && x[2] != "duckdns" && x[2] != "dreamhost" {
+		if !stringInAny(x[2], "namecheap", "godaddy", "duckdns", "dreamhost") {
 			logging.Fatal("The DNS provider %s is not supported for entry %s", x[2], config)
 		}
-		if x[2] == "namecheap" || x[2] == "duckdns" {
-			if x[3] != "duckduckgo" && x[3] != "opendns" && regex.FindIP(x[3]) == "" && x[3] != "provider" {
+		if stringInAny(x[2], "namecheap", "duckdns") {
+			if !stringInAny(x[3], "duckduckgo", "opendns", "provider") && regex.FindIP(x[3]) == "" {
 				logging.Fatal("The IP query method %s is not valid for entry %s", x[3], config)
 			}
-		} else if x[3] != "duckduckgo" && x[3] != "opendns" && regex.FindIP(x[3]) == "" {
+		} else if !stringInAny(x[3], "duckduckgo", "opendns") && regex.FindIP(x[3]) == "" {
 			logging.Fatal("The IP query method %s is not valid for entry %s", x[3], config)
 		}
 		if x[2] == "namecheap" && !regex.NamecheapPassword(x[4]) {

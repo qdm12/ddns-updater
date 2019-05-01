@@ -18,20 +18,20 @@ FROM alpine:${ALPINE_VERSION} AS final
 ARG BUILD_DATE
 ARG VCS_REF
 LABEL org.label-schema.schema-version="1.0.0-rc1" \
-      maintainer="quentin.mcgaw@gmail.com" \
-      org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.vcs-url="https://github.com/qdm12/ddns-updater" \
-      org.label-schema.url="https://github.com/qdm12/ddns-updater" \
-      org.label-schema.vcs-description="Lightweight container updating DNS A records periodically for GoDaddy, Namecheap, Dreamhost and DuckDNS" \
-      org.label-schema.vcs-usage="https://github.com/qdm12/ddns-updater/blob/master/README.md#setup" \
-      org.label-schema.docker.cmd="docker run -d -p 8000:8000/tcp -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater" \
-      org.label-schema.docker.cmd.devel="docker run -it --rm -p 8000:8000/tcp -e RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547 qmcgaw/ddns-updater" \
-      org.label-schema.docker.params="See readme" \
-      org.label-schema.version="" \
-      image-size="21.4MB" \
-      ram-usage="13MB" \
-      cpu-usage="Very Low"
+    maintainer="quentin.mcgaw@gmail.com" \
+    org.label-schema.build-date=$BUILD_DATE \
+    org.label-schema.vcs-ref=$VCS_REF \
+    org.label-schema.vcs-url="https://github.com/qdm12/ddns-updater" \
+    org.label-schema.url="https://github.com/qdm12/ddns-updater" \
+    org.label-schema.vcs-description="Lightweight container updating DNS A records periodically for GoDaddy, Namecheap, Dreamhost and DuckDNS" \
+    org.label-schema.vcs-usage="https://github.com/qdm12/ddns-updater" \
+    org.label-schema.docker.cmd="docker run -d -p 8000:8000/tcp -v $(pwd)/config.json:/updater/config.json:ro qmcgaw/ddns-updater" \
+    org.label-schema.docker.cmd.devel="docker run -it --rm -p 8000:8000/tcp -v $(pwd)/config.json:/updater/config.json:ro 7 qmcgaw/ddns-updater" \
+    org.label-schema.docker.params="See readme configuration section" \
+    org.label-schema.version="" \
+    image-size="21.4MB" \
+    ram-usage="13MB" \
+    cpu-usage="Very Low"
 RUN apk add --update sqlite ca-certificates && \
     mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2 && \
     rm -rf /var/cache/apk/* && \
@@ -48,7 +48,6 @@ ENTRYPOINT ["/updater/app"]
 ENV DELAY= \
     ROOTURL= \
     LISTENINGPORT= \
-    RECORD0= \
     LOGGING= \
     NODEID=
 COPY --from=builder --chown=1000 /tmp/gobuild/app /updater/app

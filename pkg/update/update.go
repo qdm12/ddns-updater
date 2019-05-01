@@ -13,6 +13,7 @@ import (
 	"ddns-updater/pkg/models"
 	"ddns-updater/pkg/network"
 	"ddns-updater/pkg/regex"
+
 	uuid "github.com/google/uuid"
 )
 
@@ -38,7 +39,7 @@ func update(
 	if err != nil {
 		recordConfig.Status.Code = models.FAIL
 		recordConfig.Status.Message = err.Error()
-		logging.Warn(recordConfig.String())
+		logging.Warn("%s", recordConfig)
 		return
 	}
 	// Note: empty IP means DNS provider provided
@@ -49,19 +50,21 @@ func update(
 	}
 
 	// Update the record
-	if recordConfig.Settings.Provider == "namecheap" {
+	if recordConfig.Settings.Provider == models.PROVIDERNAMECHEAP {
 		ip, err = updateNamecheap(httpClient, recordConfig.Settings.Host, recordConfig.Settings.Domain, recordConfig.Settings.Password, ip)
-	} else if recordConfig.Settings.Provider == "godaddy" {
-		err = updateGoDaddy(httpClient, recordConfig.Settings.Host, recordConfig.Settings.Domain, recordConfig.Settings.Password, ip)
-	} else if recordConfig.Settings.Provider == "duckdns" {
-		ip, err = updateDuckDNS(httpClient, recordConfig.Settings.Host, recordConfig.Settings.Domain, recordConfig.Settings.Password, ip)
-	} else if recordConfig.Settings.Provider == "dreamhost" {
-		err = updateDreamhost(httpClient, recordConfig.Settings.Host, recordConfig.Settings.Domain, recordConfig.Settings.Password, ip, recordConfig.Settings.BuildDomainName())
+	} else if recordConfig.Settings.Provider == models.PROVIDERGODADDY {
+		err = updateGoDaddy(httpClient, recordConfig.Settings.Host, recordConfig.Settings.Domain, recordConfig.Settings.Key, recordConfig.Settings.Secret, ip)
+	} else if recordConfig.Settings.Provider == models.PROVIDERDUCKDNS {
+		ip, err = updateDuckDNS(httpClient, recordConfig.Settings.Host, recordConfig.Settings.Domain, recordConfig.Settings.Token, ip)
+	} else if recordConfig.Settings.Provider == models.PROVIDERDREAMHOST {
+		err = updateDreamhost(httpClient, recordConfig.Settings.Host, recordConfig.Settings.Domain, recordConfig.Settings.Key, ip, recordConfig.Settings.BuildDomainName())
+	} else {
+		err = fmt.Errorf("provider %s is not supported", recordConfig.Settings.Provider)
 	}
 	if err != nil {
 		recordConfig.Status.Code = models.FAIL
 		recordConfig.Status.Message = err.Error()
-		logging.Warn(recordConfig.String())
+		logging.Warn("%s", recordConfig)
 		return
 	}
 	if len(recordConfig.History.IPs) > 0 && ip == recordConfig.History.IPs[0] { // same IP
@@ -86,16 +89,15 @@ func update(
 	}
 }
 
-func getPublicIP(httpClient *http.Client, IPmethod string) (ip string, err error) {
-	if IPmethod == "provider" {
+func getPublicIP(httpClient *http.Client, IPmethod models.IPMethodType) (ip string, err error) {
+	if IPmethod == models.IPMETHODPROVIDER {
 		return "", nil
-	} else if IPmethod == "duckduckgo" {
+	} else if IPmethod == models.IPMETHODDUCKDUCKGO {
 		return network.GetPublicIP(httpClient, "https://duckduckgo.com/?q=ip")
-	} else if IPmethod == "opendns" {
+	} else if IPmethod == models.IPMETHODOPENDNS {
 		return network.GetPublicIP(httpClient, "https://diagnostic.opendns.com/myip")
 	}
-	// fixed IP
-	return IPmethod, nil
+	return "", fmt.Errorf("IPMethod %s is not supported", IPmethod)
 }
 
 func updateNamecheap(httpClient *http.Client, host, domain, password, ip string) (newIP string, err error) {
@@ -136,7 +138,7 @@ func updateNamecheap(httpClient *http.Client, host, domain, password, ip string)
 	return parsedXML.IP, nil
 }
 
-func updateGoDaddy(httpClient *http.Client, host, domain, password, ip string) error {
+func updateGoDaddy(httpClient *http.Client, host, domain, key, secret, ip string) error {
 	if len(ip) == 0 {
 		return fmt.Errorf("cannot have a DNS provider provided IP address for GoDaddy")
 	}
@@ -155,7 +157,7 @@ func updateGoDaddy(httpClient *http.Client, host, domain, password, ip string) e
 	if err != nil {
 		return err
 	}
-	r.Header.Set("Authorization", "sso-key "+password) // password is key:secret here
+	r.Header.Set("Authorization", "sso-key "+key+":"+secret)
 	status, content, err := network.DoHTTPRequest(httpClient, r)
 	if err != nil {
 		return err
@@ -175,8 +177,8 @@ func updateGoDaddy(httpClient *http.Client, host, domain, password, ip string) e
 	return nil
 }
 
-func updateDuckDNS(httpClient *http.Client, host, domain, password, ip string) (newIP string, err error) {
-	url := strings.ToLower(duckdnsURL + "?domains=" + domain + "&token=" + password + "&verbose=true")
+func updateDuckDNS(httpClient *http.Client, host, domain, token, ip string) (newIP string, err error) {
+	url := strings.ToLower(duckdnsURL + "?domains=" + domain + "&token=" + token + "&verbose=true")
 	if len(ip) > 0 {
 		url += "&ip=" + ip
 	}
@@ -204,13 +206,13 @@ func updateDuckDNS(httpClient *http.Client, host, domain, password, ip string) (
 	return "", fmt.Errorf("DuckDNS responded with: %s", s)
 }
 
-func updateDreamhost(httpClient *http.Client, host, domain, password, ip, domainName string) error {
+func updateDreamhost(httpClient *http.Client, host, domain, key, ip, domainName string) error {
 	type dreamhostReponse struct {
 		Result string `json:"result"`
 		Data   string `json:"data"`
 	}
 	// List records
-	url := strings.ToLower(dreamhostURL + "/?key=" + password + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-list_records")
+	url := strings.ToLower(dreamhostURL + "/?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-list_records")
 	r, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -253,7 +255,7 @@ func updateDreamhost(httpClient *http.Client, host, domain, password, ip, domain
 		}
 	}
 	if found { // Found editable record with a different IP address, so remove it
-		url = strings.ToLower(dreamhostURL + "?key=" + password + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-remove_record&record=" + domain + "&type=A&value=" + oldIP)
+		url = strings.ToLower(dreamhostURL + "?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-remove_record&record=" + domain + "&type=A&value=" + oldIP)
 		r, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			return err
@@ -274,7 +276,7 @@ func updateDreamhost(httpClient *http.Client, host, domain, password, ip, domain
 		}
 	}
 	// Create the right record
-	url = strings.ToLower(dreamhostURL + "?key=" + password + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-add_record&record=" + domain + "&type=A&value=" + ip)
+	url = strings.ToLower(dreamhostURL + "?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-add_record&record=" + domain + "&type=A&value=" + ip)
 	r, err = http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err

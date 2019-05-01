@@ -9,18 +9,11 @@ services:
       - 8000:8000/tcp
     volumes:
       - ./data:/updater/data
+      - ./config.json:/updater/config.json:ro
     environment:
       - DELAY=300
       - ROOTURL=
       - LISTENINGPORT=8000
       - LOGGING=human
       - NODEID=0
-      - RECORD1=example.com,@,namecheap,provider,0e4512a9c45a4fe88313bcc2234bf547
-      - RECORD2=example.info,@,namecheap,duckduckgo,157fd2a9c45a4fe88313bcc2234bfd58
-      - RECORD3=example.io,www,namecheap,opendns,0e4512a9c45a4fe88313bcc2234bf547      
-      - RECORD4=example.info,subdomain,namecheap,222.145.121.59,4a67d2a9c45a4fe88313bcc2234bfd62
-      - RECORD5=example.org,*,godaddy,opendns,dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5:GuUFdVFj8nJ1M79RtdwmkZ
-      - RECORD6=example.app,@,godaddy,duckduckgo,dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5:GuUFdVFj8nJ1M79RtdwmkZ
-      - RECORD7=example.duckdns.org,@,duckdns,provider,064a0540-864c-4f0f-8bf5-23857452b0c1
-      - RECORD8=example2.duckdns.org,@,duckdns,opendns,064a0540-864c-4f0f-8bf5-23857452b0c1
     restart: always

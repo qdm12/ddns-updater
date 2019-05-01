@@ -13,6 +13,7 @@ import (
 	"ddns-updater/pkg/database"
 	"ddns-updater/pkg/healthcheck"
 	"ddns-updater/pkg/logging"
+	"ddns-updater/pkg/models"
 	"ddns-updater/pkg/network"
 	"ddns-updater/pkg/params"
 	"ddns-updater/pkg/server"
@@ -20,6 +21,15 @@ import (
 
 	"github.com/kyokomi/emoji"
 )
+
+func init() {
+	loggerMode := params.GetLoggerMode()
+	logging.SetGlobalLoggerMode(loggerMode)
+	nodeID := params.GetNodeID()
+	logging.SetGlobalLoggerNodeID(nodeID)
+	loggerLevel := params.GetLoggerLevel()
+	logging.SetGlobalLoggerLevel(loggerLevel)
+}
 
 func main() {
 	if healthcheck.Mode() {
@@ -31,21 +41,15 @@ func main() {
 	fmt.Println("######## Give some " + emoji.Sprint(":heart:") + "at #########")
 	fmt.Println("# github.com/qdm12/ddns-updater #")
 	fmt.Print("#################################\n\n")
-	loggerMode := params.GetLoggerMode()
-	logging.SetGlobalLoggerMode(loggerMode)
-	nodeID := params.GetNodeID()
-	logging.SetGlobalLoggerNodeID(nodeID)
+	logging.Warn("The RECORDn environment variables will be removed and replaced by the config.json file in the coming months. Please update your container configuration as soon as possible to avoid problems once the retrocompatibility is removed. See more information on github.com/qdm12/ddns-updater")
 	httpClient := &http.Client{Timeout: 10 * time.Second}
-	go waitForExit(httpClient)
 	dir := params.GetDir()
-	loggerLevel := params.GetLoggerLevel()
-	logging.SetGlobalLoggerLevel(loggerLevel)
 	listeningPort := params.GetListeningPort()
 	rootURL := params.GetRootURL()
 	delay := params.GetDelay()
-	recordsConfigs := params.GetRecordConfigs()
-	logging.Info("Found %d records to update", len(recordsConfigs))
 	dataDir := params.GetDataDir(dir)
+	settings := params.GetAllSettings(dir)
+	logging.Info("Found %d settings to update records", len(settings))
 	errs := network.ConnectivityChecks(httpClient, []string{"google.com"})
 	for _, err := range errs {
 		logging.Warn("%s", err)
@@ -54,24 +58,22 @@ func main() {
 	if err != nil {
 		logging.Fatal("%s", err)
 	}
-	for i := range recordsConfigs {
-		domain := recordsConfigs[i].Settings.Domain
-		host := recordsConfigs[i].Settings.Host
-		logging.Info("Reading history for domain %s and host %s", domain, host)
-		ips, tSuccess, err := sqlDb.GetIps(domain, host)
+	var recordsConfigs []models.RecordConfigType
+	for _, s := range settings {
+		logging.Info("Reading history from database for domain and host: %s %s", s.Domain, s.Host)
+		ips, tSuccess, err := sqlDb.GetIps(s.Domain, s.Host)
 		if err != nil {
 			logging.Fatal("%s", err)
 		}
-		recordsConfigs[i].M.Lock()
-		recordsConfigs[i].History.IPs = ips
-		recordsConfigs[i].History.TSuccess = tSuccess
-		recordsConfigs[i].M.Unlock()
+		recordsConfigs = append(recordsConfigs, models.NewRecordConfig(s, ips, tSuccess))
 	}
-	forceCh := make(chan struct{})
-	quitCh := make(chan struct{})
-	go update.TriggerServer(delay, forceCh, quitCh, recordsConfigs, httpClient, sqlDb)
-	forceCh <- struct{}{}
-	router := server.CreateRouter(rootURL, dir, forceCh, recordsConfigs)
+	chForce := make(chan struct{})
+	chQuit := make(chan struct{})
+	defer close(chForce)
+	go waitForExit(httpClient, chQuit)
+	go update.TriggerServer(delay, chForce, chQuit, recordsConfigs, httpClient, sqlDb)
+	chForce <- struct{}{}
+	router := server.CreateRouter(rootURL, dir, chForce, recordsConfigs)
 	logging.Info("Web UI listening on 0.0.0.0:%s%s", listeningPort, rootURL)
 	err = http.ListenAndServe("0.0.0.0:"+listeningPort, router)
 	if err != nil {
@@ -79,7 +81,7 @@ func main() {
 	}
 }
 
-func waitForExit(httpClient *http.Client) {
+func waitForExit(httpClient *http.Client, chQuit chan struct{}) {
 	signals := make(chan os.Signal)
 	signal.Notify(signals,
 		syscall.SIGINT,
@@ -91,5 +93,7 @@ func waitForExit(httpClient *http.Client) {
 	logging.Warn("Caught OS signal: %s", signal)
 	logging.Info("Closing HTTP client idle connections")
 	httpClient.CloseIdleConnections()
+	logging.Info("Sending quit signal to goroutines")
+	chQuit <- struct{}{} // this closes chQuit implicitely
 	os.Exit(0)
 }

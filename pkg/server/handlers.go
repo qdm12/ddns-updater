@@ -15,7 +15,7 @@ func healthcheckHandler(recordsConfigs []models.RecordConfigType) error {
 		}
 		ips, err := net.LookupIP(recordsConfigs[i].Settings.BuildDomainName())
 		if err != nil {
-			return fmt.Errorf("%s", err)
+			return err
 		}
 		if len(recordsConfigs[i].History.IPs) == 0 {
 			return fmt.Errorf("no set IP address found")

@@ -2,6 +2,7 @@ package models
 
 import (
 	"sync"
+	"time"
 )
 
 // RecordConfigType contains all the information to update and display a DNS record
@@ -9,13 +10,24 @@ type RecordConfigType struct { // internal
 	Settings SettingsType // fixed
 	Status   statusType   // changes for each update
 	History  historyType  // past information
-	M        sync.RWMutex
+	M        sync.RWMutex // TODO inherit
+}
+
+// NewRecordConfig returns a new recordConfig with settings
+func NewRecordConfig(settings SettingsType, IPs []string, tSuccess time.Time) RecordConfigType {
+	return RecordConfigType{
+		Settings: settings,
+		History: historyType{
+			IPs:      IPs,
+			TSuccess: tSuccess,
+		},
+	}
 }
 
 func (conf *RecordConfigType) String() string {
 	conf.M.RLock()
 	defer conf.M.RUnlock()
-	return conf.Settings.string() + ": " + conf.Status.string() + "; " + conf.History.string()
+	return conf.Settings.String() + ": " + conf.Status.string() + "; " + conf.History.string()
 }
 
 func (conf *RecordConfigType) toHTML() HTMLRow {

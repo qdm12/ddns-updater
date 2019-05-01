@@ -10,48 +10,26 @@ import (
 
 	"ddns-updater/pkg/logging"
 	"ddns-updater/pkg/models"
-	"ddns-updater/pkg/regex"
+
 	"github.com/spf13/viper"
 )
 
 // GetListeningPort obtains and checks the listening port from Viper (env variable or config file, etc.)
 func GetListeningPort() (listeningPort string) {
 	listeningPort = viper.GetString("listeningPort")
-	value, err := strconv.Atoi(listeningPort)
-	if err != nil {
-		logging.Fatal("listening port %s is not a valid integer", listeningPort)
-	} else if value < 1 {
-		logging.Fatal("listening port %s cannot be lower than 1", listeningPort)
-	} else if value < 1024 {
-		if os.Geteuid() == 0 {
-			logging.Warn("listening port %s allowed to be in the reserved system ports range as you are running as root", listeningPort)
-		} else if os.Geteuid() == -1 {
-			logging.Warn("listening port %s allowed to be in the reserved system ports range as you are running in Windows", listeningPort)
-		} else {
-			logging.Fatal("listening port %s cannot be in the reserved system ports range (1 to 1023) when running without root", listeningPort)
-		}
-	} else if value > 65535 {
-		logging.Fatal("listening port %s cannot be higher than 65535", listeningPort)
-	} else if value > 49151 {
-		// dynamic and/or private ports.
-		logging.Warn("listening port %s is in the dynamic/private ports range (above 49151)", listeningPort)
-	} else if value == 9999 {
-		logging.Fatal("listening port %s cannot be set to the local healthcheck port 9999", listeningPort)
-	}
+	verifyListeningPort(listeningPort)
 	return listeningPort
 }
 
 // GetRootURL obtains and checks the root URL from Viper (env variable or config file, etc.)
 func GetRootURL() string {
 	rootURL := viper.GetString("rooturl")
-	if strings.ContainsAny(rootURL, " .?~#") {
-		logging.Fatal("root URL %s contains invalid characters", rootURL)
-	}
+	verifyRootURL(rootURL)
 	rootURL = strings.ReplaceAll(rootURL, "//", "/")
 	return strings.TrimSuffix(rootURL, "/") // already have / from paths of router
 }
 
-// GetDelay obtains and delay duration between each updates from Viper (env variable or config file, etc.)
+// GetDelay obtains the global delay duration between each updates from Viper (env variable or config file, etc.)
 func GetDelay() time.Duration {
 	delayStr := viper.GetString("delay")
 	delayInt, err := strconv.ParseInt(delayStr, 10, 64)
@@ -64,7 +42,7 @@ func GetDelay() time.Duration {
 	return time.Duration(delayInt)
 }
 
-// GetDataDir obtains and data directory from Viper (env variable or config file, etc.)
+// GetDataDir obtains the data directory from Viper (env variable or config file, etc.)
 func GetDataDir(dir string) string {
 	dataDir := viper.GetString("datadir")
 	if len(dataDir) == 0 {
@@ -113,62 +91,86 @@ func stringInAny(s string, ss ...string) bool {
 	return false
 }
 
-// GetRecordConfigs get the DNS update configurations from the environment variables RECORD1, RECORD2, ...
-func GetRecordConfigs() (recordsConfigs []models.RecordConfigType) {
+func getSettingsEnv() (settings []models.SettingsType, warnings []string, err error) {
 	var i uint64 = 1
 	for {
-		config := os.Getenv(fmt.Sprintf("RECORD%d", i))
-		if config == "" {
+		s := os.Getenv(fmt.Sprintf("RECORD%d", i))
+		if s == "" {
 			break
 		}
-		x := strings.Split(config, ",")
+		x := strings.Split(s, ",")
 		if len(x) != 5 {
-			logging.Fatal("The configuration entry %s should be in the format 'domain,host,provider,ipmethod,password'", config)
+			warnings = append(warnings, "configuration entry "+s+" should be in the format 'domain,host,provider,ipmethod,password'")
+			continue
 		}
-		if !regex.Domain(x[0]) {
-			logging.Fatal("The domain name %s is not valid for entry %s", x[0], config)
+		provider, err := models.ParseProvider(x[2])
+		if err != nil {
+			warnings = append(warnings, err.Error())
+			continue
 		}
-		if len(x[1]) == 0 {
-			logging.Fatal("The host for entry %s must have one character at least", config)
-		} // TODO test when it does not exist
-		if stringInAny(x[2], "duckdns", "dreamhost") && x[1] != "@" {
-			logging.Fatal("The host %s can only be '@' for entry %s", x[1], config)
+		IPMethod, err := models.ParseIPMethod(x[3])
+		if err != nil {
+			warnings = append(warnings, err.Error())
+			continue
 		}
-		if !stringInAny(x[2], "namecheap", "godaddy", "duckdns", "dreamhost") {
-			logging.Fatal("The DNS provider %s is not supported for entry %s", x[2], config)
-		}
-		if stringInAny(x[2], "namecheap", "duckdns") {
-			if !stringInAny(x[3], "duckduckgo", "opendns", "provider") && regex.FindIP(x[3]) == "" {
-				logging.Fatal("The IP query method %s is not valid for entry %s", x[3], config)
+		var host, key, secret, token, password string
+		switch provider {
+		case models.PROVIDERGODADDY:
+			host = x[1]
+			arr := strings.Split(x[4], ":")
+			if len(arr) != 2 {
+				warnings = append(warnings, "GoDaddy password (key:secret) is not valid for entry "+s)
+				continue
 			}
-		} else if !stringInAny(x[3], "duckduckgo", "opendns") && regex.FindIP(x[3]) == "" {
-			logging.Fatal("The IP query method %s is not valid for entry %s", x[3], config)
+			key = arr[0]
+			secret = arr[1]
+		case models.PROVIDERNAMECHEAP:
+			host = x[1]
+			password = x[4]
+		case models.PROVIDERDUCKDNS:
+			host = "@"
+			token = x[4]
+		case models.PROVIDERDREAMHOST:
+			host = "@"
+			key = x[4]
 		}
-		if x[2] == "namecheap" && !regex.NamecheapPassword(x[4]) {
-			logging.Fatal("The Namecheap password query parameter is not valid for entry %s", config)
+		setting := models.SettingsType{
+			Domain:   x[0],
+			Host:     host,
+			Provider: provider,
+			IPmethod: IPMethod,
+			Password: password,
+			Key:      key,
+			Secret:   secret,
+			Token:    token,
 		}
-		if x[2] == "godaddy" && !regex.GodaddyKeySecret(x[4]) {
-			logging.Fatal("The GoDaddy password (key:secret) query parameter is not valid for entry %s", config)
+		err = setting.Verify()
+		if err != nil {
+			warnings = append(warnings, err.Error())
+			continue
 		}
-		if x[2] == "duckdns" && !regex.DuckDNSToken(x[4]) {
-			logging.Fatal("The DuckDNS password (token) query parameter is not valid for entry %s", config)
-		}
-		if x[2] == "dreamhost" && !regex.DreamhostKey(x[4]) {
-			logging.Fatal("The Dreamhost password (key) query parameter is not valid for entry %s", config)
-		}
-		recordsConfigs = append(recordsConfigs, models.RecordConfigType{
-			Settings: models.SettingsType{
-				Domain:   x[0],
-				Host:     x[1],
-				Provider: x[2],
-				IPmethod: x[3],
-				Password: x[4],
-			},
-		})
+		settings = append(settings, setting)
 		i++
 	}
-	if len(recordsConfigs) == 0 {
-		logging.Fatal("No record to update was found in the environment variable RECORD1")
+	if len(settings) == 0 {
+		return nil, warnings, fmt.Errorf("no valid settings was found in the environment variables")
 	}
-	return recordsConfigs
+	return settings, warnings, nil
+}
+
+// GetAllSettings reads all settings from environment variables and config.json
+func GetAllSettings(dir string) []models.SettingsType {
+	settingsEnv, warningsEnv, errEnv := getSettingsEnv()
+	settingsJSON, warningsJSON, errJSON := getSettingsJSON(dir + "/config.json")
+	if errEnv != nil && errJSON != nil {
+		logging.Fatal("%s AND %s", errEnv, errJSON)
+	} else if errEnv != nil {
+		logging.Warn("%s", errEnv)
+	} else if errJSON != nil {
+		logging.Warn("%s", errJSON)
+	}
+	for _, w := range append(warningsEnv, warningsJSON...) {
+		logging.Warn(w)
+	}
+	return append(settingsEnv, settingsJSON...)
 }

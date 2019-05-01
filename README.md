@@ -36,13 +36,20 @@
 ## Setup
 
 1. To setup your domains initially, see the [Domain set up](#domain-set-up) section.
-1. Create a *config.json* file owned by user `1000` with read permission
+1. Create a directory of your choice, say *data* with a file named **config.json** inside:
 
     ```sh
-    touch config.json && chown 1000 config.json && chmod 400 config.json
+    mkdir data
+    touch data/config.json
+    # Owned by user ID of Docker container (1000)
+    chown -R 1000 data
+    # all access (for sqlite database)
+    chmod 700 data
+    # read access only
+    chmod 400 data/config.json
     ```
 
-1. Modify the *config.json* file similarly to:
+1. Modify the *data/config.json* file similarly to:
 
     ```json
     {
@@ -84,19 +91,10 @@
 1. Use the following command:
 
     ```bash
-    docker run -d -p 8000:8000/tcp -v $(pwd)/config.json:/updater/config.json:ro qmcgaw/ddns-updater
+    docker run -d -p 8000:8000/tcp -v $(pwd)/data:/updater/data qmcgaw/ddns-updater
     ```
 
     - You can also use [docker-compose.yml](https://github.com/qdm12/ddns-updater/blob/master/docker-compose.yml)
-    - You can add history persitence with:
-
-        ```bash
-        mkdir data && chown 1000 data && chmod -R 700 data
-        docker run -d -p 8000:8000/tcp \
-        -v $(pwd)/config.json:/updater/config.json:ro \
-        -v $(pwd)/data:/updater/data \
-        qmcgaw/ddns-updater
-        ```
 
 ## Configuration
 

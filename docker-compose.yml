@@ -9,7 +9,6 @@ services:
       - 8000:8000/tcp
     volumes:
       - ./data:/updater/data
-      - ./config.json:/updater/config.json:ro
     environment:
       - DELAY=300
       - ROOTURL=

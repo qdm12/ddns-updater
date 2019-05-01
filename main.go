@@ -48,7 +48,7 @@ func main() {
 	rootURL := params.GetRootURL()
 	delay := params.GetDelay()
 	dataDir := params.GetDataDir(dir)
-	settings := params.GetAllSettings(dir)
+	settings := params.GetAllSettings(dataDir)
 	logging.Info("Found %d settings to update records", len(settings))
 	errs := network.ConnectivityChecks(httpClient, []string{"google.com"})
 	for _, err := range errs {

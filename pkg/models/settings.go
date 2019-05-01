@@ -14,10 +14,14 @@ type SettingsType struct {
 	IPmethod IPMethodType
 	Delay    time.Duration
 	// Provider dependent fields
-	Password string
-	Key      string
-	Secret   string
-	Token    string
+	Password       string // Namecheap only
+	Key            string // GoDaddy, Dreamhost and Cloudflare only
+	Secret         string // GoDaddy only
+	Token          string // DuckDNS only
+	Email          string // Cloudflare only
+	UserServiceKey string // Cloudflare only
+	ZoneIdentifier string // Cloudflare only
+	Identifier     string // Cloudflare only
 }
 
 func (settings *SettingsType) String() (s string) {
@@ -101,6 +105,31 @@ func (settings *SettingsType) Verify() error {
 	case PROVIDERDREAMHOST:
 		if !regex.DreamhostKey(settings.Key) {
 			return fmt.Errorf("the Dreamhost key is not valid for settings %s", settings)
+		}
+		if settings.Host != "@" {
+			return fmt.Errorf("the host %s can only be @ for settings %s", settings.Host, settings)
+		}
+		if settings.IPmethod == IPMETHODPROVIDER {
+			return fmt.Errorf("the provider %s does not support the IP update method %s", settings.Provider, settings.IPmethod)
+		}
+	case PROVIDERCLOUDFLARE:
+		if settings.UserServiceKey == "" { // email and key must be provided
+			if !regex.CloudflareKey(settings.Key) {
+				return fmt.Errorf("the Cloudflare key is not valid for settings %s", settings)
+			}
+			if !regex.Email(settings.Email) {
+				return fmt.Errorf("the Cloudflare email %s is not valid for settings %s", settings.Email, settings)
+			}
+		} else { // only user service key
+			if !regex.CloudflareUserServiceKey(settings.UserServiceKey) {
+				return fmt.Errorf("the Cloudflare user service key is not valid for settings %s", settings)
+			}
+		}
+		if len(settings.ZoneIdentifier) == 0 {
+			return fmt.Errorf("Cloudflare zone identifier was not provided")
+		}
+		if len(settings.Identifier) == 0 {
+			return fmt.Errorf("Cloudflare identifier was not provided")
 		}
 		if settings.Host != "@" {
 			return fmt.Errorf("the host %s can only be @ for settings %s", settings.Host, settings)

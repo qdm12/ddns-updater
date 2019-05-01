@@ -18,10 +18,11 @@ import (
 )
 
 const (
-	namecheapURL = "https://dynamicdns.park-your-domain.com/update"
-	godaddyURL   = "https://api.godaddy.com/v1/domains"
-	duckdnsURL   = "https://www.duckdns.org/update"
-	dreamhostURL = "https://api.dreamhost.com"
+	namecheapURL  = "https://dynamicdns.park-your-domain.com/update"
+	godaddyURL    = "https://api.godaddy.com/v1/domains"
+	duckdnsURL    = "https://www.duckdns.org/update"
+	dreamhostURL  = "https://api.dreamhost.com"
+	cloudflareURL = "https://api.cloudflare.com/client/v4"
 )
 
 func update(
@@ -55,9 +56,11 @@ func update(
 	} else if recordConfig.Settings.Provider == models.PROVIDERGODADDY {
 		err = updateGoDaddy(httpClient, recordConfig.Settings.Host, recordConfig.Settings.Domain, recordConfig.Settings.Key, recordConfig.Settings.Secret, ip)
 	} else if recordConfig.Settings.Provider == models.PROVIDERDUCKDNS {
-		ip, err = updateDuckDNS(httpClient, recordConfig.Settings.Host, recordConfig.Settings.Domain, recordConfig.Settings.Token, ip)
+		ip, err = updateDuckDNS(httpClient, recordConfig.Settings.Domain, recordConfig.Settings.Token, ip)
 	} else if recordConfig.Settings.Provider == models.PROVIDERDREAMHOST {
-		err = updateDreamhost(httpClient, recordConfig.Settings.Host, recordConfig.Settings.Domain, recordConfig.Settings.Key, ip, recordConfig.Settings.BuildDomainName())
+		err = updateDreamhost(httpClient, recordConfig.Settings.Domain, recordConfig.Settings.Key, ip, recordConfig.Settings.BuildDomainName())
+	} else if recordConfig.Settings.Provider == models.PROVIDERCLOUDFLARE {
+		err = updateCloudflare(httpClient, recordConfig.Settings.Domain, recordConfig.Settings.ZoneIdentifier, recordConfig.Settings.Identifier, recordConfig.Settings.Email, recordConfig.Settings.Key, recordConfig.Settings.UserServiceKey, ip)
 	} else {
 		err = fmt.Errorf("provider %s is not supported", recordConfig.Settings.Provider)
 	}
@@ -140,7 +143,7 @@ func updateNamecheap(httpClient *http.Client, host, domain, password, ip string)
 
 func updateGoDaddy(httpClient *http.Client, host, domain, key, secret, ip string) error {
 	if len(ip) == 0 {
-		return fmt.Errorf("cannot have a DNS provider provided IP address for GoDaddy")
+		return fmt.Errorf("cannot have a DNS provider-provided IP address for GoDaddy")
 	}
 	type goDaddyPutBody struct {
 		Data string `json:"data"` // IP address to update to
@@ -177,7 +180,68 @@ func updateGoDaddy(httpClient *http.Client, host, domain, key, secret, ip string
 	return nil
 }
 
-func updateDuckDNS(httpClient *http.Client, host, domain, token, ip string) (newIP string, err error) {
+func updateCloudflare(httpClient *http.Client, domain, zoneIdentifier, identifier, email, key, userServiceKey, ip string) error {
+	if len(ip) == 0 {
+		return fmt.Errorf("cannot have a DNS provider-provided IP address for Cloudflare")
+	}
+	type cloudflarePutBody struct {
+		Type    string `json:"type"`    // forced to A
+		Name    string `json:"name"`    // DNS record name i.e. example.com
+		Content string `json:"content"` // ip address
+	}
+	URL := cloudflareURL + "/" + zoneIdentifier + "/dns_records/" + identifier
+	r, err := network.BuildHTTPPut(
+		URL,
+		cloudflarePutBody{
+			Type:    "A",
+			Name:    domain,
+			Content: ip,
+		},
+	)
+	if err != nil {
+		return err
+	}
+	if len(userServiceKey) > 0 {
+		r.Header.Set("X-Auth-User-Service-Key", userServiceKey)
+	} else if len(email) > 0 && len(key) > 0 {
+		r.Header.Set("X-Auth-Email", email)
+		r.Header.Set("X-Auth-Key", key)
+	} else {
+		return fmt.Errorf("email and key are both unset and no user service key was provided")
+	}
+	status, content, err := network.DoHTTPRequest(httpClient, r)
+	if err != nil {
+		return err
+	}
+	if status > 415 {
+		return fmt.Errorf("bad HTTP status %d", status)
+	}
+	var parsedJSON struct {
+		Success bool `json:"success"`
+		Errors  []struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		} `json:"errors"`
+		Result struct {
+			Content string `json:"content"`
+		} `json:"result"`
+	}
+	err = json.Unmarshal(content, &parsedJSON)
+	if err != nil {
+		return err
+	} else if !parsedJSON.Success {
+		var errStr string
+		for _, e := range parsedJSON.Errors {
+			errStr += fmt.Sprintf("error %d: %s; ", e.Code, e.Message)
+		}
+		return fmt.Errorf(errStr)
+	} else if parsedJSON.Result.Content != ip {
+		return fmt.Errorf("returned IP address is %s and not %s", parsedJSON.Result.Content, ip)
+	}
+	return nil
+}
+
+func updateDuckDNS(httpClient *http.Client, domain, token, ip string) (newIP string, err error) {
 	url := strings.ToLower(duckdnsURL + "?domains=" + domain + "&token=" + token + "&verbose=true")
 	if len(ip) > 0 {
 		url += "&ip=" + ip
@@ -206,7 +270,7 @@ func updateDuckDNS(httpClient *http.Client, host, domain, token, ip string) (new
 	return "", fmt.Errorf("DuckDNS responded with: %s", s)
 }
 
-func updateDreamhost(httpClient *http.Client, host, domain, key, ip, domainName string) error {
+func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string) error {
 	type dreamhostReponse struct {
 		Result string `json:"result"`
 		Data   string `json:"data"`

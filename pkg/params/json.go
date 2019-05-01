@@ -15,15 +15,19 @@ type configType struct {
 }
 
 type settingsType struct {
-	Provider string `json:"provider"`
-	Domain   string `json:"domain"`
-	IPMethod string `json:"ip_method"`
-	Delay    int    `json:"delay"`
-	Host     string `json:"host"`
-	Password string `json:"password"`
-	Key      string `json:"key"`
-	Secret   string `json:"secret"`
-	Token    string `json:"token"`
+	Provider       string `json:"provider"`
+	Domain         string `json:"domain"`
+	IPMethod       string `json:"ip_method"`
+	Delay          int    `json:"delay"`
+	Host           string `json:"host"`
+	Password       string `json:"password"`         // Namecheap only
+	Key            string `json:"key"`              // GoDaddy, Dreamhost and Cloudflare only
+	Secret         string `json:"secret"`           // GoDaddy only
+	Token          string `json:"token"`            // DuckDNS only
+	Email          string `json:"email"`            // Cloudflare only
+	UserServiceKey string `json:"user_service_key"` // Cloudflare only
+	ZoneIdentifier string `json:"zone_identifier"`  // Cloudflare only
+	Identifier     string `json:"identifier"`       // Cloudflare only
 }
 
 func getSettingsJSON(filePath string) (settings []models.SettingsType, warnings []string, err error) {
@@ -58,15 +62,19 @@ func getSettingsJSON(filePath string) (settings []models.SettingsType, warnings 
 			host = "@" // only one choice
 		}
 		setting := models.SettingsType{
-			Provider: provider,
-			Domain:   s.Domain,
-			Host:     host,
-			IPmethod: IPMethod,
-			Delay:    delay,
-			Password: s.Password,
-			Key:      s.Key,
-			Secret:   s.Secret,
-			Token:    s.Token,
+			Provider:       provider,
+			Domain:         s.Domain,
+			Host:           host,
+			IPmethod:       IPMethod,
+			Delay:          delay,
+			Password:       s.Password,
+			Key:            s.Key,
+			Secret:         s.Secret,
+			Token:          s.Token,
+			Email:          s.Email,
+			UserServiceKey: s.UserServiceKey,
+			ZoneIdentifier: s.ZoneIdentifier,
+			Identifier:     s.Identifier,
 		}
 		err = setting.Verify()
 		if err != nil {

@@ -1,6 +1,6 @@
 # Lightweight DDNS Updater with Docker and web UI
 
-*Light container updating DNS A records periodically for GoDaddy, Namecheap, Dreamhost and DuckDNS*
+*Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost and DuckDNS*
 
 **WARNING: Please change your configuration to use *config.json*, see the [config.json section](#configuration)**
 
@@ -25,7 +25,7 @@
 
 ## Features
 
-- Updates periodically A records for different DNS providers: Namecheap, GoDaddy, Dreamhost, DuckDNS (ask for more)
+- Updates periodically A records for different DNS providers: Namecheap, GoDaddy, Cloudflare, Dreamhost, DuckDNS (ask for more)
 - Web User interface
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
@@ -129,6 +129,12 @@ Each DNS provider has a specific set of extra required parameters as follows:
     - `"password"`
 - Dreamhost:
     - `"key"`
+- Cloudflare:
+    - `"zone_identifier"`
+    - `"identifier"`
+    - Either (or both):
+        - Email `"email"` and Key `"key"`
+        - User service key `"user_service_key"`
 
 ### Environment variables
 
@@ -207,6 +213,10 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 *See [duckdns website](https://duckdns.org)*
 
 ### Dreamhost
+
+*Awaiting a contribution*
+
+### Cloudflare
 
 *Awaiting a contribution*
 

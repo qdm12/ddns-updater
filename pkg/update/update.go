@@ -60,7 +60,7 @@ func update(
 	} else if recordConfig.Settings.Provider == models.PROVIDERDREAMHOST {
 		err = updateDreamhost(httpClient, recordConfig.Settings.Domain, recordConfig.Settings.Key, ip, recordConfig.Settings.BuildDomainName())
 	} else if recordConfig.Settings.Provider == models.PROVIDERCLOUDFLARE {
-		err = updateCloudflare(httpClient, recordConfig.Settings.Domain, recordConfig.Settings.ZoneIdentifier, recordConfig.Settings.Identifier, recordConfig.Settings.Email, recordConfig.Settings.Key, recordConfig.Settings.UserServiceKey, ip)
+		err = updateCloudflare(httpClient, recordConfig.Settings.ZoneIdentifier, recordConfig.Settings.Identifier, recordConfig.Settings.Host, recordConfig.Settings.Email, recordConfig.Settings.Key, recordConfig.Settings.UserServiceKey, ip)
 	} else {
 		err = fmt.Errorf("provider %s is not supported", recordConfig.Settings.Provider)
 	}
@@ -180,7 +180,7 @@ func updateGoDaddy(httpClient *http.Client, host, domain, key, secret, ip string
 	return nil
 }
 
-func updateCloudflare(httpClient *http.Client, domain, zoneIdentifier, identifier, email, key, userServiceKey, ip string) error {
+func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host, email, key, userServiceKey, ip string) error {
 	if len(ip) == 0 {
 		return fmt.Errorf("cannot have a DNS provider-provided IP address for Cloudflare")
 	}
@@ -189,12 +189,12 @@ func updateCloudflare(httpClient *http.Client, domain, zoneIdentifier, identifie
 		Name    string `json:"name"`    // DNS record name i.e. example.com
 		Content string `json:"content"` // ip address
 	}
-	URL := cloudflareURL + "/" + zoneIdentifier + "/dns_records/" + identifier
+	URL := cloudflareURL + "/zones/" + zoneIdentifier + "/dns_records/" + identifier
 	r, err := network.BuildHTTPPut(
 		URL,
 		cloudflarePutBody{
 			Type:    "A",
-			Name:    domain,
+			Name:    host,
 			Content: ip,
 		},
 	)

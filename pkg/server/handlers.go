@@ -20,8 +20,8 @@ func healthcheckHandler(recordsConfigs []models.RecordConfigType) error {
 		if len(recordsConfigs[i].History.IPs) == 0 {
 			return fmt.Errorf("no set IP address found")
 		}
-		for i := range ips {
-			if ips[i].String() != recordsConfigs[i].History.IPs[0] {
+		for _, ip := range ips {
+			if ip.String() != recordsConfigs[i].History.IPs[0] {
 				return fmt.Errorf(
 					"lookup IP address of %s is not %s",
 					recordsConfigs[i].Settings.BuildDomainName(),

@@ -27,8 +27,6 @@ func verifyListeningPort(listeningPort string) {
 	} else if value > 49151 {
 		// dynamic and/or private ports.
 		logging.Warn("listening port %s is in the dynamic/private ports range (above 49151)", listeningPort)
-	} else if value == 9999 {
-		logging.Fatal("listening port %s cannot be set to the local healthcheck port 9999", listeningPort)
 	}
 }
 

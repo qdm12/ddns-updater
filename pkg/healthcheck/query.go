@@ -39,7 +39,7 @@ func Query() {
 	if err != nil {
 		logging.Fatal("Cannot build HTTP request: %s", err)
 	}
-	client := &http.Client{Timeout: time.Duration(1000) * time.Millisecond}
+	client := &http.Client{Timeout: 2 * time.Second}
 	response, err := client.Do(request)
 	if err != nil {
 		logging.Fatal("Cannot execute HTTP request: %s", err)

@@ -7,10 +7,10 @@ import (
 
 // RecordConfigType contains all the information to update and display a DNS record
 type RecordConfigType struct { // internal
-	Settings SettingsType // fixed
-	Status   statusType   // changes for each update
-	History  historyType  // past information
-	M        sync.RWMutex // TODO inherit
+	Settings SettingsType  // fixed
+	Status   statusType    // changes for each update
+	History  historyType   // past information
+	M        *sync.RWMutex // TODO inherit
 }
 
 // NewRecordConfig returns a new recordConfig with settings
@@ -21,6 +21,7 @@ func NewRecordConfig(settings SettingsType, IPs []string, tSuccess time.Time) Re
 			IPs:      IPs,
 			TSuccess: tSuccess,
 		},
+		M: new(sync.RWMutex),
 	}
 }
 
@@ -30,9 +31,7 @@ func (conf *RecordConfigType) String() string {
 	return conf.Settings.String() + ": " + conf.Status.string() + "; " + conf.History.string()
 }
 
-func (conf *RecordConfigType) toHTML() HTMLRow {
-	conf.M.RLock()
-	defer conf.M.RUnlock()
+func (conf RecordConfigType) toHTML() HTMLRow {
 	row := HTMLRow{
 		Domain:   conf.Settings.getHTMLDomain(),
 		Host:     conf.Settings.Host,

@@ -131,9 +131,6 @@ func (settings *SettingsType) Verify() error {
 		if len(settings.Identifier) == 0 {
 			return fmt.Errorf("Cloudflare identifier was not provided")
 		}
-		if settings.Host != "@" {
-			return fmt.Errorf("the host %s can only be @ for settings %s", settings.Host, settings)
-		}
 		if settings.IPmethod == IPMETHODPROVIDER {
 			return fmt.Errorf("the provider %s does not support the IP update method %s", settings.Provider, settings.IPmethod)
 		}

@@ -109,6 +109,7 @@ The following parameters are available to all DNS hosts providers:
     - `namecheap`
     - `duckdns`
     - `dreamhost`
+    - `cloudflare`
 - `"domain"` is your domain name
 - `"ip_method"` is the method to obtain your public IP address and can be
     - `provider` means the public IP is automatically determined by the DNS provider (**only for DuckDNs and Namecheap**)
@@ -132,6 +133,7 @@ Each DNS provider has a specific set of extra required parameters as follows:
 - Cloudflare:
     - `"zone_identifier"`
     - `"identifier"`
+    - `"host"` is your host and can be a subdomain, `@` or `*` generally
     - Either (or both):
         - Email `"email"` and Key `"key"`
         - User service key `"user_service_key"`
@@ -218,7 +220,23 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 ### Cloudflare
 
-*Awaiting a contribution*
+1. Make sure you have `curl` installed
+1. Obtain your API key from Cloudflare website ([see this](https://support.cloudflare.com/hc/en-us/articles/200167836-Where-do-I-find-my-Cloudflare-API-key-))
+1. Obtain your zone identifier for your domain name, from the domain's overview page written as *Zone ID*
+1. Find your **identifier** in the `id` field with
+
+    ```sh
+    EMAIL=example@example.com
+    APIKEY=aaaaaaaaaaaaaaaaaa
+    curl -X GET "https://api.cloudflare.com/client/v4/zones/945e08a9672f6da8e9c061967f3a9301/dns_records" \
+        -H "X-Auth-Email: $EMAIL" \
+        -H "X-Auth-Key: $APIKEY" \
+        -H "Content-Type: application/json"
+    ```
+
+You can now fill in the necessary parameters in *config.json*
+
+Special thanks to @Starttoaster for helping out with the [documentation](https://gist.github.com/Starttoaster/07d568c2a99ad7631dd776688c988326) and testing.
 
 ## Testing
 

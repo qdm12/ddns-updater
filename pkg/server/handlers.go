@@ -13,6 +13,9 @@ func healthcheckHandler(recordsConfigs []models.RecordConfigType) error {
 		if recordsConfigs[i].Status.Code == models.FAIL {
 			return fmt.Errorf("%s", recordsConfigs[i].String())
 		}
+		if recordsConfigs[i].Settings.NoDNSLookup {
+			continue
+		}
 		ips, err := net.LookupIP(recordsConfigs[i].Settings.BuildDomainName())
 		if err != nil {
 			return err

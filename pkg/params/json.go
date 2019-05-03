@@ -19,6 +19,7 @@ type settingsType struct {
 	Domain         string `json:"domain"`
 	IPMethod       string `json:"ip_method"`
 	Delay          int    `json:"delay"`
+	NoDNSLookup    bool   `json:"no_dns_lookup"`
 	Host           string `json:"host"`
 	Password       string `json:"password"`         // Namecheap only
 	Key            string `json:"key"`              // GoDaddy, Dreamhost and Cloudflare only
@@ -67,6 +68,7 @@ func getSettingsJSON(filePath string) (settings []models.SettingsType, warnings 
 			Host:           host,
 			IPmethod:       IPMethod,
 			Delay:          delay,
+			NoDNSLookup:    s.NoDNSLookup,
 			Password:       s.Password,
 			Key:            s.Key,
 			Secret:         s.Secret,

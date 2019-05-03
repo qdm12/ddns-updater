@@ -8,11 +8,12 @@ import (
 
 // SettingsType contains the elements to update the DNS record
 type SettingsType struct {
-	Domain   string
-	Host     string
-	Provider ProviderType
-	IPmethod IPMethodType
-	Delay    time.Duration
+	Domain      string
+	Host        string
+	Provider    ProviderType
+	IPmethod    IPMethodType
+	Delay       time.Duration
+	NoDNSLookup bool
 	// Provider dependent fields
 	Password       string // Namecheap only
 	Key            string // GoDaddy, Dreamhost and Cloudflare only

@@ -116,6 +116,7 @@ The following parameters are available to all DNS hosts providers:
     - `duckduckgo` using [https://duckduckgo.com/?q=ip](https://duckduckgo.com/?q=ip)
     - `opendns` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
 - `"delay"` is an **optional** integer delay in seconds between each update. It defaults to the `DELAY` environment variable which itself defaults to 5 minutes.
+- `"no_dns_lookup"` is **optional**, to prevent the regular Docker healthcheck from running a DNS lookup on your domain. This is useful in some corner cases.
 
 Each DNS provider has a specific set of extra required parameters as follows:
 

@@ -162,15 +162,15 @@ func getSettingsEnv() (settings []models.SettingsType, warnings []string, err er
 func GetAllSettings(dir string) []models.SettingsType {
 	settingsEnv, warningsEnv, errEnv := getSettingsEnv()
 	settingsJSON, warningsJSON, errJSON := getSettingsJSON(dir + "/config.json")
+	for _, w := range append(warningsEnv, warningsJSON...) {
+		logging.Warn(w)
+	}
 	if errEnv != nil && errJSON != nil {
 		logging.Fatal("%s AND %s", errEnv, errJSON)
 	} else if errEnv != nil {
 		logging.Warn("%s", errEnv)
 	} else if errJSON != nil {
 		logging.Warn("%s", errJSON)
-	}
-	for _, w := range append(warningsEnv, warningsJSON...) {
-		logging.Warn(w)
 	}
 	return append(settingsEnv, settingsJSON...)
 }

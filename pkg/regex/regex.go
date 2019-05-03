@@ -18,7 +18,7 @@ var (
 	GodaddySecret            = regexp.MustCompile(`^[A-Za-z0-9]{22}$`).MatchString
 	DuckDNSToken             = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$`).MatchString
 	NamecheapPassword        = regexp.MustCompile(`^[a-f0-9]{32}$`).MatchString
-	DreamhostKey             = regexp.MustCompile(`^[A-Z0-9]{16}$`).MatchString
-	CloudflareKey            = regexp.MustCompile(`^[A-Z0-9]*$`).MatchString
+	DreamhostKey             = regexp.MustCompile(`^[a-zA-Z0-9]{16}$`).MatchString
+	CloudflareKey            = regexp.MustCompile(`^[a-zA-Z0-9]*$`).MatchString
 	CloudflareUserServiceKey = regexp.MustCompile(`^v1\.0.*`).MatchString
 )

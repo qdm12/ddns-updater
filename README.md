@@ -4,17 +4,17 @@
 
 **WARNING: Please change your configuration to use *config.json*, see the [config.json section](#configuration)**
 
-[![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
+[![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
 
-[![Docker Build Status](https://img.shields.io/docker/build/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
+[![Docker Build Status](https://img.shields.io/docker/build/qmcgaw/ddns-updater.svg)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
 
 [![GitHub last commit](https://img.shields.io/github/last-commit/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/y/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
 [![GitHub issues](https://img.shields.io/github/issues/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
-[![Docker Stars](https://img.shields.io/docker/stars/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
-[![Docker Automated](https://img.shields.io/docker/automated/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
+[![Docker Pulls](https://img.shields.io/docker/pulls/qmcgaw/ddns-updater.svg)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
+[![Docker Stars](https://img.shields.io/docker/stars/qmcgaw/ddns-updater.svg)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
+[![Docker Automated](https://img.shields.io/docker/automated/qmcgaw/ddns-updater.svg)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
 
 [![Image size](https://images.microbadger.com/badges/image/qmcgaw/ddns-updater.svg)](https://microbadger.com/images/qmcgaw/ddns-updater)
 [![Image version](https://images.microbadger.com/badges/version/qmcgaw/ddns-updater.svg)](https://microbadger.com/images/qmcgaw/ddns-updater)
@@ -101,7 +101,9 @@
 ### Record configuration
 
 The record update updates configuration must be done through the *config.json* mentioned [above](#setup).
+
 **Support for record updates configuration through environment variables will be removed in the coming updates.**
+
 The following parameters are available to all DNS hosts providers:
 
 - `"provider"` is the DNS provider and can be:
@@ -227,12 +229,12 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 1. Find your **identifier** in the `id` field with
 
     ```sh
+    ZONEID=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     EMAIL=example@example.com
     APIKEY=aaaaaaaaaaaaaaaaaa
-    curl -X GET "https://api.cloudflare.com/client/v4/zones/945e08a9672f6da8e9c061967f3a9301/dns_records" \
+    curl -X GET "https://api.cloudflare.com/client/v4/zones/$ZONEID/dns_records" \
         -H "X-Auth-Email: $EMAIL" \
-        -H "X-Auth-Key: $APIKEY" \
-        -H "Content-Type: application/json"
+        -H "X-Auth-Key: $APIKEY"
     ```
 
 You can now fill in the necessary parameters in *config.json*
@@ -257,7 +259,6 @@ Special thanks to @Starttoaster for helping out with the [documentation](https:/
 
 ## TODOs
 
-- [ ] Cloudflare DNS registrar
 - [ ] Unit tests
 - [ ] Read parameters from JSON file
 - [ ] Finish readme

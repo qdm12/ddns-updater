@@ -1,0 +1,10 @@
+
+language: go
+go:
+  - 1.12.x
+env:
+  - GO111MODULE=on
+git:
+  depth: 1
+intall: go mod download
+script: go test -v -race ./...

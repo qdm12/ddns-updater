@@ -104,7 +104,7 @@ The record update updates configuration must be done through the *config.json* m
 
 **Support for record updates configuration through environment variables will be removed in the coming updates.**
 
-The following parameters are available to all DNS hosts providers:
+#### Required parameters for all
 
 - `"provider"` is the DNS provider and can be:
     - `godaddy`
@@ -117,29 +117,48 @@ The following parameters are available to all DNS hosts providers:
     - `provider` means the public IP is automatically determined by the DNS provider (**only for DuckDNs and Namecheap**)
     - `duckduckgo` using [https://duckduckgo.com/?q=ip](https://duckduckgo.com/?q=ip)
     - `opendns` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
-- `"delay"` is an **optional** integer delay in seconds between each update. It defaults to the `DELAY` environment variable which itself defaults to 5 minutes.
-- `"no_dns_lookup"` is **optional**, to prevent the regular Docker healthcheck from running a DNS lookup on your domain. This is useful in some corner cases.
 
-Each DNS provider has a specific set of extra required parameters as follows:
+Please then refer to your specific DNS host provider in the section below for eventual additional required parameters.
 
-- DuckDNS:
-    - `"token"`
-- GoDaddy:
-    - `"host"` is your host and can be a subdomain, `@` or `*` generally
-    - `"key"`
-    - `"secret"`
-- Namecheap:
+#### Optional parameters for all
+
+- `"delay"` is the delay in seconds between each update. It defaults to the `DELAY` environment variable which itself defaults to 5 minutes.
+- `"no_dns_lookup"` is a boolean to prevent the regular Docker healthcheck from running a DNS lookup on your domain. This is useful in some corner cases.
+
+#### Namecheap
+
+- Required:
     - `"host"` is your host and can be a subdomain, `@` or `*` generally
     - `"password"`
-- Dreamhost:
-    - `"key"`
-- Cloudflare:
+
+#### Cloudflare
+
+- Required:
     - `"zone_identifier"`
     - `"identifier"`
     - `"host"` is your host and can be a subdomain, `@` or `*` generally
-    - Either (or both):
+    - Either:
         - Email `"email"` and Key `"key"`
         - User service key `"user_service_key"`
+- Optional:
+    - `"proxied"` is a boolean to use the proxy services of Cloudflare
+
+#### GoDaddy
+
+- Required:
+    - `"host"` is your host and can be a subdomain, `@` or `*` generally
+    - `"key"`
+    - `"secret"`
+
+#### DuckDNS
+
+- Required:
+    - `"token"`
+
+#### Dreamhost
+
+- Required:
+    - `"key"`
 
 ### Environment variables
 
@@ -260,8 +279,6 @@ Special thanks to @Starttoaster for helping out with the [documentation](https:/
 ## TODOs
 
 - [ ] Unit tests
-- [ ] Read parameters from JSON file
-- [ ] Finish readme
 - [ ] Other types or records
 - [ ] ReactJS frontend
     - [ ] Live update of website

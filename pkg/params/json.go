@@ -29,6 +29,7 @@ type settingsType struct {
 	UserServiceKey string `json:"user_service_key"` // Cloudflare only
 	ZoneIdentifier string `json:"zone_identifier"`  // Cloudflare only
 	Identifier     string `json:"identifier"`       // Cloudflare only
+	Proxied        bool   `json:"proxied"`          // Cloudflare only
 }
 
 func getSettingsJSON(filePath string) (settings []models.SettingsType, warnings []string, err error) {
@@ -77,6 +78,7 @@ func getSettingsJSON(filePath string) (settings []models.SettingsType, warnings 
 			UserServiceKey: s.UserServiceKey,
 			ZoneIdentifier: s.ZoneIdentifier,
 			Identifier:     s.Identifier,
+			Proxied:        s.Proxied,
 		}
 		err = setting.Verify()
 		if err != nil {

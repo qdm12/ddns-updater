@@ -23,6 +23,7 @@ type SettingsType struct {
 	UserServiceKey string // Cloudflare only
 	ZoneIdentifier string // Cloudflare only
 	Identifier     string // Cloudflare only
+	Proxied        bool   // Cloudflare only
 }
 
 func (settings *SettingsType) String() (s string) {

@@ -31,7 +31,7 @@ func update(
 	sqlDb *database.DB,
 ) {
 	var err error
-	recordConfig.M.Lock() // TODO better to see updating in web UI
+	recordConfig.M.Lock() // TODO hide through getters and setters
 	defer recordConfig.M.Unlock()
 	recordConfig.Status.Time = time.Now()
 
@@ -52,15 +52,49 @@ func update(
 
 	// Update the record
 	if recordConfig.Settings.Provider == models.PROVIDERNAMECHEAP {
-		ip, err = updateNamecheap(httpClient, recordConfig.Settings.Host, recordConfig.Settings.Domain, recordConfig.Settings.Password, ip)
+		ip, err = updateNamecheap(
+			httpClient,
+			recordConfig.Settings.Host,
+			recordConfig.Settings.Domain,
+			recordConfig.Settings.Password,
+			ip,
+		)
 	} else if recordConfig.Settings.Provider == models.PROVIDERGODADDY {
-		err = updateGoDaddy(httpClient, recordConfig.Settings.Host, recordConfig.Settings.Domain, recordConfig.Settings.Key, recordConfig.Settings.Secret, ip)
+		err = updateGoDaddy(
+			httpClient,
+			recordConfig.Settings.Host,
+			recordConfig.Settings.Domain,
+			recordConfig.Settings.Key,
+			recordConfig.Settings.Secret,
+			ip,
+		)
 	} else if recordConfig.Settings.Provider == models.PROVIDERDUCKDNS {
-		ip, err = updateDuckDNS(httpClient, recordConfig.Settings.Domain, recordConfig.Settings.Token, ip)
+		ip, err = updateDuckDNS(
+			httpClient,
+			recordConfig.Settings.Domain,
+			recordConfig.Settings.Token,
+			ip,
+		)
 	} else if recordConfig.Settings.Provider == models.PROVIDERDREAMHOST {
-		err = updateDreamhost(httpClient, recordConfig.Settings.Domain, recordConfig.Settings.Key, ip, recordConfig.Settings.BuildDomainName())
+		err = updateDreamhost(
+			httpClient,
+			recordConfig.Settings.Domain,
+			recordConfig.Settings.Key,
+			ip,
+			recordConfig.Settings.BuildDomainName(),
+		)
 	} else if recordConfig.Settings.Provider == models.PROVIDERCLOUDFLARE {
-		err = updateCloudflare(httpClient, recordConfig.Settings.ZoneIdentifier, recordConfig.Settings.Identifier, recordConfig.Settings.Host, recordConfig.Settings.Email, recordConfig.Settings.Key, recordConfig.Settings.UserServiceKey, ip)
+		err = updateCloudflare(
+			httpClient,
+			recordConfig.Settings.ZoneIdentifier,
+			recordConfig.Settings.Identifier,
+			recordConfig.Settings.Host,
+			recordConfig.Settings.Email,
+			recordConfig.Settings.Key,
+			recordConfig.Settings.UserServiceKey,
+			ip,
+			recordConfig.Settings.Proxied,
+		)
 	} else {
 		err = fmt.Errorf("provider %s is not supported", recordConfig.Settings.Provider)
 	}
@@ -180,7 +214,7 @@ func updateGoDaddy(httpClient *http.Client, host, domain, key, secret, ip string
 	return nil
 }
 
-func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host, email, key, userServiceKey, ip string) error {
+func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host, email, key, userServiceKey, ip string, proxied bool) error {
 	if len(ip) == 0 {
 		return fmt.Errorf("cannot have a DNS provider-provided IP address for Cloudflare")
 	}
@@ -188,6 +222,7 @@ func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host,
 		Type    string `json:"type"`    // forced to A
 		Name    string `json:"name"`    // DNS record name i.e. example.com
 		Content string `json:"content"` // ip address
+		Proxied bool   `json:"proxied"` // whether the record is receiving the performance and security benefits of Cloudflare
 	}
 	URL := cloudflareURL + "/zones/" + zoneIdentifier + "/dns_records/" + identifier
 	r, err := network.BuildHTTPPut(
@@ -196,6 +231,7 @@ func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host,
 			Type:    "A",
 			Name:    host,
 			Content: ip,
+			Proxied: proxied,
 		},
 	)
 	if err != nil {

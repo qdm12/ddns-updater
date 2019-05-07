@@ -12,9 +12,10 @@ func GetPublicIP(client *http.Client, URL string) (ip string, err error) {
 	if err != nil {
 		return ip, fmt.Errorf("cannot get public IP address from %s: %s", URL, err)
 	}
-	ip = regex.FindIP(string(content))
-	if ip == "" {
+	ips := regex.SearchIP(string(content))
+	if ips == nil {
 		return ip, fmt.Errorf("no public IP found at %s: %s", URL, err)
 	}
+	ip = ips[0]
 	return ip, nil
 }

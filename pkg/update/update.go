@@ -135,7 +135,7 @@ func updateNamecheap(httpClient *http.Client, host, domain, password, ip string)
 	if parsedXML.IP == "" {
 		return "", fmt.Errorf("No IP address was sent back from DDNS server")
 	}
-	if regex.FindIP(parsedXML.IP) == "" {
+	if regex.SearchIP(parsedXML.IP) == nil {
 		return "", fmt.Errorf("IP address %s is not valid", parsedXML.IP)
 	}
 	return parsedXML.IP, nil
@@ -261,10 +261,11 @@ func updateDuckDNS(httpClient *http.Client, domain, token, ip string) (newIP str
 	if s[0:2] == "KO" {
 		return "", fmt.Errorf("Bad DuckDNS domain/token combination")
 	} else if s[0:2] == "OK" {
-		newIP = regex.FindIP(s)
-		if newIP == "" {
+		ips := regex.SearchIP(s)
+		if ips == nil {
 			return "", fmt.Errorf("DuckDNS did not respond with an IP address")
 		}
+		newIP = ips[0]
 		return newIP, nil
 	}
 	return "", fmt.Errorf("DuckDNS responded with: %s", s)

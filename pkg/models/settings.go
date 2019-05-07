@@ -75,7 +75,7 @@ func (settings *SettingsType) getHTMLIPMethod() string {
 
 // Verify verifies all the settings provided are valid
 func (settings *SettingsType) Verify() error {
-	if !regex.Domain(settings.Domain) {
+	if !regex.MatchDomain(settings.Domain) {
 		return fmt.Errorf("the domain name %s is not valid for settings %s", settings.Domain, settings)
 	}
 	if len(settings.Host) == 0 {
@@ -83,28 +83,28 @@ func (settings *SettingsType) Verify() error {
 	}
 	switch settings.Provider {
 	case PROVIDERNAMECHEAP:
-		if !regex.NamecheapPassword(settings.Password) {
+		if !regex.MatchNamecheapPassword(settings.Password) {
 			return fmt.Errorf("the Namecheap password is not valid for settings %s", settings)
 		}
 	case PROVIDERGODADDY:
-		if !regex.GodaddyKey(settings.Key) {
+		if !regex.MatchGodaddyKey(settings.Key) {
 			return fmt.Errorf("the GoDaddy key is not valid for settings %s", settings)
 		}
-		if !regex.GodaddySecret(settings.Secret) {
+		if !regex.MatchGodaddySecret(settings.Secret) {
 			return fmt.Errorf("the GoDaddy secret is not valid for settings %s", settings)
 		}
 		if settings.IPmethod == IPMETHODPROVIDER {
 			return fmt.Errorf("the provider %s does not support the IP update method %s", settings.Provider, settings.IPmethod)
 		}
 	case PROVIDERDUCKDNS:
-		if !regex.DuckDNSToken(settings.Token) {
+		if !regex.MatchDuckDNSToken(settings.Token) {
 			return fmt.Errorf("the DuckDNS token is not valid for settings %s", settings)
 		}
 		if settings.Host != "@" {
 			return fmt.Errorf("the host %s can only be @ for settings %s", settings.Host, settings)
 		}
 	case PROVIDERDREAMHOST:
-		if !regex.DreamhostKey(settings.Key) {
+		if !regex.MatchDreamhostKey(settings.Key) {
 			return fmt.Errorf("the Dreamhost key is not valid for settings %s", settings)
 		}
 		if settings.Host != "@" {
@@ -115,14 +115,14 @@ func (settings *SettingsType) Verify() error {
 		}
 	case PROVIDERCLOUDFLARE:
 		if settings.UserServiceKey == "" { // email and key must be provided
-			if !regex.CloudflareKey(settings.Key) {
+			if !regex.MatchCloudflareKey(settings.Key) {
 				return fmt.Errorf("the Cloudflare key is not valid for settings %s", settings)
 			}
-			if !regex.Email(settings.Email) {
+			if !regex.MatchEmail(settings.Email) {
 				return fmt.Errorf("the Cloudflare email %s is not valid for settings %s", settings.Email, settings)
 			}
 		} else { // only user service key
-			if !regex.CloudflareUserServiceKey(settings.UserServiceKey) {
+			if !regex.MatchCloudflareUserServiceKey(settings.UserServiceKey) {
 				return fmt.Errorf("the Cloudflare user service key is not valid for settings %s", settings)
 			}
 		}

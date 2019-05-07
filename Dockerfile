@@ -10,7 +10,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY pkg/ ./pkg/
 COPY main.go .
-RUN go test -v -race ./...
+RUN go test -v ./...
 RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags="-s -w" -o app .
 RUN [ "${BINCOMPRESS}" == "" ] || (upx -v --best --lzma --overlay=strip app && upx -t app)
 

@@ -30,8 +30,10 @@
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
-- Lightweight based on Go and **Alpine 3.9** with Sqlite and Ca-Certificates packages
+- Lightweight based on Go and *Alpine 3.9* with Sqlite and Ca-Certificates packages
 - Persistence with a sqlite database to store old IP addresses and previous update status
+- Docker healthcheck verifying the DNS resolution of your domains
+- Highly configurable
 
 ## Setup
 
@@ -129,7 +131,11 @@
     docker run -d -p 8000:8000/tcp -v $(pwd)/data:/updater/data qmcgaw/ddns-updater
     ```
 
-    - You can also use [docker-compose.yml](https://github.com/qdm12/ddns-updater/blob/master/docker-compose.yml)
+    You can also use [docker-compose.yml](https://github.com/qdm12/ddns-updater/blob/master/docker-compose.yml) with:
+
+    ```sh
+    docker-compose up -d
+    ```
 
 ## Configuration
 
@@ -313,6 +319,7 @@ Special thanks to @Starttoaster for helping out with the [documentation](https:/
 
 ## TODOs
 
+- [ ] Changed from sqlite to rqlite
 - [ ] Unit tests
 - [ ] Other types or records
 - [ ] ReactJS frontend

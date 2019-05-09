@@ -1,7 +1,6 @@
 version: '3'
 services:
   ddns-updater:
-    build: https://github.com/qdm12/ddns-updater.git
     image: qmcgaw/ddns-updater
     container_name: ddns-updater
     network_mode: bridge

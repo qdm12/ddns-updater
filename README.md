@@ -88,6 +88,41 @@
 
     See more information at the [configuration section](#configuration)
 
+1. <details><summary>CLICK IF YOU HAVE AN ARM DEVICE</summary><p>
+
+    1. Install **docker-compose** and **wget** on your host system
+    1. Download the *docker-compose.yml* file appropriate to your architecture:
+
+        ```sh
+        # for ARM 32 bit v6:
+        wget -O docker-compose.yml https://github.com/qdm12/ddns-updater/raw/master/arch/ARMv6.yml
+        # or for ARM 32 bit v7:
+        wget -O docker-compose.yml https://github.com/qdm12/ddns-updater/raw/master/arch/ARMv7.yml
+        # or for ARM 64 bit v8:
+        wget -O docker-compose.yml https://github.com/qdm12/ddns-updater/raw/master/arch/ARMv8.yml
+        ```
+
+    1. Build the image with your device (build parameters are in the docker-compose.yml file)
+
+        ```sh
+        docker-compose build
+        ```
+
+    1. You can then use this docker-compose.yml to run the container as well
+
+        ```sh
+        docker-compose up -d
+        ```
+
+    1. To update
+
+        ```sh
+        docker-compose build
+        docker-compose up -d --force-recreate
+        ```
+
+    </p></details>
+
 1. Use the following command:
 
     ```bash

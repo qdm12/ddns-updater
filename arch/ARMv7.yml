@@ -1,0 +1,24 @@
+version: '3'
+services:
+  ddns-updater:
+    build:
+      context: https://github.com/qdm12/ddns-updater.git
+      args:
+        BASE_IMAGE_BUILDER: arm32v7/golang
+        BASE_IMAGE: arm32v7/alpine
+        GOARCH: arm
+        GOARM: 7
+    image: qmcgaw/ddns-updater
+    container_name: ddns-updater
+    network_mode: bridge
+    ports:
+      - 8000:8000/tcp
+    volumes:
+      - ./data:/updater/data
+    environment:
+      - DELAY=300
+      - ROOTURL=
+      - LISTENINGPORT=8000
+      - LOGGING=human
+      - NODEID=0
+    restart: always

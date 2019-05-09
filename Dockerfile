@@ -1,7 +1,11 @@
+ARG BASE_IMAGE_BUILDER=golang
+ARG BASE_IMAGE=alpine
 ARG ALPINE_VERSION=3.9
 ARG GO_VERSION=1.12.4
 
-FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+FROM ${BASE_IMAGE_BUILDER}:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+ARG GOARCH=amd64
+ARG GOARM=
 ARG BINCOMPRESS
 RUN apk --update add git build-base upx
 RUN go get -u -v golang.org/x/vgo
@@ -11,10 +15,10 @@ RUN go mod download
 COPY pkg/ ./pkg/
 COPY main.go .
 RUN go test -v ./...
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags="-s -w" -o app .
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=${GOARCH} GOARM=${GOARM} go build -a -installsuffix cgo -ldflags="-s -w" -o app .
 RUN [ "${BINCOMPRESS}" == "" ] || (upx -v --best --lzma --overlay=strip app && upx -t app)
 
-FROM alpine:${ALPINE_VERSION} AS final
+FROM ${BASE_IMAGE}:${ALPINE_VERSION} AS final
 ARG BUILD_DATE
 ARG VCS_REF
 LABEL org.label-schema.schema-version="1.0.0-rc1" \

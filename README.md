@@ -210,6 +210,7 @@ Please then refer to your specific DNS host provider in the section below for ev
 | `ROOTURL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
 | `LISTENINGPORT` | `8000` | Internal TCP listening port for the web UI |
 | `LOGGING` | `json` | Format of logging, `json` or `human` |
+| `LOGLEVEL` | `info` | Level of logging, `info`, `success`, `warning` or `error` |
 | `NODEID` | `0` | Node ID (for distributed systems), can be any integer |
 
 ### Host firewall

@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"fmt"
+	"sync"
+	"time"
+)
 
 type statusCode uint8
 
@@ -11,7 +15,7 @@ const (
 	UPTODATE
 )
 
-func (code *statusCode) string() (s string) {
+func (code *statusCode) String() (s string) {
 	switch *code {
 	case SUCCESS:
 		return "Success"
@@ -38,25 +42,66 @@ func (code *statusCode) toHTML() (s string) {
 }
 
 type statusType struct {
-	Code    statusCode
-	Message string
-	Time    time.Time
+	code    statusCode
+	message string
+	time    time.Time
+	sync.RWMutex
 }
 
-func (status *statusType) string() (s string) {
-	s += status.Code.string()
-	if status.Message != "" {
-		s += " (" + status.Message + ")"
+func (status *statusType) SetTime(t time.Time) {
+	status.Lock()
+	defer status.Unlock()
+	status.time = t
+}
+
+func (status *statusType) SetCode(code statusCode) {
+	status.Lock()
+	defer status.Unlock()
+	status.code = code
+}
+
+func (status *statusType) SetMessage(format string, a ...interface{}) {
+	status.Lock()
+	defer status.Unlock()
+	status.message = fmt.Sprintf(format, a...)
+}
+
+func (status *statusType) GetTime() time.Time {
+	status.RLock()
+	defer status.RUnlock()
+	return status.time
+}
+
+func (status *statusType) GetCode() statusCode {
+	status.RLock()
+	defer status.RUnlock()
+	return status.code
+}
+
+func (status *statusType) GetMessage() string {
+	status.RLock()
+	defer status.RUnlock()
+	return status.message
+}
+
+func (status *statusType) String() (s string) {
+	status.RLock()
+	defer status.RUnlock()
+	s += status.code.String()
+	if status.message != "" {
+		s += " (" + status.message + ")"
 	}
-	s += " at " + status.Time.Format("2006-01-02 15:04:05 MST")
+	s += " at " + status.time.Format("2006-01-02 15:04:05 MST")
 	return s
 }
 
 func (status *statusType) toHTML() (s string) {
-	s += status.Code.toHTML()
-	if status.Message != "" {
-		s += " (" + status.Message + ")"
+	status.RLock()
+	defer status.RUnlock()
+	s += status.code.toHTML()
+	if status.message != "" {
+		s += " (" + status.message + ")"
 	}
-	s += ", " + time.Since(status.Time).Round(time.Second).String() + " ago"
+	s += ", " + time.Since(status.time).Round(time.Second).String() + " ago"
 	return s
 }

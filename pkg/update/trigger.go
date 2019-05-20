@@ -11,7 +11,7 @@ import (
 func TriggerServer(
 	delay time.Duration,
 	chForce, chQuit chan struct{}, // listener only
-	recordsConfigs []models.RecordConfigType,
+	recordsConfigs []models.RecordConfigType, // does not change size so no pointer needed
 	httpClient *http.Client,
 	sqlDb *database.DB,
 ) {
@@ -72,11 +72,11 @@ func periodicServer(
 		case <-chForce:
 			go update(recordConfig, httpClient, sqlDb)
 		case <-chQuit:
-			recordConfig.M.Lock() // wait for an eventual update to finish
+			recordConfig.IsUpdating.Lock() // wait for an eventual update to finish
 			ticker.Stop()
 			close(chForce)
 			close(chQuit)
-			recordConfig.M.Unlock()
+			recordConfig.IsUpdating.Unlock()
 			return
 		}
 	}

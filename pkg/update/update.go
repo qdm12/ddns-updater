@@ -31,22 +31,23 @@ func update(
 	sqlDb *database.DB,
 ) {
 	var err error
-	recordConfig.M.Lock() // TODO hide through getters and setters
-	defer recordConfig.M.Unlock()
-	recordConfig.Status.Time = time.Now()
+	recordConfig.IsUpdating.Lock()
+	defer recordConfig.IsUpdating.Unlock()
+	recordConfig.Status.SetTime(time.Now())
 
 	// Get the public IP address
 	ip, err := getPublicIP(httpClient, recordConfig.Settings.IPmethod)
 	if err != nil {
-		recordConfig.Status.Code = models.FAIL
-		recordConfig.Status.Message = err.Error()
+		recordConfig.Status.SetCode(models.FAIL)
+		recordConfig.Status.SetMessage("%s", err)
 		logging.Warn("%s", recordConfig)
 		return
 	}
 	// Note: empty IP means DNS provider provided
-	if ip != "" && len(recordConfig.History.IPs) > 0 && ip == recordConfig.History.IPs[0] { // same IP as before
-		recordConfig.Status.Code = models.UPTODATE
-		recordConfig.Status.Message = "No IP change for " + time.Since(recordConfig.History.TSuccess).Round(time.Second).String()
+	ips := recordConfig.History.GetIPs()
+	if ip != "" && len(ips) > 0 && ip == ips[0] { // same IP as before
+		recordConfig.Status.SetCode(models.UPTODATE)
+		recordConfig.Status.SetMessage("No IP change for %s", recordConfig.History.GetTSuccessDuration())
 		return
 	}
 
@@ -99,30 +100,30 @@ func update(
 		err = fmt.Errorf("provider %s is not supported", recordConfig.Settings.Provider)
 	}
 	if err != nil {
-		recordConfig.Status.Code = models.FAIL
-		recordConfig.Status.Message = err.Error()
+		recordConfig.Status.SetCode(models.FAIL)
+		recordConfig.Status.SetMessage("%s", err)
 		logging.Warn("%s", recordConfig)
 		return
 	}
-	if len(recordConfig.History.IPs) > 0 && ip == recordConfig.History.IPs[0] { // same IP
-		recordConfig.Status.Code = models.UPTODATE
-		recordConfig.Status.Message = "No IP change for " + time.Since(recordConfig.History.TSuccess).Round(time.Second).String()
+	if len(ips) > 0 && ip == ips[0] { // same IP
+		recordConfig.Status.SetCode(models.UPTODATE)
+		recordConfig.Status.SetMessage("No IP change for %s", recordConfig.History.GetTSuccessDuration())
 		err = sqlDb.UpdateIPTime(recordConfig.Settings.Domain, recordConfig.Settings.Host, ip)
 		if err != nil {
-			recordConfig.Status.Code = models.FAIL
-			recordConfig.Status.Message = "Cannot update database: " + err.Error()
+			recordConfig.Status.SetCode(models.FAIL)
+			recordConfig.Status.SetMessage("Cannot update database: %s", err)
 		}
 		return
 	}
 	// new IP
-	recordConfig.Status.Code = models.SUCCESS
-	recordConfig.Status.Message = ""
-	recordConfig.History.TSuccess = time.Now()
-	recordConfig.History.IPs = append([]string{ip}, recordConfig.History.IPs...)
+	recordConfig.Status.SetCode(models.SUCCESS)
+	recordConfig.Status.SetMessage("")
+	recordConfig.History.SetTSuccess(time.Now())
+	recordConfig.History.PrependIP(ip)
 	err = sqlDb.StoreNewIP(recordConfig.Settings.Domain, recordConfig.Settings.Host, ip)
 	if err != nil {
-		recordConfig.Status.Code = models.FAIL
-		recordConfig.Status.Message = "Cannot update database: " + err.Error()
+		recordConfig.Status.SetCode(models.FAIL)
+		recordConfig.Status.SetMessage("Cannot update database: %s", err)
 	}
 }
 

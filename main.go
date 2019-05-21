@@ -41,14 +41,19 @@ func main() {
 	fmt.Println("######## Give some " + emoji.Sprint(":heart:") + "at #########")
 	fmt.Println("# github.com/qdm12/ddns-updater #")
 	fmt.Print("#################################\n\n")
-	logging.Warn("The RECORDn environment variables will be removed and replaced by the config.json file in the coming months. Please update your container configuration as soon as possible to avoid problems once the retrocompatibility is removed. See more information on github.com/qdm12/ddns-updater")
 	httpClient := &http.Client{Timeout: 10 * time.Second}
 	dir := params.GetDir()
 	listeningPort := params.GetListeningPort()
 	rootURL := params.GetRootURL()
 	delay := params.GetDelay()
 	dataDir := params.GetDataDir(dir)
-	settings := params.GetAllSettings(dataDir)
+	settings, warnings, err := params.GetSettings(dataDir + "/config.json")
+	for _, w := range warnings {
+		logging.Warn(w)
+	}
+	if err != nil {
+		logging.Fatal("%s", err)
+	}
 	logging.Info("Found %d settings to update records", len(settings))
 	errs := network.ConnectivityChecks(httpClient, []string{"google.com"})
 	for _, err := range errs {

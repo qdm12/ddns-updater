@@ -1,7 +1,6 @@
 package params
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -9,7 +8,6 @@ import (
 	"time"
 
 	"ddns-updater/pkg/logging"
-	"ddns-updater/pkg/models"
 
 	"github.com/spf13/viper"
 )
@@ -89,88 +87,4 @@ func stringInAny(s string, ss ...string) bool {
 		}
 	}
 	return false
-}
-
-func getSettingsEnv() (settings []models.SettingsType, warnings []string, err error) {
-	var i uint64 = 1
-	for {
-		s := os.Getenv(fmt.Sprintf("RECORD%d", i))
-		if s == "" {
-			break
-		}
-		x := strings.Split(s, ",")
-		if len(x) != 5 {
-			warnings = append(warnings, "configuration entry "+s+" should be in the format 'domain,host,provider,ipmethod,password'")
-			continue
-		}
-		provider, err := models.ParseProvider(x[2])
-		if err != nil {
-			warnings = append(warnings, err.Error())
-			continue
-		}
-		IPMethod, err := models.ParseIPMethod(x[3])
-		if err != nil {
-			warnings = append(warnings, err.Error())
-			continue
-		}
-		var host, key, secret, token, password string
-		switch provider {
-		case models.PROVIDERGODADDY:
-			host = x[1]
-			arr := strings.Split(x[4], ":")
-			if len(arr) != 2 {
-				warnings = append(warnings, "GoDaddy password (key:secret) is not valid for entry "+s)
-				continue
-			}
-			key = arr[0]
-			secret = arr[1]
-		case models.PROVIDERNAMECHEAP:
-			host = x[1]
-			password = x[4]
-		case models.PROVIDERDUCKDNS:
-			host = "@"
-			token = x[4]
-		case models.PROVIDERDREAMHOST:
-			host = "@"
-			key = x[4]
-		}
-		setting := models.SettingsType{
-			Domain:   x[0],
-			Host:     host,
-			Provider: provider,
-			IPmethod: IPMethod,
-			Password: password,
-			Key:      key,
-			Secret:   secret,
-			Token:    token,
-		}
-		err = setting.Verify()
-		if err != nil {
-			warnings = append(warnings, err.Error())
-			continue
-		}
-		settings = append(settings, setting)
-		i++
-	}
-	if len(settings) == 0 {
-		return nil, warnings, fmt.Errorf("no valid settings was found in the environment variables")
-	}
-	return settings, warnings, nil
-}
-
-// GetAllSettings reads all settings from environment variables and config.json
-func GetAllSettings(dir string) []models.SettingsType {
-	settingsEnv, warningsEnv, errEnv := getSettingsEnv()
-	settingsJSON, warningsJSON, errJSON := getSettingsJSON(dir + "/config.json")
-	for _, w := range append(warningsEnv, warningsJSON...) {
-		logging.Warn(w)
-	}
-	if errEnv != nil && errJSON != nil {
-		logging.Fatal("%s AND %s", errEnv, errJSON)
-	} else if errEnv != nil {
-		logging.Warn("%s", errEnv)
-	} else if errJSON != nil {
-		logging.Warn("%s", errJSON)
-	}
-	return append(settingsEnv, settingsJSON...)
 }

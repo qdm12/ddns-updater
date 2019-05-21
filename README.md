@@ -2,8 +2,6 @@
 
 *Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost and DuckDNS*
 
-**WARNING: Please change your configuration to use *config.json*, see the [config.json section](#configuration)**
-
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
 
 [![Docker Build Status](https://img.shields.io/docker/build/qmcgaw/ddns-updater.svg)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
@@ -21,7 +19,7 @@
 
 | Image size | RAM usage | CPU usage |
 | --- | --- | --- |
-| 21.4MB | 13MB | Very low |
+| 21.5MB | 13MB | Very low |
 
 ## Features
 
@@ -50,6 +48,8 @@
     # read access only
     chmod 400 data/config.json
     ```
+
+    *(You could change the user ID, for example with `1001`, by running the container with `--user=1001`)*
 
 1. Modify the *data/config.json* file similarly to:
 
@@ -143,8 +143,6 @@
 ### Record configuration
 
 The record update updates configuration must be done through the *config.json* mentioned [above](#setup).
-
-**Support for record updates configuration through environment variables will be removed in the coming updates.**
 
 #### Required parameters for all
 
@@ -322,6 +320,7 @@ Special thanks to @Starttoaster for helping out with the [documentation](https:/
 ## TODOs
 
 - [ ] Changed from sqlite to rqlite
+- [ ] Change logging to uber-go/zap
 - [ ] Unit tests
 - [ ] Other types or records
 - [ ] ReactJS frontend

@@ -32,7 +32,8 @@ type settingsType struct {
 	Proxied        bool   `json:"proxied"`          // Cloudflare only
 }
 
-func getSettingsJSON(filePath string) (settings []models.SettingsType, warnings []string, err error) {
+// GetSettings obtain the update settings from config.json
+func GetSettings(filePath string) (settings []models.SettingsType, warnings []string, err error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, nil, err

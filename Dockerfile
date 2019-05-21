@@ -33,7 +33,7 @@ LABEL org.label-schema.schema-version="1.0.0-rc1" \
     org.label-schema.docker.cmd.devel="docker run -it --rm -p 8000:8000/tcp -v $(pwd)/data:/updater/data qmcgaw/ddns-updater" \
     org.label-schema.docker.params="See readme configuration section" \
     org.label-schema.version="" \
-    image-size="21.4MB" \
+    image-size="21.5MB" \
     ram-usage="13MB" \
     cpu-usage="Very Low"
 RUN apk add --update sqlite ca-certificates && \

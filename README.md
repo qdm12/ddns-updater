@@ -100,7 +100,7 @@
         --build-arg BASE_IMAGE=arm32v6/alpine \
         --build-arg GOARCH=arm \
         --build-arg GOARM=6 \
-        .
+        https://github.com/qdm12/ddns-updater.git
         ```
 
     - If you have a ARM 32 bit v7 architecture
@@ -111,7 +111,7 @@
         --build-arg BASE_IMAGE=arm32v7/alpine \
         --build-arg GOARCH=arm \
         --build-arg GOARM=7 \
-        .
+        https://github.com/qdm12/ddns-updater.git
         ```
 
     - If you have a ARM 64 bit v8 architecture
@@ -121,7 +121,7 @@
         --build-arg BASE_IMAGE_BUILDER=arm64v8/golang \
         --build-arg BASE_IMAGE=arm64v8/alpine \
         --build-arg GOARCH=arm64 \
-        .
+        https://github.com/qdm12/ddns-updater.git
         ```
 
     </p></details>

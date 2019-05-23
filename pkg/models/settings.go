@@ -2,6 +2,7 @@ package models
 
 import (
 	"ddns-updater/pkg/regex"
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -26,8 +27,19 @@ type SettingsType struct {
 	Proxied        bool   // Cloudflare only
 }
 
-func (settings *SettingsType) String() (s string) {
-	return fmt.Sprintf("%s | %s | %s | %s", settings.Domain, settings.Host, settings.Provider, settings.IPmethod)
+func (settings *SettingsType) String() string {
+	b, _ := json.Marshal(
+		struct {
+			Domain   string `json:"domain"`
+			Host     string `json:"host"`
+			Provider string `json:"provider"`
+		}{
+			settings.Domain,
+			settings.Host,
+			settings.Provider.String(),
+		},
+	)
+	return string(b)
 }
 
 // BuildDomainName builds the domain name from the domain and the host of the settings
@@ -77,67 +89,58 @@ func (settings *SettingsType) getHTMLIPMethod() string {
 // Verify verifies all the settings provided are valid
 func (settings *SettingsType) Verify() error {
 	if !regex.MatchDomain(settings.Domain) {
-		return fmt.Errorf("the domain name %s is not valid for settings %s", settings.Domain, settings)
-	}
-	if len(settings.Host) == 0 {
-		return fmt.Errorf("the host for entry %s must have at least one character", settings)
+		return fmt.Errorf("invalid domain name format for settings %s", settings)
+	} else if len(settings.Host) == 0 {
+		return fmt.Errorf("host cannot be empty for settings %s", settings)
 	}
 	switch settings.Provider {
 	case PROVIDERNAMECHEAP:
 		if !regex.MatchNamecheapPassword(settings.Password) {
-			return fmt.Errorf("the Namecheap password is not valid for settings %s", settings)
+			return fmt.Errorf("invalid password format for settings %s", settings)
 		}
 	case PROVIDERGODADDY:
 		if !regex.MatchGodaddyKey(settings.Key) {
-			return fmt.Errorf("the GoDaddy key is not valid for settings %s", settings)
-		}
-		if !regex.MatchGodaddySecret(settings.Secret) {
-			return fmt.Errorf("the GoDaddy secret is not valid for settings %s", settings)
-		}
-		if settings.IPmethod == IPMETHODPROVIDER {
-			return fmt.Errorf("the provider %s does not support the IP update method %s", settings.Provider, settings.IPmethod)
+			return fmt.Errorf("invalid key format for settings %s", settings)
+		} else if !regex.MatchGodaddySecret(settings.Secret) {
+			return fmt.Errorf("invalid secret format for settings %s", settings)
+		} else if settings.IPmethod == IPMETHODPROVIDER {
+			return fmt.Errorf("unsupported IP update method for settings %s", settings)
 		}
 	case PROVIDERDUCKDNS:
 		if !regex.MatchDuckDNSToken(settings.Token) {
-			return fmt.Errorf("the DuckDNS token is not valid for settings %s", settings)
-		}
-		if settings.Host != "@" {
-			return fmt.Errorf("the host %s can only be @ for settings %s", settings.Host, settings)
+			return fmt.Errorf("invalid token format for settings %s", settings)
+		} else if settings.Host != "@" {
+			return fmt.Errorf("host can only be \"@\" for settings %s", settings)
 		}
 	case PROVIDERDREAMHOST:
 		if !regex.MatchDreamhostKey(settings.Key) {
-			return fmt.Errorf("the Dreamhost key is not valid for settings %s", settings)
-		}
-		if settings.Host != "@" {
-			return fmt.Errorf("the host %s can only be @ for settings %s", settings.Host, settings)
-		}
-		if settings.IPmethod == IPMETHODPROVIDER {
-			return fmt.Errorf("the provider %s does not support the IP update method %s", settings.Provider, settings.IPmethod)
+			return fmt.Errorf("invalid key format for settings %s", settings)
+		} else if settings.Host != "@" {
+			return fmt.Errorf("host can only be \"@\" for settings %s", settings)
+		} else if settings.IPmethod == IPMETHODPROVIDER {
+			return fmt.Errorf("unsupported IP update method for settings %s", settings)
 		}
 	case PROVIDERCLOUDFLARE:
 		if settings.UserServiceKey == "" { // email and key must be provided
 			if !regex.MatchCloudflareKey(settings.Key) {
-				return fmt.Errorf("the Cloudflare key is not valid for settings %s", settings)
-			}
-			if !regex.MatchEmail(settings.Email) {
-				return fmt.Errorf("the Cloudflare email %s is not valid for settings %s", settings.Email, settings)
+				return fmt.Errorf("invalid key format for settings %s", settings)
+			} else if !regex.MatchEmail(settings.Email) {
+				return fmt.Errorf("invalid email format for settings %s", settings)
 			}
 		} else { // only user service key
 			if !regex.MatchCloudflareUserServiceKey(settings.UserServiceKey) {
-				return fmt.Errorf("the Cloudflare user service key is not valid for settings %s", settings)
+				return fmt.Errorf("invalid user service key format for settings %s", settings)
 			}
 		}
 		if len(settings.ZoneIdentifier) == 0 {
-			return fmt.Errorf("Cloudflare zone identifier was not provided")
-		}
-		if len(settings.Identifier) == 0 {
-			return fmt.Errorf("Cloudflare identifier was not provided")
-		}
-		if settings.IPmethod == IPMETHODPROVIDER {
-			return fmt.Errorf("the provider %s does not support the IP update method %s", settings.Provider, settings.IPmethod)
+			return fmt.Errorf("zone identifier cannot be empty to settings %s", settings)
+		} else if len(settings.Identifier) == 0 {
+			return fmt.Errorf("identifier cannot be empty to settings %s", settings)
+		} else if settings.IPmethod == IPMETHODPROVIDER {
+			return fmt.Errorf("unsupported IP update method for settings %s", settings)
 		}
 	default:
-		return fmt.Errorf("provider %s is not supported", settings.Provider)
+		return fmt.Errorf("provider \"%s\" is not supported", settings.Provider)
 	}
 	return nil
 }

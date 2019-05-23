@@ -52,7 +52,8 @@ func update(
 	}
 
 	// Update the record
-	if recordConfig.Settings.Provider == models.PROVIDERNAMECHEAP {
+	switch recordConfig.Settings.Provider {
+	case models.PROVIDERNAMECHEAP:
 		ip, err = updateNamecheap(
 			httpClient,
 			recordConfig.Settings.Host,
@@ -60,7 +61,7 @@ func update(
 			recordConfig.Settings.Password,
 			ip,
 		)
-	} else if recordConfig.Settings.Provider == models.PROVIDERGODADDY {
+	case models.PROVIDERGODADDY:
 		err = updateGoDaddy(
 			httpClient,
 			recordConfig.Settings.Host,
@@ -69,14 +70,14 @@ func update(
 			recordConfig.Settings.Secret,
 			ip,
 		)
-	} else if recordConfig.Settings.Provider == models.PROVIDERDUCKDNS {
+	case models.PROVIDERDUCKDNS:
 		ip, err = updateDuckDNS(
 			httpClient,
 			recordConfig.Settings.Domain,
 			recordConfig.Settings.Token,
 			ip,
 		)
-	} else if recordConfig.Settings.Provider == models.PROVIDERDREAMHOST {
+	case models.PROVIDERDREAMHOST:
 		err = updateDreamhost(
 			httpClient,
 			recordConfig.Settings.Domain,
@@ -84,7 +85,7 @@ func update(
 			ip,
 			recordConfig.Settings.BuildDomainName(),
 		)
-	} else if recordConfig.Settings.Provider == models.PROVIDERCLOUDFLARE {
+	case models.PROVIDERCLOUDFLARE:
 		err = updateCloudflare(
 			httpClient,
 			recordConfig.Settings.ZoneIdentifier,
@@ -96,8 +97,8 @@ func update(
 			ip,
 			recordConfig.Settings.Proxied,
 		)
-	} else {
-		err = fmt.Errorf("provider %s is not supported", recordConfig.Settings.Provider)
+	default:
+		err = fmt.Errorf("unsupported provider \"%s\"", recordConfig.Settings.Provider)
 	}
 	if err != nil {
 		recordConfig.Status.SetCode(models.FAIL)
@@ -135,7 +136,7 @@ func getPublicIP(httpClient *http.Client, IPmethod models.IPMethodType) (ip stri
 	} else if IPmethod == models.IPMETHODOPENDNS {
 		return network.GetPublicIP(httpClient, "https://diagnostic.opendns.com/myip")
 	}
-	return "", fmt.Errorf("IPMethod %s is not supported", IPmethod)
+	return "", fmt.Errorf("IP method %s is not supported", IPmethod)
 }
 
 func updateNamecheap(httpClient *http.Client, host, domain, password, ip string) (newIP string, err error) {
@@ -150,9 +151,8 @@ func updateNamecheap(httpClient *http.Client, host, domain, password, ip string)
 	status, content, err := network.DoHTTPRequest(httpClient, r)
 	if err != nil {
 		return "", err
-	}
-	if status != 200 { // TODO test / combine with below
-		return "", fmt.Errorf("%s responded with status %d", r.URL.String(), status)
+	} else if status != 200 { // TODO test / combine with below
+		return "", fmt.Errorf("HTTP status %d", status)
 	}
 	var parsedXML struct {
 		Errors struct {
@@ -163,22 +163,23 @@ func updateNamecheap(httpClient *http.Client, host, domain, password, ip string)
 	err = xml.Unmarshal(content, &parsedXML)
 	if err != nil {
 		return "", err
-	}
-	if parsedXML.Errors.Error != "" {
+	} else if parsedXML.Errors.Error != "" {
 		return "", fmt.Errorf(parsedXML.Errors.Error)
 	}
-	if parsedXML.IP == "" {
-		return "", fmt.Errorf("No IP address was sent back from DDNS server")
+	ips := regex.SearchIP(parsedXML.IP)
+	if ips == nil {
+		return "", fmt.Errorf("no IP address in response")
 	}
-	if regex.SearchIP(parsedXML.IP) == nil {
-		return "", fmt.Errorf("IP address %s is not valid", parsedXML.IP)
+	newIP = ips[0]
+	if len(ip) > 0 && ip != newIP {
+		return "", fmt.Errorf("new IP address %s is not %s", newIP, ip)
 	}
-	return parsedXML.IP, nil
+	return newIP, nil
 }
 
 func updateGoDaddy(httpClient *http.Client, host, domain, key, secret, ip string) error {
 	if len(ip) == 0 {
-		return fmt.Errorf("cannot have a DNS provider-provided IP address for GoDaddy")
+		return fmt.Errorf("invalid empty IP address")
 	}
 	type goDaddyPutBody struct {
 		Data string `json:"data"` // IP address to update to
@@ -208,16 +209,16 @@ func updateGoDaddy(httpClient *http.Client, host, domain, key, secret, ip string
 		if err != nil {
 			return err
 		} else if parsedJSON.Message != "" {
-			return fmt.Errorf("HTTP %d - %s", status, parsedJSON.Message)
+			return fmt.Errorf("HTTP status %d - %s", status, parsedJSON.Message)
 		}
-		return fmt.Errorf("HTTP %d", status)
+		return fmt.Errorf("HTTP status %d", status)
 	}
 	return nil
 }
 
-func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host, email, key, userServiceKey, ip string, proxied bool) error {
+func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host, email, key, userServiceKey, ip string, proxied bool) (err error) {
 	if len(ip) == 0 {
-		return fmt.Errorf("cannot have a DNS provider-provided IP address for Cloudflare")
+		return fmt.Errorf("invalid empty IP address")
 	}
 	type cloudflarePutBody struct {
 		Type    string `json:"type"`    // forced to A
@@ -251,7 +252,7 @@ func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host,
 		return err
 	}
 	if status > 415 {
-		return fmt.Errorf("bad HTTP status %d", status)
+		return fmt.Errorf("HTTP status %d", status)
 	}
 	var parsedJSON struct {
 		Success bool `json:"success"`
@@ -264,6 +265,7 @@ func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host,
 		} `json:"result"`
 	}
 	err = json.Unmarshal(content, &parsedJSON)
+	newIP := parsedJSON.Result.Content
 	if err != nil {
 		return err
 	} else if !parsedJSON.Success {
@@ -272,8 +274,8 @@ func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host,
 			errStr += fmt.Sprintf("error %d: %s; ", e.Code, e.Message)
 		}
 		return fmt.Errorf(errStr)
-	} else if parsedJSON.Result.Content != ip {
-		return fmt.Errorf("returned IP address is %s and not %s", parsedJSON.Result.Content, ip)
+	} else if newIP != ip {
+		return fmt.Errorf("new IP address %s is not %s", newIP, ip)
 	}
 	return nil
 }
@@ -292,20 +294,23 @@ func updateDuckDNS(httpClient *http.Client, domain, token, ip string) (newIP str
 		return "", err
 	}
 	if status != 200 {
-		return "", fmt.Errorf("HTTP %d", status)
+		return "", fmt.Errorf("HTTP status %d", status)
 	}
 	s := string(content)
 	if s[0:2] == "KO" {
-		return "", fmt.Errorf("Bad DuckDNS domain/token combination")
+		return "", fmt.Errorf("invalid domain token combination")
 	} else if s[0:2] == "OK" {
 		ips := regex.SearchIP(s)
 		if ips == nil {
-			return "", fmt.Errorf("DuckDNS did not respond with an IP address")
+			return "", fmt.Errorf("no IP address in response")
 		}
 		newIP = ips[0]
+		if len(ip) > 0 && newIP != ip {
+			return "", fmt.Errorf("new IP address %s is not %s", newIP, ip)
+		}
 		return newIP, nil
 	}
-	return "", fmt.Errorf("DuckDNS responded with: %s", s)
+	return "", fmt.Errorf("response \"%s\"", s)
 }
 
 func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string) error {
@@ -324,7 +329,7 @@ func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string
 		return err
 	}
 	if status != 200 {
-		return fmt.Errorf("HTTP %d", status)
+		return fmt.Errorf("HTTP status %d", status)
 	}
 	var dhList struct {
 		Result string `json:"result"`
@@ -346,7 +351,7 @@ func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string
 	for _, data := range dhList.Data {
 		if data.Type == "A" && data.Record == domainName {
 			if data.Editable == "0" {
-				return fmt.Errorf("Record data is not editable")
+				return fmt.Errorf("record data is not editable")
 			}
 			oldIP = data.Value
 			if oldIP == ip { // success, nothing to change
@@ -367,7 +372,7 @@ func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string
 			return err
 		}
 		if status != 200 {
-			return fmt.Errorf("HTTP %d", status)
+			return fmt.Errorf("HTTP status %d", status)
 		}
 		var dhResponse dreamhostReponse
 		err = json.Unmarshal(content, &dhResponse)
@@ -388,7 +393,7 @@ func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string
 		return err
 	}
 	if status != 200 {
-		return fmt.Errorf("HTTP %d", status)
+		return fmt.Errorf("HTTP status %d", status)
 	}
 	var dhResponse dreamhostReponse
 	err = json.Unmarshal(content, &dhResponse)

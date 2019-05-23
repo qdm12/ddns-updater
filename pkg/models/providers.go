@@ -46,6 +46,7 @@ func ParseProvider(s string) (ProviderType, error) {
 		return PROVIDERDREAMHOST, nil
 	case "cloudflare":
 		return PROVIDERCLOUDFLARE, nil
+	default:
+		return 0, fmt.Errorf("Provider %s not recognized", s)
 	}
-	return 0, fmt.Errorf("Provider %s not recognized", s)
 }

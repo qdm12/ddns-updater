@@ -139,6 +139,16 @@ func (settings *SettingsType) Verify() error {
 		} else if settings.IPmethod == IPMETHODPROVIDER {
 			return fmt.Errorf("unsupported IP update method for settings %s", settings)
 		}
+	case PROVIDERNOIP:
+		if !regex.MatchEmail(settings.Email) {
+			return fmt.Errorf("invalid email format for settings %s", settings)
+		} else if len(settings.Email) > 50 {
+			return fmt.Errorf("email cannot be longer than 50 characters for settings %s", settings)
+		} else if len(settings.Password) == 0 {
+			return fmt.Errorf("password cannot be empty for settings %s", settings)
+		} else if settings.Host == "*" {
+			return fmt.Errorf("host cannot be * for settings %s", settings)
+		}
 	default:
 		return fmt.Errorf("provider \"%s\" is not supported", settings.Provider)
 	}

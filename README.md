@@ -1,6 +1,6 @@
 # Lightweight DDNS Updater with Docker and web UI
 
-*Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost and DuckDNS*
+*Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP and DuckDNS*
 
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
 
@@ -23,7 +23,7 @@
 
 ## Features
 
-- Updates periodically A records for different DNS providers: Namecheap, GoDaddy, Cloudflare, Dreamhost, DuckDNS (ask for more)
+- Updates periodically A records for different DNS providers: Namecheap, GoDaddy, Cloudflare, NoIP, Dreamhost, DuckDNS (ask for more)
 - Web User interface
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
@@ -152,9 +152,10 @@ The record update updates configuration must be done through the *config.json* m
     - `duckdns`
     - `dreamhost`
     - `cloudflare`
+    - `noip`
 - `"domain"` is your domain name
 - `"ip_method"` is the method to obtain your public IP address and can be
-    - `provider` means the public IP is automatically determined by the DNS provider (**only for DuckDNs and Namecheap**)
+    - `provider` means the public IP is automatically determined by the DNS provider (**only for DuckDNs, Namecheap and NoIP**)
     - `duckduckgo` using [https://duckduckgo.com/?q=ip](https://duckduckgo.com/?q=ip)
     - `opendns` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
 
@@ -199,6 +200,13 @@ Please then refer to your specific DNS host provider in the section below for ev
 
 - Required:
     - `"key"`
+
+#### NoIP
+
+- Required:
+    - `"host"` is your host and can be a subdomain or `@`
+    - `"email"`
+    - `"password"`
 
 ### Environment variables
 
@@ -300,6 +308,10 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 You can now fill in the necessary parameters in *config.json*
 
 Special thanks to @Starttoaster for helping out with the [documentation](https://gist.github.com/Starttoaster/07d568c2a99ad7631dd776688c988326) and testing.
+
+### NoIP
+
+*Awaiting a contribution*
 
 ## Testing
 

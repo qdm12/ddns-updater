@@ -23,6 +23,7 @@ const (
 	duckdnsURL    = "https://www.duckdns.org/update"
 	dreamhostURL  = "https://api.dreamhost.com"
 	cloudflareURL = "https://api.cloudflare.com/client/v4"
+	noIPURL       = "https://dynupdate.no-ip.com/nic/update"
 )
 
 func update(
@@ -96,6 +97,14 @@ func update(
 			recordConfig.Settings.UserServiceKey,
 			ip,
 			recordConfig.Settings.Proxied,
+		)
+	case models.PROVIDERNOIP:
+		ip, err = updateNoIP(
+			httpClient,
+			recordConfig.Settings.BuildDomainName(),
+			recordConfig.Settings.Email,
+			recordConfig.Settings.Password,
+			ip,
 		)
 	default:
 		err = fmt.Errorf("unsupported provider \"%s\"", recordConfig.Settings.Provider)
@@ -403,4 +412,51 @@ func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string
 		return fmt.Errorf("%s - %s", dhResponse.Result, dhResponse.Data)
 	}
 	return nil
+}
+
+func updateNoIP(httpClient *http.Client, hostname, email, password, ip string) (newIP string, err error) {
+	url := strings.ToLower(noIPURL + "?hostname=" + hostname)
+	if len(ip) > 0 {
+		url += "&myip=" + ip
+	}
+	r, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	r.Header.Set("Authorization", "Basic "+email+":"+password)
+	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	status, content, err := network.DoHTTPRequest(httpClient, r)
+	if err != nil {
+		return "", err
+	}
+	if status != 200 {
+		return "", fmt.Errorf("HTTP status %d", status)
+	}
+	s := string(content)
+	switch s {
+	case "911":
+		return "", fmt.Errorf("NoIP's internal server error 911")
+	case "abuse":
+		return "", fmt.Errorf("username is banned due to abuse")
+	case "!donator":
+		return "", fmt.Errorf("user has not this extra feature")
+	case "badagent":
+		return "", fmt.Errorf("user agent is banned")
+	case "badauth":
+		return "", fmt.Errorf("invalid username password combination")
+	case "nohost":
+		return "", fmt.Errorf("hostname does not exist")
+	}
+	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
+		ips := regex.SearchIP(s)
+		if ips == nil {
+			return "", fmt.Errorf("no IP address in response")
+		}
+		newIP = ips[0]
+		if len(ip) > 0 && newIP != ip {
+			return "", fmt.Errorf("new IP address %s is not %s", newIP, ip)
+		}
+		return newIP, nil
+	}
+	return "", fmt.Errorf("unknown response: %s", s)
 }

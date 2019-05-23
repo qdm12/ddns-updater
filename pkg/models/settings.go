@@ -16,7 +16,7 @@ type SettingsType struct {
 	Delay       time.Duration
 	NoDNSLookup bool
 	// Provider dependent fields
-	Password       string // Namecheap only
+	Password       string // Namecheap and NoIP only
 	Key            string // GoDaddy, Dreamhost and Cloudflare only
 	Secret         string // GoDaddy only
 	Token          string // DuckDNS only
@@ -25,6 +25,7 @@ type SettingsType struct {
 	ZoneIdentifier string // Cloudflare only
 	Identifier     string // Cloudflare only
 	Proxied        bool   // Cloudflare only
+	Username       string // NoIP only
 }
 
 func (settings *SettingsType) String() string {
@@ -140,10 +141,10 @@ func (settings *SettingsType) Verify() error {
 			return fmt.Errorf("unsupported IP update method for settings %s", settings)
 		}
 	case PROVIDERNOIP:
-		if !regex.MatchEmail(settings.Email) {
-			return fmt.Errorf("invalid email format for settings %s", settings)
-		} else if len(settings.Email) > 50 {
-			return fmt.Errorf("email cannot be longer than 50 characters for settings %s", settings)
+		if len(settings.Username) == 0 {
+			return fmt.Errorf("username cannot be empty for settings %s", settings)
+		} else if len(settings.Username) > 50 {
+			return fmt.Errorf("username cannot be longer than 50 characters for settings %s", settings)
 		} else if len(settings.Password) == 0 {
 			return fmt.Errorf("password cannot be empty for settings %s", settings)
 		} else if settings.Host == "*" {

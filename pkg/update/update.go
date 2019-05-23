@@ -1,7 +1,6 @@
 package update
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -103,7 +102,7 @@ func update(
 		ip, err = updateNoIP(
 			httpClient,
 			recordConfig.Settings.BuildDomainName(),
-			recordConfig.Settings.Email,
+			recordConfig.Settings.Username,
 			recordConfig.Settings.Password,
 			ip,
 		)
@@ -415,7 +414,7 @@ func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string
 	return nil
 }
 
-func updateNoIP(httpClient *http.Client, hostname, email, password, ip string) (newIP string, err error) {
+func updateNoIP(httpClient *http.Client, hostname, username, password, ip string) (newIP string, err error) {
 	url := strings.ToLower(noIPURL + "?hostname=" + hostname)
 	if len(ip) > 0 {
 		url += "&myip=" + ip
@@ -424,8 +423,7 @@ func updateNoIP(httpClient *http.Client, hostname, email, password, ip string) (
 	if err != nil {
 		return "", err
 	}
-	credsEncoded := base64.StdEncoding.EncodeToString([]byte(email + ":" + password))
-	r.Header.Set("Authorization", "Basic "+credsEncoded)
+	r.Header.Set("Authorization", "Basic "+username+":"+password)
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	status, content, err := network.DoHTTPRequest(httpClient, r)
 	if err != nil {

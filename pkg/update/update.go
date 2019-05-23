@@ -1,6 +1,7 @@
 package update
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -423,7 +424,8 @@ func updateNoIP(httpClient *http.Client, hostname, email, password, ip string) (
 	if err != nil {
 		return "", err
 	}
-	r.Header.Set("Authorization", "Basic "+email+":"+password)
+	credsEncoded := base64.StdEncoding.EncodeToString([]byte(email + ":" + password))
+	r.Header.Set("Authorization", "Basic "+credsEncoded)
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	status, content, err := network.DoHTTPRequest(httpClient, r)
 	if err != nil {

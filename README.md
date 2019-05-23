@@ -205,7 +205,7 @@ Please then refer to your specific DNS host provider in the section below for ev
 
 - Required:
     - `"host"` is your host and can be a subdomain or `@`
-    - `"email"`
+    - `"email"` which can be your email *or* your username
     - `"password"`
 
 ### Environment variables

@@ -21,11 +21,11 @@ type settingsType struct {
 	Delay          int    `json:"delay"`
 	NoDNSLookup    bool   `json:"no_dns_lookup"`
 	Host           string `json:"host"`
-	Password       string `json:"password"`         // Namecheap only
+	Password       string `json:"password"`         // Namecheap, NoIP only
 	Key            string `json:"key"`              // GoDaddy, Dreamhost and Cloudflare only
 	Secret         string `json:"secret"`           // GoDaddy only
 	Token          string `json:"token"`            // DuckDNS only
-	Email          string `json:"email"`            // Cloudflare only
+	Email          string `json:"email"`            // Cloudflare, NoIP only
 	UserServiceKey string `json:"user_service_key"` // Cloudflare only
 	ZoneIdentifier string `json:"zone_identifier"`  // Cloudflare only
 	Identifier     string `json:"identifier"`       // Cloudflare only

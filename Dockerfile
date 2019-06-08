@@ -15,7 +15,7 @@ RUN go mod download
 COPY pkg/ ./pkg/
 COPY main.go .
 RUN go test -v ./...
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=${GOARCH} GOARM=${GOARM} go build -a -installsuffix cgo -ldflags="-s -w" -o app .
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=${GOARCH} GOARM=${GOARM} go build -a -installsuffix cgo -ldflags="-s -w" -o app
 RUN [ "${BINCOMPRESS}" == "" ] || (upx -v --best --lzma --overlay=strip app && upx -t app)
 
 FROM ${BASE_IMAGE}:${ALPINE_VERSION} AS final

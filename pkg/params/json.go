@@ -25,7 +25,8 @@ type settingsType struct {
 	Key            string `json:"key"`              // GoDaddy, Dreamhost and Cloudflare only
 	Secret         string `json:"secret"`           // GoDaddy only
 	Token          string `json:"token"`            // DuckDNS only
-	Email          string `json:"email"`            // Cloudflare, NoIP only
+	Email          string `json:"email"`            // Cloudflare only
+	Username       string `json:"username"`         // NoIP only
 	UserServiceKey string `json:"user_service_key"` // Cloudflare only
 	ZoneIdentifier string `json:"zone_identifier"`  // Cloudflare only
 	Identifier     string `json:"identifier"`       // Cloudflare only
@@ -76,6 +77,7 @@ func GetSettings(filePath string) (settings []models.SettingsType, warnings []st
 			Secret:         s.Secret,
 			Token:          s.Token,
 			Email:          s.Email,
+			Username:       s.Username,
 			UserServiceKey: s.UserServiceKey,
 			ZoneIdentifier: s.ZoneIdentifier,
 			Identifier:     s.Identifier,

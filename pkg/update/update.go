@@ -429,11 +429,10 @@ func updateNoIP(httpClient *http.Client, hostname, username, password, ip string
 	if err != nil {
 		return "", err
 	}
-	if status != 200 {
-		return "", fmt.Errorf("HTTP status %d", status)
-	}
 	s := string(content)
 	switch s {
+	case "":
+		return "", fmt.Errorf("HTTP status %d", status)
 	case "911":
 		return "", fmt.Errorf("NoIP's internal server error 911")
 	case "abuse":

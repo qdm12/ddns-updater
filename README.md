@@ -28,7 +28,7 @@
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
-- Lightweight based on Go and *Alpine 3.9* with Sqlite and Ca-Certificates packages
+- Lightweight based on Go and *Alpine 3.10* with Sqlite and Ca-Certificates packages
 - Persistence with a sqlite database to store old IP addresses and previous update status
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable

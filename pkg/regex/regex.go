@@ -8,7 +8,7 @@ const (
 	regexIP                       = `(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`
 	regexEmail                    = `[a-zA-Z0-9-_.]+@[a-zA-Z0-9-_.]+\.[a-zA-Z][a-zA-Z]+`
 	regexDomain                   = `(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})`
-	regexGoDaddyKey               = `[A-Za-z0-9]{12}\_[A-Za-z0-9]{22}`
+	regexGoDaddyKey               = `[A-Za-z0-9]{10,14}\_[A-Za-z0-9]{22}`
 	regexGodaddySecret            = `[A-Za-z0-9]{22}`
 	regexDuckDNSToken             = `[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}`
 	regexNamecheapPassword        = `[a-f0-9]{32}`

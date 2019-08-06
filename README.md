@@ -221,8 +221,7 @@ Please then refer to your specific DNS host provider in the section below for ev
 
 - Required:
     - `"host"` is your host and can be a subdomain or `@`
-    - `"username"` which is your user_id
-    - `"password"` which is your token
+    - `"token"`
 
 ### Environment variables
 

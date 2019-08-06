@@ -1,6 +1,6 @@
 # Lightweight DDNS Updater with Docker and web UI
 
-*Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP and DuckDNS*
+*Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod and DuckDNS*
 
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
 
@@ -83,6 +83,14 @@
                 "domain": "example.info",
                 "ip_method": "opendns",
                 "key": "aaaaaaaaaaaaaaaa"
+            },
+            {
+                "provider": "dnspod",
+                "domain": "example.com",
+                "host": "@",
+                "ip_method": "provider",
+                "delay": 86400,
+                "password": "e5322165c1d74692bfa6d807100c0310"
             }
         ]
     }
@@ -153,6 +161,7 @@ The record update updates configuration must be done through the *config.json* m
     - `dreamhost`
     - `cloudflare`
     - `noip`
+    - `dnspod`
 - `"domain"` is your domain name
 - `"ip_method"` is the method to obtain your public IP address and can be
     - `provider` means the public IP is automatically determined by the DNS provider (**only for DuckDNs, Namecheap and NoIP**)
@@ -207,6 +216,13 @@ Please then refer to your specific DNS host provider in the section below for ev
     - `"host"` is your host and can be a subdomain or `@`
     - `"username"` which is your username
     - `"password"`
+    
+#### DNSPOD
+
+- Required:
+    - `"host"` is your host and can be a subdomain or `@`
+    - `"username"` which is your user_id
+    - `"password"` which is your token
 
 ### Environment variables
 

@@ -1,10 +1,14 @@
 package update
 
 import (
+	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -104,6 +108,14 @@ func update(
 			recordConfig.Settings.BuildDomainName(),
 			recordConfig.Settings.Username,
 			recordConfig.Settings.Password,
+			ip,
+		)
+	case models.PROVIDERDNSPOD:
+		ip, err = updateDnsPod(
+			httpClient,
+			recordConfig.Settings.Domain,
+			recordConfig.Settings.Host,
+			recordConfig.Settings.Token,
 			ip,
 		)
 	default:
@@ -458,4 +470,94 @@ func updateNoIP(httpClient *http.Client, hostname, username, password, ip string
 		return newIP, nil
 	}
 	return "", fmt.Errorf("unknown response: %s", s)
+}
+
+func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (newIP string, err error) {
+	postValues := url.Values{}
+	postValues.Set("login_token", token)
+	postValues.Set("format", "json")
+	postValues.Set("domain", domain)
+	postValues.Set("length", "200")
+	postValues.Set("sub_domain", host)
+	postValues.Set("record_type", "A")
+	req, err := http.NewRequest(http.MethodPost, "https://dnsapi.cn/Record.List", bytes.NewBufferString(postValues.Encode()))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	respBody, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return "", err
+	}
+	type RecordResp struct {
+		Records []*struct {
+			ID    string `json:"id"`
+			Value string `json:"value"`
+			Type  string `json:"type"`
+			Name  string `json:"name"`
+			Line  string `json:"line"`
+		} `json:"records"`
+	}
+	recordResp := new(RecordResp)
+	err = json.Unmarshal(respBody, recordResp)
+	if err != nil {
+		return "", err
+	}
+	var recordID string
+	var line string
+	for _, record := range recordResp.Records {
+		if record.Type == "A" && record.Name == host {
+			recordID = record.ID
+			line = record.Line
+			if ip == record.Value {
+				return "", nil
+			}
+		}
+	}
+	if recordID == "" {
+		return "", errors.New("record not found")
+	}
+	postValues = url.Values{}
+	postValues.Set("login_token", token)
+	postValues.Set("format", "json")
+	postValues.Set("domain", domain)
+	postValues.Set("record_id", recordID)
+	postValues.Set("value", ip)
+	postValues.Set("record_line", line)
+	postValues.Set("sub_domain", host)
+	req, err = http.NewRequest(http.MethodPost, "https://dnsapi.cn/Record.Ddns", bytes.NewBufferString(postValues.Encode()))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err = httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	respBody, err = ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return "", err
+	}
+	type DDNSResp struct {
+		Record struct {
+			ID    int64  `json:"id"`
+			Value string `json:"value"`
+			Name  string `json:"name"`
+		} `json:"record"`
+	}
+	ddnsResp := new(DDNSResp)
+	err = json.Unmarshal(respBody, ddnsResp)
+	if err != nil {
+		return "", err
+	}
+	if ddnsResp.Record.Value != ip {
+		return "", errors.New("ip not set")
+	}
+	return ddnsResp.Record.Value, nil
 }

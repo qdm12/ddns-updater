@@ -90,7 +90,7 @@
                 "host": "@",
                 "ip_method": "provider",
                 "delay": 86400,
-                "password": "e5322165c1d74692bfa6d807100c0310"
+                "token": "id,token"
             }
         ]
     }

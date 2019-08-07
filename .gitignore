@@ -1,3 +1,2 @@
 *.exe
 .vscode
-pkg/update/update_test.go

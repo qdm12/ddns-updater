@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -18,7 +16,7 @@ import (
 	"ddns-updater/pkg/network"
 	"ddns-updater/pkg/regex"
 
-	uuid "github.com/google/uuid"
+	"github.com/google/uuid"
 )
 
 const (
@@ -485,16 +483,12 @@ func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (newI
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	resp, err := httpClient.Do(req)
+	var content []byte
+	_, content, err = network.DoHTTPRequest(httpClient, req)
 	if err != nil {
 		return "", err
 	}
-	respBody, err := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return "", err
-	}
-	type RecordResp struct {
+	recordResp := new(struct {
 		Records []*struct {
 			ID    string `json:"id"`
 			Value string `json:"value"`
@@ -502,9 +496,8 @@ func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (newI
 			Name  string `json:"name"`
 			Line  string `json:"line"`
 		} `json:"records"`
-	}
-	recordResp := new(RecordResp)
-	err = json.Unmarshal(respBody, recordResp)
+	})
+	err = json.Unmarshal(content, recordResp)
 	if err != nil {
 		return "", err
 	}
@@ -520,7 +513,7 @@ func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (newI
 		}
 	}
 	if recordID == "" {
-		return "", errors.New("record not found")
+		return "", fmt.Errorf("record not found")
 	}
 	postValues = url.Values{}
 	postValues.Set("login_token", token)
@@ -535,29 +528,23 @@ func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (newI
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	resp, err = httpClient.Do(req)
+	_, content, err = network.DoHTTPRequest(httpClient, req)
 	if err != nil {
 		return "", err
 	}
-	respBody, err = ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return "", err
-	}
-	type DDNSResp struct {
+	ddnsResp := new(struct {
 		Record struct {
 			ID    int64  `json:"id"`
 			Value string `json:"value"`
 			Name  string `json:"name"`
 		} `json:"record"`
-	}
-	ddnsResp := new(DDNSResp)
-	err = json.Unmarshal(respBody, ddnsResp)
+	})
+	err = json.Unmarshal(content, ddnsResp)
 	if err != nil {
 		return "", err
 	}
 	if ddnsResp.Record.Value != ip {
-		return "", errors.New("ip not set")
+		return "", fmt.Errorf("ip not set")
 	}
-	return ddnsResp.Record.Value, nil
+	return "", nil
 }

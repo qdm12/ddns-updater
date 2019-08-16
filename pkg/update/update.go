@@ -109,7 +109,7 @@ func update(
 			ip,
 		)
 	case models.PROVIDERDNSPOD:
-		ip, err = updateDnsPod(
+		err = updateDnsPod(
 			httpClient,
 			recordConfig.Settings.Domain,
 			recordConfig.Settings.Host,
@@ -470,7 +470,7 @@ func updateNoIP(httpClient *http.Client, hostname, username, password, ip string
 	return "", fmt.Errorf("unknown response: %s", s)
 }
 
-func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (newIP string, err error) {
+func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (err error) {
 	postValues := url.Values{}
 	postValues.Set("login_token", token)
 	postValues.Set("format", "json")
@@ -480,15 +480,19 @@ func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (newI
 	postValues.Set("record_type", "A")
 	req, err := http.NewRequest(http.MethodPost, "https://dnsapi.cn/Record.List", bytes.NewBufferString(postValues.Encode()))
 	if err != nil {
-		return "", err
+		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	var content []byte
-	_, content, err = network.DoHTTPRequest(httpClient, req)
+	var status int
+	status, content, err = network.DoHTTPRequest(httpClient, req)
 	if err != nil {
-		return "", err
+		return err
 	}
-	recordResp := new(struct {
+	if status != 200 {
+		return fmt.Errorf("HTTP status %d", status)
+	}
+	recordResp := &struct {
 		Records []*struct {
 			ID    string `json:"id"`
 			Value string `json:"value"`
@@ -496,10 +500,10 @@ func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (newI
 			Name  string `json:"name"`
 			Line  string `json:"line"`
 		} `json:"records"`
-	})
+	}{}
 	err = json.Unmarshal(content, recordResp)
 	if err != nil {
-		return "", err
+		return err
 	}
 	var recordID string
 	var line string
@@ -508,12 +512,12 @@ func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (newI
 			recordID = record.ID
 			line = record.Line
 			if ip == record.Value {
-				return "", nil
+				return nil
 			}
 		}
 	}
 	if recordID == "" {
-		return "", fmt.Errorf("record not found")
+		return fmt.Errorf("record not found")
 	}
 	postValues = url.Values{}
 	postValues.Set("login_token", token)
@@ -525,26 +529,29 @@ func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (newI
 	postValues.Set("sub_domain", host)
 	req, err = http.NewRequest(http.MethodPost, "https://dnsapi.cn/Record.Ddns", bytes.NewBufferString(postValues.Encode()))
 	if err != nil {
-		return "", err
+		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	_, content, err = network.DoHTTPRequest(httpClient, req)
+	status, content, err = network.DoHTTPRequest(httpClient, req)
 	if err != nil {
-		return "", err
+		return err
 	}
-	ddnsResp := new(struct {
+	if status != 200 {
+		return fmt.Errorf("HTTP status %d", status)
+	}
+	ddnsResp := &struct {
 		Record struct {
 			ID    int64  `json:"id"`
 			Value string `json:"value"`
 			Name  string `json:"name"`
 		} `json:"record"`
-	})
+	}{}
 	err = json.Unmarshal(content, ddnsResp)
 	if err != nil {
-		return "", err
+		return err
 	}
 	if ddnsResp.Record.Value != ip {
-		return "", fmt.Errorf("ip not set")
+		return fmt.Errorf("ip not set")
 	}
-	return "", nil
+	return nil
 }

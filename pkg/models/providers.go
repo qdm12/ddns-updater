@@ -15,6 +15,7 @@ const (
 	PROVIDERDREAMHOST
 	PROVIDERCLOUDFLARE
 	PROVIDERNOIP
+	PROVIDERDNSPOD
 )
 
 func (provider ProviderType) String() string {
@@ -31,6 +32,8 @@ func (provider ProviderType) String() string {
 		return "cloudflare"
 	case PROVIDERNOIP:
 		return "noip"
+	case PROVIDERDNSPOD:
+		return "dnspod"
 	default:
 		return "unknown"
 	}
@@ -51,6 +54,8 @@ func ParseProvider(s string) (ProviderType, error) {
 		return PROVIDERCLOUDFLARE, nil
 	case "noip":
 		return PROVIDERNOIP, nil
+	case "dnspod":
+		return PROVIDERDNSPOD, nil
 	default:
 		return 0, fmt.Errorf("Provider %s not recognized", s)
 	}

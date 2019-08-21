@@ -150,6 +150,12 @@ func (settings *SettingsType) Verify() error {
 		} else if settings.Host == "*" {
 			return fmt.Errorf("host cannot be * for settings %s", settings)
 		}
+	case PROVIDERDNSPOD:
+		if len(settings.Token) == 0 {
+			return fmt.Errorf("token cannot be empty for settings %s", settings)
+		} else if settings.IPmethod == IPMETHODPROVIDER {
+			return fmt.Errorf("unsupported IP update method for settings %s", settings)
+		}
 	default:
 		return fmt.Errorf("provider \"%s\" is not supported", settings.Provider)
 	}

@@ -88,7 +88,7 @@
                 "provider": "dnspod",
                 "domain": "example.com",
                 "host": "@",
-                "ip_method": "provider",
+                "ip_method": "opendns",
                 "delay": 86400,
                 "token": "id,token"
             }

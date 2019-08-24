@@ -19,7 +19,7 @@
 
 | Image size | RAM usage | CPU usage |
 | --- | --- | --- |
-| 21.5MB | 13MB | Very low |
+| 21.6MB | 13MB | Very low |
 
 ## Features
 
@@ -77,20 +77,6 @@
                 "ip_method": "duckduckgo",
                 "key": "aaaaaaaaaaaaaaaa",
                 "secret": "aaaaaaaaaaaaaaaa"
-            },
-            {
-                "provider": "dreamhost",
-                "domain": "example.info",
-                "ip_method": "opendns",
-                "key": "aaaaaaaaaaaaaaaa"
-            },
-            {
-                "provider": "dnspod",
-                "domain": "example.com",
-                "host": "@",
-                "ip_method": "opendns",
-                "delay": 86400,
-                "token": "id,token"
             }
         ]
     }
@@ -356,6 +342,7 @@ Special thanks to @Starttoaster for helping out with the [documentation](https:/
 
 ## TODOs
 
+- [ ] Hot reload of config.json
 - [ ] Changed from sqlite to rqlite
 - [ ] Change logging to uber-go/zap
 - [ ] Unit tests

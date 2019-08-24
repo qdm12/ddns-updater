@@ -1,17 +1,16 @@
 ARG BASE_IMAGE_BUILDER=golang
 ARG BASE_IMAGE=alpine
 ARG ALPINE_VERSION=3.10
-ARG GO_VERSION=1.12.6
+ARG GO_VERSION=1.12.9
 
 FROM ${BASE_IMAGE_BUILDER}:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 ARG GOARCH=amd64
 ARG GOARM=
 ARG BINCOMPRESS
 RUN apk --update add git build-base upx
-RUN go get -u -v golang.org/x/vgo
 WORKDIR /tmp/gobuild
 COPY go.mod go.sum ./
-RUN go mod download
+RUN go mod download 2>&1
 COPY pkg/ ./pkg/
 COPY main.go .
 RUN go test -v ./...

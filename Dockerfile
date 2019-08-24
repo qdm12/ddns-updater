@@ -21,19 +21,17 @@ RUN [ "${BINCOMPRESS}" == "" ] || (upx -v --best --lzma --overlay=strip app && u
 FROM ${BASE_IMAGE}:${ALPINE_VERSION} AS final
 ARG BUILD_DATE
 ARG VCS_REF
-LABEL org.label-schema.schema-version="1.0.0-rc1" \
-    maintainer="quentin.mcgaw@gmail.com" \
-    org.label-schema.build-date=$BUILD_DATE \
-    org.label-schema.vcs-ref=$VCS_REF \
-    org.label-schema.vcs-url="https://github.com/qdm12/ddns-updater" \
-    org.label-schema.url="https://github.com/qdm12/ddns-updater" \
-    org.label-schema.vcs-description="Lightweight container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost and DuckDNS" \
-    org.label-schema.vcs-usage="https://github.com/qdm12/ddns-updater" \
-    org.label-schema.docker.cmd="docker run -d -p 8000:8000/tcp -v $(pwd)/data:/updater/data qmcgaw/ddns-updater" \
-    org.label-schema.docker.cmd.devel="docker run -it --rm -p 8000:8000/tcp -v $(pwd)/data:/updater/data qmcgaw/ddns-updater" \
-    org.label-schema.docker.params="See readme configuration section" \
-    org.label-schema.version="" \
-    image-size="21.5MB" \
+LABEL \
+    org.opencontainers.image.authors="quentin.mcgaw@gmail.com" \
+    org.opencontainers.image.created=$BUILD_DATE \
+    org.opencontainers.image.version="" \
+    org.opencontainers.image.revision=$VCS_REF \
+    org.opencontainers.image.url="https://github.com/qdm12/ddns-updater" \
+    org.opencontainers.image.documentation="https://github.com/qdm12/ddns-updater" \
+    org.opencontainers.image.source="https://github.com/qdm12/ddns-updater" \
+    org.opencontainers.image.title="ddns-updater" \
+    org.opencontainers.image.description="Universal DNS updater with WebUI. Works with Namecheap, Cloudflare, GoDaddy, DuckDns, Dreamhost and NoIP" \
+    image-size="21.6MB" \
     ram-usage="13MB" \
     cpu-usage="Very Low"
 RUN apk add --update sqlite ca-certificates && \

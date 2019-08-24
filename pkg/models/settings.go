@@ -80,8 +80,8 @@ func (settings *SettingsType) getHTMLIPMethod() string {
 		return settings.getHTMLProvider()
 	case IPMETHODDUCKDUCKGO:
 		return "<a href=\"https://duckduckgo.com/?q=ip\">DuckDuckGo</a>"
-	case IPMETHODOPENDNS:
-		return "<a href=\"https://diagnostic.opendns.com/myip\">OpenDNS</a>"
+	// case IPMETHODOPENDNS:
+	// 	return "<a href=\"https://diagnostic.opendns.com/myip\">OpenDNS</a>"
 	default:
 		return settings.IPmethod.String()
 	}

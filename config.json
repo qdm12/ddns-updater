@@ -1,5 +1,6 @@
 {
-    "settings": [{
+    "settings": [
+        {
             "provider": "namecheap",
             "domain": "example.com",
             "host": "@",
@@ -24,7 +25,7 @@
         {
             "provider": "dreamhost",
             "domain": "example.info",
-            "ip_method": "opendns",
+            "ip_method": "duckduckgo",
             "key": "aaaaaaaaaaaaaaaa"
         }
     ]

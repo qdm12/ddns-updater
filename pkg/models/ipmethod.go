@@ -9,7 +9,7 @@ type IPMethodType uint8
 const (
 	IPMETHODPROVIDER IPMethodType = iota
 	IPMETHODDUCKDUCKGO
-	IPMETHODOPENDNS
+	// IPMETHODOPENDNS
 )
 
 func (ipMethod IPMethodType) String() string {
@@ -18,8 +18,8 @@ func (ipMethod IPMethodType) String() string {
 		return "provider"
 	case IPMETHODDUCKDUCKGO:
 		return "duckduckgo"
-	case IPMETHODOPENDNS:
-		return "opendns"
+	// case IPMETHODOPENDNS:
+	// 	return "opendns"
 	default:
 		return "unknown"
 	}
@@ -33,7 +33,7 @@ func ParseIPMethod(s string) (IPMethodType, error) {
 	case "duckduckgo":
 		return IPMETHODDUCKDUCKGO, nil
 	case "opendns":
-		return IPMETHODOPENDNS, nil
+		return 0, fmt.Errorf("IP method %s no longer supported", s)
 	}
 	return 0, fmt.Errorf("IP method %s not recognized", s)
 }

@@ -152,8 +152,8 @@ func getPublicIP(httpClient *http.Client, IPmethod models.IPMethodType) (ip stri
 		return "", nil
 	} else if IPmethod == models.IPMETHODDUCKDUCKGO {
 		return network.GetPublicIP(httpClient, "https://duckduckgo.com/?q=ip")
-	} else if IPmethod == models.IPMETHODOPENDNS {
-		return network.GetPublicIP(httpClient, "https://diagnostic.opendns.com/myip")
+		// } else if IPmethod == models.IPMETHODOPENDNS {
+		// 	return network.GetPublicIP(httpClient, "https://diagnostic.opendns.com/myip")
 	}
 	return "", fmt.Errorf("IP method %s is not supported", IPmethod)
 }

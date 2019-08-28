@@ -7,3 +7,5 @@ LICENSE
 *.md
 readme
 .gitignore
+.devcontainer
+.vscode

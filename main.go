@@ -12,23 +12,44 @@ import (
 
 	"ddns-updater/pkg/database"
 	"ddns-updater/pkg/healthcheck"
-	"ddns-updater/pkg/logging"
 	"ddns-updater/pkg/models"
 	"ddns-updater/pkg/network"
 	"ddns-updater/pkg/params"
 	"ddns-updater/pkg/server"
 	"ddns-updater/pkg/update"
 
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+
 	"github.com/kyokomi/emoji"
 )
 
 func init() {
-	loggerMode := params.GetLoggerMode()
-	logging.SetGlobalLoggerMode(loggerMode)
+	encoding := params.GetLoggerMode()
+	level := params.GetLoggerLevel()
 	nodeID := params.GetNodeID()
-	logging.SetGlobalLoggerNodeID(nodeID)
-	loggerLevel := params.GetLoggerLevel()
-	logging.SetGlobalLoggerLevel(loggerLevel)
+	config := zap.Config{
+		Level:    zap.NewAtomicLevelAt(level),
+		Encoding: encoding,
+		EncoderConfig: zapcore.EncoderConfig{
+			TimeKey:        "ts",
+			LevelKey:       "level",
+			MessageKey:     "msg",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.CapitalLevelEncoder,
+			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			EncodeDuration: zapcore.SecondsDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+		},
+		OutputPaths:      []string{"stdout"},
+		ErrorOutputPaths: []string{"stdout"},
+	}
+	logger, err := config.Build()
+	if err != nil {
+		zap.S().Fatal(err)
+	}
+	logger = logger.With(zap.Int("node_id", nodeID))
+	zap.ReplaceGlobals(logger)
 }
 
 func main() {
@@ -49,26 +70,26 @@ func main() {
 	dataDir := params.GetDataDir(dir)
 	settings, warnings, err := params.GetSettings(dataDir + "/config.json")
 	for _, w := range warnings {
-		logging.Warn(w)
+		zap.S().Warn(w)
 	}
 	if err != nil {
-		logging.Fatal("%s", err)
+		zap.S().Fatal(err)
 	}
-	logging.Info("Found %d settings to update records", len(settings))
+	zap.S().Infof("Found %d settings to update records", len(settings))
 	errs := network.ConnectivityChecks(httpClient, []string{"google.com"})
 	for _, err := range errs {
-		logging.Warn("%s", err)
+		zap.S().Warn(err)
 	}
 	sqlDb, err := database.NewDb(dataDir)
 	if err != nil {
-		logging.Fatal("%s", err)
+		zap.S().Fatal(err)
 	}
 	var recordsConfigs []models.RecordConfigType
 	for _, s := range settings {
-		logging.Info("Reading history from database for domain and host: %s %s", s.Domain, s.Host)
+		zap.S().Infof("Reading history from database for domain and host: %s %s", s.Domain, s.Host)
 		ips, tSuccess, err := sqlDb.GetIps(s.Domain, s.Host)
 		if err != nil {
-			logging.Fatal("%s", err)
+			zap.S().Fatal(err)
 		}
 		recordsConfigs = append(recordsConfigs, models.NewRecordConfig(s, ips, tSuccess))
 	}
@@ -79,10 +100,10 @@ func main() {
 	go update.TriggerServer(delay, chForce, chQuit, recordsConfigs, httpClient, sqlDb)
 	chForce <- struct{}{}
 	router := server.CreateRouter(rootURL, dir, chForce, recordsConfigs)
-	logging.Info("Web UI listening on 0.0.0.0:%s%s", listeningPort, rootURL)
+	zap.S().Infof("Web UI listening on 0.0.0.0:%s%s", listeningPort, rootURL)
 	err = http.ListenAndServe("0.0.0.0:"+listeningPort, router)
 	if err != nil {
-		logging.Fatal("%s", err)
+		zap.S().Fatal(err)
 	}
 }
 
@@ -95,10 +116,10 @@ func waitForExit(httpClient *http.Client, chQuit chan struct{}) {
 		os.Interrupt,
 	)
 	signal := <-signals
-	logging.Warn("Caught OS signal: %s", signal)
-	logging.Info("Closing HTTP client idle connections")
+	zap.S().Warnf("Caught OS signal: %s", signal)
+	zap.S().Info("Closing HTTP client idle connections")
 	httpClient.CloseIdleConnections()
-	logging.Info("Sending quit signal to goroutines")
+	zap.S().Info("Sending quit signal to goroutines")
 	chQuit <- struct{}{} // this closes chQuit implicitely
 	os.Exit(0)
 }

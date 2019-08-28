@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"ddns-updater/pkg/database"
-	"ddns-updater/pkg/logging"
 	"ddns-updater/pkg/models"
 	"ddns-updater/pkg/network"
 	"ddns-updater/pkg/regex"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 const (
@@ -43,7 +43,7 @@ func update(
 	if err != nil {
 		recordConfig.Status.SetCode(models.FAIL)
 		recordConfig.Status.SetMessage("%s", err)
-		logging.Warn("%s", recordConfig)
+		zap.S().Warn(recordConfig)
 		return
 	}
 	// Note: empty IP means DNS provider provided
@@ -122,7 +122,7 @@ func update(
 	if err != nil {
 		recordConfig.Status.SetCode(models.FAIL)
 		recordConfig.Status.SetMessage("%s", err)
-		logging.Warn("%s", recordConfig)
+		zap.S().Warn(recordConfig)
 		return
 	}
 	if len(ips) > 0 && ip == ips[0] { // same IP

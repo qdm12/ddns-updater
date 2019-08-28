@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"ddns-updater/pkg/logging"
+	"go.uber.org/zap"
 )
 
 var cidrs []*net.IPNet
@@ -27,7 +27,7 @@ func init() {
 	for _, maxCidrBlock := range maxCidrBlocks {
 		_, cidr, err := net.ParseCIDR(maxCidrBlock)
 		if err != nil {
-			logging.Fatal("%s", err)
+			zap.S().Fatal(err)
 		}
 		cidrs = append(cidrs, cidr)
 	}
@@ -82,7 +82,7 @@ func extractPublicIPs(ips []string) (publicIPs []string) {
 		ip = strings.TrimSpace(ip)
 		private, err := ipIsPrivate(ip)
 		if err != nil {
-			logging.Warn("%s", err)
+			zap.S().Warn(err)
 			continue
 		}
 		if !private {
@@ -105,7 +105,7 @@ func getXForwardedIPs(XForwardedFor string) (ips []string) {
 		ip = strings.ReplaceAll(ip, " ", "")
 		err := checkIP(ip)
 		if err != nil {
-			logging.Warn("%s", err)
+			zap.S().Warn(err)
 			continue
 		}
 		ips = append(ips, ip)

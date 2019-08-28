@@ -30,7 +30,7 @@ LABEL \
     org.opencontainers.image.source="https://github.com/qdm12/ddns-updater" \
     org.opencontainers.image.title="ddns-updater" \
     org.opencontainers.image.description="Universal DNS updater with WebUI. Works with Namecheap, Cloudflare, GoDaddy, DuckDns, Dreamhost and NoIP" \
-    image-size="21.6MB" \
+    image-size="21.9MB" \
     ram-usage="13MB" \
     cpu-usage="Very Low"
 RUN apk add --update sqlite ca-certificates && \

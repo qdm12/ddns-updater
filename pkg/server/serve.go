@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"text/template"
 
-	"ddns-updater/pkg/logging"
 	"ddns-updater/pkg/models"
 	"ddns-updater/pkg/network"
+
 	"github.com/julienschmidt/httprouter"
+	"go.uber.org/zap"
 )
 
 type healthcheckParamsType struct {
@@ -51,7 +52,7 @@ func (params *indexParamsType) get(w http.ResponseWriter, _ *http.Request, _ htt
 	htmlData := models.ToHTML(params.recordsConfigs)
 	err := t.ExecuteTemplate(w, "index.html", htmlData) // TODO Without pointer?
 	if err != nil {
-		logging.Warn("%s", err)
+		zap.S().Warn(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, "An error occurred creating this webpage")
 	}
@@ -60,18 +61,18 @@ func (params *indexParamsType) get(w http.ResponseWriter, _ *http.Request, _ htt
 func (params *healthcheckParamsType) get(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	clientIP, err := network.GetClientIP(r)
 	if err != nil {
-		logging.Info("Cannot detect client IP: %s", err)
+		zap.S().Infof("Cannot detect client IP: %s", err)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	if clientIP != "127.0.0.1" && clientIP != "::1" {
-		logging.Info("IP address %s tried to perform the healthcheck", clientIP)
+		zap.S().Infof("IP address %s tried to perform the healthcheck", clientIP)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	err = healthcheckHandler(params.recordsConfigs)
 	if err != nil {
-		logging.Warn("Responded with error to healthcheck: %s", err)
+		zap.S().Warnf("Responded with error to healthcheck: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -80,6 +81,6 @@ func (params *healthcheckParamsType) get(w http.ResponseWriter, r *http.Request,
 
 func (params *updateParamsType) get(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	params.forceCh <- struct{}{}
-	logging.Info("Update started manually")
+	zap.S().Info("Update started manually")
 	http.Redirect(w, r, params.rootURL, 301)
 }

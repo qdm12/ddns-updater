@@ -19,7 +19,7 @@
 
 | Image size | RAM usage | CPU usage |
 | --- | --- | --- |
-| 21.6MB | 13MB | Very low |
+| 21.9MB | 13MB | Very low |
 
 ## Features
 
@@ -217,7 +217,7 @@ Please then refer to your specific DNS host provider in the section below for ev
 | `ROOTURL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
 | `LISTENINGPORT` | `8000` | Internal TCP listening port for the web UI |
 | `LOGGING` | `json` | Format of logging, `json` or `human` |
-| `LOGLEVEL` | `info` | Level of logging, `info`, `success`, `warning` or `error` |
+| `LOGLEVEL` | `info` | Level of logging, `info`, ~`success`~, `warning` or `error` |
 | `NODEID` | `0` | Node ID (for distributed systems), can be any integer |
 
 ### Host firewall
@@ -344,7 +344,6 @@ Special thanks to @Starttoaster for helping out with the [documentation](https:/
 
 - [ ] Hot reload of config.json
 - [ ] Changed from sqlite to rqlite
-- [ ] Change logging to uber-go/zap
 - [ ] Unit tests
 - [ ] Other types or records
 - [ ] ReactJS frontend

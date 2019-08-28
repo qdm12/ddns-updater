@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"ddns-updater/pkg/logging"
-
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // GetListeningPort obtains and checks the listening port from Viper (env variable or config file, etc.)
@@ -32,10 +32,10 @@ func GetDelay() time.Duration {
 	delayStr := viper.GetString("delay")
 	delayInt, err := strconv.ParseInt(delayStr, 10, 64)
 	if err != nil {
-		logging.Fatal("delay %s is not a valid integer", delayStr)
+		zap.S().Fatalf("delay %s is not a valid integer", delayStr)
 	}
 	if delayInt < 10 {
-		logging.Fatal("delay %d must be bigger than 10 seconds", delayInt)
+		zap.S().Fatalf("delay %d must be bigger than 10 seconds", delayInt)
 	}
 	return time.Duration(delayInt)
 }
@@ -53,21 +53,48 @@ func GetDataDir(dir string) string {
 func GetDir() (dir string) {
 	ex, err := os.Executable()
 	if err != nil {
-		logging.Fatal("%s", err)
+		zap.S().Fatal(err)
 	}
 	return filepath.Dir(ex)
 }
 
 // GetLoggerMode obtains the logging mode from Viper (env variable or config file, etc.)
-func GetLoggerMode() logging.Mode {
+func GetLoggerMode() string {
 	s := viper.GetString("logging")
-	return logging.ParseMode(s)
+	s = strings.ToLower(s)
+	switch s {
+	case "json":
+		return "json" // zap style encoding
+	case "human":
+		return "console"
+	case "console":
+		return "console"
+	case "":
+		return "json"
+	default:
+		// uses the global logger
+		zap.S().Warnf("Unrecognized logging mode %s", s)
+		return "json"
+	}
 }
 
 // GetLoggerLevel obtains the logging level from Viper (env variable or config file, etc.)
-func GetLoggerLevel() logging.Level {
+func GetLoggerLevel() zapcore.Level {
 	s := viper.GetString("loglevel")
-	return logging.ParseLevel(s)
+	s = strings.ToLower(s)
+	switch s {
+	case "info":
+		return zap.InfoLevel
+	case "warning":
+		return zap.WarnLevel
+	case "error":
+		return zap.ErrorLevel
+	case "":
+		return zap.InfoLevel
+	default:
+		zap.S().Warn("Unrecognized logging level %s", s)
+		return zap.InfoLevel
+	}
 }
 
 // GetNodeID obtains the node instance ID from Viper (env variable or config file, etc.)
@@ -75,7 +102,7 @@ func GetNodeID() int {
 	nodeID := viper.GetString("nodeid")
 	value, err := strconv.Atoi(nodeID)
 	if err != nil {
-		logging.Fatal("Node ID %s is not a valid integer", nodeID)
+		zap.S().Fatalf("Node ID %s is not a valid integer", nodeID)
 	}
 	return value
 }

@@ -1,4 +1,4 @@
-FROM golang:1.12.9-buster
+FROM golang:1.13-buster
 ENV DEBIAN_FRONTEND=noninteractive
 ARG USERNAME=vscode
 ARG USER_UID=1000
@@ -7,7 +7,6 @@ RUN apt-get update && \
     apt-get -y install --no-install-recommends apt-utils 2>&1 && \
     apt-get -y install git && \
     go get -u -v \
-    github.com/ramya-rao-a/go-outline \
     golang.org/x/tools/cmd/gopls 2>&1 && \
     groupadd --gid $USER_GID $USERNAME && \
     useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME && \

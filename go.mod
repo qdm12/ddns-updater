@@ -6,6 +6,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/fatih/color v1.7.0
 	github.com/google/uuid v1.1.1
+	github.com/gotify/go-api-client/v2 v2.0.4
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/kyokomi/emoji v2.1.0+incompatible
 	github.com/mattn/go-colorable v0.1.1 // indirect

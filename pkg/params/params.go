@@ -1,6 +1,7 @@
 package params
 
 import (
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -105,6 +106,25 @@ func GetNodeID() int {
 		zap.S().Fatalf("Node ID %s is not a valid integer", nodeID)
 	}
 	return value
+}
+
+// GetGotifyURL obtains the URL to the Gotify server
+func GetGotifyURL() (URL *url.URL) {
+	s := viper.GetString("gotifyurl")
+	if s == "" {
+		return nil
+	}
+	URL, err := url.Parse(s)
+	if err != nil {
+		zap.S().Fatalf("URL %s is not valid", s)
+	}
+	return URL
+}
+
+// GetGotifyToken obtains the token for the app on the Gotify server
+func GetGotifyToken() (token string) {
+	token = viper.GetString("gotifytoken")
+	return token
 }
 
 func stringInAny(s string, ss ...string) bool {

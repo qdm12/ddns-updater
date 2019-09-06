@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"ddns-updater/pkg/admin"
 	"ddns-updater/pkg/database"
 	"ddns-updater/pkg/models"
 	"ddns-updater/pkg/network"
@@ -32,6 +33,7 @@ func update(
 	recordConfig *models.RecordConfigType,
 	httpClient *http.Client,
 	sqlDb *database.DB,
+	gotify *admin.Gotify,
 ) {
 	var err error
 	recordConfig.IsUpdating.Lock()
@@ -44,6 +46,7 @@ func update(
 		recordConfig.Status.SetCode(models.FAIL)
 		recordConfig.Status.SetMessage("%s", err)
 		zap.S().Warn(recordConfig)
+		gotify.Notify("DDNS Updater", 5, recordConfig.String())
 		return
 	}
 	// Note: empty IP means DNS provider provided
@@ -123,6 +126,7 @@ func update(
 		recordConfig.Status.SetCode(models.FAIL)
 		recordConfig.Status.SetMessage("%s", err)
 		zap.S().Warn(recordConfig)
+		gotify.Notify("DDNS Updater", 5, recordConfig.String())
 		return
 	}
 	if len(ips) > 0 && ip == ips[0] { // same IP
@@ -132,6 +136,7 @@ func update(
 		if err != nil {
 			recordConfig.Status.SetCode(models.FAIL)
 			recordConfig.Status.SetMessage("Cannot update database: %s", err)
+			gotify.Notify("DDNS Updater", 4, "Cannot update database: %s", err)
 		}
 		return
 	}
@@ -140,10 +145,12 @@ func update(
 	recordConfig.Status.SetMessage("")
 	recordConfig.History.SetTSuccess(time.Now())
 	recordConfig.History.PrependIP(ip)
+	gotify.Notify("DDNS Updater", 1, "%s changed from %s to %s", recordConfig.Settings.BuildDomainName(), ips[0], ip)
 	err = sqlDb.StoreNewIP(recordConfig.Settings.Domain, recordConfig.Settings.Host, ip)
 	if err != nil {
 		recordConfig.Status.SetCode(models.FAIL)
 		recordConfig.Status.SetMessage("Cannot update database: %s", err)
+		gotify.Notify("DDNS Updater", 4, "Cannot update database: %s", err)
 	}
 }
 

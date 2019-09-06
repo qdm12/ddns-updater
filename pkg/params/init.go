@@ -12,6 +12,8 @@ func init() {
 	viper.SetDefault("logmode", "")
 	viper.SetDefault("loglevel", "")
 	viper.SetDefault("nodeid", "0")
+	viper.SetDefault("gotifyurl", "")
+	viper.SetDefault("gotifytoken", "")
 	viper.BindEnv("listeningport")
 	viper.BindEnv("rooturl")
 	viper.BindEnv("delay")
@@ -19,4 +21,6 @@ func init() {
 	viper.BindEnv("logmode")
 	viper.BindEnv("loglevel")
 	viper.BindEnv("nodeid")
+	viper.BindEnv("gotifyurl")
+	viper.BindEnv("gotifytoken")
 }

@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"ddns-updater/pkg/admin"
 	"ddns-updater/pkg/database"
 	"ddns-updater/pkg/healthcheck"
 	"ddns-updater/pkg/models"
@@ -62,7 +63,7 @@ func main() {
 	fmt.Println("######## Give some " + emoji.Sprint(":heart:") + "at #########")
 	fmt.Println("# github.com/qdm12/ddns-updater #")
 	fmt.Print("#################################\n\n")
-	httpClient := &http.Client{Timeout: 10 * time.Second}
+	httpClient := &http.Client{Timeout: time.Second}
 	dir := params.GetDir()
 	listeningPort := params.GetListeningPort()
 	rootURL := params.GetRootURL()
@@ -76,6 +77,13 @@ func main() {
 		zap.S().Fatal(err)
 	}
 	zap.S().Infof("Found %d settings to update records", len(settings))
+	gotifyURL := params.GetGotifyURL()
+	gotifyToken := params.GetGotifyToken()
+	gotify, err := admin.NewGotify(gotifyURL, gotifyToken, httpClient)
+	if err != nil {
+		zap.S().Warn("Gotify not activated: %s", err)
+	}
+	httpClient.Timeout = 10 * time.Second
 	errs := network.ConnectivityChecks(httpClient, []string{"google.com"})
 	for _, err := range errs {
 		zap.S().Warn(err)
@@ -96,18 +104,19 @@ func main() {
 	chForce := make(chan struct{})
 	chQuit := make(chan struct{})
 	defer close(chForce)
-	go waitForExit(httpClient, chQuit)
-	go update.TriggerServer(delay, chForce, chQuit, recordsConfigs, httpClient, sqlDb)
+	go waitForExit(httpClient, chQuit, gotify)
+	go update.TriggerServer(delay, chForce, chQuit, recordsConfigs, httpClient, sqlDb, gotify)
 	chForce <- struct{}{}
-	router := server.CreateRouter(rootURL, dir, chForce, recordsConfigs)
+	router := server.CreateRouter(rootURL, dir, chForce, recordsConfigs, gotify)
 	zap.S().Infof("Web UI listening on 0.0.0.0:%s%s", listeningPort, rootURL)
+	gotify.Notify("DDNS Updater", 1, "Just launched\nIt has %d records to watch", len(recordsConfigs))
 	err = http.ListenAndServe("0.0.0.0:"+listeningPort, router)
 	if err != nil {
 		zap.S().Fatal(err)
 	}
 }
 
-func waitForExit(httpClient *http.Client, chQuit chan struct{}) {
+func waitForExit(httpClient *http.Client, chQuit chan struct{}, gotify *admin.Gotify) {
 	signals := make(chan os.Signal)
 	signal.Notify(signals,
 		syscall.SIGINT,
@@ -117,6 +126,7 @@ func waitForExit(httpClient *http.Client, chQuit chan struct{}) {
 	)
 	signal := <-signals
 	zap.S().Warnf("Caught OS signal: %s", signal)
+	gotify.Notify("DDNS Updater", 4, "Caught OS signal: %s", signal)
 	zap.S().Info("Closing HTTP client idle connections")
 	httpClient.CloseIdleConnections()
 	zap.S().Info("Sending quit signal to goroutines")

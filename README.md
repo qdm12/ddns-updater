@@ -32,6 +32,7 @@
 - Persistence with a sqlite database to store old IP addresses and previous update status
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
+- Sends notifications to your Android phone, see the [**Gotify**](#Gotify) section (it's free, open source and self hosted 🆒)
 
 ## Setup
 
@@ -219,12 +220,15 @@ Please then refer to your specific DNS host provider in the section below for ev
 | `LOGGING` | `json` | Format of logging, `json` or `human` |
 | `LOGLEVEL` | `info` | Level of logging, `info`, ~`success`~, `warning` or `error` |
 | `NODEID` | `0` | Node ID (for distributed systems), can be any integer |
+| `GOTIFYURL` |  | HTTP(s) URL to your Gotify server |
+| `GOTIFYTOKEN` |  | Token to access your Gotify server |
 
 ### Host firewall
 
 This container needs the following ports:
 
 - TCP 443 outbound for outbound HTTPS
+- TCP 80 outbound if you use a local unsecured HTTP connection to your Gotify server
 - UDP 53 outbound for outbound DNS resolution
 - TCP 8000 inbound (or other) for the WebUI
 
@@ -313,6 +317,22 @@ Special thanks to @Starttoaster for helping out with the [documentation](https:/
 ### NoIP
 
 *Awaiting a contribution*
+
+## Gotify
+
+[![https://github.com/qdm12/ddns-updater/raw/master/readme/gotify.jpg](Gotify)](https://gotify.net)
+
+[**Gotify**](https://gotify.net) is a simple server for sending and receiving messages, and it is **free**, **private** and **open source**
+- It has an [Android app](https://play.google.com/store/apps/details?id=com.github.gotify) to receive notifications
+- The app does not drain your battery 👍
+- The notification server is self hosted, see [how to set it up with Docker](https://gotify.net/docs/install)
+- The notifications only go through your own server (ideally through HTTPS though)
+
+To set it up with DDNS updater:
+1. Go to the Web GUI of Gotify
+1. Login with the admin credentials
+1. Create an app and copy the generated token to the environment variable `GOTIFYTOKEN` (for this container)
+1. Set the `GOTIFYURL` variable to the URL of your Gotify server address (i.e. `http://127.0.0.1:8080` or `https://bla.com/gotify`)
 
 ## Testing
 

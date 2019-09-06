@@ -2,6 +2,7 @@ package update
 
 import (
 	"ddns-updater/pkg/database"
+	"ddns-updater/pkg/admin"
 	"ddns-updater/pkg/models"
 	"net/http"
 	"time"
@@ -14,6 +15,7 @@ func TriggerServer(
 	recordsConfigs []models.RecordConfigType, // does not change size so no pointer needed
 	httpClient *http.Client,
 	sqlDb *database.DB,
+	gotify *admin.Gotify,
 ) {
 	var chQuitArr, chForceArr []chan struct{}
 	defer func() {
@@ -31,9 +33,9 @@ func TriggerServer(
 		chQuitArr = append(chQuitArr, make(chan struct{}))
 		customDelay := recordsConfigs[i].Settings.Delay
 		if customDelay > 0 {
-			go periodicServer(&recordsConfigs[i], customDelay, httpClient, sqlDb, chForceArr[i], chQuitArr[i])
+			go periodicServer(&recordsConfigs[i], customDelay, httpClient, sqlDb, chForceArr[i], chQuitArr[i], gotify)
 		} else {
-			go periodicServer(&recordsConfigs[i], delay, httpClient, sqlDb, chForceArr[i], chQuitArr[i])
+			go periodicServer(&recordsConfigs[i], delay, httpClient, sqlDb, chForceArr[i], chQuitArr[i], gotify)
 		}
 	}
 	// fan out channel signals
@@ -58,6 +60,7 @@ func periodicServer(
 	httpClient *http.Client,
 	sqlDb *database.DB,
 	chForce, chQuit chan struct{},
+	gotify *admin.Gotify,
 ) {
 	ticker := time.NewTicker(delay * time.Second)
 	defer func() {
@@ -68,9 +71,9 @@ func periodicServer(
 	for {
 		select {
 		case <-ticker.C:
-			go update(recordConfig, httpClient, sqlDb)
+			go update(recordConfig, httpClient, sqlDb, gotify)
 		case <-chForce:
-			go update(recordConfig, httpClient, sqlDb)
+			go update(recordConfig, httpClient, sqlDb, gotify)
 		case <-chQuit:
 			recordConfig.IsUpdating.Lock() // wait for an eventual update to finish
 			ticker.Stop()

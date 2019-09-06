@@ -2,24 +2,25 @@
 
 *Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod and DuckDNS*
 
-[![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
+[![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
-[![Docker Build Status](https://img.shields.io/docker/build/qmcgaw/ddns-updater.svg)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
+[![Build Status](https://travis-ci.org/qdm12/ddns-updater.svg?branch=master)](https://travis-ci.org/qdm12/ddns-updater)
+[![Docker Build Status](https://img.shields.io/docker/build/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
 [![GitHub last commit](https://img.shields.io/github/last-commit/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/y/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
 [![GitHub issues](https://img.shields.io/github/issues/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/qmcgaw/ddns-updater.svg)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
-[![Docker Stars](https://img.shields.io/docker/stars/qmcgaw/ddns-updater.svg)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
-[![Docker Automated](https://img.shields.io/docker/automated/qmcgaw/ddns-updater.svg)](https://cloud.docker.com/u/qmcgaw/repository/docker/qmcgaw/ddns-updater)
+[![Docker Pulls](https://img.shields.io/docker/pulls/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
+[![Docker Stars](https://img.shields.io/docker/stars/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
+[![Docker Automated](https://img.shields.io/docker/automated/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
 [![Image size](https://images.microbadger.com/badges/image/qmcgaw/ddns-updater.svg)](https://microbadger.com/images/qmcgaw/ddns-updater)
 [![Image version](https://images.microbadger.com/badges/version/qmcgaw/ddns-updater.svg)](https://microbadger.com/images/qmcgaw/ddns-updater)
 
 | Image size | RAM usage | CPU usage |
 | --- | --- | --- |
-| 21.9MB | 13MB | Very low |
+| 23.5MB | 13MB | Very low |
 
 ## Features
 

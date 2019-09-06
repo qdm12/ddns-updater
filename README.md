@@ -320,7 +320,7 @@ Special thanks to @Starttoaster for helping out with the [documentation](https:/
 
 ## Gotify
 
-[![https://github.com/qdm12/ddns-updater/raw/master/readme/gotify.jpg](Gotify)](https://gotify.net)
+[![https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/gotify.jpg](Gotify)](https://gotify.net)
 
 [**Gotify**](https://gotify.net) is a simple server for sending and receiving messages, and it is **free**, **private** and **open source**
 - It has an [Android app](https://play.google.com/store/apps/details?id=com.github.gotify) to receive notifications

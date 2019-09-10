@@ -145,7 +145,11 @@ func update(
 	recordConfig.Status.SetMessage("")
 	recordConfig.History.SetTSuccess(time.Now())
 	recordConfig.History.PrependIP(ip)
-	gotify.Notify("DDNS Updater", 1, "%s changed from %s to %s", recordConfig.Settings.BuildDomainName(), ips[0], ip)
+	if len(ips) == 0 {
+		gotify.Notify("DDNS Updater", 1, "%s has now IP address %s", recordConfig.Settings.BuildDomainName(), ip)
+	} else {
+		gotify.Notify("DDNS Updater", 1, "%s changed from %s to %s", recordConfig.Settings.BuildDomainName(), ips[0], ip)
+	}
 	err = sqlDb.StoreNewIP(recordConfig.Settings.Domain, recordConfig.Settings.Host, ip)
 	if err != nil {
 		recordConfig.Status.SetCode(models.FAIL)

@@ -6,8 +6,7 @@ ARG GO_VERSION=1.13
 FROM ${BASE_IMAGE_BUILDER}:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 ARG GOARCH=amd64
 ARG GOARM=
-ARG BINCOMPRESS
-RUN apk --update add git build-base upx
+RUN apk --update add git build-base
 WORKDIR /tmp/gobuild
 COPY go.mod go.sum ./
 RUN go mod download 2>&1
@@ -15,7 +14,6 @@ COPY pkg/ ./pkg/
 COPY main.go .
 RUN go test -v ./...
 RUN CGO_ENABLED=1 GOOS=linux GOARCH=${GOARCH} GOARM=${GOARM} go build -a -installsuffix cgo -ldflags="-s -w" -o app
-RUN [ "${BINCOMPRESS}" == "" ] || (upx -v --best --lzma --overlay=strip app && upx -t app)
 
 FROM ${BASE_IMAGE}:${ALPINE_VERSION} AS final
 ARG BUILD_DATE

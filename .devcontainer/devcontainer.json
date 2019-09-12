@@ -3,11 +3,13 @@
     "dockerFile": "Dockerfile",
     "appPort": 8000,
     "extensions": [
-        "ms-vscode.go"
+        "ms-vscode.go",
+        "softwaredotcom.swdc-vscode",
+        "davidanson.vscode-markdownlint",
+        "shardulm94.trailing-spaces",
+        "IBM.output-colorizer"
     ],
     "settings": {
-        "go.gopath": "/go",
-        "go.inferGopath": false,
         "go.useLanguageServer": true
     },
     "postCreateCommand": "go mod download",
@@ -17,6 +19,10 @@
         "vscode",
         "--cap-add=SYS_PTRACE",
         "--security-opt",
-        "seccomp=unconfined"
+        "seccomp=unconfined",
+        // Linux
+        // "-v", "$HOME/.ssh:/home/vscode/.ssh:ro",
+        // Windows
+        "-v", "${env:HOME}/.ssh:/home/vscode/.ssh:ro"
     ]
 }

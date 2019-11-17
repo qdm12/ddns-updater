@@ -4,6 +4,7 @@
 
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
+[![Join Slack channel](https://img.shields.io/badge/slack-@qdm12-yellow.svg?logo=slack)](https://join.slack.com/t/qdm12/shared_invite/enQtODMwMDQyMTAxMjY1LTU1YjE1MTVhNTBmNTViNzJiZmQwZWRmMDhhZjEyNjVhZGM4YmIxOTMxOTYzN2U0N2U2YjQ2MDk3YmYxN2NiNTc)
 [![Build Status](https://travis-ci.org/qdm12/ddns-updater.svg?branch=master)](https://travis-ci.org/qdm12/ddns-updater)
 [![Docker Build Status](https://img.shields.io/docker/build/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
@@ -204,7 +205,7 @@ Please then refer to your specific DNS host provider in the section below for ev
     - `"host"` is your host and can be a subdomain or `@`
     - `"username"` which is your username
     - `"password"`
-    
+
 #### DNSPOD
 
 - Required:
@@ -363,10 +364,14 @@ To set it up with DDNS updater:
 
 ## TODOs
 
+- [ ] icon.ico for webpage
+- [ ] Record events log
+- [ ] Use internal package instead of pkg
 - [ ] Hot reload of config.json
-- [ ] Changed from sqlite to rqlite
+- [ ] Changed from sqlite to bolt or similar
 - [ ] Unit tests
 - [ ] Other types or records
 - [ ] ReactJS frontend
     - [ ] Live update of website
     - [ ] Change settings
+    - [ ] Events log

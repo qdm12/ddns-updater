@@ -1,9 +1,20 @@
-language: go
-go:
-  - 1.13.x
-env:
-  - GO111MODULE=on
+dist: xenial
+sudo: required
 git:
+  quiet: true
   depth: 1
-intall: go mod download
-script: go test -v -race ./...
+env:
+  global:
+    - DOCKER_REPO=qmcgaw/ddns-updater
+before_install:
+  - curl -fsSL https://get.docker.com | sh
+  - echo '{"experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
+  - mkdir -p $HOME/.docker
+  - echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
+  - sudo service docker start
+install:
+  - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+  - docker buildx create --name xbuilder --use
+script: bash ci.sh
+after_success:
+  - curl -X POST https://hooks.microbadger.com/images/$DOCKER_REPO/tQFy7AxtSUNANPe6aoVChYdsI_I= || exit 0

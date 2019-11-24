@@ -1,7 +1,11 @@
 ARG ALPINE_VERSION=3.10
 ARG GO_VERSION=1.13
 
+<<<<<<< HEAD
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+=======
+FROM golang:${GO_VERSION}-buster AS builder
+>>>>>>> Travis CI cross architecture Docker builds
 RUN apk --update add git g++
 WORKDIR /tmp/gobuild
 COPY go.mod go.sum ./

@@ -1,7 +1,7 @@
 ARG ALPINE_VERSION=3.10
 ARG GO_VERSION=1.13
 
-FROM golang:${GO_VERSION}-buster AS builder
+FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 RUN apk --update add git g++
 WORKDIR /tmp/gobuild
 COPY go.mod go.sum ./

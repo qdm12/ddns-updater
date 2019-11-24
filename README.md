@@ -179,11 +179,15 @@ Please then refer to your specific DNS host provider in the section below for ev
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Removed old docker build hooks
 | `LOG_ENCODING` | `json` | Format of logging, `json` or `human` |
 | `LOG_LEVEL` | `info` | Level of logging, `info`, ~`success`~, `warning` or `error` |
 | `NODE_ID` | `0` | Node ID (for distributed systems), can be any integer |
 | `GOTIFY_URL` |  | HTTP(s) URL to your Gotify server |
 | `GOTIFY_TOKEN` |  | Token to access your Gotify server |
+<<<<<<< HEAD
 =======
 | `LOG_ENCODING_` | `console` | Format of logging, `json` or `console` |
 | `LOG_LEVEL` | `info` | Level of logging, `info`, `warning` or `error` |
@@ -191,6 +195,8 @@ Please then refer to your specific DNS host provider in the section below for ev
 | `GOTIFY_URL` |  | Optional HTTP(s) URL to your Gotify server |
 | `GOTIFY_TOKEN` |  | Optional token to access your Gotify server |
 >>>>>>> Full refactor using qdm12/golibs (#22)
+=======
+>>>>>>> Removed old docker build hooks
 
 ### Host firewall
 

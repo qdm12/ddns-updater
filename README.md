@@ -178,11 +178,19 @@ Please then refer to your specific DNS host provider in the section below for ev
 | `DELAY` | `300` | Delay between updates in seconds |
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
+<<<<<<< HEAD
 | `LOG_ENCODING` | `json` | Format of logging, `json` or `human` |
 | `LOG_LEVEL` | `info` | Level of logging, `info`, ~`success`~, `warning` or `error` |
 | `NODE_ID` | `0` | Node ID (for distributed systems), can be any integer |
 | `GOTIFY_URL` |  | HTTP(s) URL to your Gotify server |
 | `GOTIFY_TOKEN` |  | Token to access your Gotify server |
+=======
+| `LOG_ENCODING_` | `console` | Format of logging, `json` or `console` |
+| `LOG_LEVEL` | `info` | Level of logging, `info`, `warning` or `error` |
+| `NODEID` | `0` | Node ID (for distributed systems), can be any integer |
+| `GOTIFY_URL` |  | Optional HTTP(s) URL to your Gotify server |
+| `GOTIFY_TOKEN` |  | Optional token to access your Gotify server |
+>>>>>>> Full refactor using qdm12/golibs (#22)
 
 ### Host firewall
 

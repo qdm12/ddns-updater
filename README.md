@@ -2,6 +2,8 @@
 
 *Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod and DuckDNS*
 
+**WARNING: Env variables naming changed slightly, see below**
+
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
 [![Join Slack channel](https://img.shields.io/badge/slack-@qdm12-yellow.svg?logo=slack)](https://join.slack.com/t/qdm12/shared_invite/enQtODMwMDQyMTAxMjY1LTU1YjE1MTVhNTBmNTViNzJiZmQwZWRmMDhhZjEyNjVhZGM4YmIxOTMxOTYzN2U0N2U2YjQ2MDk3YmYxN2NiNTc)
@@ -21,7 +23,7 @@
 
 | Image size | RAM usage | CPU usage |
 | --- | --- | --- |
-| 23.5MB | 13MB | Very low |
+| 22.2MB | 13MB | Very low |
 
 ## Features
 
@@ -217,13 +219,13 @@ Please then refer to your specific DNS host provider in the section below for ev
 | Environment variable | Default | Description |
 | --- | --- | --- |
 | `DELAY` | `300` | Delay between updates in seconds |
-| `ROOTURL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
-| `LISTENINGPORT` | `8000` | Internal TCP listening port for the web UI |
-| `LOGGING` | `json` | Format of logging, `json` or `human` |
-| `LOGLEVEL` | `info` | Level of logging, `info`, ~`success`~, `warning` or `error` |
+| `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
+| `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
+| `LOG_ENCODING_` | `console` | Format of logging, `json` or `console` |
+| `LOG_LEVEL` | `info` | Level of logging, `info`, `warning` or `error` |
 | `NODEID` | `0` | Node ID (for distributed systems), can be any integer |
-| `GOTIFYURL` |  | HTTP(s) URL to your Gotify server |
-| `GOTIFYTOKEN` |  | Token to access your Gotify server |
+| `GOTIFY_URL` |  | Optional HTTP(s) URL to your Gotify server |
+| `GOTIFY_TOKEN` |  | Optional token to access your Gotify server |
 
 ### Host firewall
 

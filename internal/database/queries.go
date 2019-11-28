@@ -9,7 +9,7 @@ thread safe because of SQLite */
 
 // UpdateIPTime updates the latest same IP update time for a certain
 // domain, host and IP tuple.
-func (db *DB) UpdateIPTime(domain, host, ip string) (err error) {
+func (db *database) UpdateIPTime(domain, host, ip string) (err error) {
 	db.Lock()
 	defer db.Unlock()
 	_, err = db.sqlite.Exec(
@@ -26,7 +26,7 @@ func (db *DB) UpdateIPTime(domain, host, ip string) (err error) {
 
 // StoreNewIP stores a new IP address for a certain
 // domain and host.
-func (db *DB) StoreNewIP(domain, host, ip string) (err error) {
+func (db *database) StoreNewIP(domain, host, ip string) (err error) {
 	// Disable the current IP
 	db.Lock()
 	defer db.Unlock()
@@ -56,7 +56,7 @@ func (db *DB) StoreNewIP(domain, host, ip string) (err error) {
 
 // GetIps gets all the IP addresses history for a certain
 // domain and host.
-func (db *DB) GetIps(domain, host string) (ips []string, tNew time.Time, err error) {
+func (db *database) GetIps(domain, host string) (ips []string, tNew time.Time, err error) {
 	db.Lock()
 	defer db.Unlock()
 	rows, err := db.sqlite.Query(

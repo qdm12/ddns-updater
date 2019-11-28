@@ -10,14 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"ddns-updater/pkg/admin"
-	"ddns-updater/pkg/database"
-	"ddns-updater/pkg/models"
-	"ddns-updater/pkg/network"
-	"ddns-updater/pkg/regex"
+	"github.com/qdm12/ddns-updater/internal/database"
+	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/network"
+	"github.com/qdm12/golibs/admin"
+	"github.com/qdm12/golibs/logging"
+	libnetwork "github.com/qdm12/golibs/network"
+	"github.com/qdm12/golibs/verification"
 
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 const (
@@ -32,7 +33,7 @@ const (
 func update(
 	recordConfig *models.RecordConfigType,
 	httpClient *http.Client,
-	sqlDb *database.DB,
+	db database.SQL,
 	gotify *admin.Gotify,
 ) {
 	var err error
@@ -45,7 +46,7 @@ func update(
 	if err != nil {
 		recordConfig.Status.SetCode(models.FAIL)
 		recordConfig.Status.SetMessage("%s", err)
-		zap.S().Warn(recordConfig)
+		logging.Warn(recordConfig.String())
 		gotify.Notify("DDNS Updater", 5, recordConfig.String())
 		return
 	}
@@ -112,7 +113,7 @@ func update(
 			ip,
 		)
 	case models.PROVIDERDNSPOD:
-		err = updateDnsPod(
+		err = updateDNSPod(
 			httpClient,
 			recordConfig.Settings.Domain,
 			recordConfig.Settings.Host,
@@ -125,14 +126,14 @@ func update(
 	if err != nil {
 		recordConfig.Status.SetCode(models.FAIL)
 		recordConfig.Status.SetMessage("%s", err)
-		zap.S().Warn(recordConfig)
+		logging.Warn(recordConfig.String())
 		gotify.Notify("DDNS Updater", 5, recordConfig.String())
 		return
 	}
 	if len(ips) > 0 && ip == ips[0] { // same IP
 		recordConfig.Status.SetCode(models.UPTODATE)
 		recordConfig.Status.SetMessage("No IP change for %s", recordConfig.History.GetTSuccessDuration())
-		err = sqlDb.UpdateIPTime(recordConfig.Settings.Domain, recordConfig.Settings.Host, ip)
+		err = db.UpdateIPTime(recordConfig.Settings.Domain, recordConfig.Settings.Host, ip)
 		if err != nil {
 			recordConfig.Status.SetCode(models.FAIL)
 			recordConfig.Status.SetMessage("Cannot update database: %s", err)
@@ -150,7 +151,7 @@ func update(
 	} else {
 		gotify.Notify("DDNS Updater", 1, "%s changed from %s to %s", recordConfig.Settings.BuildDomainName(), ips[0], ip)
 	}
-	err = sqlDb.StoreNewIP(recordConfig.Settings.Domain, recordConfig.Settings.Host, ip)
+	err = db.StoreNewIP(recordConfig.Settings.Domain, recordConfig.Settings.Host, ip)
 	if err != nil {
 		recordConfig.Status.SetCode(models.FAIL)
 		recordConfig.Status.SetMessage("Cannot update database: %s", err)
@@ -178,7 +179,7 @@ func updateNamecheap(httpClient *http.Client, host, domain, password, ip string)
 	if err != nil {
 		return "", err
 	}
-	status, content, err := network.DoHTTPRequest(httpClient, r)
+	status, content, err := libnetwork.DoHTTPRequest(httpClient, r)
 	if err != nil {
 		return "", err
 	} else if status != 200 { // TODO test / combine with below
@@ -196,7 +197,7 @@ func updateNamecheap(httpClient *http.Client, host, domain, password, ip string)
 	} else if parsedXML.Errors.Error != "" {
 		return "", fmt.Errorf(parsedXML.Errors.Error)
 	}
-	ips := regex.SearchIP(parsedXML.IP)
+	ips := verification.SearchIPv4(parsedXML.IP)
 	if ips == nil {
 		return "", fmt.Errorf("no IP address in response")
 	}
@@ -227,7 +228,7 @@ func updateGoDaddy(httpClient *http.Client, host, domain, key, secret, ip string
 		return err
 	}
 	r.Header.Set("Authorization", "sso-key "+key+":"+secret)
-	status, content, err := network.DoHTTPRequest(httpClient, r)
+	status, content, err := libnetwork.DoHTTPRequest(httpClient, r)
 	if err != nil {
 		return err
 	}
@@ -277,7 +278,7 @@ func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host,
 	} else {
 		return fmt.Errorf("email and key are both unset and no user service key was provided")
 	}
-	status, content, err := network.DoHTTPRequest(httpClient, r)
+	status, content, err := libnetwork.DoHTTPRequest(httpClient, r)
 	if err != nil {
 		return err
 	}
@@ -319,7 +320,7 @@ func updateDuckDNS(httpClient *http.Client, domain, token, ip string) (newIP str
 	if err != nil {
 		return "", err
 	}
-	status, content, err := network.DoHTTPRequest(httpClient, r)
+	status, content, err := libnetwork.DoHTTPRequest(httpClient, r)
 	if err != nil {
 		return "", err
 	}
@@ -330,7 +331,7 @@ func updateDuckDNS(httpClient *http.Client, domain, token, ip string) (newIP str
 	if s[0:2] == "KO" {
 		return "", fmt.Errorf("invalid domain token combination")
 	} else if s[0:2] == "OK" {
-		ips := regex.SearchIP(s)
+		ips := verification.SearchIPv4(s)
 		if ips == nil {
 			return "", fmt.Errorf("no IP address in response")
 		}
@@ -354,7 +355,7 @@ func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string
 	if err != nil {
 		return err
 	}
-	status, content, err := network.DoHTTPRequest(httpClient, r)
+	status, content, err := libnetwork.DoHTTPRequest(httpClient, r)
 	if err != nil {
 		return err
 	}
@@ -397,7 +398,7 @@ func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string
 		if err != nil {
 			return err
 		}
-		status, content, err = network.DoHTTPRequest(httpClient, r)
+		status, content, err = libnetwork.DoHTTPRequest(httpClient, r)
 		if err != nil {
 			return err
 		}
@@ -418,7 +419,7 @@ func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string
 	if err != nil {
 		return err
 	}
-	status, content, err = network.DoHTTPRequest(httpClient, r)
+	status, content, err = libnetwork.DoHTTPRequest(httpClient, r)
 	if err != nil {
 		return err
 	}
@@ -446,7 +447,7 @@ func updateNoIP(httpClient *http.Client, hostname, username, password, ip string
 	}
 	r.Header.Set("Authorization", "Basic "+username+":"+password)
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	status, content, err := network.DoHTTPRequest(httpClient, r)
+	status, content, err := libnetwork.DoHTTPRequest(httpClient, r)
 	if err != nil {
 		return "", err
 	}
@@ -468,7 +469,7 @@ func updateNoIP(httpClient *http.Client, hostname, username, password, ip string
 		return "", fmt.Errorf("hostname does not exist")
 	}
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
-		ips := regex.SearchIP(s)
+		ips := verification.SearchIPv4(s)
 		if ips == nil {
 			return "", fmt.Errorf("no IP address in response")
 		}
@@ -481,7 +482,7 @@ func updateNoIP(httpClient *http.Client, hostname, username, password, ip string
 	return "", fmt.Errorf("unknown response: %s", s)
 }
 
-func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (err error) {
+func updateDNSPod(httpClient *http.Client, domain, host, token, ip string) (err error) {
 	postValues := url.Values{}
 	postValues.Set("login_token", token)
 	postValues.Set("format", "json")
@@ -494,16 +495,13 @@ func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (err 
 		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	var content []byte
-	var status int
-	status, content, err = network.DoHTTPRequest(httpClient, req)
+	status, content, err := libnetwork.DoHTTPRequest(httpClient, req)
 	if err != nil {
 		return err
-	}
-	if status != 200 {
+	} else if status != 200 {
 		return fmt.Errorf("HTTP status %d", status)
 	}
-	recordResp := &struct {
+	var recordResp struct {
 		Records []*struct {
 			ID    string `json:"id"`
 			Value string `json:"value"`
@@ -511,20 +509,19 @@ func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (err 
 			Name  string `json:"name"`
 			Line  string `json:"line"`
 		} `json:"records"`
-	}{}
-	err = json.Unmarshal(content, recordResp)
-	if err != nil {
+	}
+	if err := json.Unmarshal(content, &recordResp); err != nil {
 		return err
 	}
-	var recordID string
-	var line string
+	var recordID, recordLine string
 	for _, record := range recordResp.Records {
 		if record.Type == "A" && record.Name == host {
-			recordID = record.ID
-			line = record.Line
 			if ip == record.Value {
 				return nil
 			}
+			recordID = record.ID
+			recordLine = record.Line
+			break
 		}
 	}
 	if recordID == "" {
@@ -536,32 +533,29 @@ func updateDnsPod(httpClient *http.Client, domain, host, token, ip string) (err 
 	postValues.Set("domain", domain)
 	postValues.Set("record_id", recordID)
 	postValues.Set("value", ip)
-	postValues.Set("record_line", line)
+	postValues.Set("record_line", recordLine)
 	postValues.Set("sub_domain", host)
 	req, err = http.NewRequest(http.MethodPost, "https://dnsapi.cn/Record.Ddns", bytes.NewBufferString(postValues.Encode()))
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	status, content, err = network.DoHTTPRequest(httpClient, req)
+	status, content, err = libnetwork.DoHTTPRequest(httpClient, req)
 	if err != nil {
 		return err
-	}
-	if status != 200 {
+	} else if status != 200 {
 		return fmt.Errorf("HTTP status %d", status)
 	}
-	ddnsResp := &struct {
+	var ddnsResp struct {
 		Record struct {
 			ID    int64  `json:"id"`
 			Value string `json:"value"`
 			Name  string `json:"name"`
 		} `json:"record"`
-	}{}
-	err = json.Unmarshal(content, ddnsResp)
-	if err != nil {
-		return err
 	}
-	if ddnsResp.Record.Value != ip {
+	if err := json.Unmarshal(content, &ddnsResp); err != nil {
+		return err
+	} else if ddnsResp.Record.Value != ip {
 		return fmt.Errorf("ip not set")
 	}
 	return nil

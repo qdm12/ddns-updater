@@ -2,24 +2,35 @@ package database
 
 import (
 	"database/sql"
-	"strings"
 	"sync"
+	"time"
 )
 
 // A sqlite database is used to store previous IPs, when re launching the program.
 
-// DB contains the database connection pool pointer.
-// It is used so that methods are declared on it, in order
-// to mock the database easily, through the help of the Datastore interface
+// SQL represents the database store actions.
+// It is implemented with the database struct and methods.
 // WARNING: Use in one single go routine, it is not thread safe !
-type DB struct {
+type SQL interface {
+	Lock()
+	Unlock()
+	UpdateIPTime(domain, host, ip string) (err error)
+	StoreNewIP(domain, host, ip string) (err error)
+	GetIps(domain, host string) (ips []string, tNew time.Time, err error)
+	Close() error
+}
+
+type database struct {
 	sqlite *sql.DB
 	sync.Mutex
 }
 
-// NewDb opens or creates the database if necessary.
-func NewDb(dataDir string) (*DB, error) {
-	dataDir = strings.TrimSuffix(dataDir, "/")
+func (db *database) Close() error {
+	return db.sqlite.Close()
+}
+
+// NewDB opens or creates the database if necessary.
+func NewDB(dataDir string) (SQL, error) {
 	sqlite, err := sql.Open("sqlite3", dataDir+"/updates.db")
 	if err != nil {
 		return nil, err
@@ -34,5 +45,5 @@ func NewDb(dataDir string) (*DB, error) {
 		current INTEGER DEFAULT 1 NOT NULL,
 		PRIMARY KEY(domain, host, ip, t_new)
 		);`)
-	return &DB{sqlite: sqlite}, err
+	return &database{sqlite: sqlite}, err
 }

@@ -1,12 +1,13 @@
-package server
+package router
 
 import (
-	"ddns-updater/pkg/models"
 	"fmt"
 	"net"
+
+	"github.com/qdm12/ddns-updater/internal/models"
 )
 
-func healthcheckHandler(recordsConfigs []models.RecordConfigType) error {
+func IsHealthy(recordsConfigs []models.RecordConfigType) error {
 	for i := range recordsConfigs {
 		if recordsConfigs[i].Status.GetCode() == models.FAIL {
 			return fmt.Errorf("%s", recordsConfigs[i].String())

@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"ddns-updater/pkg/models"
+	"github.com/qdm12/ddns-updater/internal/models"
 )
 
 type configType struct {

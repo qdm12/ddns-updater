@@ -11,11 +11,7 @@ if [ "$TAG" = "master" ]; then
 fi
 echo "Building Docker images for \"$DOCKER_REPO:$TAG\""
 docker buildx build \
-<<<<<<< HEAD
-    --platform=linux/amd64 \
-=======
     --platform=linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6,linux/ppc64le,linux/s390x \
->>>>>>> Travis CI cross architecture Docker builds
     --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
     --build-arg VCS_REF=`git rev-parse --short HEAD` \
     --build-arg VERSION=$TAG \

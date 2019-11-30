@@ -29,7 +29,7 @@
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
 - Sends notifications to your Android phone, see the [**Gotify**](#Gotify) section (it's free, open source and self hosted 🆒)
-- Compatible with all CPU architectures Docker supports (ARM, s390x, etc.)
+- Compatible with `amd64` and `386` for now, see below for `arm` and other architectures.
 
 ## Setup
 
@@ -81,6 +81,18 @@
     ```
 
     See more information at the [configuration section](#configuration)
+
+1. <details><summary>CLICK IF YOU HAVE AN ARM OR NON-AMD64/386 DEVICE</summary><p>
+
+    For now, ARM Docker images cannot be built automatically and pushed to Docker Hub with a manifest.
+
+    The alternative for now is to build the image on your device:
+
+    ```sh
+    docker build -t qmcgaw/ddns-updater https://github.com/qdm12/ddns-updater.git
+    ```
+
+    </p></details>
 
 1. Use the following command:
 
@@ -178,25 +190,11 @@ Please then refer to your specific DNS host provider in the section below for ev
 | `DELAY` | `300` | Delay between updates in seconds |
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> Removed old docker build hooks
 | `LOG_ENCODING` | `json` | Format of logging, `json` or `human` |
 | `LOG_LEVEL` | `info` | Level of logging, `info`, ~`success`~, `warning` or `error` |
 | `NODE_ID` | `0` | Node ID (for distributed systems), can be any integer |
 | `GOTIFY_URL` |  | HTTP(s) URL to your Gotify server |
 | `GOTIFY_TOKEN` |  | Token to access your Gotify server |
-<<<<<<< HEAD
-=======
-| `LOG_ENCODING_` | `console` | Format of logging, `json` or `console` |
-| `LOG_LEVEL` | `info` | Level of logging, `info`, `warning` or `error` |
-| `NODEID` | `0` | Node ID (for distributed systems), can be any integer |
-| `GOTIFY_URL` |  | Optional HTTP(s) URL to your Gotify server |
-| `GOTIFY_TOKEN` |  | Optional token to access your Gotify server |
->>>>>>> Full refactor using qdm12/golibs (#22)
-=======
->>>>>>> Removed old docker build hooks
 
 ### Host firewall
 

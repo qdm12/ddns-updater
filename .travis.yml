@@ -17,4 +17,4 @@ install:
   - docker buildx create --name xbuilder --use
 script: bash ci.sh
 after_success:
-  - curl -X POST https://hooks.microbadger.com/images/$DOCKER_REPO/tQFy7AxtSUNANPe6aoVChYdsI_I= || exit 0
+  - curl -X POST https://hooks.microbadger.com/images/$DOCKER_REPO/t2fcZxog8ce_kJYJ61JjkYwHF5s= || exit 0

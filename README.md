@@ -29,7 +29,7 @@
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
 - Sends notifications to your Android phone, see the [**Gotify**](#Gotify) section (it's free, open source and self hosted 🆒)
-- Compatible with `amd64` and `386` for now, see below for `arm` and other architectures.
+- Compatible with `amd64`, `386`, `arm64` and `arm32v7` (Raspberry Pis) CPU architectures.
 
 ## Setup
 
@@ -81,18 +81,6 @@
     ```
 
     See more information at the [configuration section](#configuration)
-
-1. <details><summary>CLICK IF YOU HAVE AN ARM OR NON-AMD64/386 DEVICE</summary><p>
-
-    For now, ARM Docker images cannot be built automatically and pushed to Docker Hub with a manifest.
-
-    The alternative for now is to build the image on your device:
-
-    ```sh
-    docker build -t qmcgaw/ddns-updater https://github.com/qdm12/ddns-updater.git
-    ```
-
-    </p></details>
 
 1. Use the following command:
 

@@ -5,7 +5,7 @@ if [ "$TRAVIS_PULL_REQUEST" = "true" ] || [ "$TRAVIS_BRANCH" != "master" ]; then
       --progress plain \
       --platform=linux/amd64,linux/386,linux/arm64,linux/arm/v7 \
       .
-  return $?
+  exit $?
 fi
 echo $DOCKER_PASSWORD | docker login -u qmcgaw --password-stdin &> /dev/null
 TAG="${TRAVIS_TAG:-latest}"

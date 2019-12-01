@@ -6,24 +6,16 @@
 
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
-[![Join Slack channel](https://img.shields.io/badge/slack-@qdm12-yellow.svg?logo=slack)](https://join.slack.com/t/qdm12/shared_invite/enQtODMwMDQyMTAxMjY1LTU1YjE1MTVhNTBmNTViNzJiZmQwZWRmMDhhZjEyNjVhZGM4YmIxOTMxOTYzN2U0N2U2YjQ2MDk3YmYxN2NiNTc)
 [![Build Status](https://travis-ci.org/qdm12/ddns-updater.svg?branch=master)](https://travis-ci.org/qdm12/ddns-updater)
-[![Docker Build Status](https://img.shields.io/docker/build/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
-
-[![GitHub last commit](https://img.shields.io/github/last-commit/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
-[![GitHub commit activity](https://img.shields.io/github/commit-activity/y/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
-[![GitHub issues](https://img.shields.io/github/issues/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
-
 [![Docker Pulls](https://img.shields.io/docker/pulls/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 [![Docker Stars](https://img.shields.io/docker/stars/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
-[![Docker Automated](https://img.shields.io/docker/automated/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
-
 [![Image size](https://images.microbadger.com/badges/image/qmcgaw/ddns-updater.svg)](https://microbadger.com/images/qmcgaw/ddns-updater)
 [![Image version](https://images.microbadger.com/badges/version/qmcgaw/ddns-updater.svg)](https://microbadger.com/images/qmcgaw/ddns-updater)
 
-| Image size | RAM usage | CPU usage |
-| --- | --- | --- |
-| 22.2MB | 13MB | Very low |
+[![Join Slack channel](https://img.shields.io/badge/slack-@qdm12-yellow.svg?logo=slack)](https://join.slack.com/t/qdm12/shared_invite/enQtODMwMDQyMTAxMjY1LTU1YjE1MTVhNTBmNTViNzJiZmQwZWRmMDhhZjEyNjVhZGM4YmIxOTMxOTYzN2U0N2U2YjQ2MDk3YmYxN2NiNTc)
+[![GitHub last commit](https://img.shields.io/github/last-commit/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/y/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
+[![GitHub issues](https://img.shields.io/github/issues/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
 
 ## Features
 
@@ -32,11 +24,12 @@
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
-- Lightweight based on Go and *Alpine 3.10* with Sqlite and Ca-Certificates packages
+- Lightweight based on a Go binary and *Alpine 3.10* with Sqlite and Ca-Certificates packages
 - Persistence with a sqlite database to store old IP addresses and previous update status
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
 - Sends notifications to your Android phone, see the [**Gotify**](#Gotify) section (it's free, open source and self hosted 🆒)
+- Compatible with `amd64`, `386`, `arm64` and `arm32v7` (Raspberry Pis) CPU architectures.
 
 ## Setup
 
@@ -88,42 +81,6 @@
     ```
 
     See more information at the [configuration section](#configuration)
-
-1. <details><summary>CLICK IF YOU HAVE AN ARM DEVICE</summary><p>
-
-    - If you have a ARM 32 bit v6 architecture
-
-        ```sh
-        docker build -t qmcgaw/ddns-updater \
-        --build-arg BASE_IMAGE_BUILDER=arm32v6/golang \
-        --build-arg BASE_IMAGE=arm32v6/alpine \
-        --build-arg GOARCH=arm \
-        --build-arg GOARM=6 \
-        https://github.com/qdm12/ddns-updater.git
-        ```
-
-    - If you have a ARM 32 bit v7 architecture
-
-        ```sh
-        docker build -t qmcgaw/ddns-updater \
-        --build-arg BASE_IMAGE_BUILDER=arm32v7/golang \
-        --build-arg BASE_IMAGE=arm32v7/alpine \
-        --build-arg GOARCH=arm \
-        --build-arg GOARM=7 \
-        https://github.com/qdm12/ddns-updater.git
-        ```
-
-    - If you have a ARM 64 bit v8 architecture
-
-        ```sh
-        docker build -t qmcgaw/ddns-updater \
-        --build-arg BASE_IMAGE_BUILDER=arm64v8/golang \
-        --build-arg BASE_IMAGE=arm64v8/alpine \
-        --build-arg GOARCH=arm64 \
-        https://github.com/qdm12/ddns-updater.git
-        ```
-
-    </p></details>
 
 1. Use the following command:
 
@@ -221,11 +178,11 @@ Please then refer to your specific DNS host provider in the section below for ev
 | `DELAY` | `300` | Delay between updates in seconds |
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
-| `LOG_ENCODING_` | `console` | Format of logging, `json` or `console` |
-| `LOG_LEVEL` | `info` | Level of logging, `info`, `warning` or `error` |
-| `NODEID` | `0` | Node ID (for distributed systems), can be any integer |
-| `GOTIFY_URL` |  | Optional HTTP(s) URL to your Gotify server |
-| `GOTIFY_TOKEN` |  | Optional token to access your Gotify server |
+| `LOG_ENCODING` | `json` | Format of logging, `json` or `human` |
+| `LOG_LEVEL` | `info` | Level of logging, `info`, ~`success`~, `warning` or `error` |
+| `NODE_ID` | `0` | Node ID (for distributed systems), can be any integer |
+| `GOTIFY_URL` |  | HTTP(s) URL to your Gotify server |
+| `GOTIFY_TOKEN` |  | Token to access your Gotify server |
 
 ### Host firewall
 
@@ -376,4 +333,3 @@ To set it up with DDNS updater:
 - [ ] ReactJS frontend
     - [ ] Live update of website
     - [ ] Change settings
-    - [ ] Events log

@@ -15,6 +15,6 @@ before_install:
 install:
   - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
   - docker buildx create --name xbuilder --use
-script: bash ci.sh
+script: travis_wait 60 bash ci.sh
 after_success:
   - curl -X POST https://hooks.microbadger.com/images/$DOCKER_REPO/t2fcZxog8ce_kJYJ61JjkYwHF5s= || exit 0

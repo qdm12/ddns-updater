@@ -3,8 +3,8 @@ package models
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 	"regexp"
+	"time"
 
 	"github.com/qdm12/golibs/verification"
 )
@@ -101,12 +101,12 @@ func (settings *SettingsType) getHTMLIPMethod() string {
 	switch settings.IPmethod {
 	case IPMETHODPROVIDER:
 		return settings.getHTMLProvider()
-	case IPMETHODDUCKDUCKGO:
-		return "<a href=\"https://duckduckgo.com/?q=ip\">DuckDuckGo</a>"
-	// case IPMETHODOPENDNS:
-	// 	return "<a href=\"https://diagnostic.opendns.com/myip\">OpenDNS</a>"
+	case IPMETHODGOOGLE:
+		return "<a href=\"https://google.com/search?q=ip\">Google</a>"
+	case IPMETHODOPENDNS:
+		return "<a href=\"https://diagnostic.opendns.com/myip\">OpenDNS</a>"
 	default:
-		return settings.IPmethod.String()
+		return string(settings.IPmethod)
 	}
 }
 

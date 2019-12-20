@@ -18,14 +18,14 @@
             "provider": "godaddy",
             "domain": "example.org",
             "host": "subdomain",
-            "ip_method": "duckduckgo",
+            "ip_method": "google",
             "key": "aaaaaaaaaaaaaaaa",
             "secret": "aaaaaaaaaaaaaaaa"
         },
         {
             "provider": "dreamhost",
             "domain": "example.info",
-            "ip_method": "duckduckgo",
+            "ip_method": "opendns",
             "key": "aaaaaaaaaaaaaaaa"
         }
     ]

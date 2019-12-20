@@ -113,8 +113,9 @@ The record update updates configuration must be done through the *config.json* m
 - `"domain"` is your domain name
 - `"ip_method"` is the method to obtain your public IP address and can be
     - `provider` means the public IP is automatically determined by the DNS provider (**only for DuckDNs, Namecheap and NoIP**)
-    - `duckduckgo` using [https://duckduckgo.com/?q=ip](https://duckduckgo.com/?q=ip)
-    - ~`opendns` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)~ as their https certificate no longer works
+    - ~`duckduckgo` using [https://duckduckgo.com/?q=ip](https://duckduckgo.com/?q=ip)~ no longer returns your IP
+    - `google` using [https://google.com/search?q=ip](https://google.com/search?q=ip)
+    - `opendns` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
 
 Please then refer to your specific DNS host provider in the section below for eventual additional required parameters.
 

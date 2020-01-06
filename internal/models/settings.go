@@ -71,7 +71,7 @@ func (settings *SettingsType) BuildDomainName() string {
 	if settings.Host == "@" {
 		return settings.Domain
 	} else if settings.Host == "*" {
-		return settings.Domain // TODO random subdomain
+		return "any." + settings.Domain
 	} else {
 		return settings.Host + "." + settings.Domain
 	}

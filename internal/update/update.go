@@ -47,7 +47,9 @@ func update(
 		recordConfig.Status.SetCode(models.FAIL)
 		recordConfig.Status.SetMessage("%s", err)
 		logging.Warn(recordConfig.String())
-		gotify.Notify("DDNS Updater", 5, recordConfig.String())
+		if gotify != nil {
+			gotify.Notify("DDNS Updater", 5, recordConfig.String())
+		}
 		return
 	}
 	// Note: empty IP means DNS provider provided
@@ -127,7 +129,9 @@ func update(
 		recordConfig.Status.SetCode(models.FAIL)
 		recordConfig.Status.SetMessage("%s", err)
 		logging.Warn(recordConfig.String())
-		gotify.Notify("DDNS Updater", 5, recordConfig.String())
+		if gotify != nil {
+			gotify.Notify("DDNS Updater", 5, recordConfig.String())
+		}
 		return
 	}
 	if len(ips) > 0 && ip == ips[0] { // same IP
@@ -137,7 +141,9 @@ func update(
 		if err != nil {
 			recordConfig.Status.SetCode(models.FAIL)
 			recordConfig.Status.SetMessage("Cannot update database: %s", err)
-			gotify.Notify("DDNS Updater", 4, "Cannot update database: %s", err)
+			if gotify != nil {
+				gotify.Notify("DDNS Updater", 4, "Cannot update database: %s", err)
+			}
 		}
 		return
 	}
@@ -146,16 +152,20 @@ func update(
 	recordConfig.Status.SetMessage("")
 	recordConfig.History.SetTSuccess(time.Now())
 	recordConfig.History.PrependIP(ip)
-	if len(ips) == 0 {
-		gotify.Notify("DDNS Updater", 1, "%s has now IP address %s", recordConfig.Settings.BuildDomainName(), ip)
-	} else {
-		gotify.Notify("DDNS Updater", 1, "%s changed from %s to %s", recordConfig.Settings.BuildDomainName(), ips[0], ip)
+	if gotify != nil {
+		if len(ips) == 0 {
+			gotify.Notify("DDNS Updater", 1, "%s has now IP address %s", recordConfig.Settings.BuildDomainName(), ip)
+		} else {
+			gotify.Notify("DDNS Updater", 1, "%s changed from %s to %s", recordConfig.Settings.BuildDomainName(), ips[0], ip)
+		}
 	}
 	err = db.StoreNewIP(recordConfig.Settings.Domain, recordConfig.Settings.Host, ip)
 	if err != nil {
 		recordConfig.Status.SetCode(models.FAIL)
 		recordConfig.Status.SetMessage("Cannot update database: %s", err)
-		gotify.Notify("DDNS Updater", 4, "Cannot update database: %s", err)
+		if gotify != nil {
+			gotify.Notify("DDNS Updater", 4, "Cannot update database: %s", err)
+		}
 	}
 }
 

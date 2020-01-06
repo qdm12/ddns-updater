@@ -95,7 +95,9 @@ func main() {
 		return router.IsHealthy(recordsConfigs)
 	})
 	logging.Infof("Web UI listening at address 0.0.0.0:%s with root URL %s", listeningPort, rootURL)
-	e.Gotify.Notify("DDNS Updater", 1, "Just launched\nIt has %d records to watch", len(recordsConfigs))
+	if e.Gotify != nil {
+		e.Gotify.Notify("DDNS Updater", 1, "Just launched\nIt has %d records to watch", len(recordsConfigs))
+	}
 	serverErrs := server.RunServers(
 		server.Settings{Name: "production", Addr: "0.0.0.0:" + listeningPort, Handler: productionRouter},
 		server.Settings{Name: "healthcheck", Addr: "127.0.0.1:9999", Handler: healthcheckRouter},
@@ -112,6 +114,8 @@ func setupGotify(envParams libparams.EnvParams) (admin.Gotify, error) {
 	URL, err := envParams.GetGotifyURL()
 	if err != nil {
 		return nil, err
+	} else if URL == nil {
+		return nil, nil
 	}
 	token, err := envParams.GetGotifyToken()
 	if err != nil {

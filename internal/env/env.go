@@ -25,7 +25,9 @@ type Env struct {
 func (e *Env) Warn(message interface{}) {
 	s := fmt.Sprintf("%s", message)
 	logging.Warn(s)
-	e.Gotify.Notify("Warning", 2, s)
+	if e.Gotify != nil {
+		e.Gotify.Notify("Warning", 2, s)
+	}
 }
 
 // CheckError logs an error and sends a notification to the Gotify server
@@ -36,7 +38,9 @@ func (e *Env) CheckError(err error) {
 	}
 	s := err.Error()
 	logging.Errorf(s)
-	e.Gotify.Notify("Error", 3, s)
+	if e.Gotify != nil {
+		e.Gotify.Notify("Error", 3, s)
+	}
 }
 
 // FatalOnError calls Fatal if the error is not nil.

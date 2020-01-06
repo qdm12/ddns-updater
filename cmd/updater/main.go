@@ -39,26 +39,28 @@ func main() {
 	fmt.Println("######## Give some " + emoji.Sprint(":heart:") + "at #########")
 	fmt.Println("# github.com/qdm12/ddns-updater #")
 	fmt.Print("#################################\n\n")
-	encoding, level, nodeID, err := libparams.GetLoggerConfig()
+	envParams := libparams.NewEnvParams()
+	encoding, level, nodeID, err := envParams.GetLoggerConfig()
 	if err != nil {
 		logging.Error(err.Error())
 	} else {
 		logging.InitLogger(encoding, level, nodeID)
 	}
 	var e env.Env
-	HTTPTimeout, err := libparams.GetHTTPTimeout(3000)
+	HTTPTimeout, err := envParams.GetHTTPTimeout(time.Millisecond, libparams.Default("3000"))
 	e.CheckError(err)
-	e.HTTPClient = &http.Client{Timeout: HTTPTimeout}
-	e.Gotify = admin.InitGotify(e.HTTPClient)
-	listeningPort, err := libparams.GetListeningPort()
+	e.Client = network.NewClient(HTTPTimeout)
+	e.Gotify, err = setupGotify(envParams)
+	listeningPort, err := envParams.GetListeningPort()
 	e.FatalOnError(err)
-	rootURL, err := libparams.GetRootURL()
+	rootURL, err := envParams.GetRootURL()
 	e.FatalOnError(err)
-	delay, err := libparams.GetDuration("DELAY", 600, time.Second)
+	delay, err := envParams.GetDuration("DELAY", time.Second, libparams.Default("600"))
 	e.FatalOnError(err)
-	dir, err := libparams.GetExeDir()
+	dir, err := envParams.GetExeDir()
 	e.FatalOnError(err)
-	dataDir := params.GetDataDir(dir)
+	dataDir, err := params.GetDataDir(envParams, dir)
+	e.FatalOnError(err)
 	e.SQL, err = database.NewDB(dataDir)
 	e.FatalOnError(err)
 	defer e.SQL.Close()
@@ -71,8 +73,7 @@ func main() {
 		e.Fatal(err)
 	}
 	logging.Infof("Found %d settings to update records", len(settings))
-	errs := network.ConnectivityChecks(e.HTTPClient, []string{"google.com"})
-	for _, err := range errs {
+	for _, err := range network.NewConnectivity(5 * time.Second).Checks("google.com") {
 		e.Warn(err)
 	}
 	var recordsConfigs []models.RecordConfigType
@@ -87,7 +88,7 @@ func main() {
 	chForce := make(chan struct{})
 	chQuit := make(chan struct{})
 	defer close(chForce)
-	go update.TriggerServer(delay, chForce, chQuit, recordsConfigs, e.HTTPClient, e.SQL, e.Gotify)
+	go update.TriggerServer(delay, chForce, chQuit, recordsConfigs, e.Client, e.SQL, e.Gotify)
 	chForce <- struct{}{}
 	productionRouter := router.CreateRouter(rootURL, dir, chForce, recordsConfigs, e.Gotify)
 	healthcheckRouter := healthcheck.CreateRouter(func() error {
@@ -105,4 +106,16 @@ func main() {
 	if len(serverErrs) > 0 {
 		e.Fatal(serverErrs)
 	}
+}
+
+func setupGotify(envParams libparams.EnvParams) (admin.Gotify, error) {
+	URL, err := envParams.GetGotifyURL()
+	if err != nil {
+		return nil, err
+	}
+	token, err := envParams.GetGotifyToken()
+	if err != nil {
+		return nil, err
+	}
+	return admin.NewGotify(*URL, token, &http.Client{Timeout: time.Second}), nil
 }

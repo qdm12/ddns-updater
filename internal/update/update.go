@@ -32,9 +32,9 @@ const (
 
 func update(
 	recordConfig *models.RecordConfigType,
-	httpClient *http.Client,
+	client libnetwork.Client,
 	db database.SQL,
-	gotify *admin.Gotify,
+	gotify admin.Gotify,
 ) {
 	var err error
 	recordConfig.IsUpdating.Lock()
@@ -42,7 +42,7 @@ func update(
 	recordConfig.Status.SetTime(time.Now())
 
 	// Get the public IP address
-	ip, err := getPublicIP(httpClient, recordConfig.Settings.IPmethod)
+	ip, err := getPublicIP(client, recordConfig.Settings.IPmethod)
 	if err != nil {
 		recordConfig.Status.SetCode(models.FAIL)
 		recordConfig.Status.SetMessage("%s", err)
@@ -62,7 +62,7 @@ func update(
 	switch recordConfig.Settings.Provider {
 	case models.PROVIDERNAMECHEAP:
 		ip, err = updateNamecheap(
-			httpClient,
+			client,
 			recordConfig.Settings.Host,
 			recordConfig.Settings.Domain,
 			recordConfig.Settings.Password,
@@ -70,7 +70,7 @@ func update(
 		)
 	case models.PROVIDERGODADDY:
 		err = updateGoDaddy(
-			httpClient,
+			client,
 			recordConfig.Settings.Host,
 			recordConfig.Settings.Domain,
 			recordConfig.Settings.Key,
@@ -79,14 +79,14 @@ func update(
 		)
 	case models.PROVIDERDUCKDNS:
 		ip, err = updateDuckDNS(
-			httpClient,
+			client,
 			recordConfig.Settings.Domain,
 			recordConfig.Settings.Token,
 			ip,
 		)
 	case models.PROVIDERDREAMHOST:
 		err = updateDreamhost(
-			httpClient,
+			client,
 			recordConfig.Settings.Domain,
 			recordConfig.Settings.Key,
 			ip,
@@ -94,7 +94,7 @@ func update(
 		)
 	case models.PROVIDERCLOUDFLARE:
 		err = updateCloudflare(
-			httpClient,
+			client,
 			recordConfig.Settings.ZoneIdentifier,
 			recordConfig.Settings.Identifier,
 			recordConfig.Settings.Host,
@@ -106,7 +106,7 @@ func update(
 		)
 	case models.PROVIDERNOIP:
 		ip, err = updateNoIP(
-			httpClient,
+			client,
 			recordConfig.Settings.BuildDomainName(),
 			recordConfig.Settings.Username,
 			recordConfig.Settings.Password,
@@ -114,7 +114,7 @@ func update(
 		)
 	case models.PROVIDERDNSPOD:
 		err = updateDNSPod(
-			httpClient,
+			client,
 			recordConfig.Settings.Domain,
 			recordConfig.Settings.Host,
 			recordConfig.Settings.Token,
@@ -159,19 +159,19 @@ func update(
 	}
 }
 
-func getPublicIP(httpClient *http.Client, IPmethod models.IPMethodType) (ip string, err error) {
+func getPublicIP(client libnetwork.Client, IPmethod models.IPMethodType) (ip string, err error) {
 	switch IPmethod {
 	case models.IPMETHODPROVIDER:
 		return "", nil
 	case models.IPMETHODGOOGLE:
-		return network.GetPublicIP(httpClient, "https://google.com/search?q=ip")
+		return network.GetPublicIP(client, "https://google.com/search?q=ip")
 	case models.IPMETHODOPENDNS:
-		return network.GetPublicIP(httpClient, "https://diagnostic.opendns.com/myip")
+		return network.GetPublicIP(client, "https://diagnostic.opendns.com/myip")
 	}
 	return "", fmt.Errorf("IP method %s is not supported", IPmethod)
 }
 
-func updateNamecheap(httpClient *http.Client, host, domain, password, ip string) (newIP string, err error) {
+func updateNamecheap(client libnetwork.Client, host, domain, password, ip string) (newIP string, err error) {
 	url := strings.ToLower(namecheapURL + "?host=" + host + "&domain=" + domain + "&password=" + password)
 	if len(ip) > 0 {
 		url += "&ip=" + ip
@@ -180,7 +180,7 @@ func updateNamecheap(httpClient *http.Client, host, domain, password, ip string)
 	if err != nil {
 		return "", err
 	}
-	status, content, err := libnetwork.DoHTTPRequest(httpClient, r)
+	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return "", err
 	} else if status != 200 { // TODO test / combine with below
@@ -209,7 +209,7 @@ func updateNamecheap(httpClient *http.Client, host, domain, password, ip string)
 	return newIP, nil
 }
 
-func updateGoDaddy(httpClient *http.Client, host, domain, key, secret, ip string) error {
+func updateGoDaddy(client libnetwork.Client, host, domain, key, secret, ip string) error {
 	if len(ip) == 0 {
 		return fmt.Errorf("invalid empty IP address")
 	}
@@ -229,7 +229,7 @@ func updateGoDaddy(httpClient *http.Client, host, domain, key, secret, ip string
 		return err
 	}
 	r.Header.Set("Authorization", "sso-key "+key+":"+secret)
-	status, content, err := libnetwork.DoHTTPRequest(httpClient, r)
+	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return err
 	}
@@ -248,7 +248,7 @@ func updateGoDaddy(httpClient *http.Client, host, domain, key, secret, ip string
 	return nil
 }
 
-func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host, email, key, userServiceKey, ip string, proxied bool) (err error) {
+func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host, email, key, userServiceKey, ip string, proxied bool) (err error) {
 	if len(ip) == 0 {
 		return fmt.Errorf("invalid empty IP address")
 	}
@@ -279,7 +279,7 @@ func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host,
 	} else {
 		return fmt.Errorf("email and key are both unset and no user service key was provided")
 	}
-	status, content, err := libnetwork.DoHTTPRequest(httpClient, r)
+	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return err
 	}
@@ -312,7 +312,7 @@ func updateCloudflare(httpClient *http.Client, zoneIdentifier, identifier, host,
 	return nil
 }
 
-func updateDuckDNS(httpClient *http.Client, domain, token, ip string) (newIP string, err error) {
+func updateDuckDNS(client libnetwork.Client, domain, token, ip string) (newIP string, err error) {
 	url := strings.ToLower(duckdnsURL + "?domains=" + domain + "&token=" + token + "&verbose=true")
 	if len(ip) > 0 {
 		url += "&ip=" + ip
@@ -321,7 +321,7 @@ func updateDuckDNS(httpClient *http.Client, domain, token, ip string) (newIP str
 	if err != nil {
 		return "", err
 	}
-	status, content, err := libnetwork.DoHTTPRequest(httpClient, r)
+	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return "", err
 	}
@@ -345,7 +345,7 @@ func updateDuckDNS(httpClient *http.Client, domain, token, ip string) (newIP str
 	return "", fmt.Errorf("response \"%s\"", s)
 }
 
-func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string) error {
+func updateDreamhost(client libnetwork.Client, domain, key, ip, domainName string) error {
 	type dreamhostReponse struct {
 		Result string `json:"result"`
 		Data   string `json:"data"`
@@ -356,7 +356,7 @@ func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string
 	if err != nil {
 		return err
 	}
-	status, content, err := libnetwork.DoHTTPRequest(httpClient, r)
+	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return err
 	}
@@ -399,7 +399,7 @@ func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string
 		if err != nil {
 			return err
 		}
-		status, content, err = libnetwork.DoHTTPRequest(httpClient, r)
+		status, content, err = client.DoHTTPRequest(r)
 		if err != nil {
 			return err
 		}
@@ -420,7 +420,7 @@ func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string
 	if err != nil {
 		return err
 	}
-	status, content, err = libnetwork.DoHTTPRequest(httpClient, r)
+	status, content, err = client.DoHTTPRequest(r)
 	if err != nil {
 		return err
 	}
@@ -437,7 +437,7 @@ func updateDreamhost(httpClient *http.Client, domain, key, ip, domainName string
 	return nil
 }
 
-func updateNoIP(httpClient *http.Client, hostname, username, password, ip string) (newIP string, err error) {
+func updateNoIP(client libnetwork.Client, hostname, username, password, ip string) (newIP string, err error) {
 	url := strings.ToLower(noIPURL + "?hostname=" + hostname)
 	if len(ip) > 0 {
 		url += "&myip=" + ip
@@ -448,7 +448,7 @@ func updateNoIP(httpClient *http.Client, hostname, username, password, ip string
 	}
 	r.Header.Set("Authorization", "Basic "+username+":"+password)
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	status, content, err := libnetwork.DoHTTPRequest(httpClient, r)
+	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return "", err
 	}
@@ -483,7 +483,7 @@ func updateNoIP(httpClient *http.Client, hostname, username, password, ip string
 	return "", fmt.Errorf("unknown response: %s", s)
 }
 
-func updateDNSPod(httpClient *http.Client, domain, host, token, ip string) (err error) {
+func updateDNSPod(client libnetwork.Client, domain, host, token, ip string) (err error) {
 	postValues := url.Values{}
 	postValues.Set("login_token", token)
 	postValues.Set("format", "json")
@@ -496,7 +496,7 @@ func updateDNSPod(httpClient *http.Client, domain, host, token, ip string) (err 
 		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	status, content, err := libnetwork.DoHTTPRequest(httpClient, req)
+	status, content, err := client.DoHTTPRequest(req)
 	if err != nil {
 		return err
 	} else if status != 200 {
@@ -541,7 +541,7 @@ func updateDNSPod(httpClient *http.Client, domain, host, token, ip string) (err 
 		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	status, content, err = libnetwork.DoHTTPRequest(httpClient, req)
+	status, content, err = client.DoHTTPRequest(req)
 	if err != nil {
 		return err
 	} else if status != 200 {

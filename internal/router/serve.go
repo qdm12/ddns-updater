@@ -23,7 +23,7 @@ type updateParamsType struct {
 }
 
 // CreateRouter returns a router with all the necessary routes configured
-func CreateRouter(rootURL, dir string, forceCh chan struct{}, recordsConfigs []models.RecordConfigType, gotify *admin.Gotify) *httprouter.Router {
+func CreateRouter(rootURL, dir string, forceCh chan struct{}, recordsConfigs []models.RecordConfigType, gotify admin.Gotify) *httprouter.Router {
 	indexParams := indexParamsType{
 		dir:            dir,
 		recordsConfigs: recordsConfigs,

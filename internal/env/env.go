@@ -2,23 +2,23 @@ package env
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/qdm12/ddns-updater/internal/database"
 
 	"github.com/qdm12/golibs/admin"
 	"github.com/qdm12/golibs/logging"
+	"github.com/qdm12/golibs/network"
 )
 
 // Env contains objects necessary to the main function.
 // These are created at start and are needed to the top-level
 // working management of the program.
 type Env struct {
-	stopCh     chan struct{}
-	HTTPClient *http.Client
-	Gotify     *admin.Gotify
-	SQL        database.SQL
+	stopCh chan struct{}
+	Client network.Client
+	Gotify admin.Gotify
+	SQL    database.SQL
 }
 
 // Warn logs a message and sends a notification to the Gotify server.
@@ -50,9 +50,7 @@ func (e *Env) FatalOnError(err error) {
 // databases and syncing the loggers.
 func (e *Env) shutdown() (exitCode int) {
 	defer logging.Sync()
-	if e.HTTPClient != nil {
-		e.HTTPClient.CloseIdleConnections()
-	}
+	e.Client.Close()
 	if e.SQL != nil {
 		err := e.SQL.Close()
 		if err != nil {

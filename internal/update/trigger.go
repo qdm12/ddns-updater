@@ -1,12 +1,12 @@
 package update
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/database"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/golibs/admin"
+	libnetwork "github.com/qdm12/golibs/network"
 )
 
 // TriggerServer runs an infinite asynchronous periodic function that triggers updates
@@ -14,9 +14,9 @@ func TriggerServer(
 	delay time.Duration,
 	chForce, chQuit chan struct{}, // listener only
 	recordsConfigs []models.RecordConfigType, // does not change size so no pointer needed
-	httpClient *http.Client,
+	client libnetwork.Client,
 	db database.SQL,
-	gotify *admin.Gotify,
+	gotify admin.Gotify,
 ) {
 	var chQuitArr, chForceArr []chan struct{}
 	defer func() {
@@ -34,9 +34,9 @@ func TriggerServer(
 		chQuitArr = append(chQuitArr, make(chan struct{}))
 		customDelay := recordsConfigs[i].Settings.Delay
 		if customDelay > 0 {
-			go periodicServer(&recordsConfigs[i], customDelay, httpClient, db, chForceArr[i], chQuitArr[i], gotify)
+			go periodicServer(&recordsConfigs[i], customDelay, client, db, chForceArr[i], chQuitArr[i], gotify)
 		} else {
-			go periodicServer(&recordsConfigs[i], delay, httpClient, db, chForceArr[i], chQuitArr[i], gotify)
+			go periodicServer(&recordsConfigs[i], delay, client, db, chForceArr[i], chQuitArr[i], gotify)
 		}
 	}
 	// fan out channel signals
@@ -58,10 +58,10 @@ func TriggerServer(
 func periodicServer(
 	recordConfig *models.RecordConfigType,
 	delay time.Duration,
-	httpClient *http.Client,
+	client libnetwork.Client,
 	db database.SQL,
 	chForce, chQuit chan struct{},
-	gotify *admin.Gotify,
+	gotify admin.Gotify,
 ) {
 	ticker := time.NewTicker(delay)
 	defer func() {
@@ -72,9 +72,9 @@ func periodicServer(
 	for {
 		select {
 		case <-ticker.C:
-			go update(recordConfig, httpClient, db, gotify)
+			go update(recordConfig, client, db, gotify)
 		case <-chForce:
-			go update(recordConfig, httpClient, db, gotify)
+			go update(recordConfig, client, db, gotify)
 		case <-chQuit:
 			recordConfig.IsUpdating.Lock() // wait for an eventual update to finish
 			ticker.Stop()

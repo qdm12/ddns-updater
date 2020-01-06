@@ -6,6 +6,6 @@ import (
 
 // GetDataDir obtains the data directory from the environment
 // variable DATADIR
-func GetDataDir(dir string) string {
-	return libparams.GetEnv("DATADIR", dir+"/data")
+func GetDataDir(e libparams.EnvParams, dir string) (string, error) {
+	return e.GetEnv("DATADIR", libparams.Default(dir+"/data"))
 }

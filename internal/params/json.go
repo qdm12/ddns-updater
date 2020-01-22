@@ -31,6 +31,7 @@ type settingsType struct {
 	ZoneIdentifier string        `json:"zone_identifier"`  // Cloudflare only
 	Identifier     string        `json:"identifier"`       // Cloudflare only
 	Proxied        bool          `json:"proxied"`          // Cloudflare only
+	Ttl            uint          `json:"ttl"`              // Cloudflare only
 }
 
 // GetSettings obtain the update settings from config.json
@@ -82,9 +83,9 @@ func GetSettings(filePath string) (settings []models.SettingsType, warnings []st
 			ZoneIdentifier: s.ZoneIdentifier,
 			Identifier:     s.Identifier,
 			Proxied:        s.Proxied,
+			Ttl:            s.Ttl,
 		}
-		err = setting.Verify()
-		if err != nil {
+		if err := setting.Verify(); err != nil {
 			warnings = append(warnings, err.Error())
 			continue
 		}

@@ -48,6 +48,7 @@ type SettingsType struct {
 	ZoneIdentifier string // Cloudflare only
 	Identifier     string // Cloudflare only
 	Proxied        bool   // Cloudflare only
+	Ttl            uint   // Cloudflare only
 	Username       string // NoIP only
 }
 
@@ -162,6 +163,8 @@ func (settings *SettingsType) Verify() error {
 			return fmt.Errorf("identifier cannot be empty to settings %s", settings)
 		} else if settings.IPmethod == IPMETHODPROVIDER {
 			return fmt.Errorf("unsupported IP update method for settings %s", settings)
+		} else if settings.Ttl == 0 {
+			return fmt.Errorf("TTL cannot be left to 0 for settings %s", settings)
 		}
 	case PROVIDERNOIP:
 		if len(settings.Username) == 0 {

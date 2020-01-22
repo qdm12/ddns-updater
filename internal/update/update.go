@@ -105,6 +105,7 @@ func update(
 			recordConfig.Settings.UserServiceKey,
 			ip,
 			recordConfig.Settings.Proxied,
+			recordConfig.Settings.Ttl,
 		)
 	case models.PROVIDERNOIP:
 		ip, err = updateNoIP(
@@ -258,7 +259,7 @@ func updateGoDaddy(client libnetwork.Client, host, domain, key, secret, ip strin
 	return nil
 }
 
-func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host, email, key, userServiceKey, ip string, proxied bool) (err error) {
+func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host, email, key, userServiceKey, ip string, proxied bool, ttl uint) (err error) {
 	if len(ip) == 0 {
 		return fmt.Errorf("invalid empty IP address")
 	}
@@ -267,6 +268,7 @@ func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host
 		Name    string `json:"name"`    // DNS record name i.e. example.com
 		Content string `json:"content"` // ip address
 		Proxied bool   `json:"proxied"` // whether the record is receiving the performance and security benefits of Cloudflare
+		Ttl     uint   `json:"ttl"`
 	}
 	URL := cloudflareURL + "/zones/" + zoneIdentifier + "/dns_records/" + identifier
 	r, err := network.BuildHTTPPut(
@@ -276,6 +278,7 @@ func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host
 			Name:    host,
 			Content: ip,
 			Proxied: proxied,
+			Ttl:     ttl,
 		},
 	)
 	if err != nil {

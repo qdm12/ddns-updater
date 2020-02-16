@@ -16,6 +16,7 @@ const (
 	regexNamecheapPassword        = `[a-f0-9]{32}`
 	regexDreamhostKey             = `[a-zA-Z0-9]{16}`
 	regexCloudflareKey            = `[a-zA-Z0-9]+`
+	regexCloudflareToken          = `[a-zA-Z0-9_]{40}`
 	regexCloudflareUserServiceKey = `v1\.0.+`
 )
 
@@ -27,6 +28,7 @@ var (
 	matchNamecheapPassword        = regexp.MustCompile("^" + regexNamecheapPassword + "$").MatchString
 	matchDreamhostKey             = regexp.MustCompile("^" + regexDreamhostKey + "$").MatchString
 	matchCloudflareKey            = regexp.MustCompile("^" + regexCloudflareKey + "$").MatchString
+	matchCloudflareToken          = regexp.MustCompile("^" + regexCloudflareToken + "$").MatchString
 	matchCloudflareUserServiceKey = regexp.MustCompile("^" + regexCloudflareUserServiceKey + "$").MatchString
 )
 
@@ -42,7 +44,7 @@ type SettingsType struct {
 	Password       string // Namecheap and NoIP only
 	Key            string // GoDaddy, Dreamhost and Cloudflare only
 	Secret         string // GoDaddy only
-	Token          string // DuckDNS only
+	Token          string // Cloudflare and DuckDNS only
 	Email          string // Cloudflare only
 	UserServiceKey string // Cloudflare only
 	ZoneIdentifier string // Cloudflare only
@@ -146,15 +148,19 @@ func (settings *SettingsType) Verify() error {
 			return fmt.Errorf("unsupported IP update method for settings %s", settings)
 		}
 	case PROVIDERCLOUDFLARE:
-		if settings.UserServiceKey == "" { // email and key must be provided
+		if settings.Key != "" { // email and key must be provided
 			if !matchCloudflareKey(settings.Key) {
 				return fmt.Errorf("invalid key format for settings %s", settings)
 			} else if !verification.MatchEmail(settings.Email) {
 				return fmt.Errorf("invalid email format for settings %s", settings)
 			}
-		} else { // only user service key
+		} else if settings.UserServiceKey != "" { // only user service key
 			if !matchCloudflareUserServiceKey(settings.UserServiceKey) {
 				return fmt.Errorf("invalid user service key format for settings %s", settings)
+			}
+		} else { // otherwise use an API token
+			if !matchCloudflareToken(settings.Token) {
+				return fmt.Errorf("invalid API token key format for settings %s", settings)
 			}
 		}
 		if len(settings.ZoneIdentifier) == 0 {

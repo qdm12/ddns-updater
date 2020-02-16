@@ -140,6 +140,7 @@ Please then refer to your specific DNS host provider in the section below for ev
     - Either:
         - Email `"email"` and Key `"key"`
         - User service key `"user_service_key"`
+        - API Token `"token"`, configured with DNS edit permissions for your DNS name's zone.
 - Optional:
     - `"proxied"` is a boolean to use the proxy services of Cloudflare
 

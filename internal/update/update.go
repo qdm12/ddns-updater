@@ -103,6 +103,7 @@ func update(
 			recordConfig.Settings.Email,
 			recordConfig.Settings.Key,
 			recordConfig.Settings.UserServiceKey,
+			recordConfig.Settings.Token,
 			ip,
 			recordConfig.Settings.Proxied,
 			recordConfig.Settings.Ttl,
@@ -259,7 +260,7 @@ func updateGoDaddy(client libnetwork.Client, host, domain, key, secret, ip strin
 	return nil
 }
 
-func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host, email, key, userServiceKey, ip string, proxied bool, ttl uint) (err error) {
+func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host, email, key, userServiceKey, token, ip string, proxied bool, ttl uint) (err error) {
 	if len(ip) == 0 {
 		return fmt.Errorf("invalid empty IP address")
 	}
@@ -284,7 +285,9 @@ func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host
 	if err != nil {
 		return err
 	}
-	if len(userServiceKey) > 0 {
+	if len(token) > 0 {
+		r.Header.Set("Authorization", "Bearer "+token)
+	} else if len(userServiceKey) > 0 {
 		r.Header.Set("X-Auth-User-Service-Key", userServiceKey)
 	} else if len(email) > 0 && len(key) > 0 {
 		r.Header.Set("X-Auth-Email", email)

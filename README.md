@@ -136,6 +136,7 @@ Please then refer to your specific DNS host provider in the section below for ev
     - `"zone_identifier"`
     - `"identifier"`
     - `"host"` is your host and can be a subdomain, `@` or `*` generally
+    - `"ttl"` is a positive integer
     - Either:
         - Email `"email"` and Key `"key"`
         - User service key `"user_service_key"`

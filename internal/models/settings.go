@@ -17,7 +17,7 @@ type Settings struct {
 	Password       string // Namecheap and NoIP only
 	Key            string // GoDaddy, Dreamhost and Cloudflare only
 	Secret         string // GoDaddy only
-	Token          string // DuckDNS only
+	Token          string // Cloudflare and DuckDNS only
 	Email          string // Cloudflare only
 	UserServiceKey string // Cloudflare only
 	ZoneIdentifier string // Cloudflare only

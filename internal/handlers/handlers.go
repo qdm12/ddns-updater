@@ -39,9 +39,9 @@ func NewHandler(rootURL, UIDir string, db data.Database, logger logging.Logger, 
 // GetHandlerFunc returns a router with all the necessary routes configured
 func (h *handler) GetHandlerFunc(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		h.logger.Info("received request at %s", r.RequestURI)
+		h.logger.Info("received HTTP request at %s", r.RequestURI)
 		switch {
-		case r.Method == http.MethodGet && r.RequestURI == "/":
+		case r.Method == http.MethodGet && r.RequestURI == h.rootURL+"/":
 			// TODO: Forms to change existing updates or add some
 			t := template.Must(template.ParseFiles(h.UIDir + "/ui/index.html"))
 			var htmlData models.HTMLData
@@ -51,10 +51,9 @@ func (h *handler) GetHandlerFunc(ctx context.Context) http.HandlerFunc {
 			}
 			if err := t.ExecuteTemplate(w, "index.html", htmlData); err != nil {
 				h.logger.Warn(err)
-				w.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprint(w, "An error occurred creating this webpage")
 			}
-		case r.Method == http.MethodGet && r.RequestURI == "/update":
+		case r.Method == http.MethodGet && r.RequestURI == h.rootURL+"/update":
 			h.force(ctx)
 			h.logger.Info("Update started manually")
 			http.Redirect(w, r, h.rootURL, 301)

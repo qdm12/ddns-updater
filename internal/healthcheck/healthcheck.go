@@ -26,7 +26,7 @@ func IsHealthy(db data.Database, lookupIP func(host string) ([]net.IP, error)) e
 			return fmt.Errorf("no set IP address found")
 		}
 		for _, lookedUpIP := range lookedUpIPs {
-			if lookedUpIP.Equal(currentIP) {
+			if !lookedUpIP.Equal(currentIP) {
 				return fmt.Errorf(
 					"lookup IP address of %s is %s instead of %s",
 					record.Settings.BuildDomainName(), lookedUpIP, currentIP)

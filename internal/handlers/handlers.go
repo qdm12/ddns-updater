@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"text/template"
-	"time"
 
 	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/html"
@@ -58,15 +57,9 @@ func (h *handler) GetHandlerFunc() http.HandlerFunc {
 			}
 		case r.Method == http.MethodGet && r.RequestURI == h.rootURL+"/update":
 			h.logger.Info("Update started manually")
-			errs := h.forceAll()
-			delay := 3 * time.Second
-			for _, err := range errs {
-				delay = 15 * time.Second
+			for _, err := range h.forceAll() {
 				h.onError(err)
-				fmt.Fprint(w, err.Error()+"\n\n")
 			}
-			fmt.Fprint(w, fmt.Sprintf("Redirecting to main web page in %s", delay))
-			time.Sleep(delay)
 			http.Redirect(w, r, h.rootURL, 301)
 		}
 	}

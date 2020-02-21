@@ -11,7 +11,7 @@ import (
 	libnetwork "github.com/qdm12/golibs/network"
 )
 
-func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host, email, key, userServiceKey string, proxied bool, ttl uint, ip net.IP) (err error) {
+func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host, email, key, userServiceKey, token string, proxied bool, ttl uint, ip net.IP) (err error) {
 	if ip == nil {
 		return fmt.Errorf("IP address was not given to updater")
 	}
@@ -37,13 +37,15 @@ func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host
 		return err
 	}
 	switch {
+	case len(token) > 0:
+		r.Header.Set("Authorization", "Bearer "+token)
 	case len(userServiceKey) > 0:
 		r.Header.Set("X-Auth-User-Service-Key", userServiceKey)
 	case len(email) > 0 && len(key) > 0:
 		r.Header.Set("X-Auth-Email", email)
 		r.Header.Set("X-Auth-Key", key)
 	default:
-		return fmt.Errorf("email and key are both unset and no user service key was provided")
+		return fmt.Errorf("email and key are both unset and user service key is not set and no token was provided")
 	}
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {

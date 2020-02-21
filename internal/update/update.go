@@ -125,6 +125,7 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 			settings.Email,
 			settings.Key,
 			settings.UserServiceKey,
+			settings.Token,
 			settings.Proxied,
 			settings.Ttl,
 			ip,

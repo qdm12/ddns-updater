@@ -10,6 +10,7 @@ const (
 	RegexDreamhostKey             string = `[a-zA-Z0-9]{16}`
 	RegexCloudflareKey            string = `[a-zA-Z0-9]+`
 	RegexCloudflareUserServiceKey string = `v1\.0.+`
+	RegexCloudflareToken          string = `[a-zA-Z0-9_]{40}`
 )
 
 func MatchGodaddyKey(s string) bool {
@@ -38,4 +39,8 @@ func MatchCloudflareKey(s string) bool {
 
 func MatchCloudflareUserServiceKey(s string) bool {
 	return regexp.MustCompile("^" + RegexCloudflareUserServiceKey + "$").MatchString(s)
+}
+
+func MatchCloudflareToken(s string) bool {
+	return regexp.MustCompile("^" + RegexCloudflareToken + "$").MatchString(s)
 }

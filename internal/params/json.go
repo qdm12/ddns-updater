@@ -19,7 +19,7 @@ type settingsType struct {
 	Password       string        `json:"password"`         // Namecheap, NoIP only
 	Key            string        `json:"key"`              // GoDaddy, Dreamhost and Cloudflare only
 	Secret         string        `json:"secret"`           // GoDaddy only
-	Token          string        `json:"token"`            // DuckDNS only
+	Token          string        `json:"token"`            // DuckDNS and Cloudflare only
 	Email          string        `json:"email"`            // Cloudflare only
 	Username       string        `json:"username"`         // NoIP only
 	UserServiceKey string        `json:"user_service_key"` // Cloudflare only

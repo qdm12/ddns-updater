@@ -48,16 +48,20 @@ func (p *params) isConsistent(settings models.Settings) error {
 		}
 	case constants.PROVIDERCLOUDFLARE:
 		switch {
-		case len(settings.UserServiceKey) == 0: // email and key must be provided
+		case len(settings.Key) > 0: // email and key must be provided
 			switch {
 			case !constants.MatchCloudflareKey(settings.Key):
 				return fmt.Errorf("invalid key format")
 			case !p.verifier.MatchEmail(settings.Email):
 				return fmt.Errorf("invalid email format")
-			} // TODO PR merged check
-		default: // only user service key
-			if !constants.MatchCloudflareUserServiceKey(settings.UserServiceKey) {
+			}
+		case len(settings.UserServiceKey) > 0: // only user service key
+			if !constants.MatchCloudflareKey(settings.Key) {
 				return fmt.Errorf("invalid user service key format")
+			}
+		default: // API token only
+			if !constants.MatchCloudflareToken(settings.Token) {
+				return fmt.Errorf("invalid API token key format")
 			}
 		}
 		switch {

@@ -35,7 +35,7 @@ RUN apk add --update sqlite ca-certificates && \
     chmod 700 /updater/data && \
     chmod 700 /updater/data/updates.db
 EXPOSE 8000
-HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=2 CMD ["/updater/app", "healthcheck"]
+HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=2 CMD ["/updater/app", "healthcheck"]
 USER 1000
 ENTRYPOINT ["/updater/app"]
 ENV DELAY=10m \

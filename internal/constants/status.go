@@ -10,8 +10,8 @@ const (
 )
 
 const (
-	HTML_FAIL     string = `<font color="red">Failure</font>`
-	HTML_SUCCESS  string = `<font color="green">Success</font>`
-	HTML_UPTODATE string = `<font color="#00CC66">Up to date</font>`
-	HTML_UPDATING string = `<font color="yellow">Updating</font>`
+	HTML_FAIL     string = `<font color="red"><b>Failure</b></font>`
+	HTML_SUCCESS  string = `<font color="green"><b>Success</b></font>`
+	HTML_UPTODATE string = `<font color="#00CC66"><b>Up to date</b></font>`
+	HTML_UPDATING string = `<font color="orange"><b>Updating</b></font>`
 )

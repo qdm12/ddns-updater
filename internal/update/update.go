@@ -5,7 +5,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/qdm12/golibs/admin"
 	"github.com/qdm12/golibs/logging"
 	libnetwork "github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
@@ -24,53 +23,53 @@ type updater struct {
 	db       data.Database
 	logger   logging.Logger
 	client   libnetwork.Client
-	gotify   admin.Gotify
+	notify   notifyFunc
 	verifier verification.Verifier
 }
 
-func NewUpdater(db data.Database, logger logging.Logger, client libnetwork.Client, gotify admin.Gotify) Updater {
+type notifyFunc func(priority int, messageArgs ...interface{})
+
+func NewUpdater(db data.Database, logger logging.Logger, client libnetwork.Client, notify notifyFunc) Updater {
 	return &updater{
 		db:       db,
 		logger:   logger,
 		client:   client,
-		gotify:   gotify,
+		notify:   notify,
 		verifier: verification.NewVerifier(),
 	}
 }
 
 func (u *updater) Update(id int) error {
-	recordConfig, err := u.db.Select(id)
+	record, err := u.db.Select(id)
 	if err != nil {
 		return err
 	}
-	recordConfig.Time = time.Now()
-	recordConfig.Status = constants.UPDATING
-	if err := u.db.Update(id, recordConfig); err != nil {
+	record.Time = time.Now()
+	record.Status = constants.UPDATING
+	if err := u.db.Update(id, record); err != nil {
 		return err
 	}
 	status, message, newIP, err := u.update(
-		recordConfig.Settings,
-		recordConfig.History.GetCurrentIP(),
-		recordConfig.History.GetDurationSinceSuccess())
-	recordConfig.Status = status
-	recordConfig.Message = message
+		record.Settings,
+		record.History.GetCurrentIP(),
+		record.History.GetDurationSinceSuccess())
+	record.Status = status
+	record.Message = message
 	if err != nil {
-		if len(recordConfig.Message) == 0 {
-			recordConfig.Message = err.Error()
+		if len(record.Message) == 0 {
+			record.Message = err.Error()
 		}
-		if updateErr := u.db.Update(id, recordConfig); updateErr != nil {
+		if updateErr := u.db.Update(id, record); updateErr != nil {
 			return fmt.Errorf("%s, %s", err, updateErr)
 		}
 		return err
 	}
 	if newIP != nil {
-		recordConfig.History.SuccessTime = time.Now()
-		recordConfig.History.IPs = append(recordConfig.History.IPs, newIP)
-		if err := u.gotify.Notify("DDNS Updater", 1, message); err != nil {
-			u.logger.Warn(err)
-		}
+		record.History.SuccessTime = time.Now()
+		record.History.IPs = append(record.History.IPs, newIP)
+		u.notify(1, fmt.Sprintf("%s %s", record.Settings.BuildDomainName(), message))
 	}
-	return u.db.Update(id, recordConfig) // persists some data if needed (i.e new IP)
+	return u.db.Update(id, record) // persists some data if needed (i.e new IP)
 }
 
 func (u *updater) update(settings models.Settings, currentIP net.IP, durationSinceSuccess string) (status models.Status, message string, newIP net.IP, err error) {
@@ -157,9 +156,9 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 	}
 	if currentIP == nil {
 		// first IP assigned
-		message = fmt.Sprintf("%s has now IP address %s", settings.BuildDomainName(), ip.String())
+		message = fmt.Sprintf("has now IP address %s", ip.String())
 	} else {
-		message = fmt.Sprintf("%s changed from %s to %s", settings.BuildDomainName(), currentIP.String(), ip.String())
+		message = fmt.Sprintf("changed from %s to %s", currentIP.String(), ip.String())
 	}
 	return constants.SUCCESS, message, ip, nil
 }

@@ -91,28 +91,29 @@ func main() {
 	idToPeriod := make(map[int]time.Duration)
 	for id, setting := range settings {
 		logger.Info("Reading history from database: domain %s host %s", setting.Domain, setting.Host)
-		ips, tSuccess, err := persistentDB.GetIPs(setting.Domain, setting.Host)
+		ips, successTime, err := persistentDB.GetIPs(setting.Domain, setting.Host)
 		if err != nil {
 			e.FatalOnError(err)
 		}
+		records = append(records, models.NewRecord(setting, ips, successTime))
 		idToPeriod[id] = defaultPeriod
 		if setting.Delay > 0 {
-		idToPeriod[id] = setting.Delay
-	}
+			idToPeriod[id] = setting.Delay
+		}
 	}
 	HTTPTimeout, err := paramsReader.GetHTTPTimeout()
 	e.FatalOnError(err)
 	client := network.NewClient(HTTPTimeout)
 	db := data.NewDatabase(records, persistentDB)
 	e.SetDb(db)
-	updater := update.NewUpdater(db, logger, client, gotify)
+	updater := update.NewUpdater(db, logger, client, e.Notify)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	forceUpdate := trigger.StartUpdates(ctx, updater, idToPeriod, e.CheckError)
 	forceUpdate()
 	productionHandlerFunc := handlers.NewHandler(rootURL, dir, db, logger, forceUpdate, e.CheckError).GetHandlerFunc()
 	healthcheckHandlerFunc := libhealthcheck.GetHandler(func() error {
-		return healthcheck.IsHealthy(db, net.LookupIP)
+		return healthcheck.IsHealthy(db, net.LookupIP, logger)
 	})
 	logger.Info("Web UI listening at address 0.0.0.0:%s with root URL %s", listeningPort, rootURL)
 	e.Notify(1, fmt.Sprintf("Just launched\nIt has %d records to watch", len(records)))

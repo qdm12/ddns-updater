@@ -38,11 +38,12 @@ EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=2 CMD ["/updater/app", "healthcheck"]
 USER 1000
 ENTRYPOINT ["/updater/app"]
-ENV DELAY=600 \
+ENV DELAY=10m \
     ROOT_URL=/ \
     LISTENING_PORT=8000 \
     LOG_ENCODING=console \
     LOG_LEVEL=info \
-    NODE_ID=0
+    NODE_ID=0 \
+    HTTP_TIMEOUT=10s
 COPY --from=builder --chown=1000 /tmp/gobuild/app /updater/app
 COPY --chown=1000 ui/* /updater/ui/

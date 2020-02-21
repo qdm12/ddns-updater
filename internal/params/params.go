@@ -19,21 +19,23 @@ type ParamsReader interface {
 	GetGotifyURL(setters ...libparams.GetEnvSetter) (URL *url.URL, err error)
 	GetGotifyToken(setters ...libparams.GetEnvSetter) (token string, err error)
 	GetRootURL(setters ...libparams.GetEnvSetter) (rootURL string, err error)
-	GetDuration(key string, setters ...libparams.GetEnvSetter) (duration time.Duration, err error)
+	GetDuration(setters ...libparams.GetEnvSetter) (duration time.Duration, err error)
 	GetExeDir() (dir string, err error)
-	GetHTTPTimeout(setters ...libparams.GetEnvSetter) (duration time.Duration, err error)
+	GetHTTPTimeout() (duration time.Duration, err error)
 }
 
 type params struct {
 	envParams libparams.EnvParams
 	verifier  verification.Verifier
+	logger    logging.Logger
 	readFile  func(filename string) ([]byte, error)
 }
 
-func NewParamsReader() ParamsReader {
+func NewParamsReader(logger logging.Logger) ParamsReader {
 	return &params{
 		envParams: libparams.NewEnvParams(),
 		verifier:  verification.NewVerifier(),
+		logger:    logger,
 		readFile:  ioutil.ReadFile,
 	}
 }
@@ -64,14 +66,20 @@ func (p *params) GetRootURL(setters ...libparams.GetEnvSetter) (rootURL string, 
 	return p.envParams.GetRootURL()
 }
 
-func (p *params) GetDuration(key string, setters ...libparams.GetEnvSetter) (duration time.Duration, err error) {
-	return p.envParams.GetDuration(key, setters...)
+func (p *params) GetDuration(setters ...libparams.GetEnvSetter) (period time.Duration, err error) {
+	// Backward compatibility
+	n, err := p.envParams.GetEnvInt("DELAY", libparams.Compulsory()) // TODO change to PERIOD
+	if err == nil {                                                  // integer only, treated as seconds
+		p.logger.Warn("The value for the duration period of the updater does not have a time unit, you might want to set it to \"%ds\" instead of \"%d\"", n, n)
+		return time.Duration(n) * time.Second, nil
+	}
+	return p.envParams.GetDuration("DELAY", setters...)
 }
 
 func (p *params) GetExeDir() (dir string, err error) {
 	return p.envParams.GetExeDir()
 }
 
-func (p *params) GetHTTPTimeout(setters ...libparams.GetEnvSetter) (duration time.Duration, err error) {
-	return p.envParams.GetHTTPTimeout()
+func (p *params) GetHTTPTimeout() (duration time.Duration, err error) {
+	return p.envParams.GetHTTPTimeout(libparams.Default("10s"))
 }

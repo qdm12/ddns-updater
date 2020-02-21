@@ -36,7 +36,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	paramsReader := params.NewParamsReader()
+	paramsReader := params.NewParamsReader(logger)
 	encoding, level, nodeID, err := paramsReader.GetLoggerConfig()
 	if err != nil {
 		logger.Error(err)
@@ -67,7 +67,7 @@ func main() {
 	}
 	rootURL, err := paramsReader.GetRootURL()
 	e.FatalOnError(err)
-	defaultPeriod, err := paramsReader.GetDuration("DELAY", libparams.Default("10m"))
+	defaultPeriod, err := paramsReader.GetDuration(libparams.Default("10m"))
 	e.FatalOnError(err)
 	dir, err := paramsReader.GetExeDir()
 	e.FatalOnError(err)
@@ -98,7 +98,7 @@ func main() {
 		records = append(records, models.NewRecord(setting, ips, tSuccess))
 		idToPeriod[id] = setting.Delay
 	}
-	HTTPTimeout, err := paramsReader.GetHTTPTimeout(libparams.Default("3s"))
+	HTTPTimeout, err := paramsReader.GetHTTPTimeout()
 	e.FatalOnError(err)
 	client := network.NewClient(HTTPTimeout)
 	db := data.NewDatabase(records, persistentDB)

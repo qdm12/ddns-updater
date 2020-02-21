@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"text/template"
+	"time"
 
 	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/html"
@@ -14,30 +14,33 @@ import (
 
 // Handler contains a handler function
 type Handler interface {
-	GetHandlerFunc(ctx context.Context) http.HandlerFunc
+	GetHandlerFunc() http.HandlerFunc
 }
 
 type handler struct {
-	rootURL string
-	UIDir   string
-	db      data.Database
-	logger  logging.Logger
-	force   func(ctx context.Context) error
+	rootURL  string
+	UIDir    string
+	db       data.Database
+	logger   logging.Logger
+	forceAll func() []error
+	onError  func(err error)
 }
 
 // NewHandler returns a Handler object
-func NewHandler(rootURL, UIDir string, db data.Database, logger logging.Logger, force func(ctx context.Context) error) Handler {
+func NewHandler(rootURL, UIDir string, db data.Database, logger logging.Logger,
+	forceAll func() []error, onError func(err error)) Handler {
 	return &handler{
-		rootURL: rootURL,
-		UIDir:   UIDir,
-		db:      db,
-		logger:  logger,
-		force:   force,
+		rootURL:  rootURL,
+		UIDir:    UIDir,
+		db:       db,
+		logger:   logger,
+		forceAll: forceAll,
+		onError:  onError,
 	}
 }
 
 // GetHandlerFunc returns a router with all the necessary routes configured
-func (h *handler) GetHandlerFunc(ctx context.Context) http.HandlerFunc {
+func (h *handler) GetHandlerFunc() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.logger.Info("received HTTP request at %s", r.RequestURI)
 		switch {
@@ -54,8 +57,16 @@ func (h *handler) GetHandlerFunc(ctx context.Context) http.HandlerFunc {
 				fmt.Fprint(w, "An error occurred creating this webpage")
 			}
 		case r.Method == http.MethodGet && r.RequestURI == h.rootURL+"/update":
-			h.force(ctx)
 			h.logger.Info("Update started manually")
+			errs := h.forceAll()
+			delay := 3 * time.Second
+			for _, err := range errs {
+				delay = 15 * time.Second
+				h.onError(err)
+				fmt.Fprint(w, err.Error()+"\n\n")
+			}
+			fmt.Fprint(w, fmt.Sprintf("Redirecting to main web page in %s", delay))
+			time.Sleep(delay)
 			http.Redirect(w, r, h.rootURL, 301)
 		}
 	}

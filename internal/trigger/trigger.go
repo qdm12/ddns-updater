@@ -2,7 +2,6 @@ package trigger
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/update"
@@ -10,14 +9,13 @@ import (
 
 type Trigger interface {
 	Run(ctx context.Context, onError func(err error))
-	Force(ctx context.Context) error
+	Force() (errors []error)
 }
 
 type trigger struct {
 	defaultPeriod time.Duration
 	idToPeriod    map[int]time.Duration
 	updater       update.Updater
-	force         chan struct{}
 }
 
 func NewTrigger(defaultPeriod time.Duration, idToPeriod map[int]time.Duration, updater update.Updater) Trigger {
@@ -30,8 +28,6 @@ func NewTrigger(defaultPeriod time.Duration, idToPeriod map[int]time.Duration, u
 
 // Run runs an infinite asynchronous periodic function that triggers updates
 func (t *trigger) Run(ctx context.Context, onError func(err error)) {
-	t.force = make(chan struct{})
-	defer close(t.force)
 	errors := make(chan error)
 	for id, customPeriod := range t.idToPeriod {
 		period := t.defaultPeriod
@@ -59,22 +55,17 @@ func (t *trigger) periodicRun(ctx context.Context, id int, period time.Duration,
 			if err := t.updater.Update(id); err != nil {
 				errors <- err
 			}
-		case <-t.force:
-			if err := t.updater.Update(id); err != nil {
-				errors <- err
-			}
 		case <-ctx.Done(): // waits for update to finish
 			return
 		}
 	}
 }
 
-func (t *trigger) Force(ctx context.Context) error {
-	if err := ctx.Err(); err != nil {
-		return fmt.Errorf("trigger is already stopped (%s)", err)
-	} else if t.force == nil {
-		return fmt.Errorf("trigger is not running yet")
+func (t *trigger) Force() (errors []error) {
+	for id := range t.idToPeriod {
+		if err := t.updater.Update(id); err != nil {
+			errors = append(errors, err)
+		}
 	}
-	t.force <- struct{}{}
-	return nil
+	return errors
 }

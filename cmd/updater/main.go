@@ -110,9 +110,10 @@ func main() {
 	go trigger.Run(ctx, func(err error) {
 		e.CheckError(err)
 	})
-	err = trigger.Force(ctx) // TODO race condition
-	e.FatalOnError(err)
-	productionHandlerFunc := handlers.NewHandler(rootURL, dir, db, logger, trigger.Force).GetHandlerFunc(ctx)
+	for _, err := range trigger.Force() {
+		e.CheckError(err)
+	}
+	productionHandlerFunc := handlers.NewHandler(rootURL, dir, db, logger, trigger.Force, e.CheckError).GetHandlerFunc()
 	healthcheckHandlerFunc := libhealthcheck.GetHandler(func() error {
 		return healthcheck.IsHealthy(db, net.LookupIP)
 	})

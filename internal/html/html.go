@@ -23,24 +23,32 @@ func ConvertRecord(record models.Record) models.HTMLRow {
 	if len(message) > 0 {
 		message = fmt.Sprintf("(%s)", message)
 	}
-	row.Status = fmt.Sprintf("%s %s, %s",
-		string(record.Status),
-		message,
-		time.Since(record.Time).Round(time.Second).String()+" ago")
+	if len(record.Status) == 0 {
+		row.Status = "N/A"
+	} else {
+		row.Status = fmt.Sprintf("%s %s, %s",
+			convertStatus(record.Status),
+			message,
+			time.Since(record.Time).Round(time.Second).String()+" ago")
+	}
 	currentIP := record.History.GetCurrentIP()
-	previousIPs := record.History.GetPreviousIPs()
 	if currentIP != nil {
 		row.CurrentIP = `<a href="https://ipinfo.io/"` + currentIP.String() + `\>` + currentIP.String() + "</a>"
 	} else {
 		row.CurrentIP = "N/A"
 	}
-	var previousIPsStr []string
-	for _, previousIP := range previousIPs {
-		previousIPsStr = append(previousIPsStr, previousIP.String())
-	}
-	if len(previousIPsStr) == 0 {
-		row.PreviousIPs = "N/A"
-	} else {
+	previousIPs := record.History.GetPreviousIPs()
+	row.PreviousIPs = "N/A"
+	if len(previousIPs) > 0 {
+		var previousIPsStr []string
+		const maxPreviousIPs = 2
+		for i, previousIP := range previousIPs {
+			if i == maxPreviousIPs {
+				previousIPsStr = append(previousIPsStr, fmt.Sprintf("and %d more", len(previousIPs)-i))
+				break
+			}
+			previousIPsStr = append(previousIPsStr, previousIP.String())
+		}
 		row.PreviousIPs = strings.Join(previousIPsStr, ", ")
 	}
 	return row

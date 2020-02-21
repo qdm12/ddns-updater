@@ -26,6 +26,7 @@ func NewDatabase(dataDir string) (*database, error) {
 		host TEXT NOT NULL,
 		ip TEXT NOT NULL,
 		t_new DATETIME NOT NULL,
+		t_last DATETIME NOT NULL,
 		current INTEGER DEFAULT 1 NOT NULL,
 		PRIMARY KEY(domain, host, ip, t_new)
 		);`)

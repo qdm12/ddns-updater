@@ -25,12 +25,13 @@ func (db *database) StoreNewIP(domain, host string, ip net.IP) (err error) {
 	}
 	// Inserts new IP
 	_, err = db.sqlite.Exec(
-		`INSERT INTO updates_ips(domain,host,ip,t_new,current)
-		VALUES(?, ?, ?, ?, ?);`,
+		`INSERT INTO updates_ips(domain,host,ip,t_new,t_last,current)
+		VALUES(?, ?, ?, ?, ?, ?);`,
 		domain,
 		host,
 		ip.String(),
 		time.Now(),
+		time.Now(), // unneeded but it's hard to modify tables in sqlite
 		1,
 	)
 	return err

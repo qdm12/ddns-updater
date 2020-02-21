@@ -177,14 +177,15 @@ Please then refer to your specific DNS host provider in the section below for ev
 
 | Environment variable | Default | Description |
 | --- | --- | --- |
-| `DELAY` | `300` | Delay between updates in seconds |
+| `DELAY` | `10m` | Delay between updates, it can be `30s` for 30 seconds or `1h` for 1 hour for example |
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
-| `LOG_ENCODING` | `json` | Format of logging, `json` or `human` |
-| `LOG_LEVEL` | `info` | Level of logging, `info`, ~`success`~, `warning` or `error` |
+| `LOG_ENCODING` | `console` | Format of logging, `json` or `console` |
+| `LOG_LEVEL` | `info` | Level of logging, `info`, `warning` or `error` |
 | `NODE_ID` | `0` | Node ID (for distributed systems), can be any integer |
-| `GOTIFY_URL` |  | HTTP(s) URL to your Gotify server |
-| `GOTIFY_TOKEN` |  | Token to access your Gotify server |
+| `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
+| `GOTIFY_URL` |  | (optional) HTTP(s) URL to your Gotify server |
+| `GOTIFY_TOKEN` |  | (optional) Token to access your Gotify server |
 
 ### Host firewall
 

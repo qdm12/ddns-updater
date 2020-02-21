@@ -9,10 +9,13 @@ services:
     volumes:
       - ./data:/updater/data
     environment:
-      - DELAY=300
-      - ROOTURL=
+      - DELAY=300s
+      - ROOT_URL=/
       - LISTENINGPORT=8000
-      - LOGGING=human
-      - NODEID=0
-      - LOGLEVEL=
+      - LOG_ENCODING=console
+      - LOG_LEVEL=info
+      - NODE_ID=0
+      - HTTP_TIMEOUT=10s
+      - GOTIFY_URL=
+      - GOTIFY_TOKEN=
     restart: always

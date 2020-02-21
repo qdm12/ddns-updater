@@ -1,4 +1,4 @@
-ARG ALPINE_VERSION=3.10
+ARG ALPINE_VERSION=3.11
 ARG GO_VERSION=1.13
 
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
@@ -44,6 +44,8 @@ ENV DELAY=10m \
     LOG_ENCODING=console \
     LOG_LEVEL=info \
     NODE_ID=0 \
-    HTTP_TIMEOUT=10s
+    HTTP_TIMEOUT=10s \
+    GOTIFY_URL= \
+    GOTIFY_TOKEN=
 COPY --from=builder --chown=1000 /tmp/gobuild/app /updater/app
 COPY --chown=1000 ui/* /updater/ui/

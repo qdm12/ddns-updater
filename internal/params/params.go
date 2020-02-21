@@ -19,7 +19,7 @@ type ParamsReader interface {
 	GetGotifyURL(setters ...libparams.GetEnvSetter) (URL *url.URL, err error)
 	GetGotifyToken(setters ...libparams.GetEnvSetter) (token string, err error)
 	GetRootURL(setters ...libparams.GetEnvSetter) (rootURL string, err error)
-	GetDuration(setters ...libparams.GetEnvSetter) (duration time.Duration, err error)
+	GetDelay(setters ...libparams.GetEnvSetter) (duration time.Duration, err error)
 	GetExeDir() (dir string, err error)
 	GetHTTPTimeout() (duration time.Duration, err error)
 }
@@ -66,7 +66,7 @@ func (p *params) GetRootURL(setters ...libparams.GetEnvSetter) (rootURL string, 
 	return p.envParams.GetRootURL()
 }
 
-func (p *params) GetDuration(setters ...libparams.GetEnvSetter) (period time.Duration, err error) {
+func (p *params) GetDelay(setters ...libparams.GetEnvSetter) (period time.Duration, err error) {
 	// Backward compatibility
 	n, err := p.envParams.GetEnvInt("DELAY", libparams.Compulsory()) // TODO change to PERIOD
 	if err == nil {                                                  // integer only, treated as seconds

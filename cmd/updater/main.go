@@ -67,7 +67,7 @@ func main() {
 	}
 	rootURL, err := paramsReader.GetRootURL()
 	e.FatalOnError(err)
-	defaultPeriod, err := paramsReader.GetDuration(libparams.Default("10m"))
+	defaultPeriod, err := paramsReader.GetDelay(libparams.Default("10m"))
 	e.FatalOnError(err)
 	dir, err := paramsReader.GetExeDir()
 	e.FatalOnError(err)

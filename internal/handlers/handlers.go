@@ -17,24 +17,24 @@ type Handler interface {
 }
 
 type handler struct {
-	rootURL  string
-	UIDir    string
-	db       data.Database
-	logger   logging.Logger
-	forceAll func() []error
-	onError  func(err error)
+	rootURL     string
+	UIDir       string
+	db          data.Database
+	logger      logging.Logger
+	forceUpdate func()
+	onError     func(err error)
 }
 
 // NewHandler returns a Handler object
 func NewHandler(rootURL, UIDir string, db data.Database, logger logging.Logger,
-	forceAll func() []error, onError func(err error)) Handler {
+	forceUpdate func(), onError func(err error)) Handler {
 	return &handler{
-		rootURL:  rootURL,
-		UIDir:    UIDir,
-		db:       db,
-		logger:   logger,
-		forceAll: forceAll,
-		onError:  onError,
+		rootURL:     rootURL,
+		UIDir:       UIDir,
+		db:          db,
+		logger:      logger,
+		forceUpdate: forceUpdate,
+		onError:     onError,
 	}
 }
 
@@ -57,9 +57,7 @@ func (h *handler) GetHandlerFunc() http.HandlerFunc {
 			}
 		case r.Method == http.MethodGet && r.RequestURI == h.rootURL+"/update":
 			h.logger.Info("Update started manually")
-			for _, err := range h.forceAll() {
-				h.onError(err)
-			}
+			h.forceUpdate()
 			http.Redirect(w, r, h.rootURL, 301)
 		}
 	}

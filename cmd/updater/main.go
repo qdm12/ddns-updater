@@ -27,7 +27,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/params"
 	"github.com/qdm12/ddns-updater/internal/persistence"
-	libtrigger "github.com/qdm12/ddns-updater/internal/trigger"
+	"github.com/qdm12/ddns-updater/internal/trigger"
 	"github.com/qdm12/ddns-updater/internal/update"
 )
 
@@ -95,8 +95,10 @@ func main() {
 		if err != nil {
 			e.FatalOnError(err)
 		}
-		records = append(records, models.NewRecord(setting, ips, tSuccess))
+		idToPeriod[id] = defaultPeriod
+		if setting.Delay > 0 {
 		idToPeriod[id] = setting.Delay
+	}
 	}
 	HTTPTimeout, err := paramsReader.GetHTTPTimeout()
 	e.FatalOnError(err)
@@ -106,19 +108,9 @@ func main() {
 	updater := update.NewUpdater(db, logger, client, gotify)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	trigger := libtrigger.NewTrigger(defaultPeriod, idToPeriod, updater)
-	go trigger.Run(ctx, func(err error) {
-		e.CheckError(err)
-	})
-	// Trigger the updates once at the beginning
-	go func() {
-		logger.Info("Updating all records...")
-		for _, err := range trigger.Force() {
-			e.CheckError(err)
-		}
-		logger.Info("Initial update finished")
-	}()
-	productionHandlerFunc := handlers.NewHandler(rootURL, dir, db, logger, trigger.Force, e.CheckError).GetHandlerFunc()
+	forceUpdate := trigger.StartUpdates(ctx, updater, idToPeriod, e.CheckError)
+	forceUpdate()
+	productionHandlerFunc := handlers.NewHandler(rootURL, dir, db, logger, forceUpdate, e.CheckError).GetHandlerFunc()
 	healthcheckHandlerFunc := libhealthcheck.GetHandler(func() error {
 		return healthcheck.IsHealthy(db, net.LookupIP)
 	})

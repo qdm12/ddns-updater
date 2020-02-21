@@ -110,9 +110,14 @@ func main() {
 	go trigger.Run(ctx, func(err error) {
 		e.CheckError(err)
 	})
-	for _, err := range trigger.Force() {
-		e.CheckError(err)
-	}
+	// Trigger the updates once at the beginning
+	go func() {
+		logger.Info("Updating all records...")
+		for _, err := range trigger.Force() {
+			e.CheckError(err)
+		}
+		logger.Info("Initial update finished")
+	}()
 	productionHandlerFunc := handlers.NewHandler(rootURL, dir, db, logger, trigger.Force, e.CheckError).GetHandlerFunc()
 	healthcheckHandlerFunc := libhealthcheck.GetHandler(func() error {
 		return healthcheck.IsHealthy(db, net.LookupIP)

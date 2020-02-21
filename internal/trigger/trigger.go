@@ -61,7 +61,7 @@ func (t *trigger) periodicRun(ctx context.Context, id int, period time.Duration,
 	}
 }
 
-func (t *trigger) Force() (errors []error) {
+func (t *trigger) Force() (errors []error) { // TODO make with signal channel as it was before
 	for id := range t.idToPeriod {
 		if err := t.updater.Update(id); err != nil {
 			errors = append(errors, err)

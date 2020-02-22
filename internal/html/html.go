@@ -78,7 +78,13 @@ func convertProvider(provider models.Provider) string {
 	case constants.DUCKDNS:
 		return "<a href=\"https://duckdns.org\">DuckDNS</a>"
 	case constants.DREAMHOST:
-		return "<a href=\"https://https://www.dreamhost.com/\">Dreamhost</a>"
+		return "<a href=\"https://www.dreamhost.com/\">Dreamhost</a>"
+	case constants.CLOUDFLARE:
+		return "<a href=\"https://www.cloudflare.com\">Cloudflare</a>"
+	case constants.NOIP:
+		return "<a href=\"https://www.noip.com/\">NoIP</a>"
+	case constants.DNSPOD:
+		return "<a href=\"https://www.dnspod.cn/\">DNSPod</a>"
 	default:
 		return string(provider)
 	}

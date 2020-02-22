@@ -1,81 +1,81 @@
 <html>
+
 <head>
-<title>DDNS Updater</title>
-<style>
-table {
-    font-family: arial, sans-serif;
-    font-size: 14px;
-    font-size: 1vw;
-    border-collapse: collapse;
-    width: 100%;
-}
+  <title>DDNS Updater</title>
+  <style>
+    table {
+      font-family: arial, sans-serif;
+      font-size: 14px;
+      font-size: 1vw;
+      border-collapse: collapse;
+      width: 100%;
+    }
 
-td, th {
-    border: 2px solid #9a9fa1;
-    text-align: center;
-    padding: 1%;
-    max-width: 35%;
-    transition: all 0.7s;
-}
+    td,
+    th {
+      border: 2px solid #9a9fa1;
+      text-align: center;
+      padding: 1%;
+      max-width: 35%;
+      transition: all 0.7s;
+    }
 
-th {
-  background-color: #d8daf7;
-}
+    th {
+      background-color: #d8daf7;
+    }
 
-tr:nth-child(odd) {
-    background-color: #e6f7ea;
-}
+    tr:nth-child(odd) {
+      background-color: #e6f7ea;
+    }
 
-tr:nth-child(even) {
-    background-color: #f3ebe3;
-}
+    tr:nth-child(even) {
+      background-color: #f3ebe3;
+    }
 
-tr {
-  transition: all 0.7s;
-}
+    tr {
+      transition: all 0.7s;
+    }
 
-tr:hover {
-  background: #c1e2f0;
-}
+    tr:hover {
+      background: #c1e2f0;
+    }
 
-a {
-  text-decoration: none;
-}
-</style>
+    a {
+      text-decoration: none;
+    }
+  </style>
 </head>
+
 <body>
-<table>
-  <tr>
-    <th>Domain</th>
-    <th>Host</th>
-    <th>Provider</th>
-    <th>IP method</th>
-    <th>Update status</th>
-    <th>Set IP</th>
-    <th>Previous IPs (achronologically)</th>
-  </tr>
-  {{range .Rows}}
-  <tr>
-    <td>{{.Domain}}</td>
-    <td>{{.Host}}</td>
-    <td>{{.Provider}}</td>
-    <td>{{.IPMethod}}</td>
-    <td>{{.Status}}</td>
-    <td>{{.IP}}</td>
-    <td>
-    {{range .IPs}}
-      {{.}}
+  <table>
+    <tr>
+      <th>Domain</th>
+      <th>Host</th>
+      <th>Provider</th>
+      <th>IP method</th>
+      <th>Update status</th>
+      <th>Set IP</th>
+      <th>Previous IPs (achronologically)</th>
+    </tr>
+    {{range .Rows}}
+    <tr>
+      <td>{{.Domain}}</td>
+      <td>{{.Host}}</td>
+      <td>{{.Provider}}</td>
+      <td>{{.IPMethod}}</td>
+      <td>{{.Status}}</td>
+      <td>{{.CurrentIP}}</td>
+      <td>{{.PreviousIPs}}</td>
+    </tr>
     {{end}}
-    </td>
-  </tr>
-  {{end}}
-</table>
-<div>
-  Made by <a href="https://qqq.ninja">Quentin McGaw</a>
-</div>
-<div>
-  <a href="https://github.com/qdm12/ddns-updater">github.com/qdm12/ddns-updater</a>
-</div>
+  </table>
+  <div>
+    Made by <a href="https://qqq.ninja">Quentin McGaw</a>
+  </div>
+  <div>
+    <a href="https://github.com/qdm12/ddns-updater">github.com/qdm12/ddns-updater</a>
+  </div>
 
 </body>
+
 </html>

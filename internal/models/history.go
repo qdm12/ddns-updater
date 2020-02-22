@@ -2,71 +2,80 @@ package models
 
 import (
 	"fmt"
-	"sync"
+	"net"
+	"strings"
 	"time"
 )
 
-type historyType struct {
-	ips      []string // current and previous ips
-	tSuccess time.Time
-	sync.RWMutex
+// History contains current and previous IP address for a particular record
+// with the latest success time
+type History struct {
+	IPs         []net.IP // current and previous ips
+	SuccessTime time.Time
 }
 
-func newHistory(ips []string, tSuccess time.Time) historyType {
-	return historyType{
-		ips:      ips,
-		tSuccess: tSuccess,
+// GetPreviousIPs returns an antichronological list of previous
+// IP addresses if there is any.
+func (h *History) GetPreviousIPs() []net.IP {
+	if len(h.IPs) <= 1 {
+		return nil
 	}
+	IPs := make([]net.IP, len(h.IPs)-1)
+	for i := len(h.IPs) - 2; i >= 0; i-- {
+		IPs[i] = h.IPs[i]
+	}
+	return IPs
 }
 
-func (history *historyType) PrependIP(ip string) {
-	history.Lock()
-	defer history.Unlock()
-	history.ips = append([]string{ip}, history.ips...)
+// GetCurrentIP returns the current IP address (latest in history)
+func (h *History) GetCurrentIP() net.IP {
+	if len(h.IPs) < 1 {
+		return nil
+	}
+	return h.IPs[len(h.IPs)-1]
 }
 
-func (history *historyType) SetTSuccess(t time.Time) {
-	history.Lock()
-	defer history.Unlock()
-	history.tSuccess = t
-}
-
-func (history *historyType) GetIPs() []string {
-	history.RLock()
-	defer history.RUnlock()
-	return history.ips
-}
-
-func (history *historyType) GetTSuccessDuration() string {
-	history.RLock()
-	defer history.RUnlock()
-	return durationString(history.tSuccess)
-}
-
-func durationString(t time.Time) string {
-	duration := time.Since(t)
-	if duration < time.Minute {
+func (h *History) GetDurationSinceSuccess() string {
+	duration := time.Since(h.SuccessTime)
+	switch {
+	case duration < time.Minute:
 		return fmt.Sprintf("%ds", int(duration.Round(time.Second).Seconds()))
-	} else if duration < time.Hour {
+	case duration < time.Hour:
 		return fmt.Sprintf("%dm", int(duration.Round(time.Minute).Minutes()))
-	} else if duration < 24*time.Hour {
+	case duration < 24*time.Hour:
 		return fmt.Sprintf("%dh", int(duration.Round(time.Hour).Hours()))
-	} else {
+	default:
 		return fmt.Sprintf("%dd", int(duration.Round(time.Hour*24).Hours()/24))
 	}
 }
 
-func (history *historyType) String() (s string) {
-	history.RLock()
-	defer history.RUnlock()
-	if len(history.ips) > 0 {
-		s += "Last success update: " + history.tSuccess.Format("2006-01-02 15:04:05 MST") + "; Current and previous IPs: "
-		for i := range history.ips {
-			s += history.ips[i]
-			if i != len(history.ips)-1 {
-				s += ","
-			}
-		}
+func (h *History) String() (s string) {
+	currentIP := h.GetCurrentIP()
+	if currentIP == nil {
+		return ""
 	}
-	return s
+	successTime := h.SuccessTime
+	previousIPs := h.GetPreviousIPs()
+	if len(previousIPs) == 0 {
+		return fmt.Sprintf(
+			"Last success update: %s; IP: %s",
+			successTime.Format("2006-01-02 15:04:05 MST"),
+			currentIP.String(),
+		)
+	}
+	const maxDisplay = 4
+	previousIPsStr := []string{}
+	for i, IP := range previousIPs {
+		if i == maxDisplay {
+			previousIPsStr = append(previousIPsStr, fmt.Sprintf("...(%d more)", len(previousIPs)-maxDisplay))
+			break
+		}
+		previousIPsStr = append(previousIPsStr, IP.String())
+	}
+	return fmt.Sprintf(
+		"Last success update: %s; IP: %s; Previous IPs: %s",
+		successTime.Format("2006-01-02 15:04:05 MST"),
+		currentIP.String(),
+		strings.Join(previousIPsStr, ","),
+	)
 }

@@ -7,4 +7,6 @@ type (
 	IPMethod string
 	// Status is the record config status
 	Status string
+	// HTML is for constants HTML strings
+	HTML string
 )

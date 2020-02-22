@@ -19,7 +19,7 @@ func updateGoDaddy(client libnetwork.Client, host, domain, key, secret string, i
 	type goDaddyPutBody struct {
 		Data string `json:"data"` // IP address to update to
 	}
-	URL := constants.GodaddyURL + "/" + strings.ToLower(domain) + "/records/A/" + strings.ToLower(host)
+	URL := constants.GoDaddyURL + "/" + strings.ToLower(domain) + "/records/A/" + strings.ToLower(host)
 	r, err := network.BuildHTTPPut(
 		URL,
 		[]goDaddyPutBody{

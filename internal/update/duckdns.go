@@ -12,7 +12,7 @@ import (
 )
 
 func updateDuckDNS(client network.Client, domain, token string, ip net.IP) (newIP net.IP, err error) {
-	url := constants.DuckdnsURL + "?domains=" + strings.ToLower(domain) + "&token=" + token + "&verbose=true"
+	url := constants.DuckDNSURL + "?domains=" + strings.ToLower(domain) + "&token=" + token + "&verbose=true"
 	if ip != nil {
 		url += "&ip=" + ip.String()
 	}

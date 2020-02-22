@@ -44,6 +44,9 @@ func main() {
 		logger, err = logging.NewLogger(encoding, level, nodeID)
 	}
 	if libhealthcheck.Mode(os.Args) {
+		// Running the program in a separate instance through the Docker
+		// built-in healthcheck, in an ephemeral fashion to query the
+		// long running instance of the program about its status
 		if err := libhealthcheck.Query(); err != nil {
 			logger.Error(err)
 			os.Exit(1)
@@ -57,9 +60,13 @@ func main() {
 	fmt.Println("# github.com/qdm12/ddns-updater #")
 	fmt.Print("#################################\n\n")
 	e := env.NewEnv(logger)
-	gotify, err := setupGotify(paramsReader)
+	gotifyURL, err := paramsReader.GetGotifyURL()
 	e.FatalOnError(err)
-	e.SetGotify(gotify)
+	if gotifyURL != nil {
+		gotifyToken, err := paramsReader.GetGotifyToken()
+		e.FatalOnError(err)
+		e.SetGotify(admin.NewGotify(*gotifyURL, gotifyToken, &http.Client{Timeout: time.Second}))
+	}
 	listeningPort, warning, err := paramsReader.GetListeningPort()
 	e.FatalOnError(err)
 	if len(warning) > 0 {
@@ -105,7 +112,7 @@ func main() {
 	e.FatalOnError(err)
 	client := network.NewClient(HTTPTimeout)
 	db := data.NewDatabase(records, persistentDB)
-	e.SetDb(db)
+	e.SetDB(db)
 	updater := update.NewUpdater(db, logger, client, e.Notify)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -124,18 +131,4 @@ func main() {
 	if len(serverErrs) > 0 {
 		e.Fatal(serverErrs)
 	}
-}
-
-func setupGotify(paramsReader params.ParamsReader) (admin.Gotify, error) {
-	URL, err := paramsReader.GetGotifyURL()
-	if err != nil {
-		return nil, err
-	} else if URL == nil {
-		return nil, nil
-	}
-	token, err := paramsReader.GetGotifyToken()
-	if err != nil {
-		return nil, err
-	}
-	return admin.NewGotify(*URL, token, &http.Client{Timeout: time.Second}), nil
 }

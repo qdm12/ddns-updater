@@ -13,7 +13,7 @@ import (
 type Env interface {
 	SetClient(client network.Client)
 	SetGotify(gotify admin.Gotify)
-	SetDb(db data.Database)
+	SetDB(db data.Database)
 	Notify(priority int, messageArgs ...interface{})
 	Info(messageArgs ...interface{})
 	Warn(messageArgs ...interface{})
@@ -46,7 +46,7 @@ func (e *env) SetGotify(gotify admin.Gotify) {
 	e.gotify = gotify
 }
 
-func (e *env) SetDb(db data.Database) {
+func (e *env) SetDB(db data.Database) {
 	e.db = db
 }
 

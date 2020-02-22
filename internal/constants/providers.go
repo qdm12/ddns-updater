@@ -14,7 +14,7 @@ const (
 	INFOMANIAK models.Provider = "infomaniak"
 )
 
-func ProviderChoices() (choices []models.Provider) {
+func ProviderChoices() []models.Provider {
 	return []models.Provider{
 		GODADDY,
 		NAMECHEAP,

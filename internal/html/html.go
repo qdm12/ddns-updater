@@ -12,7 +12,7 @@ import (
 func ConvertRecord(record models.Record) models.HTMLRow {
 	row := models.HTMLRow{
 		Domain:   convertDomain(record.Settings.BuildDomainName()),
-		Host:     record.Settings.Host,
+		Host:     models.HTML(record.Settings.Host),
 		Provider: convertProvider(record.Settings.Provider),
 		IPMethod: convertIPMethod(record.Settings.IPMethod, record.Settings.Provider),
 	}
@@ -26,14 +26,14 @@ func ConvertRecord(record models.Record) models.HTMLRow {
 	if len(record.Status) == 0 {
 		row.Status = "N/A"
 	} else {
-		row.Status = fmt.Sprintf("%s %s, %s",
+		row.Status = models.HTML(fmt.Sprintf("%s %s, %s",
 			convertStatus(record.Status),
 			message,
-			time.Since(record.Time).Round(time.Second).String()+" ago")
+			time.Since(record.Time).Round(time.Second).String()+" ago"))
 	}
 	currentIP := record.History.GetCurrentIP()
 	if currentIP != nil {
-		row.CurrentIP = `<a href="https://ipinfo.io/"` + currentIP.String() + `\>` + currentIP.String() + "</a>"
+		row.CurrentIP = models.HTML(`<a href="https://ipinfo.io/"` + currentIP.String() + `\>` + currentIP.String() + "</a>")
 	} else {
 		row.CurrentIP = "N/A"
 	}
@@ -49,12 +49,12 @@ func ConvertRecord(record models.Record) models.HTMLRow {
 			}
 			previousIPsStr = append(previousIPsStr, previousIP.String())
 		}
-		row.PreviousIPs = strings.Join(previousIPsStr, ", ")
+		row.PreviousIPs = models.HTML(strings.Join(previousIPsStr, ", "))
 	}
 	return row
 }
 
-func convertStatus(status models.Status) string {
+func convertStatus(status models.Status) models.HTML {
 	switch status {
 	case constants.SUCCESS:
 		return constants.HTML_SUCCESS
@@ -69,41 +69,41 @@ func convertStatus(status models.Status) string {
 	}
 }
 
-func convertProvider(provider models.Provider) string {
+func convertProvider(provider models.Provider) models.HTML {
 	switch provider {
 	case constants.NAMECHEAP:
-		return "<a href=\"https://namecheap.com\">Namecheap</a>"
+		return constants.HTML_NAMECHEAP
 	case constants.GODADDY:
-		return "<a href=\"https://godaddy.com\">GoDaddy</a>"
+		return constants.HTML_GODADDY
 	case constants.DUCKDNS:
-		return "<a href=\"https://duckdns.org\">DuckDNS</a>"
+		return constants.HTML_DUCKDNS
 	case constants.DREAMHOST:
-		return "<a href=\"https://www.dreamhost.com/\">Dreamhost</a>"
+		return constants.HTML_DREAMHOST
 	case constants.CLOUDFLARE:
-		return "<a href=\"https://www.cloudflare.com\">Cloudflare</a>"
+		return constants.HTML_CLOUDFLARE
 	case constants.NOIP:
-		return "<a href=\"https://www.noip.com/\">NoIP</a>"
+		return constants.HTML_NOIP
 	case constants.DNSPOD:
-		return "<a href=\"https://www.dnspod.cn/\">DNSPod</a>"
+		return constants.HTML_DNSPOD
 	default:
-		return string(provider)
+		return models.HTML(string(provider))
 	}
 }
 
-func convertIPMethod(IPMethod models.IPMethod, provider models.Provider) string {
+func convertIPMethod(IPMethod models.IPMethod, provider models.Provider) models.HTML {
 	// TODO map to icons
 	switch IPMethod {
 	case constants.PROVIDER:
 		return convertProvider(provider)
 	case constants.GOOGLE:
-		return "<a href=\"https://google.com/search?q=ip\">Google</a>"
+		return constants.HTML_GOOGLE
 	case constants.OPENDNS:
-		return "<a href=\"https://diagnostic.opendns.com/myip\">OpenDNS</a>"
+		return constants.HTML_OPENDNS
 	default:
-		return string(IPMethod)
+		return models.HTML(string(IPMethod))
 	}
 }
 
-func convertDomain(domain string) string {
-	return "<a href=\"http://" + domain + "\">" + domain + "</a>"
+func convertDomain(domain string) models.HTML {
+	return models.HTML("<a href=\"http://" + domain + "\">" + domain + "</a>")
 }

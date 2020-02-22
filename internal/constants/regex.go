@@ -3,14 +3,14 @@ package constants
 import "regexp"
 
 const (
-	goDaddyKey               string = `[A-Za-z0-9]{10,14}\_[A-Za-z0-9]{22}`
-	godaddySecret            string = `[A-Za-z0-9]{22}`
-	RegexDuckDNSToken        string = `[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}`
-	namecheapPassword        string = `[a-f0-9]{32}`
-	dreamhostKey             string = `[a-zA-Z0-9]{16}`
-	cloudflareKey            string = `[a-zA-Z0-9]+`
-	cloudflareUserServiceKey string = `v1\.0.+`
-	cloudflareToken          string = `[a-zA-Z0-9_]{40}`
+	goDaddyKey               = `[A-Za-z0-9]{10,14}\_[A-Za-z0-9]{22}`
+	godaddySecret            = `[A-Za-z0-9]{22}`
+	RegexDuckDNSToken        = `[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}`
+	namecheapPassword        = `[a-f0-9]{32}`
+	dreamhostKey             = `[a-zA-Z0-9]{16}`
+	cloudflareKey            = `[a-zA-Z0-9]+`
+	cloudflareUserServiceKey = `v1\.0.+`
+	cloudflareToken          = `[a-zA-Z0-9_]{40}`
 )
 
 func MatchGodaddyKey(s string) bool {

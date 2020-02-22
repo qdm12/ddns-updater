@@ -24,7 +24,7 @@ LABEL \
     org.opencontainers.image.documentation="https://github.com/qdm12/ddns-updater" \
     org.opencontainers.image.source="https://github.com/qdm12/ddns-updater" \
     org.opencontainers.image.title="ddns-updater" \
-    org.opencontainers.image.description="Universal DNS updater with WebUI. Works with Namecheap, Cloudflare, GoDaddy, DuckDns, Dreamhost and NoIP"
+    org.opencontainers.image.description="Universal DNS updater with WebUI. Works with Namecheap, Cloudflare, GoDaddy, DuckDns, Dreamhost, DNSPod and NoIP"
 RUN apk add --update sqlite ca-certificates && \
     mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2 && \
     rm -rf /var/cache/apk/* && \

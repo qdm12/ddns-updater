@@ -43,7 +43,7 @@ func (p *params) GetSettings(filePath string) (settings []models.Settings, warni
 	}
 	for _, s := range config.Settings {
 		switch models.Provider(s.Provider) {
-		case constants.PROVIDERDREAMHOST, constants.PROVIDERDUCKDNS:
+		case constants.DREAMHOST, constants.DUCKDNS:
 			s.Host = "@" // only choice available
 		}
 		setting := models.Settings{

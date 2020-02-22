@@ -84,7 +84,7 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 
 	// Update the record
 	switch settings.Provider {
-	case constants.PROVIDERNAMECHEAP:
+	case constants.NAMECHEAP:
 		ip, err = updateNamecheap(
 			u.client,
 			settings.Host,
@@ -92,7 +92,7 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 			settings.Password,
 			ip,
 		)
-	case constants.PROVIDERGODADDY:
+	case constants.GODADDY:
 		err = updateGoDaddy(
 			u.client,
 			settings.Host,
@@ -101,14 +101,14 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 			settings.Secret,
 			ip,
 		)
-	case constants.PROVIDERDUCKDNS:
+	case constants.DUCKDNS:
 		ip, err = updateDuckDNS(
 			u.client,
 			settings.Domain,
 			settings.Token,
 			ip,
 		)
-	case constants.PROVIDERDREAMHOST:
+	case constants.DREAMHOST:
 		err = updateDreamhost(
 			u.client,
 			settings.Domain,
@@ -116,7 +116,7 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 			settings.BuildDomainName(),
 			ip,
 		)
-	case constants.PROVIDERCLOUDFLARE:
+	case constants.CLOUDFLARE:
 		err = updateCloudflare(
 			u.client,
 			settings.ZoneIdentifier,
@@ -130,7 +130,7 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 			settings.Ttl,
 			ip,
 		)
-	case constants.PROVIDERNOIP:
+	case constants.NOIP:
 		ip, err = updateNoIP(
 			u.client,
 			settings.BuildDomainName(),
@@ -138,7 +138,7 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 			settings.Password,
 			ip,
 		)
-	case constants.PROVIDERDNSPOD:
+	case constants.DNSPOD:
 		err = updateDNSPod(
 			u.client,
 			settings.Domain,
@@ -160,11 +160,11 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 
 func getPublicIP(client libnetwork.Client, IPMethod models.IPMethod) (ip net.IP, err error) {
 	switch IPMethod {
-	case constants.IPMETHODPROVIDER:
+	case constants.PROVIDER:
 		return nil, nil
-	case constants.IPMETHODGOOGLE:
+	case constants.GOOGLE:
 		return network.GetPublicIP(client, "https://google.com/search?q=ip")
-	case constants.IPMETHODOPENDNS:
+	case constants.OPENDNS:
 		return network.GetPublicIP(client, "https://diagnostic.opendns.com/myip")
 	}
 	return nil, fmt.Errorf("IP method %q not supported", IPMethod)

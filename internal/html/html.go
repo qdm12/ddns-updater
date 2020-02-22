@@ -71,13 +71,13 @@ func convertStatus(status models.Status) string {
 
 func convertProvider(provider models.Provider) string {
 	switch provider {
-	case constants.PROVIDERNAMECHEAP:
+	case constants.NAMECHEAP:
 		return "<a href=\"https://namecheap.com\">Namecheap</a>"
-	case constants.PROVIDERGODADDY:
+	case constants.GODADDY:
 		return "<a href=\"https://godaddy.com\">GoDaddy</a>"
-	case constants.PROVIDERDUCKDNS:
+	case constants.DUCKDNS:
 		return "<a href=\"https://duckdns.org\">DuckDNS</a>"
-	case constants.PROVIDERDREAMHOST:
+	case constants.DREAMHOST:
 		return "<a href=\"https://https://www.dreamhost.com/\">Dreamhost</a>"
 	default:
 		return string(provider)
@@ -87,11 +87,11 @@ func convertProvider(provider models.Provider) string {
 func convertIPMethod(IPMethod models.IPMethod, provider models.Provider) string {
 	// TODO map to icons
 	switch IPMethod {
-	case constants.IPMETHODPROVIDER:
+	case constants.PROVIDER:
 		return convertProvider(provider)
-	case constants.IPMETHODGOOGLE:
+	case constants.GOOGLE:
 		return "<a href=\"https://google.com/search?q=ip\">Google</a>"
-	case constants.IPMETHODOPENDNS:
+	case constants.OPENDNS:
 		return "<a href=\"https://diagnostic.opendns.com/myip\">OpenDNS</a>"
 	default:
 		return string(IPMethod)

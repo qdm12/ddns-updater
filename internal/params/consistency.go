@@ -17,36 +17,36 @@ func (p *params) isConsistent(settings models.Settings) error {
 		return fmt.Errorf("host cannot be empty")
 	}
 	switch settings.Provider {
-	case constants.PROVIDERNAMECHEAP:
+	case constants.NAMECHEAP:
 		if !constants.MatchNamecheapPassword(settings.Password) {
 			return fmt.Errorf("invalid password format")
 		}
-	case constants.PROVIDERGODADDY:
+	case constants.GODADDY:
 		switch {
 		case !constants.MatchGodaddyKey(settings.Key):
 			return fmt.Errorf("invalid key format")
 		case !constants.MatchGodaddySecret(settings.Secret):
 			return fmt.Errorf("invalid secret format")
-		case settings.IPMethod == constants.IPMETHODPROVIDER:
+		case settings.IPMethod == constants.PROVIDER:
 			return fmt.Errorf("unsupported IP update method %q", settings.IPMethod)
 		}
-	case constants.PROVIDERDUCKDNS:
+	case constants.DUCKDNS:
 		switch {
 		case !constants.MatchDuckDNSToken(settings.Token):
 			return fmt.Errorf("invalid token format")
 		case settings.Host != "@":
 			return fmt.Errorf(`host can only be "@"`)
 		}
-	case constants.PROVIDERDREAMHOST:
+	case constants.DREAMHOST:
 		switch {
 		case !constants.MatchDreamhostKey(settings.Key):
 			return fmt.Errorf("invalid key format")
 		case settings.Host != "@":
 			return fmt.Errorf(`host can only be "@"`)
-		case settings.IPMethod == constants.IPMETHODPROVIDER:
+		case settings.IPMethod == constants.PROVIDER:
 			return fmt.Errorf("unsupported IP update method %q", settings.IPMethod)
 		}
-	case constants.PROVIDERCLOUDFLARE:
+	case constants.CLOUDFLARE:
 		switch {
 		case len(settings.Key) > 0: // email and key must be provided
 			switch {
@@ -69,12 +69,12 @@ func (p *params) isConsistent(settings models.Settings) error {
 			return fmt.Errorf("zone identifier cannot be empty")
 		case len(settings.Identifier) == 0:
 			return fmt.Errorf("identifier cannot be empty")
-		case settings.IPMethod == constants.IPMETHODPROVIDER:
+		case settings.IPMethod == constants.PROVIDER:
 			return fmt.Errorf("unsupported IP update method %q", settings.IPMethod)
 		case settings.Ttl == 0:
 			return fmt.Errorf("TTL cannot be left to 0")
 		}
-	case constants.PROVIDERNOIP:
+	case constants.NOIP:
 		switch {
 		case len(settings.Username) == 0:
 			return fmt.Errorf("username cannot be empty")
@@ -85,11 +85,11 @@ func (p *params) isConsistent(settings models.Settings) error {
 		case settings.Host == "*":
 			return fmt.Errorf(`host cannot be "*"`)
 		}
-	case constants.PROVIDERDNSPOD:
+	case constants.DNSPOD:
 		switch {
 		case len(settings.Token) == 0:
 			return fmt.Errorf("token cannot be empty")
-		case settings.IPMethod == constants.IPMETHODPROVIDER:
+		case settings.IPMethod == constants.PROVIDER:
 			return fmt.Errorf("unsupported IP update method")
 		}
 	default:

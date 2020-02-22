@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
-	libnetwork "github.com/qdm12/golibs/network"
+	"github.com/qdm12/golibs/network"
 )
 
-func updateNamecheap(client libnetwork.Client, host, domain, password string, ip net.IP) (newIP net.IP, err error) {
-	url := strings.ToLower(constants.NamecheapURL + "?host=" + host + "&domain=" + domain + "&password=" + password)
+func updateNamecheap(client network.Client, host, domain, password string, ip net.IP) (newIP net.IP, err error) {
+	url := constants.NamecheapURL + "?host=" + strings.ToLower(host) + "&domain=" + strings.ToLower(domain) + "&password=" + password
 	if ip != nil {
 		url += "&ip=" + ip.String()
 	}

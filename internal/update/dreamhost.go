@@ -9,10 +9,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/qdm12/ddns-updater/internal/constants"
-	libnetwork "github.com/qdm12/golibs/network"
+	"github.com/qdm12/golibs/network"
 )
 
-func updateDreamhost(client libnetwork.Client, domain, key, domainName string, ip net.IP) error {
+func updateDreamhost(client network.Client, domain, key, domainName string, ip net.IP) error {
 	if ip == nil {
 		return fmt.Errorf("IP address was not given to updater")
 	}
@@ -21,7 +21,7 @@ func updateDreamhost(client libnetwork.Client, domain, key, domainName string, i
 		Data   string `json:"data"`
 	}
 	// List records
-	url := strings.ToLower(constants.DreamhostURL + "/?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-list_records")
+	url := constants.DreamhostURL + "/?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-list_records"
 	r, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -60,7 +60,7 @@ func updateDreamhost(client libnetwork.Client, domain, key, domainName string, i
 		}
 	}
 	if oldIP != nil { // Found editable record with a different IP address, so remove it
-		url = strings.ToLower(constants.DreamhostURL + "?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-remove_record&record=" + domain + "&type=A&value=" + oldIP.String())
+		url = constants.DreamhostURL + "?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-remove_record&record=" + strings.ToLower(domain) + "&type=A&value=" + oldIP.String()
 		r, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			return err
@@ -79,7 +79,7 @@ func updateDreamhost(client libnetwork.Client, domain, key, domainName string, i
 		}
 	}
 	// Create the right record
-	url = strings.ToLower(constants.DreamhostURL + "?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-add_record&record=" + domain + "&type=A&value=" + ip.String())
+	url = constants.DreamhostURL + "?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-add_record&record=" + strings.ToLower(domain) + "&type=A&value=" + ip.String()
 	r, err = http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err

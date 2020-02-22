@@ -35,8 +35,7 @@ func updateGoDaddy(client libnetwork.Client, host, domain, key, secret string, i
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return err
-	}
-	if status != http.StatusOK {
+	} else if status != http.StatusOK {
 		var parsedJSON struct {
 			Message string `json:"message"`
 		}

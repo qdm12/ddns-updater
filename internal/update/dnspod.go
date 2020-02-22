@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"net/url"
 
-	libnetwork "github.com/qdm12/golibs/network"
+	"github.com/qdm12/golibs/network"
 )
 
-func updateDNSPod(client libnetwork.Client, domain, host, token string, ip net.IP) (err error) {
+func updateDNSPod(client network.Client, domain, host, token string, ip net.IP) (err error) {
 	if ip == nil {
 		return fmt.Errorf("IP address was not given to updater")
 	}

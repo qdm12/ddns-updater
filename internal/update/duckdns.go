@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
-	libnetwork "github.com/qdm12/golibs/network"
+	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
 )
 
-func updateDuckDNS(client libnetwork.Client, domain, token string, ip net.IP) (newIP net.IP, err error) {
-	url := strings.ToLower(constants.DuckdnsURL + "?domains=" + domain + "&token=" + token + "&verbose=true")
+func updateDuckDNS(client network.Client, domain, token string, ip net.IP) (newIP net.IP, err error) {
+	url := constants.DuckdnsURL + "?domains=" + strings.ToLower(domain) + "&token=" + token + "&verbose=true"
 	if ip != nil {
 		url += "&ip=" + ip.String()
 	}
@@ -23,8 +23,7 @@ func updateDuckDNS(client libnetwork.Client, domain, token string, ip net.IP) (n
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return nil, err
-	}
-	if status != http.StatusOK {
+	} else if status != http.StatusOK {
 		return nil, fmt.Errorf("HTTP status %d", status)
 	}
 	s := string(content)

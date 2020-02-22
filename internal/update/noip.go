@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
-	libnetwork "github.com/qdm12/golibs/network"
+	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
 )
 
-func updateNoIP(client libnetwork.Client, hostname, username, password string, ip net.IP) (newIP net.IP, err error) {
-	url := strings.ToLower(constants.NoIPURL + "?hostname=" + hostname)
+func updateNoIP(client network.Client, hostname, username, password string, ip net.IP) (newIP net.IP, err error) {
+	url := constants.NoIPURL + "?hostname=" + strings.ToLower(hostname)
 	if ip != nil {
 		url += "&myip=" + ip.String()
 	}

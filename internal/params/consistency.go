@@ -9,7 +9,7 @@ import (
 
 func (p *params) isConsistent(settings models.Settings) error {
 	switch {
-	case !ipMethodIsValid(settings.IPMethod, constants.IPMethodChoices()):
+	case !ipMethodIsValid(settings.IPMethod):
 		return fmt.Errorf("IP method %q is not recognized", settings.IPMethod)
 	case !p.verifier.MatchDomain(settings.Domain):
 		return fmt.Errorf("invalid domain name format")
@@ -98,9 +98,9 @@ func (p *params) isConsistent(settings models.Settings) error {
 	return nil
 }
 
-func ipMethodIsValid(ipMethod models.IPMethod, possibilities []models.IPMethod) bool {
-	for i := range possibilities {
-		if ipMethod == possibilities[i] {
+func ipMethodIsValid(ipMethod models.IPMethod) bool {
+	for _, possibility := range constants.IPMethodChoices() {
+		if ipMethod == possibility {
 			return true
 		}
 	}

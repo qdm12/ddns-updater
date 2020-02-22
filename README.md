@@ -1,4 +1,4 @@
-# Lightweight DDNS Updater with Docker and web UI
+# Lightweight universal DDNS Updater with Docker and web UI
 
 *Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod and DuckDNS*
 
@@ -133,14 +133,14 @@ For each DNS provider exist some specific parameters you need to add, as describ
 
 Namecheap:
 
-- `"host"` is your host and can be a subdomain, `@` or `*` generally
+- `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
 - `"password"`
 
 Cloudflare:
 
 - `"zone_identifier"`
 - `"identifier"`
-- `"host"` is your host and can be a subdomain, `@` or `*` generally
+- `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
 - `"ttl"` integer value for record TTL in seconds (specify 1 for automatic)
 - One of the following:
     - Email `"email"` and key `"key"`
@@ -150,7 +150,7 @@ Cloudflare:
 
 GoDaddy:
 
-- `"host"` is your host and can be a subdomain, `@` or `*` generally
+- `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
 - `"key"`
 - `"secret"`
 
@@ -164,13 +164,13 @@ Dreamhost:
 
 NoIP:
 
-- `"host"` is your host and can be a subdomain or `@`
+- `"host"` is your host and can be a subdomain or `"@"`
 - `"username"`
 - `"password"`
 
 DNSPOD:
 
-- `"host"` is your host and can be a subdomain or `@`
+- `"host"` is your host and can be a subdomain or `"@"`
 - `"token"`
 
 ### Environment variables
@@ -254,10 +254,6 @@ In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret
 
 *See [duckdns website](https://duckdns.org)*
 
-### Dreamhost
-
-*Awaiting a contribution*
-
 ### Cloudflare
 
 1. Make sure you have `curl` installed
@@ -304,10 +300,6 @@ To set it up with DDNS updater:
 
     You might want to try to change the IP address to another one to see if the update actually occurs.
 
-## Used in external projects
-
-- [Starttoaster/docker-traefik](https://github.com/Starttoaster/docker-traefik#home-networks-extra-credit-dynamic-dns)
-
 ## Development
 
 ### Using VSCode and Docker
@@ -319,6 +311,10 @@ To set it up with DDNS updater:
 1. Your dev environment is ready to go!... and it's running in a container :+1:
 
 You can probably start looking at the cmd/updater/main.go file which is the entrypoint of the program.
+
+## Used in external projects
+
+- [Starttoaster/docker-traefik](https://github.com/Starttoaster/docker-traefik#home-networks-extra-credit-dynamic-dns)
 
 ## TODOs
 

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-if [ "$TRAVIS_PULL_REQUEST" = "true" ] || [ "$TRAVIS_BRANCH" != "master" ]; then
+if [ "$TRAVIS_PULL_REQUEST" = "true" ]; then
+  echo "Building pull request without pushing to Docker Hub"
   docker buildx build \
       --progress plain \
       --platform=linux/amd64,linux/386,linux/arm64,linux/arm/v7 \
@@ -8,7 +9,14 @@ if [ "$TRAVIS_PULL_REQUEST" = "true" ] || [ "$TRAVIS_BRANCH" != "master" ]; then
   exit $?
 fi
 echo $DOCKER_PASSWORD | docker login -u qmcgaw --password-stdin &> /dev/null
-TAG="${TRAVIS_TAG:-latest}"
+TAG="$TRAVIS_TAG"
+if [ -z $TAG ]; then
+  if [ "$TRAVIS_BRANCH" = "master" ]; then
+    TAG=latest
+  else
+    TAG="$TRAVIS_BRANCH"
+  fi
+fi
 echo "Building Docker images for \"$DOCKER_REPO:$TAG\""
 docker buildx build \
     --progress plain \

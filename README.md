@@ -2,8 +2,6 @@
 
 *Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod and DuckDNS*
 
-**WARNING: Env variables naming changed slightly, see below**
-
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
 [![Build Status](https://travis-ci.org/qdm12/ddns-updater.svg?branch=master)](https://travis-ci.org/qdm12/ddns-updater)
@@ -24,7 +22,7 @@
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
-- Lightweight based on a Go binary and *Alpine 3.10* with Sqlite and Ca-Certificates packages
+- Lightweight based on a Go binary and *Alpine 3.11* with Sqlite and Ca-Certificates packages
 - Persistence with a sqlite database to store old IP addresses and previous update status
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
@@ -80,7 +78,7 @@
     }
     ```
 
-    See more information at the [configuration section](#configuration)
+    See more information in the [configuration section](#configuration)
 
 1. Use the following command:
 
@@ -96,89 +94,90 @@
 
 ## Configuration
 
-### Record configuration
+Start by having the following content in *config.json*:
 
-The record update updates configuration must be done through the *config.json* mentioned [above](#setup).
+```json
+{
+    "settings": [
+        {
+            "provider": "",
+            "domain": "",
+            "ip_method": "",
+        },
+        {
+            "provider": "",
+            "domain": "",
+            "ip_method": "",
+        }
+    ]
+}
+```
 
-#### Required parameters for all
+The following parameters are to be added in *config.json*
 
-- `"provider"` is the DNS provider and can be:
-    - `godaddy`
-    - `namecheap`
-    - `duckdns`
-    - `dreamhost`
-    - `cloudflare`
-    - `noip`
-    - `dnspod`
-- `"domain"` is your domain name
-- `"ip_method"` is the method to obtain your public IP address and can be
-    - `provider` means the public IP is automatically determined by the DNS provider (**only for DuckDNs, Namecheap and NoIP**)
-    - ~`duckduckgo` using [https://duckduckgo.com/?q=ip](https://duckduckgo.com/?q=ip)~ no longer returns your IP
-    - `google` using [https://google.com/search?q=ip](https://google.com/search?q=ip)
-    - `opendns` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
+For all record update configuration, you need the following:
 
-Please then refer to your specific DNS host provider in the section below for eventual additional required parameters.
+- `"provider"` is the DNS provider and can be `"godaddy"`, `"namecheap"`, `"duckdns"`, `"dreamhost"`, `"cloudflare"`, `"noip"`, or `"dnspod"`
+- `"domain"`
+- `"ip_method"` is the method to obtain your public IP address and can be:
+  - `"provider"` means the public IP is automatically determined by the DNS provider (**only for DuckDNs, Namecheap and NoIP**)
+  - `"google"` using [https://google.com/search?q=ip](https://google.com/search?q=ip)
+  - `"opendns"` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
 
-#### Optional parameters for all
+You can optionnally add the parameters:
 
-- `"delay"` is the delay in seconds between each update. It defaults to the `DELAY` environment variable which itself defaults to 5 minutes.
-- `"no_dns_lookup"` is a boolean to prevent the regular Docker healthcheck from running a DNS lookup on your domain. This is useful in some corner cases.
+- `"delay"` is the delay in seconds between each update. It defaults to the `DELAY` environment variable value.
+- `"no_dns_lookup"` can be `true` or `false` and allows, if `true`, to prevent the periodic Docker healthcheck from running a DNS lookup on your domain.
 
-#### Namecheap
+For each DNS provider exist some specific parameters you need to add, as described below:
 
-- Required:
-    - `"host"` is your host and can be a subdomain, `@` or `*` generally
-    - `"password"`
+Namecheap:
 
-#### Cloudflare
+- `"host"` is your host and can be a subdomain, `@` or `*` generally
+- `"password"`
 
-- Required:
-    - `"zone_identifier"`
-    - `"identifier"`
-    - `"host"` is your host and can be a subdomain, `@` or `*` generally
-    - `"ttl"` integer value for record TTL (specify 1 for automatic)
-    - Either:
-        - Email `"email"` and Key `"key"`
-        - User service key `"user_service_key"`
-        - API Token `"token"`, configured with DNS edit permissions for your DNS name's zone.
-- Optional:
-    - `"proxied"` is a boolean to use the proxy services of Cloudflare
+Cloudflare:
 
-#### GoDaddy
+- `"zone_identifier"`
+- `"identifier"`
+- `"host"` is your host and can be a subdomain, `@` or `*` generally
+- `"ttl"` integer value for record TTL in seconds (specify 1 for automatic)
+- One of the following:
+    - Email `"email"` and key `"key"`
+    - User service key `"user_service_key"`
+    - API Token `"token"`, configured with DNS edit permissions for your DNS name's zone.
+- *Optionally*, `"proxied"` can be `true` or `false` to use the proxy services of Cloudflare
 
-- Required:
-    - `"host"` is your host and can be a subdomain, `@` or `*` generally
-    - `"key"`
-    - `"secret"`
+GoDaddy:
 
-#### DuckDNS
+- `"host"` is your host and can be a subdomain, `@` or `*` generally
+- `"key"`
+- `"secret"`
 
-- Required:
-    - `"token"`
+DuckDNS:
 
-#### Dreamhost
+- `"token"`
 
-- Required:
-    - `"key"`
+Dreamhost:
 
-#### NoIP
+- `"key"`
 
-- Required:
-    - `"host"` is your host and can be a subdomain or `@`
-    - `"username"` which is your username
-    - `"password"`
+NoIP:
 
-#### DNSPOD
+- `"host"` is your host and can be a subdomain or `@`
+- `"username"`
+- `"password"`
 
-- Required:
-    - `"host"` is your host and can be a subdomain or `@`
-    - `"token"`
+DNSPOD:
+
+- `"host"` is your host and can be a subdomain or `@`
+- `"token"`
 
 ### Environment variables
 
 | Environment variable | Default | Description |
 | --- | --- | --- |
-| `DELAY` | `10m` | Delay between updates, it can be `30s` for 30 seconds or `1h` for 1 hour for example |
+| `DELAY` | `10m` | Default delay between updates, following [this format](https://golang.org/pkg/time/#ParseDuration) |
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
 | `LOG_ENCODING` | `console` | Format of logging, `json` or `console` |
@@ -190,7 +189,7 @@ Please then refer to your specific DNS host provider in the section below for ev
 
 ### Host firewall
 
-This container needs the following ports:
+If you have a host firewall in place, this container needs the following ports:
 
 - TCP 443 outbound for outbound HTTPS
 - TCP 80 outbound if you use a local unsecured HTTP connection to your Gotify server
@@ -279,13 +278,9 @@ You can now fill in the necessary parameters in *config.json*
 
 Special thanks to @Starttoaster for helping out with the [documentation](https://gist.github.com/Starttoaster/07d568c2a99ad7631dd776688c988326) and testing.
 
-### NoIP
-
-*Awaiting a contribution*
-
 ## Gotify
 
-[![https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/gotify.png](Gotify)](https://gotify.net)
+[![Gotify](https://github.com/qdm12/ddns-updater/blob/master/readme/gotify.png?raw=true)](https://gotify.net)
 
 [**Gotify**](https://gotify.net) is a simple server for sending and receiving messages, and it is **free**, **private** and **open source**
 - It has an [Android app](https://play.google.com/store/apps/details?id=com.github.gotify) to receive notifications
@@ -308,8 +303,6 @@ To set it up with DDNS updater:
     [![GoDaddy DNS management](https://github.com/qdm12/ddns-updater/raw/master/readme/godaddydnsmanagement.png)](https://dcc.godaddy.com/manage/)
 
     You might want to try to change the IP address to another one to see if the update actually occurs.
-  - Namecheap: *awaiting contribution*
-  - DuckDNS: *awaiting contribution*
 
 ## Used in external projects
 
@@ -325,13 +318,16 @@ To set it up with DDNS updater:
 1. In Visual Studio Code, press on `F1` and select `Remote-Containers: Open Folder in Container...`
 1. Your dev environment is ready to go!... and it's running in a container :+1:
 
+You can probably start looking at the cmd/updater/main.go file which is the entrypoint of the program.
+
 ## TODOs
 
+- [ ] Changed from sqlite to bolt or similar
+- [ ] Support Infomaniak.com
 - [ ] icon.ico for webpage
 - [ ] Record events log
 - [ ] Use internal package instead of pkg
 - [ ] Hot reload of config.json
-- [ ] Changed from sqlite to bolt or similar
 - [ ] Unit tests
 - [ ] Other types or records
 - [ ] ReactJS frontend

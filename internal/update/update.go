@@ -155,13 +155,7 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 	if ip != nil && ip.Equal(currentIP) {
 		return constants.UPTODATE, fmt.Sprintf("No IP change for %s", durationSinceSuccess), nil, nil
 	}
-	if currentIP == nil {
-		// first IP assigned
-		message = fmt.Sprintf("has now IP address %s", ip.String())
-	} else {
-		message = fmt.Sprintf("changed from %s to %s", currentIP.String(), ip.String())
-	}
-	return constants.SUCCESS, message, ip, nil
+	return constants.SUCCESS, fmt.Sprintf("changed to %s", ip.String()), ip, nil
 }
 
 func getPublicIP(client libnetwork.Client, IPMethod models.IPMethod) (ip net.IP, err error) {

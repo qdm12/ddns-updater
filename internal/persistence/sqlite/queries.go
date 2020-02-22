@@ -37,7 +37,8 @@ func (db *database) StoreNewIP(domain, host string, ip net.IP) (err error) {
 	return err
 }
 
-// GetIPs gets all the IP addresses history for a certain domain and host.
+// GetIPs gets all the IP addresses history for a certain domain and host, in the order
+// from oldest to newest
 func (db *database) GetIPs(domain, host string) (ips []net.IP, tNew time.Time, err error) {
 	db.Lock()
 	defer db.Unlock()
@@ -45,7 +46,7 @@ func (db *database) GetIPs(domain, host string) (ips []net.IP, tNew time.Time, e
 		`SELECT ip, t_new
 		FROM updates_ips
 		WHERE domain = ? AND host = ?
-		ORDER BY t_new DESC`,
+		ORDER BY t_new ASC`,
 		domain,
 		host,
 	)

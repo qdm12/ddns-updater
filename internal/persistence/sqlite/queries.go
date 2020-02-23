@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"time"
+
+	"github.com/qdm12/ddns-updater/internal/models"
 )
 
 /* Access to SQLite is NOT thread safe so we use a mutex */
@@ -61,4 +63,33 @@ func (db *database) GetIPs(domain, host string) (ips []net.IP, successTime time.
 		return nil, successTime, err
 	}
 	return ips, successTime, nil
+}
+
+// GetAllDomainsHosts gets all domains and hosts from the database
+func (db *database) GetAllDomainsHosts() (domainshosts []models.DomainHost, err error) {
+	db.Lock()
+	defer db.Unlock()
+	rows, err := db.sqlite.Query(`SELECT domain, host FROM updates_ips`)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		closeErr := rows.Close()
+		if err != nil {
+			err = fmt.Errorf("%s, %s", err, closeErr)
+		} else {
+			err = closeErr
+		}
+	}()
+	for rows.Next() {
+		domainHost := models.DomainHost{}
+		if err := rows.Scan(&domainHost.Domain, &domainHost.Host); err != nil {
+			return nil, err
+		}
+		domainshosts = append(domainshosts, domainHost)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return domainshosts, nil
 }

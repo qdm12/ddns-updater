@@ -43,10 +43,11 @@ func Migrate(source, destination Database, logger logging.Logger) (err error) {
 	}
 
 	for _, r := range rows {
+		previousIPTime := r.successTime.Add(-time.Second)
 		for _, ip := range r.ips {
-			destination.StoreNewIP(r.domain, r.host, ip)
+			destination.StoreNewIP(r.domain, r.host, ip, previousIPTime)
 		}
 		destination.SetSuccessTime(r.domain, r.host, r.successTime)
 	}
-	return nil
+	return destination.Check()
 }

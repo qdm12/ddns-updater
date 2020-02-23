@@ -30,6 +30,7 @@ func (db *database) Update(id int, record models.Record) error {
 			record.Settings.Domain,
 			record.Settings.Host,
 			record.History.GetCurrentIP(),
+			record.History.SuccessTime,
 		); err != nil {
 			return err
 		}

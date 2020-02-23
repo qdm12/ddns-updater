@@ -50,13 +50,13 @@ func NewDatabase(dataDir string) (*database, error) {
 	if err := json.Unmarshal(data, &db.data); err != nil {
 		return nil, err
 	}
-	if err := db.check(); err != nil {
+	if err := db.Check(); err != nil {
 		return nil, err
 	}
 	return &db, nil
 }
 
-func (db *database) check() error {
+func (db *database) Check() error {
 	for _, record := range db.data.Records {
 		switch {
 		case len(record.Domain) == 0:

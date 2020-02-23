@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
+	"fmt"
 	"sync"
 )
 
@@ -31,4 +32,8 @@ func NewDatabase(dataDir string) (*database, error) {
 		PRIMARY KEY(domain, host, ip, t_new)
 		);`)
 	return &database{sqlite: sqlite}, err
+}
+
+func (db *database) Check() error {
+	return fmt.Errorf("not implemented")
 }

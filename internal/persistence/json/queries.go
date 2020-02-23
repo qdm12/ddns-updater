@@ -9,14 +9,14 @@ import (
 )
 
 // StoreNewIP stores a new IP address for a certain domain and host.
-func (db *database) StoreNewIP(domain, host string, ip net.IP) (err error) {
+func (db *database) StoreNewIP(domain, host string, ip net.IP, t time.Time) (err error) {
 	db.Lock()
 	defer db.Unlock()
 	for i, record := range db.data.Records {
 		if record.Domain == domain && record.Host == host {
 			db.data.Records[i].IPs = append(db.data.Records[i].IPs, ipData{
 				IP:   ip,
-				Time: time.Now(),
+				Time: t,
 			})
 			return db.write()
 		}
@@ -26,7 +26,7 @@ func (db *database) StoreNewIP(domain, host string, ip net.IP) (err error) {
 		Host:   host,
 		IPs: []ipData{{
 			IP:   ip,
-			Time: time.Now(),
+			Time: t,
 		}},
 	})
 	return db.write()

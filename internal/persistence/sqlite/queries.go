@@ -12,7 +12,7 @@ import (
 
 // StoreNewIP stores a new IP address for a certain
 // domain and host.
-func (db *database) StoreNewIP(domain, host string, ip net.IP) (err error) {
+func (db *database) StoreNewIP(domain, host string, ip net.IP, t time.Time) (err error) {
 	db.Lock()
 	defer db.Unlock()
 	// Inserts new IP
@@ -22,8 +22,8 @@ func (db *database) StoreNewIP(domain, host string, ip net.IP) (err error) {
 		domain,
 		host,
 		ip.String(),
-		time.Now(),
-		time.Now(), // unneeded but it's hard to modify tables in sqlite
+		t,
+		t, // unneeded but it's hard to modify tables in sqlite
 	)
 	return err
 }

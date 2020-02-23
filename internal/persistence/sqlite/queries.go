@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"fmt"
 	"net"
 	"time"
 )
@@ -27,7 +28,7 @@ func (db *database) StoreNewIP(domain, host string, ip net.IP) (err error) {
 
 // GetIPs gets all the IP addresses history for a certain domain and host, in the order
 // from oldest to newest
-func (db *database) GetIPs(domain, host string) (ips []net.IP, tNew time.Time, err error) {
+func (db *database) GetIPs(domain, host string) (ips []net.IP, successTime time.Time, err error) {
 	db.Lock()
 	defer db.Unlock()
 	rows, err := db.sqlite.Query(
@@ -39,17 +40,25 @@ func (db *database) GetIPs(domain, host string) (ips []net.IP, tNew time.Time, e
 		host,
 	)
 	if err != nil {
-		return nil, tNew, err
+		return nil, successTime, err
 	}
 	defer func() {
-		err = rows.Close()
+		closeErr := rows.Close()
+		if err != nil {
+			err = fmt.Errorf("%s, %s", err, closeErr)
+		} else {
+			err = closeErr
+		}
 	}()
 	for rows.Next() {
 		var ip string
-		if err := rows.Scan(&ip, &tNew); err != nil {
-			return nil, tNew, err
+		if err := rows.Scan(&ip, &successTime); err != nil {
+			return nil, successTime, err
 		}
 		ips = append(ips, net.ParseIP(ip))
 	}
-	return ips, tNew, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, successTime, err
+	}
+	return ips, successTime, nil
 }

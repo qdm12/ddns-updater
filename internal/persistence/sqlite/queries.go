@@ -28,9 +28,9 @@ func (db *database) StoreNewIP(domain, host string, ip net.IP, t time.Time) (err
 	return err
 }
 
-// GetIPs gets all the IP addresses history for a certain domain and host, in the order
+// GetEvents gets all the IP addresses history for a certain domain and host, in the order
 // from oldest to newest
-func (db *database) GetIPs(domain, host string) (ips []net.IP, successTime time.Time, err error) {
+func (db *database) GetEvents(domain, host string) (events []models.HistoryEvent, err error) {
 	db.Lock()
 	defer db.Unlock()
 	rows, err := db.sqlite.Query(
@@ -42,7 +42,7 @@ func (db *database) GetIPs(domain, host string) (ips []net.IP, successTime time.
 		host,
 	)
 	if err != nil {
-		return nil, successTime, err
+		return nil, err
 	}
 	defer func() {
 		closeErr := rows.Close()
@@ -54,15 +54,19 @@ func (db *database) GetIPs(domain, host string) (ips []net.IP, successTime time.
 	}()
 	for rows.Next() {
 		var ip string
-		if err := rows.Scan(&ip, &successTime); err != nil {
-			return nil, successTime, err
+		var t time.Time
+		if err := rows.Scan(&ip, &t); err != nil {
+			return nil, err
 		}
-		ips = append(ips, net.ParseIP(ip))
+		events = append(events, models.HistoryEvent{
+			IP:   net.ParseIP(ip),
+			Time: t,
+		})
 	}
 	if err := rows.Err(); err != nil {
-		return nil, successTime, err
+		return nil, err
 	}
-	return ips, successTime, nil
+	return events, nil
 }
 
 // GetAllDomainsHosts gets all domains and hosts from the database

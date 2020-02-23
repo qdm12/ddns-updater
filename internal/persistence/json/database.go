@@ -65,16 +65,16 @@ func (db *database) Check() error {
 			return fmt.Errorf("host is empty for record %s", record)
 		}
 		var t time.Time
-		for i, ipRecord := range record.IPs {
-			if ipRecord.Time.Before(t) {
+		for i, event := range record.Events {
+			if event.Time.Before(t) {
 				return fmt.Errorf("IP records are not ordered correctly by time")
 			}
-			t = ipRecord.Time
+			t = event.Time
 			switch {
-			case ipRecord.IP == nil:
-				return fmt.Errorf("IP %d of %d is empty for record %s", i+1, len(record.IPs), record)
-			case ipRecord.Time.IsZero():
-				return fmt.Errorf("Time of IP %d of %d is empty for record %s", i+1, len(record.IPs), record)
+			case event.IP == nil:
+				return fmt.Errorf("IP %d of %d is empty for record %s", i+1, len(record.Events), record)
+			case event.Time.IsZero():
+				return fmt.Errorf("Time of IP %d of %d is empty for record %s", i+1, len(record.Events), record)
 			}
 		}
 	}

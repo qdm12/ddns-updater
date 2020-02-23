@@ -12,9 +12,8 @@ import (
 type Database interface {
 	Close() error
 	StoreNewIP(domain, host string, ip net.IP, t time.Time) (err error)
-	GetIPs(domain, host string) (ips []net.IP, successTime time.Time, err error)
+	GetEvents(domain, host string) (events []models.HistoryEvent, err error)
 	GetAllDomainsHosts() (domainshosts []models.DomainHost, err error)
-	SetSuccessTime(domain, host string, successTime time.Time) error
 	Check() error
 }
 

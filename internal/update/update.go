@@ -65,8 +65,10 @@ func (u *updater) Update(id int) error {
 		return err
 	}
 	if newIP != nil {
-		record.History.SuccessTime = time.Now()
-		record.History.IPs = append(record.History.IPs, newIP)
+		record.History = append(record.History, models.HistoryEvent{
+			IP:   newIP,
+			Time: time.Now(),
+		})
 		u.notify(1, fmt.Sprintf("%s %s", record.Settings.BuildDomainName(), message))
 	}
 	return u.db.Update(id, record) // persists some data if needed (i.e new IP)

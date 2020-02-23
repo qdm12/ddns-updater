@@ -116,11 +116,11 @@ func main() {
 	idToPeriod := make(map[int]time.Duration)
 	for id, setting := range settings {
 		logger.Info("Reading history from database: domain %s host %s", setting.Domain, setting.Host)
-		ips, successTime, err := persistentDB.GetIPs(setting.Domain, setting.Host)
+		events, err := persistentDB.GetEvents(setting.Domain, setting.Host)
 		if err != nil {
 			e.FatalOnError(err)
 		}
-		records = append(records, models.NewRecord(setting, ips, successTime))
+		records = append(records, models.NewRecord(setting, events))
 		idToPeriod[id] = defaultPeriod
 		if setting.Delay > 0 {
 			idToPeriod[id] = setting.Delay

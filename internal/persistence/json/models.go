@@ -2,8 +2,8 @@ package json
 
 import (
 	"encoding/json"
-	"net"
-	"time"
+
+	"github.com/qdm12/ddns-updater/internal/models"
 )
 
 type dataModel struct {
@@ -11,17 +11,12 @@ type dataModel struct {
 }
 
 type record struct {
-	Domain string   `json:"domain"`
-	Host   string   `json:"host"`
-	IPs    []ipData `json:"ips"`
+	Domain string                `json:"domain"`
+	Host   string                `json:"host"`
+	Events []models.HistoryEvent `json:"ips"`
 }
 
 func (r record) String() string {
 	b, _ := json.Marshal(r)
 	return string(b)
-}
-
-type ipData struct {
-	IP   net.IP    `json:"ip"`
-	Time time.Time `json:"time"`
 }

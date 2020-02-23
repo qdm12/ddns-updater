@@ -1,9 +1,7 @@
 package data
 
 import (
-	"net"
 	"sync"
-	"time"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/persistence"
@@ -16,7 +14,7 @@ type Database interface {
 	SelectAll() (records []models.Record)
 	Update(id int, record models.Record) error
 	// From persistence database
-	GetIPs(domain, host string) (IPs []net.IP, timeSuccess time.Time, err error)
+	GetEvents(domain, host string) (events []models.HistoryEvent, err error)
 }
 
 type database struct {

@@ -2,9 +2,8 @@ package persistence
 
 import (
 	"fmt"
-	"net"
-	"time"
 
+	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/golibs/logging"
 )
 
@@ -19,10 +18,9 @@ func Migrate(source, destination Database, logger logging.Logger) (err error) {
 	}()
 
 	type row struct {
-		domain      string
-		host        string
-		ips         []net.IP
-		successTime time.Time
+		domain string
+		host   string
+		events []models.HistoryEvent
 	}
 	var rows []row
 
@@ -35,19 +33,17 @@ func Migrate(source, destination Database, logger logging.Logger) (err error) {
 	for i := range domainshosts {
 		domain := domainshosts[i].Domain
 		host := domainshosts[i].Host
-		ips, successTime, err := source.GetIPs(domain, host)
+		events, err := source.GetEvents(domain, host)
 		if err != nil {
 			return err
 		}
-		rows = append(rows, row{domain, host, ips, successTime})
+		rows = append(rows, row{domain, host, events})
 	}
 
 	for _, r := range rows {
-		previousIPTime := r.successTime.Add(-time.Second)
-		for _, ip := range r.ips {
-			destination.StoreNewIP(r.domain, r.host, ip, previousIPTime)
+		for _, event := range r.events {
+			destination.StoreNewIP(r.domain, r.host, event.IP, event.Time)
 		}
-		destination.SetSuccessTime(r.domain, r.host, r.successTime)
 	}
 	return destination.Check()
 }

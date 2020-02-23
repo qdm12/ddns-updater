@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"net"
 	"time"
 )
 
@@ -16,13 +15,10 @@ type Record struct { // internal
 }
 
 // NewRecord returns a new Record with settings and some history
-func NewRecord(settings Settings, IPs []net.IP, successTime time.Time) Record {
+func NewRecord(settings Settings, events []HistoryEvent) Record {
 	return Record{
 		Settings: settings,
-		History: History{
-			IPs:         IPs,
-			SuccessTime: successTime,
-		},
+		History:  events,
 	}
 }
 

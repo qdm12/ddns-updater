@@ -9,34 +9,44 @@ import (
 
 // History contains current and previous IP address for a particular record
 // with the latest success time
-type History struct {
-	IPs         []net.IP // current and previous ips
-	SuccessTime time.Time
+type History []HistoryEvent // current and previous ips
+
+type HistoryEvent struct { // current and previous ips
+	IP   net.IP    `json:"ip"`
+	Time time.Time `json:"time"`
 }
 
 // GetPreviousIPs returns an antichronological list of previous
 // IP addresses if there is any.
-func (h *History) GetPreviousIPs() []net.IP {
-	if len(h.IPs) <= 1 {
+func (h History) GetPreviousIPs() []net.IP {
+	if len(h) <= 1 {
 		return nil
 	}
-	IPs := make([]net.IP, len(h.IPs)-1)
-	for i := len(h.IPs) - 2; i >= 0; i-- {
-		IPs[i] = h.IPs[i]
+	IPs := make([]net.IP, len(h)-1)
+	for i := len(h) - 2; i >= 0; i-- {
+		IPs[i] = h[i].IP
 	}
 	return IPs
 }
 
 // GetCurrentIP returns the current IP address (latest in history)
-func (h *History) GetCurrentIP() net.IP {
-	if len(h.IPs) < 1 {
+func (h History) GetCurrentIP() net.IP {
+	if len(h) < 1 {
 		return nil
 	}
-	return h.IPs[len(h.IPs)-1]
+	return h[len(h)-1].IP
 }
 
-func (h *History) GetDurationSinceSuccess() string {
-	duration := time.Since(h.SuccessTime)
+// GetSuccessTime returns the latest success update time
+func (h History) GetSuccessTime() time.Time {
+	if len(h) < 1 {
+		return time.Time{}
+	}
+	return h[len(h)-1].Time
+}
+
+func (h History) GetDurationSinceSuccess() string {
+	duration := time.Since(h[len(h)-1].Time)
 	switch {
 	case duration < time.Minute:
 		return fmt.Sprintf("%ds", int(duration.Round(time.Second).Seconds()))
@@ -49,12 +59,12 @@ func (h *History) GetDurationSinceSuccess() string {
 	}
 }
 
-func (h *History) String() (s string) {
+func (h History) String() (s string) {
 	currentIP := h.GetCurrentIP()
 	if currentIP == nil {
 		return ""
 	}
-	successTime := h.SuccessTime
+	successTime := h[len(h)-1].Time
 	previousIPs := h.GetPreviousIPs()
 	if len(previousIPs) == 0 {
 		return fmt.Sprintf(

@@ -2,14 +2,12 @@ package data
 
 import (
 	"fmt"
-	"net"
-	"time"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 )
 
-func (db *database) GetIPs(domain, host string) (IPs []net.IP, timeSuccess time.Time, err error) {
-	return db.persistentDB.GetIPs(domain, host)
+func (db *database) GetEvents(domain, host string) (events []models.HistoryEvent, err error) {
+	return db.persistentDB.GetEvents(domain, host)
 }
 
 func (db *database) Update(id int, record models.Record) error {
@@ -21,8 +19,8 @@ func (db *database) Update(id int, record models.Record) error {
 	if id > len(db.data)-1 {
 		return fmt.Errorf("no record config found for id %d", id)
 	}
-	currentCount := len(db.data[id].History.IPs)
-	newCount := len(record.History.IPs)
+	currentCount := len(db.data[id].History)
+	newCount := len(record.History)
 	db.data[id] = record
 	// new IP address added
 	if newCount > currentCount {
@@ -30,6 +28,7 @@ func (db *database) Update(id int, record models.Record) error {
 			record.Settings.Domain,
 			record.Settings.Host,
 			record.History.GetCurrentIP(),
+			record.History.GetSuccessTime(),
 		); err != nil {
 			return err
 		}

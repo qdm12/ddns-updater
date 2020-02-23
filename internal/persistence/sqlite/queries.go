@@ -12,7 +12,7 @@ import (
 
 // StoreNewIP stores a new IP address for a certain
 // domain and host.
-func (db *database) StoreNewIP(domain, host string, ip net.IP) (err error) {
+func (db *database) StoreNewIP(domain, host string, ip net.IP, t time.Time) (err error) {
 	db.Lock()
 	defer db.Unlock()
 	// Inserts new IP
@@ -22,15 +22,15 @@ func (db *database) StoreNewIP(domain, host string, ip net.IP) (err error) {
 		domain,
 		host,
 		ip.String(),
-		time.Now(),
-		time.Now(), // unneeded but it's hard to modify tables in sqlite
+		t,
+		t, // unneeded but it's hard to modify tables in sqlite
 	)
 	return err
 }
 
-// GetIPs gets all the IP addresses history for a certain domain and host, in the order
+// GetEvents gets all the IP addresses history for a certain domain and host, in the order
 // from oldest to newest
-func (db *database) GetIPs(domain, host string) (ips []net.IP, successTime time.Time, err error) {
+func (db *database) GetEvents(domain, host string) (events []models.HistoryEvent, err error) {
 	db.Lock()
 	defer db.Unlock()
 	rows, err := db.sqlite.Query(
@@ -42,7 +42,7 @@ func (db *database) GetIPs(domain, host string) (ips []net.IP, successTime time.
 		host,
 	)
 	if err != nil {
-		return nil, successTime, err
+		return nil, err
 	}
 	defer func() {
 		closeErr := rows.Close()
@@ -54,22 +54,26 @@ func (db *database) GetIPs(domain, host string) (ips []net.IP, successTime time.
 	}()
 	for rows.Next() {
 		var ip string
-		if err := rows.Scan(&ip, &successTime); err != nil {
-			return nil, successTime, err
+		var t time.Time
+		if err := rows.Scan(&ip, &t); err != nil {
+			return nil, err
 		}
-		ips = append(ips, net.ParseIP(ip))
+		events = append(events, models.HistoryEvent{
+			IP:   net.ParseIP(ip),
+			Time: t,
+		})
 	}
 	if err := rows.Err(); err != nil {
-		return nil, successTime, err
+		return nil, err
 	}
-	return ips, successTime, nil
+	return events, nil
 }
 
 // GetAllDomainsHosts gets all domains and hosts from the database
 func (db *database) GetAllDomainsHosts() (domainshosts []models.DomainHost, err error) {
 	db.Lock()
 	defer db.Unlock()
-	rows, err := db.sqlite.Query(`SELECT domain, host FROM updates_ips`)
+	rows, err := db.sqlite.Query(`SELECT DISTINCT domain, host FROM updates_ips`)
 	if err != nil {
 		return nil, err
 	}
@@ -92,4 +96,9 @@ func (db *database) GetAllDomainsHosts() (domainshosts []models.DomainHost, err 
 		return nil, err
 	}
 	return domainshosts, nil
+}
+
+// SetSuccessTime sets the latest successful update time for a particular domain, host.
+func (db *database) SetSuccessTime(domain, host string, successTime time.Time) error {
+	return fmt.Errorf("not implemented") // no plan to migrate back to sqlite
 }

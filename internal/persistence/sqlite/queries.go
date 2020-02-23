@@ -10,29 +10,17 @@ import (
 // StoreNewIP stores a new IP address for a certain
 // domain and host.
 func (db *database) StoreNewIP(domain, host string, ip net.IP) (err error) {
-	// Disable the current IP
 	db.Lock()
 	defer db.Unlock()
-	_, err = db.sqlite.Exec(
-		`UPDATE updates_ips
-		SET current = 0
-		WHERE domain = ? AND host = ? AND current = 1`,
-		domain,
-		host,
-	)
-	if err != nil {
-		return err
-	}
 	// Inserts new IP
 	_, err = db.sqlite.Exec(
-		`INSERT INTO updates_ips(domain,host,ip,t_new,t_last,current)
+		`INSERT INTO updates_ips(domain,host,ip,t_new,t_last)
 		VALUES(?, ?, ?, ?, ?, ?);`,
 		domain,
 		host,
 		ip.String(),
 		time.Now(),
 		time.Now(), // unneeded but it's hard to modify tables in sqlite
-		1,
 	)
 	return err
 }
@@ -58,17 +46,10 @@ func (db *database) GetIPs(domain, host string) (ips []net.IP, tNew time.Time, e
 	}()
 	for rows.Next() {
 		var ip string
-		var t time.Time
-		if err := rows.Scan(&ip, &t); err != nil {
+		if err := rows.Scan(&ip, &tNew); err != nil {
 			return nil, tNew, err
 		}
-		if tNew.IsZero() {
-			tNew = t
-		}
 		ips = append(ips, net.ParseIP(ip))
-	}
-	if tNew.IsZero() {
-		tNew = time.Now()
 	}
 	return ips, tNew, rows.Err()
 }

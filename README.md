@@ -2,6 +2,8 @@
 
 *Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod and DuckDNS*
 
+**SQLite migration support will be removed on 1 April 2020, so be sure to update your image before that**
+
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
 [![Build Status](https://travis-ci.org/qdm12/ddns-updater.svg?branch=master)](https://travis-ci.org/qdm12/ddns-updater)
@@ -23,7 +25,7 @@
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
 - Lightweight based on a Go binary and *Alpine 3.11* with Sqlite and Ca-Certificates packages
-- Persistence with a sqlite database to store old IP addresses and previous update status
+- Persistence with a JSON file *updates.json* to store old IP addresses with change times for each record
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
 - Sends notifications to your Android phone, see the [**Gotify**](#Gotify) section (it's free, open source and self hosted 🆒)
@@ -39,7 +41,7 @@
     touch data/config.json
     # Owned by user ID of Docker container (1000)
     chown -R 1000 data
-    # all access (for sqlite database)
+    # all access (for creating json database file data/updates.json)
     chmod 700 data
     # read access only
     chmod 400 data/config.json
@@ -318,14 +320,12 @@ You can probably start looking at the cmd/updater/main.go file which is the entr
 
 ## TODOs
 
-- [ ] Changed from sqlite to bolt or similar
+- [ ] Other types or records
 - [ ] Support Infomaniak.com
 - [ ] icon.ico for webpage
 - [ ] Record events log
-- [ ] Use internal package instead of pkg
 - [ ] Hot reload of config.json
 - [ ] Unit tests
-- [ ] Other types or records
 - [ ] ReactJS frontend
     - [ ] Live update of website
     - [ ] Change settings

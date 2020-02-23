@@ -69,7 +69,7 @@ func (db *database) GetIPs(domain, host string) (ips []net.IP, successTime time.
 func (db *database) GetAllDomainsHosts() (domainshosts []models.DomainHost, err error) {
 	db.Lock()
 	defer db.Unlock()
-	rows, err := db.sqlite.Query(`SELECT domain, host FROM updates_ips`)
+	rows, err := db.sqlite.Query(`SELECT DISTINCT domain, host FROM updates_ips`)
 	if err != nil {
 		return nil, err
 	}
@@ -92,4 +92,9 @@ func (db *database) GetAllDomainsHosts() (domainshosts []models.DomainHost, err 
 		return nil, err
 	}
 	return domainshosts, nil
+}
+
+// SetSuccessTime sets the latest successful update time for a particular domain, host.
+func (db *database) SetSuccessTime(domain, host string, successTime time.Time) error {
+	return fmt.Errorf("not implemented") // no plan to migrate back to sqlite
 }

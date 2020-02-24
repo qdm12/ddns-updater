@@ -22,6 +22,11 @@ type ParamsReader interface {
 	GetDelay(setters ...libparams.GetEnvSetter) (duration time.Duration, err error)
 	GetExeDir() (dir string, err error)
 	GetHTTPTimeout() (duration time.Duration, err error)
+
+	// Version getters
+	GetVersion() string
+	GetBuildDate() string
+	GetVcsRef() string
 }
 
 type params struct {

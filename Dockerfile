@@ -8,7 +8,7 @@ COPY go.mod go.sum ./
 RUN go mod download 2>&1
 COPY internal/ ./internal/
 COPY cmd/updater/main.go .
-#RUN go test -v ./...
+RUN CGO_ENABLED=0 go test ./...
 RUN CGO_ENABLED=1 go build -a -installsuffix cgo -ldflags="-s -w" -o app
 
 FROM alpine:${ALPINE_VERSION}

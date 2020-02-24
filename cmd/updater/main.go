@@ -11,7 +11,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/kyokomi/emoji"
 	"github.com/qdm12/golibs/admin"
 	"github.com/qdm12/golibs/files"
 	libhealthcheck "github.com/qdm12/golibs/healthcheck"
@@ -28,6 +27,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/params"
 	"github.com/qdm12/ddns-updater/internal/persistence"
+	"github.com/qdm12/ddns-updater/internal/splash"
 	"github.com/qdm12/ddns-updater/internal/trigger"
 	"github.com/qdm12/ddns-updater/internal/update"
 )
@@ -54,12 +54,7 @@ func main() {
 		}
 		os.Exit(0)
 	}
-	fmt.Println("#################################")
-	fmt.Println("##### DDNS Universal Updater ####")
-	fmt.Println("######## by Quentin McGaw #######")
-	fmt.Println("######## Give some " + emoji.Sprint(":heart:") + "at #########")
-	fmt.Println("# github.com/qdm12/ddns-updater #")
-	fmt.Print("#################################\n\n")
+	fmt.Println(splash.Splash(paramsReader))
 	e := env.NewEnv(logger)
 	gotifyURL, err := paramsReader.GetGotifyURL()
 	e.FatalOnError(err)
@@ -108,7 +103,11 @@ func main() {
 	if err != nil {
 		e.Fatal(err)
 	}
-	logger.Info("Found %d settings to update records", len(settings))
+	if len(settings) > 1 {
+		logger.Info("Found %d settings to update records", len(settings))
+	} else if len(settings) == 1 {
+		logger.Info("Found single setting to update records", len(settings))
+	}
 	for _, err := range network.NewConnectivity(5 * time.Second).Checks("google.com") {
 		e.Warn(err)
 	}

@@ -30,10 +30,8 @@ RUN apk add --update sqlite ca-certificates && \
     rm -rf /var/cache/apk/* && \
     # Creating empty database file in case nothing is mounted
     mkdir -p /updater/data && \
-    touch /updater/data/updates.db && \
     chown -R 1000 /updater && \
-    chmod 700 /updater/data && \
-    chmod 700 /updater/data/updates.db
+    chmod 700 /updater/data
 EXPOSE 8000
 HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=2 CMD ["/updater/app", "healthcheck"]
 USER 1000

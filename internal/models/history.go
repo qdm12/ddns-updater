@@ -45,8 +45,11 @@ func (h History) GetSuccessTime() time.Time {
 	return h[len(h)-1].Time
 }
 
-func (h History) GetDurationSinceSuccess() string {
-	duration := time.Since(h[len(h)-1].Time)
+func (h History) GetDurationSinceSuccess(now time.Time) string {
+	if len(h) < 1 {
+		return "N/A"
+	}
+	duration := now.Sub(h[len(h)-1].Time)
 	switch {
 	case duration < time.Minute:
 		return fmt.Sprintf("%ds", int(duration.Round(time.Second).Seconds()))

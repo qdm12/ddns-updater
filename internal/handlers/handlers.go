@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"text/template"
+	"time"
 
 	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/html"
@@ -23,6 +24,7 @@ type handler struct {
 	logger      logging.Logger
 	forceUpdate func()
 	onError     func(err error)
+	getTime     func() time.Time
 }
 
 // NewHandler returns a Handler object
@@ -35,6 +37,7 @@ func NewHandler(rootURL, UIDir string, db data.Database, logger logging.Logger,
 		logger:      logger,
 		forceUpdate: forceUpdate,
 		onError:     onError,
+		getTime:     time.Now,
 	}
 }
 
@@ -48,7 +51,7 @@ func (h *handler) GetHandlerFunc() http.HandlerFunc {
 			t := template.Must(template.ParseFiles(h.UIDir + "/ui/index.html"))
 			var htmlData models.HTMLData
 			for _, record := range h.db.SelectAll() {
-				row := html.ConvertRecord(record)
+				row := html.ConvertRecord(record, h.getTime())
 				htmlData.Rows = append(htmlData.Rows, row)
 			}
 			if err := t.ExecuteTemplate(w, "index.html", htmlData); err != nil {

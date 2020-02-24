@@ -9,7 +9,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 )
 
-func ConvertRecord(record models.Record) models.HTMLRow {
+func ConvertRecord(record models.Record, now time.Time) models.HTMLRow {
 	row := models.HTMLRow{
 		Domain:   convertDomain(record.Settings.BuildDomainName()),
 		Host:     models.HTML(record.Settings.Host),
@@ -18,7 +18,7 @@ func ConvertRecord(record models.Record) models.HTMLRow {
 	}
 	message := record.Message
 	if record.Status == constants.UPTODATE {
-		message = "no IP change for " + record.History.GetDurationSinceSuccess()
+		message = "no IP change for " + record.History.GetDurationSinceSuccess(now)
 	}
 	if len(message) > 0 {
 		message = fmt.Sprintf("(%s)", message)

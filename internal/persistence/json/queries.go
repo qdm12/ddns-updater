@@ -1,7 +1,6 @@
 package json
 
 import (
-	"fmt"
 	"net"
 	"time"
 
@@ -45,7 +44,7 @@ func (db *database) GetEvents(domain, host string) (events []models.HistoryEvent
 			return events, nil
 		}
 	}
-	return nil, fmt.Errorf("no record found for domain %q and host %q", domain, host)
+	return nil, nil
 }
 
 // GetAllDomainsHosts gets all the domains and hosts from the database

@@ -52,7 +52,7 @@ func (u *updater) Update(id int) error {
 	status, message, newIP, err := u.update(
 		record.Settings,
 		record.History.GetCurrentIP(),
-		record.History.GetDurationSinceSuccess())
+		record.History.GetDurationSinceSuccess(time.Now()))
 	record.Status = status
 	record.Message = message
 	if err != nil {

@@ -85,6 +85,8 @@ func convertProvider(provider models.Provider) models.HTML {
 		return constants.HTML_NOIP
 	case constants.DNSPOD:
 		return constants.HTML_DNSPOD
+	case constants.INFOMANIAK:
+		return constants.HTML_INFOMANIAK
 	default:
 		return models.HTML(string(provider))
 	}

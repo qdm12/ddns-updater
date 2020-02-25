@@ -2,9 +2,9 @@ package constants
 
 const (
 	// Annoucement is a message annoucement
-	Annoucement = ""
+	Annoucement = "Added support for Infomaniak.com"
 	// AnnoucementExpiration is the expiration date of the annoucement in format yyyy-mm-dd
-	AnnoucementExpiration = ""
+	AnnoucementExpiration = "2020-03-10"
 )
 
 const (

@@ -92,6 +92,15 @@ func (p *params) isConsistent(settings models.Settings) error {
 		case settings.IPMethod == constants.PROVIDER:
 			return fmt.Errorf("unsupported IP update method")
 		}
+	case constants.INFOMANIAK:
+		switch {
+		case len(settings.Username) == 0:
+			return fmt.Errorf("username cannot be empty")
+		case len(settings.Password) == 0:
+			return fmt.Errorf("password cannot be empty")
+		case settings.Host == "*":
+			return fmt.Errorf(`host cannot be "*"`)
+		}
 	default:
 		return fmt.Errorf("provider %q is not supported", settings.Provider)
 	}

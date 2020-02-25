@@ -106,7 +106,7 @@ func main() {
 	if len(settings) > 1 {
 		logger.Info("Found %d settings to update records", len(settings))
 	} else if len(settings) == 1 {
-		logger.Info("Found single setting to update records", len(settings))
+		logger.Info("Found single setting to update records")
 	}
 	for _, err := range network.NewConnectivity(5 * time.Second).Checks("google.com") {
 		e.Warn(err)

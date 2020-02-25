@@ -148,6 +148,15 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 			settings.Token,
 			ip,
 		)
+	case constants.INFOMANIAK:
+		err = updateInfomaniak(
+			u.client,
+			settings.Domain,
+			settings.Host,
+			settings.Username,
+			settings.Password,
+			ip,
+		)
 	default:
 		err = fmt.Errorf("provider %q is not supported", settings.Provider)
 	}

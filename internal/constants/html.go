@@ -18,6 +18,7 @@ const (
 	HTML_CLOUDFLARE models.HTML = "<a href=\"https://www.cloudflare.com\">Cloudflare</a>"
 	HTML_NOIP       models.HTML = "<a href=\"https://www.noip.com/\">NoIP</a>"
 	HTML_DNSPOD     models.HTML = "<a href=\"https://www.dnspod.cn/\">DNSPod</a>"
+	HTML_INFOMANIAK models.HTML = "<a href=\"https://www.infomaniak.com/\">Infomaniak</a>"
 )
 
 const (

@@ -1,6 +1,6 @@
 # Lightweight universal DDNS Updater with Docker and web UI
 
-*Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod and DuckDNS*
+*Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod, Infomaniak and DuckDNS*
 
 **SQLite migration support will be removed on 1 April 2020, so be sure to update your image before that**
 
@@ -19,7 +19,7 @@
 
 ## Features
 
-- Updates periodically A records for different DNS providers: Namecheap, GoDaddy, Cloudflare, NoIP, Dreamhost, DuckDNS (ask for more)
+- Updates periodically A records for different DNS providers: Namecheap, GoDaddy, Cloudflare, NoIP, Dreamhost, DuckDNS, DNSPod and Infomaniak (ask for more)
 - Web User interface
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
@@ -175,6 +175,12 @@ DNSPOD:
 - `"host"` is your host and can be a subdomain or `"@"`
 - `"token"`
 
+Infomaniak:
+
+- `"user"`
+- `"password"`
+- `"host"` is your host and can be a subdomain or `"@"`
+
 ### Environment variables
 
 | Environment variable | Default | Description |
@@ -321,7 +327,6 @@ You can probably start looking at the cmd/updater/main.go file which is the entr
 ## TODOs
 
 - [ ] Other types or records
-- [ ] Support Infomaniak.com
 - [ ] icon.ico for webpage
 - [ ] Record events log
 - [ ] Hot reload of config.json

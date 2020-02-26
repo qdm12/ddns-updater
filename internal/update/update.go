@@ -3,6 +3,7 @@ package update
 import (
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/qdm12/golibs/logging"
@@ -20,22 +21,26 @@ type Updater interface {
 }
 
 type updater struct {
-	db       data.Database
-	logger   logging.Logger
-	client   libnetwork.Client
-	notify   notifyFunc
-	verifier verification.Verifier
+	db           data.Database
+	logger       logging.Logger
+	client       libnetwork.Client
+	notify       notifyFunc
+	verifier     verification.Verifier
+	ipMethods    []models.IPMethod
+	counter      int
+	counterMutex sync.RWMutex
 }
 
 type notifyFunc func(priority int, messageArgs ...interface{})
 
 func NewUpdater(db data.Database, logger logging.Logger, client libnetwork.Client, notify notifyFunc) Updater {
 	return &updater{
-		db:       db,
-		logger:   logger,
-		client:   client,
-		notify:   notify,
-		verifier: verification.NewVerifier(),
+		db:        db,
+		logger:    logger,
+		client:    client,
+		notify:    notify,
+		verifier:  verification.NewVerifier(),
+		ipMethods: constants.IPMethodExternalChoices(),
 	}
 }
 
@@ -76,7 +81,7 @@ func (u *updater) Update(id int) error {
 
 func (u *updater) update(settings models.Settings, currentIP net.IP, durationSinceSuccess string) (status models.Status, message string, newIP net.IP, err error) {
 	// Get the public IP address
-	ip, err := getPublicIP(u.client, settings.IPMethod) // Note: empty IP means DNS provider provided
+	ip, err := u.getPublicIP(settings.IPMethod) // Note: empty IP means DNS provider provided
 	if err != nil {
 		return constants.FAIL, "", nil, err
 	}
@@ -169,14 +174,24 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 	return constants.SUCCESS, fmt.Sprintf("changed to %s", ip.String()), ip, nil
 }
 
-func getPublicIP(client libnetwork.Client, IPMethod models.IPMethod) (ip net.IP, err error) {
-	switch IPMethod {
-	case constants.PROVIDER:
-		return nil, nil
-	case constants.GOOGLE:
-		return network.GetPublicIP(client, "https://google.com/search?q=ip")
-	case constants.OPENDNS:
-		return network.GetPublicIP(client, "https://diagnostic.opendns.com/myip")
+func (u *updater) incCounter() (value int) {
+	u.counterMutex.Lock()
+	defer u.counterMutex.Unlock()
+	value = u.counter
+	u.counter++
+	return value
+}
+
+func (u *updater) getPublicIP(IPMethod models.IPMethod) (ip net.IP, err error) {
+	if IPMethod == constants.CYCLE {
+		i := u.incCounter() % len(u.ipMethods)
+		return u.getPublicIP(u.ipMethods[i])
 	}
-	return nil, fmt.Errorf("IP method %q not supported", IPMethod)
+	url, ok := constants.IPMethodMapping()[IPMethod]
+	if !ok {
+		return nil, fmt.Errorf("IP method %q not supported", IPMethod)
+	} else if url == string(constants.PROVIDER) {
+		return nil, nil
+	}
+	return network.GetPublicIP(u.client, url)
 }

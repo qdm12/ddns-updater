@@ -149,7 +149,7 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 			ip,
 		)
 	case constants.INFOMANIAK:
-		err = updateInfomaniak(
+		ip, err = updateInfomaniak(
 			u.client,
 			settings.Domain,
 			settings.Host,

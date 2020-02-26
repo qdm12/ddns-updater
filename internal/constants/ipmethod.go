@@ -32,11 +32,9 @@ func IPMethodChoices() (choices []models.IPMethod) {
 }
 
 func IPMethodExternalChoices() (choices []models.IPMethod) {
-	choices = IPMethodChoices()
-	for i, choice := range choices {
-		if choice == CYCLE || choice == PROVIDER {
-			choices[i] = choices[len(choices)-1]
-			choices = choices[:len(choices)-1]
+	for _, choice := range IPMethodChoices() {
+		if choice != CYCLE && choice != PROVIDER {
+			choices = append(choices, choice)
 		}
 	}
 	return choices

@@ -2,6 +2,7 @@ package params
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -129,5 +130,9 @@ func ipMethodIsValid(ipMethod models.IPMethod) bool {
 			return true
 		}
 	}
-	return false
+	url, err := url.Parse(string(ipMethod))
+	if err != nil || url == nil || url.Scheme != "https" {
+		return false
+	}
+	return true
 }

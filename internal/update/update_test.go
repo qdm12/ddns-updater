@@ -41,9 +41,15 @@ func Test_getPublicIP(t *testing.T) {
 		"provider IP method": {
 			IPMethod: constants.PROVIDER,
 		},
-		"Google IP method": {
+		"OpenDNS IP method": {
 			IPMethod:    constants.OPENDNS,
 			mockURL:     constants.IPMethodMapping()[constants.OPENDNS],
+			mockContent: []byte("blabla 58.67.201.151.25 sds"),
+			ip:          net.IP{58, 67, 201, 151},
+		},
+		"Custom URL IP method": {
+			IPMethod:    models.IPMethod("https://ipinfo.io/ip"),
+			mockURL:     "https://ipinfo.io/ip",
 			mockContent: []byte("blabla 58.67.201.151.25 sds"),
 			ip:          net.IP{58, 67, 201, 151},
 		},

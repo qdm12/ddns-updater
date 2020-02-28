@@ -127,6 +127,7 @@ For all record update configuration, you need the following:
   - `"ifconfig"` using [https://ifconfig.io/ip](https://ifconfig.io/ip) (may be rate limited)
   - `"ipinfo"` using [https://ipinfo.io/ip](https://ipinfo.io/ip) (may be rate limited)
   - `"cycle"` to cycle between each external methods, in order to avoid being rate limited
+  - You can also specify an HTTPS URL to obtain your public IP address (i.e. `"ip_method": "https://ipinfo.io/ip"`)
 
 You can optionnally add the parameters:
 

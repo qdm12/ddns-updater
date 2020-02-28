@@ -42,14 +42,14 @@ func Test_getPublicIP(t *testing.T) {
 			IPMethod: constants.PROVIDER,
 		},
 		"Google IP method": {
-			IPMethod:    constants.GOOGLE,
-			mockURL:     constants.IPMethodMapping()[constants.GOOGLE],
+			IPMethod:    constants.OPENDNS,
+			mockURL:     constants.IPMethodMapping()[constants.OPENDNS],
 			mockContent: []byte("blabla 58.67.201.151.25 sds"),
 			ip:          net.IP{58, 67, 201, 151},
 		},
 		"Cycle IP method": {
 			IPMethod:    constants.CYCLE,
-			mockURL:     constants.IPMethodMapping()[constants.GOOGLE],
+			mockURL:     constants.IPMethodMapping()[constants.OPENDNS],
 			mockContent: []byte("blabla 58.67.201.151.25 sds"),
 			ip:          net.IP{58, 67, 201, 151},
 		},
@@ -65,7 +65,7 @@ func Test_getPublicIP(t *testing.T) {
 			}
 			u := &updater{
 				client:    client,
-				ipMethods: []models.IPMethod{constants.GOOGLE, constants.OPENDNS},
+				ipMethods: []models.IPMethod{constants.OPENDNS, constants.IPINFO},
 			}
 			ip, err := u.getPublicIP(tc.IPMethod)
 			if tc.err != nil {

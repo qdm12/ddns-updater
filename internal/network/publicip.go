@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
@@ -21,7 +22,7 @@ func GetPublicIP(client network.Client, URL string) (ip net.IP, err error) {
 	if ips == nil {
 		return nil, fmt.Errorf("no public IPv4 address found at %s", URL)
 	} else if len(ips) > 1 {
-		return nil, fmt.Errorf("%d public IPv4 addresses found at %s instead of 1", len(ips), URL)
+		return nil, fmt.Errorf("multiple public IPv4 addresses found at %s: %s", URL, strings.Join(ips, " "))
 	}
 	ip = net.ParseIP(ips[0])
 	if ip == nil {

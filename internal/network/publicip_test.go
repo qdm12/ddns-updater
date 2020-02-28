@@ -36,7 +36,7 @@ func Test_GetPublicIP(t *testing.T) {
 		"multiple IPs in content": {
 			mockContent: []byte("10.10.10.10  50.50.50.50"),
 			mockStatus:  http.StatusOK,
-			err:         fmt.Errorf("2 public IPv4 addresses found at https://getmyip.com instead of 1"),
+			err:         fmt.Errorf("multiple public IPv4 addresses found at https://getmyip.com: 10.10.10.10 50.50.50.50"),
 		},
 		"single IP in content": {
 			mockContent: []byte("10.10.10.10"),

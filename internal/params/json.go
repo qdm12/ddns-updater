@@ -46,11 +46,17 @@ func (p *params) GetSettings(filePath string) (settings []models.Settings, warni
 		case constants.DREAMHOST, constants.DUCKDNS:
 			s.Host = "@" // only choice available
 		}
+		ipMethod := models.IPMethod(s.IPMethod)
+		// Retro compatibility
+		if ipMethod == constants.GOOGLE {
+			p.logger.Warn("IP Method %q is no longer valid, please change it. Defaulting it to %s", constants.GOOGLE, constants.CYCLE)
+			ipMethod = constants.CYCLE
+		}
 		setting := models.Settings{
 			Provider:       models.Provider(s.Provider),
 			Domain:         s.Domain,
 			Host:           s.Host,
-			IPMethod:       models.IPMethod(s.IPMethod),
+			IPMethod:       ipMethod,
 			Delay:          time.Second * time.Duration(s.Delay),
 			NoDNSLookup:    s.NoDNSLookup,
 			Password:       s.Password,

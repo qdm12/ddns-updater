@@ -6,18 +6,18 @@ import (
 
 const (
 	PROVIDER models.IPMethod = "provider"
-	GOOGLE   models.IPMethod = "google"
 	OPENDNS  models.IPMethod = "opendns"
 	IFCONFIG models.IPMethod = "ifconfig"
 	IPINFO   models.IPMethod = "ipinfo"
 	CYCLE    models.IPMethod = "cycle"
+	// Retro compatibility only
+	GOOGLE models.IPMethod = "google"
 )
 
 func IPMethodMapping() map[models.IPMethod]string {
 	return map[models.IPMethod]string{
 		PROVIDER: string(PROVIDER),
 		CYCLE:    string(CYCLE),
-		GOOGLE:   "https://google.com/search?q=ip",
 		OPENDNS:  "https://diagnostic.opendns.com/myip",
 		IFCONFIG: "https://ifconfig.io/ip",
 		IPINFO:   "https://ipinfo.io/ip",

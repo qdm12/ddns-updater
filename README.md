@@ -126,7 +126,6 @@ For all record update configuration, you need the following:
   - `"opendns"` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip) (reliable)
   - `"ifconfig"` using [https://ifconfig.io/ip](https://ifconfig.io/ip) (may be rate limited)
   - `"ipinfo"` using [https://ipinfo.io/ip](https://ipinfo.io/ip) (may be rate limited)
-  - `"google"` using [https://google.com/search?q=ip](https://google.com/search?q=ip) (depends on your location)
   - `"cycle"` to cycle between each external methods, in order to avoid being rate limited
 
 You can optionnally add the parameters:

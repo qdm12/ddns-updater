@@ -10,11 +10,11 @@ import (
 func Test_IPMethodChoices(t *testing.T) {
 	t.Parallel()
 	choices := IPMethodChoices()
-	assert.ElementsMatch(t, []models.IPMethod{"ipinfo", "provider", "cycle", "google", "opendns", "ifconfig"}, choices)
+	assert.ElementsMatch(t, []models.IPMethod{"ipinfo", "provider", "cycle", "opendns", "ifconfig"}, choices)
 }
 
 func Test_IPMethodExternalChoices(t *testing.T) {
 	t.Parallel()
 	choices := IPMethodExternalChoices()
-	assert.ElementsMatch(t, []models.IPMethod{"ipinfo", "ifconfig", "google", "opendns"}, choices)
+	assert.ElementsMatch(t, []models.IPMethod{"ipinfo", "ifconfig", "opendns"}, choices)
 }

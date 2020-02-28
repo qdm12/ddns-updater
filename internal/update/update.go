@@ -3,6 +3,7 @@ package update
 import (
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -183,15 +184,22 @@ func (u *updater) incCounter() (value int) {
 }
 
 func (u *updater) getPublicIP(IPMethod models.IPMethod, IPVersion models.IPVersion) (ip net.IP, err error) {
-	if IPMethod == constants.CYCLE {
-		i := u.incCounter() % len(u.ipMethods)
-		return u.getPublicIP(u.ipMethods[i], IPVersion)
-	}
-	url, ok := constants.IPMethodMapping()[IPMethod]
-	if !ok {
-		return nil, fmt.Errorf("IP method %q not supported", IPMethod)
-	} else if url == string(constants.PROVIDER) {
+	var url string
+	switch {
+	case IPMethod == constants.PROVIDER:
 		return nil, nil
+	case strings.HasPrefix(string(IPMethod), "https://"):
+		// Custom URL provided
+		url = string(IPMethod)
+	case IPMethod == constants.CYCLE:
+		i := u.incCounter() % len(u.ipMethods)
+		url = constants.IPMethodMapping()[u.ipMethods[i]]
+	default:
+		var ok bool
+		url, ok = constants.IPMethodMapping()[IPMethod]
+		if !ok {
+			return nil, fmt.Errorf("IP method %q not supported", IPMethod)
+		}
 	}
 	return network.GetPublicIP(u.client, url, IPVersion)
 }

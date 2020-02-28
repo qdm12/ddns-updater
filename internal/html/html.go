@@ -88,6 +88,12 @@ func convertProvider(provider models.Provider) models.HTML {
 	case constants.INFOMANIAK:
 		return constants.HTML_INFOMANIAK
 	default:
+		s := string(provider)
+		if strings.HasPrefix("https://", s) {
+			shorterName := strings.TrimPrefix(s, "https://")
+			shorterName = strings.TrimSuffix(shorterName, "/")
+			return models.HTML(fmt.Sprintf("<a href=\"%s\">%s</a>", s, shorterName))
+		}
 		return models.HTML(string(provider))
 	}
 }

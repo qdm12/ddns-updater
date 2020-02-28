@@ -11,6 +11,7 @@ type Settings struct {
 	Host        string
 	Provider    Provider
 	IPMethod    IPMethod
+	IPVersion   IPVersion
 	Delay       time.Duration
 	NoDNSLookup bool
 	// Provider dependent fields

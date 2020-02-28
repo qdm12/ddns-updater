@@ -81,7 +81,7 @@ func (u *updater) Update(id int) error {
 
 func (u *updater) update(settings models.Settings, currentIP net.IP, durationSinceSuccess string) (status models.Status, message string, newIP net.IP, err error) {
 	// Get the public IP address
-	ip, err := u.getPublicIP(settings.IPMethod) // Note: empty IP means DNS provider provided
+	ip, err := u.getPublicIP(settings.IPMethod, settings.IPVersion) // Note: empty IP means DNS provider provided
 	if err != nil {
 		return constants.FAIL, "", nil, err
 	}
@@ -182,10 +182,10 @@ func (u *updater) incCounter() (value int) {
 	return value
 }
 
-func (u *updater) getPublicIP(IPMethod models.IPMethod) (ip net.IP, err error) {
+func (u *updater) getPublicIP(IPMethod models.IPMethod, IPVersion models.IPVersion) (ip net.IP, err error) {
 	if IPMethod == constants.CYCLE {
 		i := u.incCounter() % len(u.ipMethods)
-		return u.getPublicIP(u.ipMethods[i])
+		return u.getPublicIP(u.ipMethods[i], IPVersion)
 	}
 	url, ok := constants.IPMethodMapping()[IPMethod]
 	if !ok {
@@ -193,5 +193,5 @@ func (u *updater) getPublicIP(IPMethod models.IPMethod) (ip net.IP, err error) {
 	} else if url == string(constants.PROVIDER) {
 		return nil, nil
 	}
-	return network.GetPublicIP(u.client, url)
+	return network.GetPublicIP(u.client, url, IPVersion)
 }

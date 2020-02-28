@@ -13,6 +13,7 @@ type settingsType struct {
 	Provider       string `json:"provider"`
 	Domain         string `json:"domain"`
 	IPMethod       string `json:"ip_method"`
+	IPVersion      string `json:"ip_version"`
 	Delay          uint64 `json:"delay"`
 	NoDNSLookup    bool   `json:"no_dns_lookup"`
 	Host           string `json:"host"`
@@ -52,11 +53,16 @@ func (p *params) GetSettings(filePath string) (settings []models.Settings, warni
 			p.logger.Warn("IP Method %q is no longer valid, please change it. Defaulting it to %s", constants.GOOGLE, constants.CYCLE)
 			ipMethod = constants.CYCLE
 		}
+		ipVersion := models.IPVersion(s.IPVersion)
+		if len(ipVersion) == 0 {
+			ipVersion = constants.IPv4 // default
+		}
 		setting := models.Settings{
 			Provider:       models.Provider(s.Provider),
 			Domain:         s.Domain,
 			Host:           s.Host,
 			IPMethod:       ipMethod,
+			IPVersion:      ipVersion,
 			Delay:          time.Second * time.Duration(s.Delay),
 			NoDNSLookup:    s.NoDNSLookup,
 			Password:       s.Password,

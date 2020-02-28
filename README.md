@@ -182,6 +182,7 @@ Infomaniak:
 - `"user"`
 - `"password"`
 - `"host"` is your host and can be a subdomain or `"@"`
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records)
 
 ### Environment variables
 

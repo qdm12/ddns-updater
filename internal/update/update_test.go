@@ -67,7 +67,7 @@ func Test_getPublicIP(t *testing.T) {
 				client:    client,
 				ipMethods: []models.IPMethod{constants.OPENDNS, constants.IPINFO},
 			}
-			ip, err := u.getPublicIP(tc.IPMethod)
+			ip, err := u.getPublicIP(tc.IPMethod, constants.IPv4)
 			if tc.err != nil {
 				require.Error(t, err)
 				assert.Equal(t, tc.err.Error(), err.Error())

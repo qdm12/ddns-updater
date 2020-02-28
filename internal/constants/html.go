@@ -22,6 +22,9 @@ const (
 )
 
 const (
-	HTML_GOOGLE  models.HTML = "<a href=\"https://google.com/search?q=ip\">Google</a>"
-	HTML_OPENDNS models.HTML = "<a href=\"https://diagnostic.opendns.com/myip\">OpenDNS</a>"
+	HTML_GOOGLE   models.HTML = "<a href=\"https://google.com/search?q=ip\">Google</a>"
+	HTML_OPENDNS  models.HTML = "<a href=\"https://diagnostic.opendns.com/myip\">OpenDNS</a>"
+	HTML_IFCONFIG models.HTML = "<a href=\"https://ifconfig.io\">ifconfig.io</a>"
+	HTML_IPINFO   models.HTML = "<a href=\"https://ipinfo.io\">ipinfo.io</a>"
+	HTML_CYCLE    models.HTML = "Cycling"
 )

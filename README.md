@@ -122,9 +122,11 @@ For all record update configuration, you need the following:
 - `"provider"` is the DNS provider and can be `"godaddy"`, `"namecheap"`, `"duckdns"`, `"dreamhost"`, `"cloudflare"`, `"noip"`, or `"dnspod"`
 - `"domain"`
 - `"ip_method"` is the method to obtain your public IP address and can be:
-  - `"provider"` means the public IP is automatically determined by the DNS provider (**only for DuckDNs, Namecheap and NoIP**)
-  - `"google"` using [https://google.com/search?q=ip](https://google.com/search?q=ip)
-  - `"opendns"` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
+  - `"provider"` means the public IP is automatically determined by the DNS provider (**only for DuckDNs, Namecheap, Infomaniak and NoIP**), most reliable.
+  - `"opendns"` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip) (reliable)
+  - `"ifconfig"` using [https://ifconfig.io/ip](https://ifconfig.io/ip) (may be rate limited)
+  - `"ipinfo"` using [https://ipinfo.io/ip](https://ipinfo.io/ip) (may be rate limited)
+  - `"cycle"` to cycle between each external methods, in order to avoid being rate limited
 
 You can optionnally add the parameters:
 

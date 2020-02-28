@@ -97,10 +97,14 @@ func convertIPMethod(IPMethod models.IPMethod, provider models.Provider) models.
 	switch IPMethod {
 	case constants.PROVIDER:
 		return convertProvider(provider)
-	case constants.GOOGLE:
-		return constants.HTML_GOOGLE
 	case constants.OPENDNS:
 		return constants.HTML_OPENDNS
+	case constants.IFCONFIG:
+		return constants.HTML_IFCONFIG
+	case constants.IPINFO:
+		return constants.HTML_IPINFO
+	case constants.CYCLE:
+		return constants.HTML_CYCLE
 	default:
 		return models.HTML(string(IPMethod))
 	}

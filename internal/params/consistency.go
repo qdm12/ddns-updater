@@ -25,12 +25,12 @@ func (p *params) isConsistent(settings models.Settings) error {
 	switch settings.IPVersion {
 	case constants.IPv4:
 		switch settings.IPMethod {
-		case constants.IPIFY6:
+		case constants.IPIFY6, constants.DDNSS6:
 			return fmt.Errorf("IP method %s is only for IPv6 addresses", settings.IPMethod)
 		}
 	case constants.IPv6:
 		switch settings.IPMethod {
-		case constants.IPIFY:
+		case constants.IPIFY, constants.DDNSS4:
 			return fmt.Errorf("IP method %s is only for IPv4 addresses", settings.IPMethod)
 		}
 		switch settings.Provider {

@@ -125,6 +125,15 @@ func (p *params) isConsistent(settings models.Settings) error {
 		case settings.Host == "*":
 			return fmt.Errorf(`host cannot be "*"`)
 		}
+	case constants.DDNSS:
+		switch {
+		case len(settings.Username) == 0:
+			return fmt.Errorf("username cannot be empty")
+		case len(settings.Password) == 0:
+			return fmt.Errorf("password cannot be empty")
+		case settings.Host == "*":
+			return fmt.Errorf(`host cannot be "*"`)
+		}
 	default:
 		return fmt.Errorf("provider %q is not supported", settings.Provider)
 	}

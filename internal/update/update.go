@@ -163,6 +163,15 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 			settings.Password,
 			ip,
 		)
+	case constants.DDNSS:
+		ip, err = updateDDNSS(
+			u.client,
+			settings.Domain,
+			settings.Host,
+			settings.Username,
+			settings.Password,
+			ip,
+		)
 	default:
 		err = fmt.Errorf("provider %q is not supported", settings.Provider)
 	}

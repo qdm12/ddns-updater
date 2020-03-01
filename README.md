@@ -1,6 +1,6 @@
 # Lightweight universal DDNS Updater with Docker and web UI
 
-*Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod, Infomaniak and DuckDNS*
+*Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod, Infomaniak, ddnss.de and DuckDNS*
 
 **SQLite migration support will be removed on 1 April 2020, so be sure to update your image before that**
 
@@ -181,6 +181,13 @@ DNSPOD:
 - `"token"`
 
 Infomaniak:
+
+- `"user"`
+- `"password"`
+- `"host"` is your host and can be a subdomain or `"@"`
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records)
+
+DDNSS.de:
 
 - `"user"`
 - `"password"`

@@ -126,6 +126,8 @@ For all record update configuration, you need the following:
   - `"opendns"` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip) (reliable)
   - `"ifconfig"` using [https://ifconfig.io/ip](https://ifconfig.io/ip) (may be rate limited)
   - `"ipinfo"` using [https://ipinfo.io/ip](https://ipinfo.io/ip) (may be rate limited)
+  - `"ipify"` using [https://api.ipify.org](https://api.ipify.org) (may be rate limited)
+  - `"ipify6"` using [https://api6.ipify.org](https://api.ipify.org) for IPv6 only (may be rate limited)
   - `"cycle"` to cycle between each external methods, in order to avoid being rate limited
   - You can also specify an HTTPS URL to obtain your public IP address (i.e. `"ip_method": "https://ipinfo.io/ip"`)
 

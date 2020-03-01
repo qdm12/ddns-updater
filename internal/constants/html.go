@@ -26,5 +26,7 @@ const (
 	HTML_OPENDNS  models.HTML = "<a href=\"https://diagnostic.opendns.com/myip\">OpenDNS</a>"
 	HTML_IFCONFIG models.HTML = "<a href=\"https://ifconfig.io\">ifconfig.io</a>"
 	HTML_IPINFO   models.HTML = "<a href=\"https://ipinfo.io\">ipinfo.io</a>"
+	HTML_IPIFY    models.HTML = "<a href=\"https://api.ipify.org\">ipify.org</a>"
+	HTML_IPIFY6   models.HTML = "<a href=\"https://api6.ipify.org\">ipify.org</a>"
 	HTML_CYCLE    models.HTML = "Cycling"
 )

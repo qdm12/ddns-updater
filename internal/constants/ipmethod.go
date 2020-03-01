@@ -9,6 +9,8 @@ const (
 	OPENDNS  models.IPMethod = "opendns"
 	IFCONFIG models.IPMethod = "ifconfig"
 	IPINFO   models.IPMethod = "ipinfo"
+	IPIFY    models.IPMethod = "ipify"
+	IPIFY6   models.IPMethod = "ipify6"
 	CYCLE    models.IPMethod = "cycle"
 	// Retro compatibility only
 	GOOGLE models.IPMethod = "google"
@@ -21,6 +23,8 @@ func IPMethodMapping() map[models.IPMethod]string {
 		OPENDNS:  "https://diagnostic.opendns.com/myip",
 		IFCONFIG: "https://ifconfig.io/ip",
 		IPINFO:   "https://ipinfo.io/ip",
+		IPIFY:    "https://api.ipify.org",
+		IPIFY6:   "https://api6.ipify.org",
 	}
 }
 
@@ -33,7 +37,9 @@ func IPMethodChoices() (choices []models.IPMethod) {
 
 func IPMethodExternalChoices() (choices []models.IPMethod) {
 	for _, choice := range IPMethodChoices() {
-		if choice != CYCLE && choice != PROVIDER {
+		switch choice {
+		case PROVIDER, CYCLE:
+		default:
 			choices = append(choices, choice)
 		}
 	}

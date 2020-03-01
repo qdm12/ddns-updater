@@ -109,6 +109,10 @@ func convertIPMethod(IPMethod models.IPMethod, provider models.Provider) models.
 		return constants.HTML_IFCONFIG
 	case constants.IPINFO:
 		return constants.HTML_IPINFO
+	case constants.IPIFY:
+		return constants.HTML_IPIFY
+	case constants.IPIFY6:
+		return constants.HTML_IPIFY6
 	case constants.CYCLE:
 		return constants.HTML_CYCLE
 	default:

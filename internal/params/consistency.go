@@ -9,6 +9,7 @@ import (
 )
 
 func (p *params) isConsistent(settings models.Settings) error {
+	// General validity checks
 	switch {
 	case !ipMethodIsValid(settings.IPMethod):
 		return fmt.Errorf("IP method %q is not recognized", settings.IPMethod)
@@ -19,12 +20,38 @@ func (p *params) isConsistent(settings models.Settings) error {
 	case len(settings.Host) == 0:
 		return fmt.Errorf("host cannot be empty")
 	}
+
+	// Checks for each IP versions
+	switch settings.IPVersion {
+	case constants.IPv4:
+		switch settings.IPMethod {
+		case constants.IPIFY6:
+			return fmt.Errorf("IP method %s is only for IPv6 addresses", settings.IPMethod)
+		}
+	case constants.IPv6:
+		switch settings.IPMethod {
+		case constants.IPIFY:
+			return fmt.Errorf("IP method %s is only for IPv4 addresses", settings.IPMethod)
+		}
+		switch settings.Provider {
+		case constants.GODADDY, constants.CLOUDFLARE, constants.DNSPOD, constants.DREAMHOST, constants.DUCKDNS, constants.NOIP:
+			return fmt.Errorf("IPv6 support for %s is not supported yet", settings.Provider)
+		}
+	}
+
+	// Check provider ipmethod is available
+	if settings.IPMethod == constants.PROVIDER {
+		switch settings.Provider {
+		case constants.GODADDY, constants.DREAMHOST, constants.CLOUDFLARE, constants.DNSPOD:
+			return fmt.Errorf("unsupported IP update method %q", settings.IPMethod)
+		}
+	}
+
+	// Checks for each DNS provider
 	switch settings.Provider {
 	case constants.NAMECHEAP:
 		if !constants.MatchNamecheapPassword(settings.Password) {
 			return fmt.Errorf("invalid password format")
-		} else if settings.IPVersion == constants.IPv6 {
-			return fmt.Errorf("IPv6 support for %s is not supported yet", settings.Provider)
 		}
 	case constants.GODADDY:
 		switch {
@@ -32,10 +59,6 @@ func (p *params) isConsistent(settings models.Settings) error {
 			return fmt.Errorf("invalid key format")
 		case !constants.MatchGodaddySecret(settings.Secret):
 			return fmt.Errorf("invalid secret format")
-		case settings.IPMethod == constants.PROVIDER:
-			return fmt.Errorf("unsupported IP update method %q", settings.IPMethod)
-		case settings.IPVersion == constants.IPv6:
-			return fmt.Errorf("IPv6 support for %s is not supported yet", settings.Provider)
 		}
 	case constants.DUCKDNS:
 		switch {
@@ -43,8 +66,6 @@ func (p *params) isConsistent(settings models.Settings) error {
 			return fmt.Errorf("invalid token format")
 		case settings.Host != "@":
 			return fmt.Errorf(`host can only be "@"`)
-		case settings.IPVersion == constants.IPv6:
-			return fmt.Errorf("IPv6 support for %s is not supported yet", settings.Provider)
 		}
 	case constants.DREAMHOST:
 		switch {
@@ -52,10 +73,6 @@ func (p *params) isConsistent(settings models.Settings) error {
 			return fmt.Errorf("invalid key format")
 		case settings.Host != "@":
 			return fmt.Errorf(`host can only be "@"`)
-		case settings.IPMethod == constants.PROVIDER:
-			return fmt.Errorf("unsupported IP update method %q", settings.IPMethod)
-		case settings.IPVersion == constants.IPv6:
-			return fmt.Errorf("IPv6 support for %s is not supported yet", settings.Provider)
 		}
 	case constants.CLOUDFLARE:
 		switch {
@@ -80,12 +97,8 @@ func (p *params) isConsistent(settings models.Settings) error {
 			return fmt.Errorf("zone identifier cannot be empty")
 		case len(settings.Identifier) == 0:
 			return fmt.Errorf("identifier cannot be empty")
-		case settings.IPMethod == constants.PROVIDER:
-			return fmt.Errorf("unsupported IP update method %q", settings.IPMethod)
 		case settings.Ttl == 0:
 			return fmt.Errorf("TTL cannot be left to 0")
-		case settings.IPVersion == constants.IPv6:
-			return fmt.Errorf("IPv6 support for %s is not supported yet", settings.Provider)
 		}
 	case constants.NOIP:
 		switch {
@@ -97,17 +110,11 @@ func (p *params) isConsistent(settings models.Settings) error {
 			return fmt.Errorf("password cannot be empty")
 		case settings.Host == "*":
 			return fmt.Errorf(`host cannot be "*"`)
-		case settings.IPVersion == constants.IPv6:
-			return fmt.Errorf("IPv6 support for %s is not supported yet", settings.Provider)
 		}
 	case constants.DNSPOD:
 		switch {
 		case len(settings.Token) == 0:
 			return fmt.Errorf("token cannot be empty")
-		case settings.IPMethod == constants.PROVIDER:
-			return fmt.Errorf("unsupported IP update method")
-		case settings.IPVersion == constants.IPv6:
-			return fmt.Errorf("IPv6 support for %s is not supported yet", settings.Provider)
 		}
 	case constants.INFOMANIAK:
 		switch {

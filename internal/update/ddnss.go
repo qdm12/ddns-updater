@@ -36,5 +36,14 @@ func updateDDNSS(client network.Client, domain, host, username, password string,
 	if status != http.StatusOK {
 		return nil, fmt.Errorf("received status %d with message: %s", status, s)
 	}
-	return ip, nil // TODO find IP address from response
+	switch {
+	case strings.Contains(s, "badysys"):
+		return nil, fmt.Errorf("ddnss.de: invalid system parameter")
+	case strings.Contains(s, "badauth"):
+		return nil, fmt.Errorf("ddnss.de: bad authentication")
+	case strings.Contains(s, "notfqdn"):
+		return nil, fmt.Errorf("ddnss.de: hostname %q does not exist", hostname)
+	default:
+		return ip, nil // TODO find IP address from response
+	}
 }

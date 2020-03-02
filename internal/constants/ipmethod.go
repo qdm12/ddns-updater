@@ -12,6 +12,9 @@ const (
 	IPIFY    models.IPMethod = "ipify"
 	IPIFY6   models.IPMethod = "ipify6"
 	CYCLE    models.IPMethod = "cycle"
+	DDNSS    models.IPMethod = "ddnss"
+	DDNSS4   models.IPMethod = "ddnss4"
+	DDNSS6   models.IPMethod = "ddnss6"
 	// Retro compatibility only
 	GOOGLE models.IPMethod = "google"
 )
@@ -25,6 +28,9 @@ func IPMethodMapping() map[models.IPMethod]string {
 		IPINFO:   "https://ipinfo.io/ip",
 		IPIFY:    "https://api.ipify.org",
 		IPIFY6:   "https://api6.ipify.org",
+		DDNSS:    "https://ip4.ddnss.de/meineip.php",
+		DDNSS4:   "https://ip4.ddnss.de/meineip.php",
+		DDNSS6:   "https://ip6.ddnss.de/meineip.php",
 	}
 }
 

@@ -113,6 +113,12 @@ func convertIPMethod(IPMethod models.IPMethod, provider models.Provider) models.
 		return constants.HTML_IPIFY
 	case constants.IPIFY6:
 		return constants.HTML_IPIFY6
+	case constants.DDNSS:
+		return constants.HTML_DDNSS
+	case constants.DDNSS4:
+		return constants.HTML_DDNSS4
+	case constants.DDNSS6:
+		return constants.HTML_DDNSS6
 	case constants.CYCLE:
 		return constants.HTML_CYCLE
 	default:

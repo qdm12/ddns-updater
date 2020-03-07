@@ -163,8 +163,7 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 			settings.Password,
 			ip,
 		)
-	case constants.DDNSS:
-		ip, err = updateDDNSS(
+	case constants.DDNSSDE:
 			u.client,
 			settings.Domain,
 			settings.Host,

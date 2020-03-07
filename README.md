@@ -119,7 +119,7 @@ The following parameters are to be added in *config.json*
 
 For all record update configuration, you need the following:
 
-- `"provider"` is the DNS provider and can be `"godaddy"`, `"namecheap"`, `"duckdns"`, `"dreamhost"`, `"cloudflare"`, `"noip"`, or `"dnspod"`
+- `"provider"` is the DNS provider and can be `"godaddy"`, `"namecheap"`, `"duckdns"`, `"dreamhost"`, `"cloudflare"`, `"noip"`, `"dnspod"` or `"ddnss"`
 - `"domain"`
 - `"ip_method"` is the method to obtain your public IP address and can be:
   - `"provider"` means the public IP is automatically determined by the DNS provider (**only for DuckDNs, Namecheap, Infomaniak and NoIP**), most reliable.

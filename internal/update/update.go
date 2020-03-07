@@ -164,6 +164,7 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 			ip,
 		)
 	case constants.DDNSSDE:
+		err = updateDDNSS(
 			u.client,
 			settings.Domain,
 			settings.Host,

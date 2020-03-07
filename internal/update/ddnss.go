@@ -9,7 +9,7 @@ import (
 	"github.com/qdm12/golibs/network"
 )
 
-func updateDDNSS(client network.Client, domain, host, username, password string, ip net.IP) (newIP net.IP, err error) {
+func updateDDNSS(client network.Client, domain, host, username, password string, ip net.IP) error {
 	var hostname string
 	if host == "@" {
 		hostname = strings.ToLower(domain)
@@ -26,24 +26,26 @@ func updateDDNSS(client network.Client, domain, host, username, password string,
 	}
 	r, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	s := string(content)
 	if status != http.StatusOK {
-		return nil, fmt.Errorf("received status %d with message: %s", status, s)
+		return fmt.Errorf("received status %d with message: %s", status, s)
 	}
 	switch {
 	case strings.Contains(s, "badysys"):
-		return nil, fmt.Errorf("ddnss.de: invalid system parameter")
+		return fmt.Errorf("ddnss.de: invalid system parameter")
 	case strings.Contains(s, "badauth"):
-		return nil, fmt.Errorf("ddnss.de: bad authentication")
+		return fmt.Errorf("ddnss.de: bad authentication")
 	case strings.Contains(s, "notfqdn"):
-		return nil, fmt.Errorf("ddnss.de: hostname %q does not exist", hostname)
+		return fmt.Errorf("ddnss.de: hostname %q does not exist", hostname)
+	case strings.Contains(s, "Updated 1 hostname"):
+		return nil
 	default:
-		return ip, nil // TODO find IP address from response
+		return fmt.Errorf("unknown response received from ddnss.de: %s", s)
 	}
 }

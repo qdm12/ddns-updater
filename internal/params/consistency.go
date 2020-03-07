@@ -42,7 +42,7 @@ func (p *params) isConsistent(settings models.Settings) error {
 	// Check provider ipmethod is available
 	if settings.IPMethod == constants.PROVIDER {
 		switch settings.Provider {
-		case constants.GODADDY, constants.DREAMHOST, constants.CLOUDFLARE, constants.DNSPOD:
+		case constants.GODADDY, constants.DREAMHOST, constants.CLOUDFLARE, constants.DNSPOD, constants.DDNSSDE:
 			return fmt.Errorf("unsupported IP update method %q", settings.IPMethod)
 		}
 	}
@@ -125,7 +125,7 @@ func (p *params) isConsistent(settings models.Settings) error {
 		case settings.Host == "*":
 			return fmt.Errorf(`host cannot be "*"`)
 		}
-	case constants.DDNSS:
+	case constants.DDNSSDE:
 		switch {
 		case len(settings.Username) == 0:
 			return fmt.Errorf("username cannot be empty")

@@ -87,6 +87,8 @@ func convertProvider(provider models.Provider) models.HTML {
 		return constants.HTML_DNSPOD
 	case constants.INFOMANIAK:
 		return constants.HTML_INFOMANIAK
+	case constants.DDNSSDE:
+		return constants.HTML_DDNSSDE
 	default:
 		s := string(provider)
 		if strings.HasPrefix("https://", s) {

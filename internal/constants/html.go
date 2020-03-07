@@ -19,6 +19,7 @@ const (
 	HTML_NOIP       models.HTML = "<a href=\"https://www.noip.com/\">NoIP</a>"
 	HTML_DNSPOD     models.HTML = "<a href=\"https://www.dnspod.cn/\">DNSPod</a>"
 	HTML_INFOMANIAK models.HTML = "<a href=\"https://www.infomaniak.com/\">Infomaniak</a>"
+	HTML_DDNSSDE    models.HTML = "<a href=\"https://ddnss.de/\">DDNSS.de</a>"
 )
 
 const (
@@ -28,8 +29,8 @@ const (
 	HTML_IPINFO   models.HTML = "<a href=\"https://ipinfo.io\">ipinfo.io</a>"
 	HTML_IPIFY    models.HTML = "<a href=\"https://api.ipify.org\">api.ipify.org</a>"
 	HTML_IPIFY6   models.HTML = "<a href=\"https://api6.ipify.org\">api6.ipify.org</a>"
-	HTML_DDNSS    models.HTML = "<a href=\"https://ddnss.de/meineip.php\">ddns.de</a>"
-	HTML_DDNSS4   models.HTML = "<a href=\"https://ip4.ddnss.de/meineip.php\">ip4.ddns.de</a>"
+	HTML_DDNSS    models.HTML = "<a href=\"https://ddnss.de/meineip.php\">ddnss.de</a>"
+	HTML_DDNSS4   models.HTML = "<a href=\"https://ip4.ddnss.de/meineip.php\">ip4.ddnss.de</a>"
 	HTML_DDNSS6   models.HTML = "<a href=\"https://ip6.ddnss.de/meineip.php\">ip6.ddns.de</a>"
 	HTML_CYCLE    models.HTML = "Cycling"
 )

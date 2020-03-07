@@ -12,6 +12,7 @@ const (
 	NOIP       models.Provider = "noip"
 	DNSPOD     models.Provider = "dnspod"
 	INFOMANIAK models.Provider = "infomaniak"
+	DDNSSDE    models.Provider = "ddnss"
 )
 
 func ProviderChoices() []models.Provider {
@@ -24,5 +25,6 @@ func ProviderChoices() []models.Provider {
 		NOIP,
 		DNSPOD,
 		INFOMANIAK,
+		DDNSSDE,
 	}
 }

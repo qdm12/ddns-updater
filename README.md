@@ -128,6 +128,9 @@ For all record update configuration, you need the following:
   - `"ipinfo"` using [https://ipinfo.io/ip](https://ipinfo.io/ip) (may be rate limited)
   - `"ipify"` using [https://api.ipify.org](https://api.ipify.org) (may be rate limited)
   - `"ipify6"` using [https://api6.ipify.org](https://api.ipify.org) for IPv6 only (may be rate limited)
+  - `"ddnss"` using [https://ddnss.de/meineip.php](https://ddnss.de/meineip.php)
+  - `"ddnss4"` using [https://ip4.ddnss.de/meineip.php](https://ip4.ddnss.de/meineip.php) for IPv4 only
+  - `"ddnss6"` using [https://ip6.ddnss.de/meineip.php](https://ip6.ddnss.de/meineip.php) for IPv6 only
   - `"cycle"` to cycle between each external methods, in order to avoid being rate limited
   - You can also specify an HTTPS URL to obtain your public IP address (i.e. `"ip_method": "https://ipinfo.io/ip"`)
 

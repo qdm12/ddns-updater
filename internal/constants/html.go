@@ -27,7 +27,10 @@ const (
 	HTML_OPENDNS  models.HTML = "<a href=\"https://diagnostic.opendns.com/myip\">OpenDNS</a>"
 	HTML_IFCONFIG models.HTML = "<a href=\"https://ifconfig.io\">ifconfig.io</a>"
 	HTML_IPINFO   models.HTML = "<a href=\"https://ipinfo.io\">ipinfo.io</a>"
-	HTML_IPIFY    models.HTML = "<a href=\"https://api.ipify.org\">ipify.org</a>"
-	HTML_IPIFY6   models.HTML = "<a href=\"https://api6.ipify.org\">ipify.org</a>"
+	HTML_IPIFY    models.HTML = "<a href=\"https://api.ipify.org\">api.ipify.org</a>"
+	HTML_IPIFY6   models.HTML = "<a href=\"https://api6.ipify.org\">api6.ipify.org</a>"
+	HTML_DDNSS    models.HTML = "<a href=\"https://ddnss.de/meineip.php\">ddns.de</a>"
+	HTML_DDNSS4   models.HTML = "<a href=\"https://ip4.ddnss.de/meineip.php\">ip4.ddns.de</a>"
+	HTML_DDNSS6   models.HTML = "<a href=\"https://ip6.ddnss.de/meineip.php\">ip6.ddns.de</a>"
 	HTML_CYCLE    models.HTML = "Cycling"
 )

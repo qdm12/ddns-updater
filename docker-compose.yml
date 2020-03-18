@@ -11,7 +11,7 @@ services:
     environment:
       - DELAY=300s
       - ROOT_URL=/
-      - LISTENINGPORT=8000
+      - LISTENING_PORT=8000
       - LOG_ENCODING=console
       - LOG_LEVEL=info
       - NODE_ID=0

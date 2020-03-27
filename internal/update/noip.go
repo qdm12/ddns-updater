@@ -16,11 +16,11 @@ func updateNoIP(client network.Client, hostname, username, password string, ip n
 	if ip != nil {
 		url += "&myip=" + ip.String()
 	}
+	url = strings.Replace(url, "https://", "https://"+username+":"+password+"@", 1)
 	r, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("Authorization", "Basic "+username+":"+password)
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {

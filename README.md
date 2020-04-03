@@ -85,7 +85,7 @@
 1. Use the following command:
 
     ```bash
-    docker run -d -p 8000:8000/tcp -v $(pwd)/data:/updater/data qmcgaw/ddns-updater
+    docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data qmcgaw/ddns-updater
     ```
 
     You can also use [docker-compose.yml](https://github.com/qdm12/ddns-updater/blob/master/docker-compose.yml) with:
@@ -303,12 +303,14 @@ Special thanks to @Starttoaster for helping out with the [documentation](https:/
 [![Gotify](https://github.com/qdm12/ddns-updater/blob/master/readme/gotify.png?raw=true)](https://gotify.net)
 
 [**Gotify**](https://gotify.net) is a simple server for sending and receiving messages, and it is **free**, **private** and **open source**
+
 - It has an [Android app](https://play.google.com/store/apps/details?id=com.github.gotify) to receive notifications
 - The app does not drain your battery 👍
 - The notification server is self hosted, see [how to set it up with Docker](https://gotify.net/docs/install)
 - The notifications only go through your own server (ideally through HTTPS though)
 
 To set it up with DDNS updater:
+
 1. Go to the Web GUI of Gotify
 1. Login with the admin credentials
 1. Create an app and copy the generated token to the environment variable `GOTIFYTOKEN` (for this container)
@@ -316,13 +318,13 @@ To set it up with DDNS updater:
 
 ## Testing
 
-- The automated healthcheck verifies all your records are up to date [using DNS lookups](https://github.com/qdm12/ddns-updater/blob/master/healthcheck/main.go)
+- The automated healthcheck verifies all your records are up to date [using DNS lookups](https://github.com/qdm12/ddns-updater/blob/master/internal/healthcheck/healthcheck.go#L15)
 - You can check manually at:
-  - GoDaddy: https://dcc.godaddy.com/manage/yourdomain.com/dns (replace yourdomain.com)
+  - GoDaddy: [https://dcc.godaddy.com/manage/yourdomain.com/dns](https://dcc.godaddy.com/manage/yourdomain.com/dns) (replace yourdomain.com)
 
     [![GoDaddy DNS management](https://github.com/qdm12/ddns-updater/raw/master/readme/godaddydnsmanagement.png)](https://dcc.godaddy.com/manage/)
 
-    You might want to try to change the IP address to another one to see if the update actually occurs.
+    You might want to try to change the IP address to `127.0.0.1` to see if the update actually occurs.
 
 ## Development
 

@@ -376,6 +376,8 @@ To set it up with DDNS updater:
 
 ## TODOs
 
+- [ ] Update dependencies
+- [ ] Mockgen instead of mockery
 - [ ] Other types or records
 - [ ] icon.ico for webpage
 - [ ] Record events log
@@ -384,4 +386,3 @@ To set it up with DDNS updater:
 - [ ] ReactJS frontend
     - [ ] Live update of website
     - [ ] Change settings
-- [ ] Golangci lint in dockerfile and yml

@@ -1,10 +1,10 @@
 package constants
 
 const (
-	// Annoucement is a message annoucement
-	Annoucement = "Added support for DDNSS.de"
-	// AnnoucementExpiration is the expiration date of the annoucement in format yyyy-mm-dd
-	AnnoucementExpiration = "2020-03-20"
+	// Announcement is a message announcement
+	Announcement = "Smaller Docker image based on Scratch (12.3MB)"
+	// AnnouncementExpiration is the expiration date of the announcement in format yyyy-mm-dd
+	AnnouncementExpiration = "2020-04-20"
 )
 
 const (

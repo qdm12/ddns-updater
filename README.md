@@ -27,7 +27,7 @@
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
 - Sends notifications to your Android phone, see the [**Gotify**](#Gotify) section (it's free, open source and self hosted 🆒)
-- Compatible with `amd64`, `386`, `arm64` and `arm32v7` (Raspberry Pis) CPU architectures.
+- Compatible with `amd64`, `386`, `arm64`, `arm32v7`, `arm32v6` (Raspberry Pis) and `ppc64le` CPU architectures.
 
 ## Setup
 
@@ -384,3 +384,4 @@ To set it up with DDNS updater:
 - [ ] ReactJS frontend
     - [ ] Live update of website
     - [ ] Change settings
+- [ ] Golangci lint in dockerfile and yml

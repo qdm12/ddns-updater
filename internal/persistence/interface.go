@@ -6,7 +6,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/persistence/json"
-	"github.com/qdm12/ddns-updater/internal/persistence/sqlite"
 )
 
 type Database interface {
@@ -15,10 +14,6 @@ type Database interface {
 	GetEvents(domain, host string) (events []models.HistoryEvent, err error)
 	GetAllDomainsHosts() (domainshosts []models.DomainHost, err error)
 	Check() error
-}
-
-func NewSQLite(dataDir string) (Database, error) {
-	return sqlite.NewDatabase(dataDir)
 }
 
 func NewJSON(dataDir string) (Database, error) {

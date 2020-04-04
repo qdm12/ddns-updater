@@ -4,15 +4,12 @@ import (
 	"context"
 	"net"
 
-	_ "github.com/mattn/go-sqlite3"
-
 	"fmt"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/qdm12/golibs/admin"
-	"github.com/qdm12/golibs/files"
 	libhealthcheck "github.com/qdm12/golibs/healthcheck"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network"
@@ -76,25 +73,9 @@ func main() {
 	e.FatalOnError(err)
 	dataDir, err := paramsReader.GetDataDir(dir)
 	e.FatalOnError(err)
-	fileManager := files.NewFileManager()
-	dbSQLiteExists, err := fileManager.FileExists(dataDir + "/updates.db")
-	e.FatalOnError(err)
-	dbJSONExists, err := fileManager.FileExists(dataDir + "/updates.json")
-	e.FatalOnError(err)
 	var persistentDB persistence.Database
-	if dbSQLiteExists && !dbJSONExists {
-		logger.Warn("Migrating from SQLite to JSON based database file")
-		sqlite, err := persistence.NewSQLite(dataDir)
-		e.FatalOnError(err)
-		persistentDB, err = persistence.NewJSON(dataDir)
-		e.FatalOnError(err)
-		err = persistence.Migrate(sqlite, persistentDB, logger)
-		e.FatalOnError(err)
-		logger.Info("Success; you can now safely delete %s", dataDir+"/updates.db")
-	} else {
-		persistentDB, err = persistence.NewJSON(dataDir)
-		e.FatalOnError(err)
-	}
+	persistentDB, err = persistence.NewJSON(dataDir)
+	e.FatalOnError(err)
 	go signals.WaitForExit(e.ShutdownFromSignal)
 	settings, warnings, err := paramsReader.GetSettings(dataDir + "/config.json")
 	for _, w := range warnings {

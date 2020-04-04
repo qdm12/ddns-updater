@@ -1,17 +1,21 @@
 ARG ALPINE_VERSION=3.11
 ARG GO_VERSION=1.13
 
+FROM alpine:${ALPINE_VERSION} AS alpine
+RUN apk --update add ca-certificates tzdata
+
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
-RUN apk --update add git g++
+RUN apk --update add git
+ENV CGO_ENABLED=0
 WORKDIR /tmp/gobuild
 COPY go.mod go.sum ./
 RUN go mod download 2>&1
 COPY internal/ ./internal/
 COPY cmd/updater/main.go .
-RUN CGO_ENABLED=0 go test ./...
-RUN CGO_ENABLED=1 go build -a -installsuffix cgo -ldflags="-s -w" -o app
+RUN go test ./...
+RUN go build -ldflags="-s -w" -o app
 
-FROM alpine:${ALPINE_VERSION}
+FROM scratch
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
@@ -25,13 +29,8 @@ LABEL \
     org.opencontainers.image.source="https://github.com/qdm12/ddns-updater" \
     org.opencontainers.image.title="ddns-updater" \
     org.opencontainers.image.description="Universal DNS updater with WebUI. Works with Namecheap, Cloudflare, GoDaddy, DuckDns, Dreamhost, DNSPod and NoIP"
-RUN apk add --update sqlite ca-certificates && \
-    mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2 && \
-    rm -rf /var/cache/apk/* && \
-    # Creating empty database file in case nothing is mounted
-    mkdir -p /updater/data && \
-    chown -R 1000 /updater && \
-    chmod 700 /updater/data
+COPY --from=alpine --chown=1000 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=alpine --chown=1000 /usr/share/zoneinfo /usr/share/zoneinfo
 EXPOSE 8000
 HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=2 CMD ["/updater/app", "healthcheck"]
 USER 1000

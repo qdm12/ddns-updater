@@ -4,13 +4,13 @@ import "regexp"
 
 const (
 	goDaddyKey               = `[A-Za-z0-9]{10,14}\_[A-Za-z0-9]{22}`
-	godaddySecret            = `[A-Za-z0-9]{22}`
-	RegexDuckDNSToken        = `[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}`
-	namecheapPassword        = `[a-f0-9]{32}`
+	godaddySecret            = `[A-Za-z0-9]{22}`                                                  // #nosec
+	duckDNSToken             = `[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}` // #nosec
+	namecheapPassword        = `[a-f0-9]{32}`                                                     // #nosec
 	dreamhostKey             = `[a-zA-Z0-9]{16}`
 	cloudflareKey            = `[a-zA-Z0-9]+`
 	cloudflareUserServiceKey = `v1\.0.+`
-	cloudflareToken          = `[a-zA-Z0-9_]{40}`
+	cloudflareToken          = `[a-zA-Z0-9_]{40}` // #nosec
 )
 
 func MatchGodaddyKey(s string) bool {
@@ -22,7 +22,7 @@ func MatchGodaddySecret(s string) bool {
 }
 
 func MatchDuckDNSToken(s string) bool {
-	return regexp.MustCompile("^" + RegexDuckDNSToken + "$").MatchString(s)
+	return regexp.MustCompile("^" + duckDNSToken + "$").MatchString(s)
 }
 
 func MatchNamecheapPassword(s string) bool {

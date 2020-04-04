@@ -34,12 +34,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	paramsReader := params.NewParamsReader(logger)
+	paramsReader := params.NewReader(logger)
 	encoding, level, nodeID, err := paramsReader.GetLoggerConfig()
 	if err != nil {
 		logger.Error(err)
 	} else {
 		logger, err = logging.NewLogger(encoding, level, nodeID)
+		if err != nil {
+			panic(err)
+		}
 	}
 	if libhealthcheck.Mode(os.Args) {
 		// Running the program in a separate instance through the Docker
@@ -92,19 +95,21 @@ func main() {
 	for _, err := range network.NewConnectivity(5 * time.Second).Checks("google.com") {
 		e.Warn(err)
 	}
-	var records []models.Record
+	records := make([]models.Record, len(settings))
 	idToPeriod := make(map[int]time.Duration)
+	i := 0
 	for id, setting := range settings {
 		logger.Info("Reading history from database: domain %s host %s", setting.Domain, setting.Host)
 		events, err := persistentDB.GetEvents(setting.Domain, setting.Host)
 		if err != nil {
 			e.FatalOnError(err)
 		}
-		records = append(records, models.NewRecord(setting, events))
+		records[i] = models.NewRecord(setting, events)
 		idToPeriod[id] = defaultPeriod
 		if setting.Delay > 0 {
 			idToPeriod[id] = setting.Delay
 		}
+		i++
 	}
 	HTTPTimeout, err := paramsReader.GetHTTPTimeout()
 	e.FatalOnError(err)

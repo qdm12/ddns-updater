@@ -11,7 +11,7 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-type ParamsReader interface {
+type Reader interface {
 	GetSettings(filePath string) (settings []models.Settings, warnings []string, err error)
 	GetDataDir(currentDir string) (string, error)
 	GetListeningPort() (listeningPort, warning string, err error)
@@ -29,15 +29,15 @@ type ParamsReader interface {
 	GetVcsRef() string
 }
 
-type params struct {
+type reader struct {
 	envParams libparams.EnvParams
 	verifier  verification.Verifier
 	logger    logging.Logger
 	readFile  func(filename string) ([]byte, error)
 }
 
-func NewParamsReader(logger logging.Logger) ParamsReader {
-	return &params{
+func NewReader(logger logging.Logger) Reader {
+	return &reader{
 		envParams: libparams.NewEnvParams(),
 		verifier:  verification.NewVerifier(),
 		logger:    logger,
@@ -47,44 +47,44 @@ func NewParamsReader(logger logging.Logger) ParamsReader {
 
 // GetDataDir obtains the data directory from the environment
 // variable DATADIR
-func (p *params) GetDataDir(currentDir string) (string, error) {
-	return p.envParams.GetEnv("DATADIR", libparams.Default(currentDir+"/data"))
+func (r *reader) GetDataDir(currentDir string) (string, error) {
+	return r.envParams.GetEnv("DATADIR", libparams.Default(currentDir+"/data"))
 }
 
-func (p *params) GetListeningPort() (listeningPort, warning string, err error) {
-	return p.envParams.GetListeningPort()
+func (r *reader) GetListeningPort() (listeningPort, warning string, err error) {
+	return r.envParams.GetListeningPort()
 }
 
-func (p *params) GetLoggerConfig() (encoding logging.Encoding, level logging.Level, nodeID int, err error) {
-	return p.envParams.GetLoggerConfig()
+func (r *reader) GetLoggerConfig() (encoding logging.Encoding, level logging.Level, nodeID int, err error) {
+	return r.envParams.GetLoggerConfig()
 }
 
-func (p *params) GetGotifyURL(setters ...libparams.GetEnvSetter) (URL *url.URL, err error) {
-	return p.envParams.GetGotifyURL()
+func (r *reader) GetGotifyURL(setters ...libparams.GetEnvSetter) (url *url.URL, err error) {
+	return r.envParams.GetGotifyURL()
 }
 
-func (p *params) GetGotifyToken(setters ...libparams.GetEnvSetter) (token string, err error) {
-	return p.envParams.GetGotifyToken()
+func (r *reader) GetGotifyToken(setters ...libparams.GetEnvSetter) (token string, err error) {
+	return r.envParams.GetGotifyToken()
 }
 
-func (p *params) GetRootURL(setters ...libparams.GetEnvSetter) (rootURL string, err error) {
-	return p.envParams.GetRootURL()
+func (r *reader) GetRootURL(setters ...libparams.GetEnvSetter) (rootURL string, err error) {
+	return r.envParams.GetRootURL()
 }
 
-func (p *params) GetDelay(setters ...libparams.GetEnvSetter) (period time.Duration, err error) {
+func (r *reader) GetDelay(setters ...libparams.GetEnvSetter) (period time.Duration, err error) {
 	// Backward compatibility
-	n, err := p.envParams.GetEnvInt("DELAY", libparams.Compulsory()) // TODO change to PERIOD
+	n, err := r.envParams.GetEnvInt("DELAY", libparams.Compulsory()) // TODO change to PERIOD
 	if err == nil {                                                  // integer only, treated as seconds
-		p.logger.Warn("The value for the duration period of the updater does not have a time unit, you might want to set it to \"%ds\" instead of \"%d\"", n, n)
+		r.logger.Warn("The value for the duration period of the updater does not have a time unit, you might want to set it to \"%ds\" instead of \"%d\"", n, n)
 		return time.Duration(n) * time.Second, nil
 	}
-	return p.envParams.GetDuration("DELAY", setters...)
+	return r.envParams.GetDuration("DELAY", setters...)
 }
 
-func (p *params) GetExeDir() (dir string, err error) {
-	return p.envParams.GetExeDir()
+func (r *reader) GetExeDir() (dir string, err error) {
+	return r.envParams.GetExeDir()
 }
 
-func (p *params) GetHTTPTimeout() (duration time.Duration, err error) {
-	return p.envParams.GetHTTPTimeout(libparams.Default("10s"))
+func (r *reader) GetHTTPTimeout() (duration time.Duration, err error) {
+	return r.envParams.GetHTTPTimeout(libparams.Default("10s"))
 }

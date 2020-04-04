@@ -9,22 +9,22 @@ import (
 	"github.com/qdm12/golibs/files"
 )
 
-type database struct {
+type Database struct {
 	data        dataModel
 	filepath    string
 	fileManager files.FileManager
 	sync.RWMutex
 }
 
-func (db *database) Close() error {
+func (db *Database) Close() error {
 	db.Lock() // ensure a write operation finishes
 	defer db.Unlock()
 	return nil
 }
 
 // NewDatabase opens or creates the JSON file database.
-func NewDatabase(dataDir string) (*database, error) {
-	db := database{
+func NewDatabase(dataDir string) (*Database, error) {
+	db := Database{
 		filepath:    dataDir + "/updates.json",
 		fileManager: files.NewFileManager(),
 	}
@@ -56,7 +56,7 @@ func NewDatabase(dataDir string) (*database, error) {
 	return &db, nil
 }
 
-func (db *database) Check() error {
+func (db *Database) Check() error {
 	for _, record := range db.data.Records {
 		switch {
 		case len(record.Domain) == 0:
@@ -81,7 +81,7 @@ func (db *database) Check() error {
 	return nil
 }
 
-func (db *database) write() error {
+func (db *Database) write() error {
 	data, err := json.MarshalIndent(db.data, "", "  ")
 	if err != nil {
 		return err

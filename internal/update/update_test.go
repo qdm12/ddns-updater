@@ -84,5 +84,4 @@ func Test_getPublicIP(t *testing.T) {
 			client.AssertExpectations(t)
 		})
 	}
-
 }

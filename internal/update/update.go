@@ -135,7 +135,7 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 			settings.UserServiceKey,
 			settings.Token,
 			settings.Proxied,
-			settings.Ttl,
+			settings.TTL,
 			ip,
 		)
 	case constants.NOIP:
@@ -192,23 +192,23 @@ func (u *updater) incCounter() (value int) {
 	return value
 }
 
-func (u *updater) getPublicIP(IPMethod models.IPMethod, IPVersion models.IPVersion) (ip net.IP, err error) {
+func (u *updater) getPublicIP(ipMethod models.IPMethod, ipVersion models.IPVersion) (ip net.IP, err error) {
 	var url string
 	switch {
-	case IPMethod == constants.PROVIDER:
+	case ipMethod == constants.PROVIDER:
 		return nil, nil
-	case strings.HasPrefix(string(IPMethod), "https://"):
+	case strings.HasPrefix(string(ipMethod), "https://"):
 		// Custom URL provided
-		url = string(IPMethod)
-	case IPMethod == constants.CYCLE:
+		url = string(ipMethod)
+	case ipMethod == constants.CYCLE:
 		i := u.incCounter() % len(u.ipMethods)
 		url = constants.IPMethodMapping()[u.ipMethods[i]]
 	default:
 		var ok bool
-		url, ok = constants.IPMethodMapping()[IPMethod]
+		url, ok = constants.IPMethodMapping()[ipMethod]
 		if !ok {
-			return nil, fmt.Errorf("IP method %q not supported", IPMethod)
+			return nil, fmt.Errorf("IP method %q not supported", ipMethod)
 		}
 	}
-	return network.GetPublicIP(u.client, url, IPVersion)
+	return network.GetPublicIP(u.client, url, ipVersion)
 }

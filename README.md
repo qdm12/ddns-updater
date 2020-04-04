@@ -2,8 +2,6 @@
 
 *Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod, Infomaniak, ddnss.de and DuckDNS*
 
-**SQLite migration support will be removed on 1 April 2020, so be sure to update your image before that**
-
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
 [![Build Status](https://travis-ci.org/qdm12/ddns-updater.svg?branch=master)](https://travis-ci.org/qdm12/ddns-updater)
@@ -24,7 +22,7 @@
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
-- Lightweight based on a Go binary and *Alpine 3.11* with Sqlite and Ca-Certificates packages
+- 12.3MB Docker image based on a Go static binary in a Scratch Docker image with ca-certificates and timezone data
 - Persistence with a JSON file *updates.json* to store old IP addresses with change times for each record
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
@@ -93,6 +91,8 @@
     ```sh
     docker-compose up -d
     ```
+
+1. You can update the image with `docker pull qmcgaw/ddns-updater`. Other [Docker image tags are available](https://hub.docker.com/repository/docker/qmcgaw/ddns-updater/tags).
 
 ## Configuration
 

@@ -8,8 +8,8 @@ FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 ARG GOLANGCI_LINT_VERSION=v1.24.0
 RUN apk --update add git
 ENV CGO_ENABLED=0
-WORKDIR /tmp/gobuild
 RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s ${GOLANGCI_LINT_VERSION}
+WORKDIR /tmp/gobuild
 COPY .golangci.yml .
 COPY go.mod go.sum ./
 RUN go mod download 2>&1

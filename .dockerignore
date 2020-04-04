@@ -9,3 +9,4 @@ readme
 .gitignore
 .devcontainer
 .vscode
+.github

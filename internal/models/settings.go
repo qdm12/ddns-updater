@@ -6,6 +6,7 @@ import (
 )
 
 // Settings contains the elements to update the DNS record
+// nolint: maligned
 type Settings struct {
 	Domain      string
 	Host        string
@@ -24,7 +25,7 @@ type Settings struct {
 	ZoneIdentifier string // Cloudflare only
 	Identifier     string // Cloudflare only
 	Proxied        bool   // Cloudflare only
-	Ttl            uint   // Cloudflare only
+	TTL            uint   // Cloudflare only
 	Username       string // NoIP, Infomaniak, DDNSS only
 }
 
@@ -45,11 +46,12 @@ func (settings *Settings) String() string {
 
 // BuildDomainName builds the domain name from the domain and the host of the settings
 func (settings *Settings) BuildDomainName() string {
-	if settings.Host == "@" {
+	switch settings.Host {
+	case "@":
 		return settings.Domain
-	} else if settings.Host == "*" {
+	case "*":
 		return "any." + settings.Domain
-	} else {
+	default:
 		return settings.Host + "." + settings.Domain
 	}
 }

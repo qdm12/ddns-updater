@@ -9,6 +9,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 )
 
+// nolint: maligned
 type settingsType struct {
 	Provider       string `json:"provider"`
 	Domain         string `json:"domain"`
@@ -27,12 +28,12 @@ type settingsType struct {
 	ZoneIdentifier string `json:"zone_identifier"`  // Cloudflare only
 	Identifier     string `json:"identifier"`       // Cloudflare only
 	Proxied        bool   `json:"proxied"`          // Cloudflare only
-	Ttl            uint   `json:"ttl"`              // Cloudflare only
+	TTL            uint   `json:"ttl"`              // Cloudflare only
 }
 
 // GetSettings obtain the update settings from config.json
-func (p *params) GetSettings(filePath string) (settings []models.Settings, warnings []string, err error) {
-	bytes, err := p.readFile(filePath)
+func (r *reader) GetSettings(filePath string) (settings []models.Settings, warnings []string, err error) {
+	bytes, err := r.readFile(filePath)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -50,7 +51,7 @@ func (p *params) GetSettings(filePath string) (settings []models.Settings, warni
 		ipMethod := models.IPMethod(s.IPMethod)
 		// Retro compatibility
 		if ipMethod == constants.GOOGLE {
-			p.logger.Warn("IP Method %q is no longer valid, please change it. Defaulting it to %s", constants.GOOGLE, constants.CYCLE)
+			r.logger.Warn("IP Method %q is no longer valid, please change it. Defaulting it to %s", constants.GOOGLE, constants.CYCLE)
 			ipMethod = constants.CYCLE
 		}
 		ipVersion := models.IPVersion(s.IPVersion)
@@ -75,9 +76,9 @@ func (p *params) GetSettings(filePath string) (settings []models.Settings, warni
 			ZoneIdentifier: s.ZoneIdentifier,
 			Identifier:     s.Identifier,
 			Proxied:        s.Proxied,
-			Ttl:            s.Ttl,
+			TTL:            s.TTL,
 		}
-		if err := p.isConsistent(setting); err != nil {
+		if err := r.isConsistent(setting); err != nil {
 			warnings = append(warnings, fmt.Sprintf("%s for settings %s", err, setting.String()))
 			continue
 		}

@@ -19,7 +19,7 @@ type Handler interface {
 
 type handler struct {
 	rootURL     string
-	UIDir       string
+	uiDir       string
 	db          data.Database
 	logger      logging.Logger
 	forceUpdate func()
@@ -28,11 +28,11 @@ type handler struct {
 }
 
 // NewHandler returns a Handler object
-func NewHandler(rootURL, UIDir string, db data.Database, logger logging.Logger,
+func NewHandler(rootURL, uiDir string, db data.Database, logger logging.Logger,
 	forceUpdate func(), onError func(err error)) Handler {
 	return &handler{
 		rootURL:     rootURL,
-		UIDir:       UIDir,
+		uiDir:       uiDir,
 		db:          db,
 		logger:      logger,
 		forceUpdate: forceUpdate,
@@ -48,7 +48,7 @@ func (h *handler) GetHandlerFunc() http.HandlerFunc {
 		switch {
 		case r.Method == http.MethodGet && r.RequestURI == h.rootURL+"/":
 			// TODO: Forms to change existing updates or add some
-			t := template.Must(template.ParseFiles(h.UIDir + "/ui/index.html"))
+			t := template.Must(template.ParseFiles(h.uiDir + "/ui/index.html"))
 			var htmlData models.HTMLData
 			for _, record := range h.db.SelectAll() {
 				row := html.ConvertRecord(record, h.getTime())

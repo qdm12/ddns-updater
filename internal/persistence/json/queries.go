@@ -8,7 +8,7 @@ import (
 )
 
 // StoreNewIP stores a new IP address for a certain domain and host.
-func (db *database) StoreNewIP(domain, host string, ip net.IP, t time.Time) (err error) {
+func (db *Database) StoreNewIP(domain, host string, ip net.IP, t time.Time) (err error) {
 	db.Lock()
 	defer db.Unlock()
 	for i, record := range db.data.Records {
@@ -33,22 +33,19 @@ func (db *database) StoreNewIP(domain, host string, ip net.IP, t time.Time) (err
 
 // GetEvents gets all the IP addresses history for a certain domain and host, in the order
 // from oldest to newest
-func (db *database) GetEvents(domain, host string) (events []models.HistoryEvent, err error) {
+func (db *Database) GetEvents(domain, host string) (events []models.HistoryEvent, err error) {
 	db.RLock()
 	defer db.RUnlock()
 	for _, record := range db.data.Records {
 		if record.Domain == domain && record.Host == host {
-			for _, event := range record.Events {
-				events = append(events, event)
-			}
-			return events, nil
+			return append(events, record.Events...), nil
 		}
 	}
 	return nil, nil
 }
 
 // GetAllDomainsHosts gets all the domains and hosts from the database
-func (db *database) GetAllDomainsHosts() (domainshosts []models.DomainHost, err error) {
+func (db *Database) GetAllDomainsHosts() (domainshosts []models.DomainHost, err error) {
 	db.RLock()
 	defer db.RUnlock()
 	for _, record := range db.data.Records {

@@ -12,16 +12,46 @@ import (
 	"github.com/qdm12/golibs/network"
 )
 
-func updateDreamhost(client network.Client, domain, key, domainName string, ip net.IP) error {
-	if ip == nil {
-		return fmt.Errorf("IP address was not given to updater")
+const success = "success"
+
+type (
+	dreamHostRecords struct {
+		Result string `json:"result"`
+		Data   []struct {
+			Editable string `json:"editable"`
+			Type     string `json:"type"`
+			Record   string `json:"record"`
+			Value    string `json:"value"`
+		} `json:"data"`
 	}
-	type dreamhostReponse struct {
+	dreamhostReponse struct {
 		Result string `json:"result"`
 		Data   string `json:"data"`
 	}
-	// List records
+)
+
+func listDreamhostRecords(client network.Client, key string) (records dreamHostRecords, err error) {
 	url := constants.DreamhostURL + "/?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-list_records"
+	r, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return records, err
+	}
+	status, content, err := client.DoHTTPRequest(r)
+	if err != nil {
+		return records, err
+	} else if status != http.StatusOK {
+		return records, fmt.Errorf("HTTP status %d", status)
+	}
+	if err := json.Unmarshal(content, &records); err != nil {
+		return records, err
+	} else if records.Result != success {
+		return records, fmt.Errorf(records.Result)
+	}
+	return records, nil
+}
+
+func removeDreamhostRecord(client network.Client, key, domain string, ip net.IP) error {
+	url := constants.DreamhostURL + "?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-remove_record&record=" + strings.ToLower(domain) + "&type=A&value=" + ip.String()
 	r, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -32,22 +62,46 @@ func updateDreamhost(client network.Client, domain, key, domainName string, ip n
 	} else if status != http.StatusOK {
 		return fmt.Errorf("HTTP status %d", status)
 	}
-	var dhList struct {
-		Result string `json:"result"`
-		Data   []struct {
-			Editable string `json:"editable"`
-			Type     string `json:"type"`
-			Record   string `json:"record"`
-			Value    string `json:"value"`
-		} `json:"data"`
-	}
-	if err := json.Unmarshal(content, &dhList); err != nil {
+	var dhResponse dreamhostReponse
+	if err := json.Unmarshal(content, &dhResponse); err != nil {
 		return err
-	} else if dhList.Result != "success" {
-		return fmt.Errorf(dhList.Result)
+	} else if dhResponse.Result != success { // this should not happen
+		return fmt.Errorf("%s - %s", dhResponse.Result, dhResponse.Data)
+	}
+	return nil
+}
+
+func addDreamhostRecord(client network.Client, key, domain string, ip net.IP) error {
+	url := constants.DreamhostURL + "?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-add_record&record=" + strings.ToLower(domain) + "&type=A&value=" + ip.String()
+	r, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+	status, content, err := client.DoHTTPRequest(r)
+	if err != nil {
+		return err
+	} else if status != http.StatusOK {
+		return fmt.Errorf("HTTP status %d", status)
+	}
+	var dhResponse dreamhostReponse
+	if err := json.Unmarshal(content, &dhResponse); err != nil {
+		return err
+	} else if dhResponse.Result != success {
+		return fmt.Errorf("%s - %s", dhResponse.Result, dhResponse.Data)
+	}
+	return nil
+}
+
+func updateDreamhost(client network.Client, domain, key, domainName string, ip net.IP) error {
+	if ip == nil {
+		return fmt.Errorf("IP address was not given to updater")
+	}
+	records, err := listDreamhostRecords(client, key)
+	if err != nil {
+		return err
 	}
 	var oldIP net.IP
-	for _, data := range dhList.Data {
+	for _, data := range records.Data {
 		if data.Type == "A" && data.Record == domainName {
 			if data.Editable == "0" {
 				return fmt.Errorf("record data is not editable")
@@ -60,42 +114,9 @@ func updateDreamhost(client network.Client, domain, key, domainName string, ip n
 		}
 	}
 	if oldIP != nil { // Found editable record with a different IP address, so remove it
-		url = constants.DreamhostURL + "?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-remove_record&record=" + strings.ToLower(domain) + "&type=A&value=" + oldIP.String()
-		r, err := http.NewRequest(http.MethodGet, url, nil)
-		if err != nil {
+		if err := removeDreamhostRecord(client, key, domain, oldIP); err != nil {
 			return err
 		}
-		status, content, err = client.DoHTTPRequest(r)
-		if err != nil {
-			return err
-		} else if status != http.StatusOK {
-			return fmt.Errorf("HTTP status %d", status)
-		}
-		var dhResponse dreamhostReponse
-		if err := json.Unmarshal(content, &dhResponse); err != nil {
-			return err
-		} else if dhResponse.Result != "success" { // this should not happen
-			return fmt.Errorf("%s - %s", dhResponse.Result, dhResponse.Data)
-		}
 	}
-	// Create the right record
-	url = constants.DreamhostURL + "?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-add_record&record=" + strings.ToLower(domain) + "&type=A&value=" + ip.String()
-	r, err = http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return err
-	}
-	status, content, err = client.DoHTTPRequest(r)
-	if err != nil {
-		return err
-	} else if status != http.StatusOK {
-		return fmt.Errorf("HTTP status %d", status)
-	}
-	var dhResponse dreamhostReponse
-	err = json.Unmarshal(content, &dhResponse)
-	if err != nil {
-		return err
-	} else if dhResponse.Result != "success" {
-		return fmt.Errorf("%s - %s", dhResponse.Result, dhResponse.Data)
-	}
-	return nil
+	return addDreamhostRecord(client, key, domain, ip)
 }

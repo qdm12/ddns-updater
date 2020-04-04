@@ -20,7 +20,7 @@ func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host
 		Name    string `json:"name"`    // DNS record name i.e. example.com
 		Content string `json:"content"` // ip address
 		Proxied bool   `json:"proxied"` // whether the record is receiving the performance and security benefits of Cloudflare
-		Ttl     uint   `json:"ttl"`
+		TTL     uint   `json:"ttl"`
 	}
 	URL := constants.CloudflareURL + "/zones/" + zoneIdentifier + "/dns_records/" + identifier
 	r, err := network.BuildHTTPPut(
@@ -30,7 +30,7 @@ func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host
 			Name:    host,
 			Content: ip.String(),
 			Proxied: proxied,
-			Ttl:     ttl,
+			TTL:     ttl,
 		},
 	)
 	if err != nil {

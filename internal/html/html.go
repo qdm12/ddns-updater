@@ -10,6 +10,7 @@ import (
 )
 
 func ConvertRecord(record models.Record, now time.Time) models.HTMLRow {
+	const NotAvailable = "N/A"
 	row := models.HTMLRow{
 		Domain:   convertDomain(record.Settings.BuildDomainName()),
 		Host:     models.HTML(record.Settings.Host),
@@ -24,7 +25,7 @@ func ConvertRecord(record models.Record, now time.Time) models.HTMLRow {
 		message = fmt.Sprintf("(%s)", message)
 	}
 	if len(record.Status) == 0 {
-		row.Status = "N/A"
+		row.Status = NotAvailable
 	} else {
 		row.Status = models.HTML(fmt.Sprintf("%s %s, %s",
 			convertStatus(record.Status),
@@ -35,10 +36,10 @@ func ConvertRecord(record models.Record, now time.Time) models.HTMLRow {
 	if currentIP != nil {
 		row.CurrentIP = models.HTML(`<a href="https://ipinfo.io/"` + currentIP.String() + `\>` + currentIP.String() + "</a>")
 	} else {
-		row.CurrentIP = "N/A"
+		row.CurrentIP = NotAvailable
 	}
 	previousIPs := record.History.GetPreviousIPs()
-	row.PreviousIPs = "N/A"
+	row.PreviousIPs = NotAvailable
 	if len(previousIPs) > 0 {
 		var previousIPsStr []string
 		const maxPreviousIPs = 2
@@ -57,13 +58,13 @@ func ConvertRecord(record models.Record, now time.Time) models.HTMLRow {
 func convertStatus(status models.Status) models.HTML {
 	switch status {
 	case constants.SUCCESS:
-		return constants.HTML_SUCCESS
+		return constants.HTMLSuccess
 	case constants.FAIL:
-		return constants.HTML_FAIL
+		return constants.HTMLFail
 	case constants.UPTODATE:
-		return constants.HTML_UPTODATE
+		return constants.HTMLUpdate
 	case constants.UPDATING:
-		return constants.HTML_UPDATING
+		return constants.HTMLUpdating
 	default:
 		return "Unknown status"
 	}
@@ -72,23 +73,23 @@ func convertStatus(status models.Status) models.HTML {
 func convertProvider(provider models.Provider) models.HTML {
 	switch provider {
 	case constants.NAMECHEAP:
-		return constants.HTML_NAMECHEAP
+		return constants.HTMLNamecheap
 	case constants.GODADDY:
-		return constants.HTML_GODADDY
+		return constants.HTMLGodaddy
 	case constants.DUCKDNS:
-		return constants.HTML_DUCKDNS
+		return constants.HTMLDuckDNS
 	case constants.DREAMHOST:
-		return constants.HTML_DREAMHOST
+		return constants.HTMLDreamhost
 	case constants.CLOUDFLARE:
-		return constants.HTML_CLOUDFLARE
+		return constants.HTMLCloudflare
 	case constants.NOIP:
-		return constants.HTML_NOIP
+		return constants.HTMLNoIP
 	case constants.DNSPOD:
-		return constants.HTML_DNSPOD
+		return constants.HTMLDNSPod
 	case constants.INFOMANIAK:
-		return constants.HTML_INFOMANIAK
+		return constants.HTMLInfomaniak
 	case constants.DDNSSDE:
-		return constants.HTML_DDNSSDE
+		return constants.HTMLDdnssde
 	default:
 		s := string(provider)
 		if strings.HasPrefix("https://", s) {
@@ -100,31 +101,31 @@ func convertProvider(provider models.Provider) models.HTML {
 	}
 }
 
-func convertIPMethod(IPMethod models.IPMethod, provider models.Provider) models.HTML {
+func convertIPMethod(ipMethod models.IPMethod, provider models.Provider) models.HTML {
 	// TODO map to icons
-	switch IPMethod {
+	switch ipMethod {
 	case constants.PROVIDER:
 		return convertProvider(provider)
 	case constants.OPENDNS:
-		return constants.HTML_OPENDNS
+		return constants.HTMLOpenDNS
 	case constants.IFCONFIG:
-		return constants.HTML_IFCONFIG
+		return constants.HTMLIfconfig
 	case constants.IPINFO:
-		return constants.HTML_IPINFO
+		return constants.HTMLIpinfo
 	case constants.IPIFY:
-		return constants.HTML_IPIFY
+		return constants.HTMLIpify
 	case constants.IPIFY6:
-		return constants.HTML_IPIFY6
+		return constants.HTMLIpify6
 	case constants.DDNSS:
-		return constants.HTML_DDNSS
+		return constants.HTMLDdnss
 	case constants.DDNSS4:
-		return constants.HTML_DDNSS4
+		return constants.HTMLDdnss4
 	case constants.DDNSS6:
-		return constants.HTML_DDNSS6
+		return constants.HTMLDdnss6
 	case constants.CYCLE:
-		return constants.HTML_CYCLE
+		return constants.HTMLCycle
 	default:
-		return models.HTML(string(IPMethod))
+		return models.HTML(string(ipMethod))
 	}
 }
 

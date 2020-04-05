@@ -15,9 +15,9 @@ COPY go.mod go.sum ./
 RUN go mod download 2>&1
 COPY internal/ ./internal/
 COPY cmd/updater/main.go .
-RUN golangci-lint run
 RUN go test ./...
 RUN go build -ldflags="-s -w" -o app
+RUN golangci-lint run --timeout=10m
 
 FROM scratch
 ARG BUILD_DATE

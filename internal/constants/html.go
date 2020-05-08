@@ -20,6 +20,7 @@ const (
 	HTMLDNSPod     models.HTML = "<a href=\"https://www.dnspod.cn/\">DNSPod</a>"
 	HTMLInfomaniak models.HTML = "<a href=\"https://www.infomaniak.com/\">Infomaniak</a>"
 	HTMLDdnssde    models.HTML = "<a href=\"https://ddnss.de/\">DDNSS.de</a>"
+	HTMLDyn        models.HTML = "<a href=\"https://dyn.com/\">Dyn DNS</a>"
 )
 
 const (

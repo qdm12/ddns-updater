@@ -2,9 +2,9 @@ package constants
 
 const (
 	// Announcement is a message announcement
-	Announcement = "Smaller Docker image based on Scratch (12.3MB)"
+	Announcement = "Support for Dyn DNS"
 	// AnnouncementExpiration is the expiration date of the announcement in format yyyy-mm-dd
-	AnnouncementExpiration = "2020-04-20"
+	AnnouncementExpiration = "2020-05-20"
 )
 
 const (

@@ -13,6 +13,7 @@ const (
 	DNSPOD     models.Provider = "dnspod"
 	INFOMANIAK models.Provider = "infomaniak"
 	DDNSSDE    models.Provider = "ddnss"
+	DYN        models.Provider = "dyn"
 )
 
 func ProviderChoices() []models.Provider {

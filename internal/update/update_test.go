@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/golibs/network/mocks"
+	"github.com/qdm12/golibs/network/mock_network"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -64,10 +65,11 @@ func Test_getPublicIP(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			client := &mocks.Client{}
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			client := mock_network.NewMockClient(mockCtrl)
 			if len(tc.mockURL) != 0 {
-				client.On("GetContent", tc.mockURL).Return(
-					tc.mockContent, http.StatusOK, nil).Once()
+				client.EXPECT().GetContent(tc.mockURL).Return(tc.mockContent, http.StatusOK, nil).Times(1)
 			}
 			u := &updater{
 				client:    client,
@@ -81,7 +83,6 @@ func Test_getPublicIP(t *testing.T) {
 				assert.NoError(t, err)
 			}
 			assert.True(t, tc.ip.Equal(ip))
-			client.AssertExpectations(t)
 		})
 	}
 }

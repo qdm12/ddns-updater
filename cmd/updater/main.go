@@ -13,6 +13,7 @@ import (
 	libhealthcheck "github.com/qdm12/golibs/healthcheck"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network"
+	"github.com/qdm12/golibs/network/connectivity"
 	libparams "github.com/qdm12/golibs/params"
 	"github.com/qdm12/golibs/server"
 	"github.com/qdm12/golibs/signals"
@@ -92,7 +93,7 @@ func main() {
 	} else if len(settings) == 1 {
 		logger.Info("Found single setting to update records")
 	}
-	for _, err := range network.NewConnectivity(5 * time.Second).Checks("google.com") {
+	for _, err := range connectivity.NewConnectivity(5 * time.Second).Checks("google.com") {
 		e.Warn(err)
 	}
 	records := make([]models.Record, len(settings))
@@ -128,6 +129,7 @@ func main() {
 	logger.Info("Web UI listening at address 0.0.0.0:%s with root URL %s", listeningPort, rootURL)
 	e.Notify(1, fmt.Sprintf("Just launched\nIt has %d records to watch", len(records)))
 	serverErrs := server.RunServers(
+		ctx,
 		server.Settings{Name: "production", Addr: "0.0.0.0:" + listeningPort, Handler: productionHandlerFunc},
 		server.Settings{Name: "healthcheck", Addr: "127.0.0.1:9999", Handler: healthcheckHandlerFunc},
 	)

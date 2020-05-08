@@ -23,7 +23,7 @@ func updateGoDaddy(client libnetwork.Client, host, domain, key, secret string, i
 	r, err := network.BuildHTTPPut(
 		URL,
 		[]goDaddyPutBody{
-			goDaddyPutBody{
+			{
 				ip.String(),
 			},
 		},

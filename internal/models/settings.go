@@ -16,7 +16,7 @@ type Settings struct {
 	Delay       time.Duration
 	NoDNSLookup bool
 	// Provider dependent fields
-	Password       string // Namecheap, Infomaniak, DDNSS and NoIP only
+	Password       string // Namecheap, Infomaniak, DDNSS, DynDNS and NoIP only
 	Key            string // GoDaddy, Dreamhost and Cloudflare only
 	Secret         string // GoDaddy only
 	Token          string // Cloudflare and DuckDNS only
@@ -26,7 +26,7 @@ type Settings struct {
 	Identifier     string // Cloudflare only
 	Proxied        bool   // Cloudflare only
 	TTL            uint   // Cloudflare only
-	Username       string // NoIP, Infomaniak, DDNSS only
+	Username       string // NoIP, Infomaniak, DDNSS, DynDNS only
 }
 
 func (settings *Settings) String() string {

@@ -27,5 +27,6 @@ func ProviderChoices() []models.Provider {
 		DNSPOD,
 		INFOMANIAK,
 		DDNSSDE,
+		DYN,
 	}
 }

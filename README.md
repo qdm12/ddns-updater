@@ -1,6 +1,6 @@
 # Lightweight universal DDNS Updater with Docker and web UI
 
-*Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod, Infomaniak, ddnss.de and DuckDNS*
+*Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod, Infomaniak, ddnss.de, dyndns and DuckDNS*
 
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
@@ -17,7 +17,7 @@
 
 ## Features
 
-- Updates periodically A records for different DNS providers: Namecheap, GoDaddy, Cloudflare, NoIP, Dreamhost, DuckDNS, DNSPod and Infomaniak (ask for more)
+- Updates periodically A records for different DNS providers: Namecheap, GoDaddy, Cloudflare, NoIP, Dreamhost, DuckDNS, DNSPod, DynDNS and Infomaniak (ask for more)
 - Web User interface
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
@@ -191,6 +191,13 @@ Infomaniak:
 - `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records)
 
 DDNSS.de:
+
+- `"user"`
+- `"password"`
+- `"host"` is your host and can be a subdomain or `"@"`
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records)
+
+DYNDNS:
 
 - `"user"`
 - `"password"`

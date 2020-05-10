@@ -7,5 +7,4 @@ const (
 	DreamhostURL  = "https://api.dreamhost.com"
 	CloudflareURL = "https://api.cloudflare.com/client/v4"
 	NoIPURL       = "https://dynupdate.no-ip.com/nic/update"
-	DynURL        = "https://api.dynect.net"
 )

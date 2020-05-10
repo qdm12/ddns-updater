@@ -172,6 +172,16 @@ func (u *updater) update(settings models.Settings, currentIP net.IP, durationSin
 			settings.Password,
 			ip,
 		)
+	case constants.DYN:
+		err = updateDyn(
+			u.client,
+			settings.Username,
+			settings.Password,
+			settings.Domain,
+			settings.Host,
+			ip,
+			nil, // TODO update both ipv4 and ipv6
+		)
 	default:
 		err = fmt.Errorf("provider %q is not supported", settings.Provider)
 	}

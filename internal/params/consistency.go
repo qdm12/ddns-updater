@@ -164,6 +164,18 @@ func settingsDdnssdeChecks(username, password, host string) error {
 	return nil
 }
 
+func settingsDynChecks(username, password, host string) error {
+	switch {
+	case len(username) == 0:
+		return fmt.Errorf("username cannot be empty")
+	case len(password) == 0:
+		return fmt.Errorf("password cannot be empty")
+	case host == "*":
+		return fmt.Errorf(`host cannot be "*"`)
+	}
+	return nil
+}
+
 func (r *reader) isConsistent(settings models.Settings) error {
 	if err := settingsGeneralChecks(settings, r.verifier.MatchDomain); err != nil {
 		return err
@@ -211,6 +223,10 @@ func (r *reader) isConsistent(settings models.Settings) error {
 		}
 	case constants.DDNSSDE:
 		if err := settingsDdnssdeChecks(settings.Username, settings.Password, settings.Host); err != nil {
+			return err
+		}
+	case constants.DYN:
+		if err := settingsDynChecks(settings.Username, settings.Password, settings.Host); err != nil {
 			return err
 		}
 	default:

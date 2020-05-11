@@ -47,6 +47,8 @@ ENV DELAY=10m \
     NODE_ID=0 \
     HTTP_TIMEOUT=10s \
     GOTIFY_URL= \
-    GOTIFY_TOKEN=
+    GOTIFY_TOKEN= \
+    BACKUP_PERIOD=0 \
+    BACKUP_DIRECTORY=/updater/data
 COPY --from=builder --chown=1000 /tmp/gobuild/app /updater/app
 COPY --chown=1000 ui/* /updater/ui/

@@ -18,4 +18,6 @@ services:
       - HTTP_TIMEOUT=10s
       - GOTIFY_URL=
       - GOTIFY_TOKEN=
+      - BACKUP_PERIOD=0
+      - BACKUP_DIRECTORY=/updater/data
     restart: always

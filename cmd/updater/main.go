@@ -19,6 +19,7 @@ import (
 	libparams "github.com/qdm12/golibs/params"
 	"github.com/qdm12/golibs/server"
 
+	"github.com/qdm12/ddns-updater/internal/backup"
 	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/handlers"
 	"github.com/qdm12/ddns-updater/internal/healthcheck"
@@ -31,12 +32,12 @@ import (
 )
 
 func main() {
-	os.Exit(_main(context.Background()))
+	os.Exit(_main(context.Background(), time.Now))
 	// returns 1 on error
 	// returns 2 on os signal
 }
 
-func _main(ctx context.Context) int {
+func _main(ctx context.Context, timeNow func() time.Time) int {
 	if libhealthcheck.Mode(os.Args) {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the
@@ -65,34 +66,7 @@ func _main(ctx context.Context) int {
 		return 1
 	}
 
-	listeningPort, warning, err := paramsReader.GetListeningPort()
-	if len(warning) > 0 {
-		logger.Warn(warning)
-	}
-	if err != nil {
-		logger.Error(err)
-		notify(4, err)
-		return 1
-	}
-	rootURL, err := paramsReader.GetRootURL()
-	if err != nil {
-		logger.Error(err)
-		notify(4, err)
-		return 1
-	}
-	defaultPeriod, err := paramsReader.GetDelay(libparams.Default("10m"))
-	if err != nil {
-		logger.Error(err)
-		notify(4, err)
-		return 1
-	}
-	dir, err := paramsReader.GetExeDir()
-	if err != nil {
-		logger.Error(err)
-		notify(4, err)
-		return 1
-	}
-	dataDir, err := paramsReader.GetDataDir(dir)
+	dir, dataDir, listeningPort, rootURL, defaultPeriod, backupPeriod, backupDirectory, err := getParams(paramsReader)
 	if err != nil {
 		logger.Error(err)
 		notify(4, err)
@@ -179,6 +153,8 @@ func _main(ctx context.Context) int {
 		)
 	}()
 
+	go backupRunLoop(ctx, backupPeriod, dir, backupDirectory, logger, timeNow)
+
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals,
 		syscall.SIGINT,
@@ -229,4 +205,70 @@ func setupGotify(paramsReader params.Reader, logger logging.Logger) (notify func
 			logger.Error(err)
 		}
 	}, nil
+}
+
+func getParams(paramsReader params.Reader) (
+	dir, dataDir,
+	listeningPort, rootURL string,
+	defaultPeriod time.Duration,
+	backupPeriod time.Duration, backupDirectory string,
+	err error) {
+	dir, err = paramsReader.GetExeDir()
+	if err != nil {
+		return "", "", "", "", 0, 0, "", err
+	}
+	dataDir, err = paramsReader.GetDataDir(dir)
+	if err != nil {
+		return "", "", "", "", 0, 0, "", err
+	}
+	listeningPort, _, err = paramsReader.GetListeningPort()
+	if err != nil {
+		return "", "", "", "", 0, 0, "", err
+	}
+	rootURL, err = paramsReader.GetRootURL()
+	if err != nil {
+		return "", "", "", "", 0, 0, "", err
+	}
+	defaultPeriod, err = paramsReader.GetDelay(libparams.Default("10m"))
+	if err != nil {
+		return "", "", "", "", 0, 0, "", err
+	}
+
+	backupPeriod, err = paramsReader.GetBackupPeriod()
+	if err != nil {
+		return "", "", "", "", 0, 0, "", err
+	}
+	backupDirectory, err = paramsReader.GetBackupDirectory()
+	if err != nil {
+		return "", "", "", "", 0, 0, "", err
+	}
+	return dir, dataDir, listeningPort, rootURL, defaultPeriod, backupPeriod, backupDirectory, nil
+}
+
+func backupRunLoop(ctx context.Context, backupPeriod time.Duration, exeDir, outputDir string,
+	logger logging.Logger, timeNow func() time.Time) {
+	logger = logger.WithPrefix("backup: ")
+	if backupPeriod == 0 {
+		logger.Info("disabled")
+		return
+	}
+	logger.Info("each %s; writing zip files to directory %s", backupPeriod, outputDir)
+	ziper := backup.NewZiper()
+	timer := time.NewTimer(backupPeriod)
+	for {
+		filepath := fmt.Sprintf("%s/ddns-updater-backup-%d.zip", outputDir, timeNow().UnixNano())
+		if err := ziper.ZipFiles(
+			filepath,
+			fmt.Sprintf("%s/data/updates.json", exeDir),
+			fmt.Sprintf("%s/data/config.json", exeDir)); err != nil {
+			logger.Error(err)
+		}
+		select {
+		case <-timer.C:
+			timer.Reset(backupPeriod)
+		case <-ctx.Done():
+			timer.Stop()
+			return
+		}
+	}
 }

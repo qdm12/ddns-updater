@@ -22,6 +22,8 @@ type Reader interface {
 	GetDelay(setters ...libparams.GetEnvSetter) (duration time.Duration, err error)
 	GetExeDir() (dir string, err error)
 	GetHTTPTimeout() (duration time.Duration, err error)
+	GetBackupPeriod() (duration time.Duration, err error)
+	GetBackupDirectory() (directory string, err error)
 
 	// Version getters
 	GetVersion() string
@@ -87,4 +89,16 @@ func (r *reader) GetExeDir() (dir string, err error) {
 
 func (r *reader) GetHTTPTimeout() (duration time.Duration, err error) {
 	return r.envParams.GetHTTPTimeout(libparams.Default("10s"))
+}
+
+func (r *reader) GetBackupPeriod() (duration time.Duration, err error) {
+	s, err := r.envParams.GetEnv("BACKUP_PERIOD", libparams.Default("0"))
+	if err != nil {
+		return 0, err
+	}
+	return time.ParseDuration(s)
+}
+
+func (r *reader) GetBackupDirectory() (directory string, err error) {
+	return r.envParams.GetEnv("BACKUP_DIRECTORY", libparams.Default("./data"))
 }

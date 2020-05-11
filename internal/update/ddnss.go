@@ -4,30 +4,39 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/qdm12/golibs/network"
 )
 
 func updateDDNSS(client network.Client, domain, host, username, password string, ip net.IP) error {
-	var hostname string
-	if host == "@" {
-		hostname = strings.ToLower(domain)
-	} else {
-		hostname = strings.ToLower(host + "." + domain)
+	u := url.URL{
+		Scheme: "https",
+		Host:   "www.ddnss.de",
+		Path:   "/upd.php",
 	}
-	url := fmt.Sprintf("http://www.ddnss.de/upd.php?user=%s&pwd=%s&host=%s", username, password, hostname)
+	var values url.Values
+	values.Set("user", username)
+	values.Set("pwd", password)
+	fqdn := domain
+	if host != "@" {
+		fqdn = host + "." + domain
+	}
+	values.Set("host", fqdn)
 	if ip != nil {
 		if ip.To4() == nil { // ipv6
-			url += fmt.Sprintf("&ip6=%s", ip)
+			values.Set("ip6", ip.String())
 		} else {
-			url += fmt.Sprintf("&ip=%s", ip)
+			values.Set("ip", ip.String())
 		}
 	}
-	r, err := http.NewRequest(http.MethodGet, url, nil)
+	u.RawQuery = values.Encode()
+	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
 		return err
 	}
+	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return err
@@ -42,7 +51,7 @@ func updateDDNSS(client network.Client, domain, host, username, password string,
 	case strings.Contains(s, "badauth"):
 		return fmt.Errorf("ddnss.de: bad authentication")
 	case strings.Contains(s, "notfqdn"):
-		return fmt.Errorf("ddnss.de: hostname %q does not exist", hostname)
+		return fmt.Errorf("ddnss.de: hostname %q does not exist", fqdn)
 	case strings.Contains(s, "Updated 1 hostname"):
 		return nil
 	default:

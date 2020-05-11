@@ -15,20 +15,26 @@ func updateDNSPod(client network.Client, domain, host, token string, ip net.IP) 
 	if ip == nil {
 		return fmt.Errorf("IP address was not given to updater")
 	}
-	body := bytes.NewBufferString(url.Values{
-		"login_token": []string{token},
-		"format":      []string{"json"},
-		"domain":      []string{domain},
-		"length":      []string{"200"},
-		"sub_domain":  []string{host},
-		"record_type": []string{"A"},
-	}.Encode())
-	req, err := http.NewRequest(http.MethodPost, "https://dnsapi.cn/Record.List", body)
+	u := url.URL{
+		Scheme: "https",
+		Host:   "dnsapi.cn",
+		Path:   "/Record.List",
+	}
+	var values url.Values
+	values.Set("login_token", token)
+	values.Set("format", "json")
+	values.Set("domain", domain)
+	values.Set("length", "200")
+	values.Set("sub_domain", host)
+	values.Set("record_type", "A")
+	u.RawQuery = values.Encode()
+	r, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBufferString(values.Encode()))
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	status, content, err := client.DoHTTPRequest(req)
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return err
 	} else if status != http.StatusOK {
@@ -61,21 +67,24 @@ func updateDNSPod(client network.Client, domain, host, token string, ip net.IP) 
 	if len(recordID) == 0 {
 		return fmt.Errorf("record not found")
 	}
-	body = bytes.NewBufferString(url.Values{
-		"login_token": []string{token},
-		"format":      []string{"json"},
-		"domain":      []string{domain},
-		"record_id":   []string{recordID},
-		"value":       []string{ip.String()},
-		"record_line": []string{recordLine},
-		"sub_domain":  []string{host},
-	}.Encode())
-	req, err = http.NewRequest(http.MethodPost, "https://dnsapi.cn/Record.Ddns", body)
+
+	u.Path = "/Record.Ddns"
+	values = url.Values{}
+	values.Set("login_token", token)
+	values.Set("format", "json")
+	values.Set("domain", domain)
+	values.Set("record_id", recordID)
+	values.Set("value", ip.String())
+	values.Set("record_line", recordLine)
+	values.Set("sub_domain", host)
+	u.RawQuery = values.Encode()
+	r, err = http.NewRequest(http.MethodPost, u.String(), bytes.NewBufferString(values.Encode()))
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	status, content, err = client.DoHTTPRequest(req)
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	status, content, err = client.DoHTTPRequest(r)
 	if err != nil {
 		return err
 	} else if status != http.StatusOK {

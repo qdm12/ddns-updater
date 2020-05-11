@@ -20,7 +20,7 @@ func updateDNSPod(client network.Client, domain, host, token string, ip net.IP) 
 		Host:   "dnsapi.cn",
 		Path:   "/Record.List",
 	}
-	var values url.Values
+	values := url.Values{}
 	values.Set("login_token", token)
 	values.Set("format", "json")
 	values.Set("domain", domain)

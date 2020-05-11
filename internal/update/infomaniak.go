@@ -17,7 +17,7 @@ func updateInfomaniak(client network.Client, domain, host, username, password st
 		Path:   "/nic/update",
 		User:   url.UserPassword(username, password),
 	}
-	var values url.Values
+	values := url.Values{}
 	values.Set("hostname", domain)
 	if host != "@" {
 		values.Set("hostname", host+"."+domain)

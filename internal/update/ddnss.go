@@ -16,7 +16,7 @@ func updateDDNSS(client network.Client, domain, host, username, password string,
 		Host:   "www.ddnss.de",
 		Path:   "/upd.php",
 	}
-	var values url.Values
+	values := url.Values{}
 	values.Set("user", username)
 	values.Set("pwd", password)
 	fqdn := domain

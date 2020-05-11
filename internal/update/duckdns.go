@@ -16,7 +16,7 @@ func updateDuckDNS(client network.Client, domain, token string, ip net.IP) (newI
 		Host:   "www.duckdns.org",
 		Path:   "/update",
 	}
-	var values url.Values
+	values := url.Values{}
 	values.Set("verbose", "true")
 	values.Set("domains", domain)
 	values.Set("token", token)

@@ -18,7 +18,7 @@ func updateNoIP(client network.Client, hostname, username, password string, ip n
 		Path:   "/nic/update",
 		User:   url.UserPassword(username, password),
 	}
-	var values url.Values
+	values := url.Values{}
 	values.Set("hostname", hostname)
 	if ip != nil {
 		values.Set("myip", ip.String())

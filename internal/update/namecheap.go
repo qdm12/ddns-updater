@@ -17,7 +17,7 @@ func updateNamecheap(client network.Client, host, domain, password string, ip ne
 		Path:   "/update",
 		// User:   url.UserPassword(username, password),
 	}
-	var values url.Values
+	values := url.Values{}
 	values.Set("host", host)
 	values.Set("domain", domain)
 	values.Set("password", password)

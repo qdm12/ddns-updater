@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/network"
 	libnetwork "github.com/qdm12/golibs/network"
 )
@@ -22,9 +22,13 @@ func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host
 		Proxied bool   `json:"proxied"` // whether the record is receiving the performance and security benefits of Cloudflare
 		TTL     uint   `json:"ttl"`
 	}
-	URL := constants.CloudflareURL + "/zones/" + zoneIdentifier + "/dns_records/" + identifier
+	u := url.URL{
+		Scheme: "https",
+		Host:   "api.cloudflare.com",
+		Path:   fmt.Sprintf("/client/v4/zones/%s/dns_records/%s", zoneIdentifier, identifier),
+	}
 	r, err := network.BuildHTTPPut(
-		URL,
+		u.String(),
 		cloudflarePutBody{
 			Type:    "A",
 			Name:    host,
@@ -36,6 +40,7 @@ func updateCloudflare(client libnetwork.Client, zoneIdentifier, identifier, host
 	if err != nil {
 		return err
 	}
+	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	switch {
 	case len(token) > 0:
 		r.Header.Set("Authorization", "Bearer "+token)

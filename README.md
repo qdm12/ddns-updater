@@ -148,12 +148,12 @@ Namecheap:
 
 Cloudflare:
 
-- `"zone_identifier"`
-- `"identifier"`
+- `"zone_identifier"` is the Zone ID of your site
+- `"identifier"` is the DNS record identifier as returned by the Cloudflare "List DNS Records" API (see below)
 - `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
 - `"ttl"` integer value for record TTL in seconds (specify 1 for automatic)
 - One of the following:
-    - Email `"email"` and key `"key"`
+    - Email `"email"` and Global API Key `"key"`
     - User service key `"user_service_key"`
     - API Token `"token"`, configured with DNS edit permissions for your DNS name's zone.
 - *Optionally*, `"proxied"` can be `true` or `false` to use the proxy services of Cloudflare
@@ -217,6 +217,8 @@ DYNDNS:
 | `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
 | `GOTIFY_URL` |  | (optional) HTTP(s) URL to your Gotify server |
 | `GOTIFY_TOKEN` |  | (optional) Token to access your Gotify server |
+| `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file |
+| `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`.
 
 ### Host firewall
 

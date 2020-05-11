@@ -4,22 +4,31 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
+	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
 )
 
 func updateDuckDNS(client network.Client, domain, token string, ip net.IP) (newIP net.IP, err error) {
-	url := constants.DuckDNSURL + "?domains=" + strings.ToLower(domain) + "&token=" + token + "&verbose=true"
-	if ip != nil {
-		url += "&ip=" + ip.String()
+	u := url.URL{
+		Scheme: "https",
+		Host:   "www.duckdns.org",
+		Path:   "/update",
 	}
-	r, err := http.NewRequest(http.MethodGet, url, nil)
+	values := url.Values{}
+	values.Set("verbose", "true")
+	values.Set("domains", domain)
+	values.Set("token", token)
+	u.RawQuery = values.Encode()
+	if ip != nil {
+		values.Set("ip", ip.String())
+	}
+	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
+	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return nil, err

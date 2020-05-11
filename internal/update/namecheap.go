@@ -5,21 +5,31 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
+	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/golibs/network"
 )
 
 func updateNamecheap(client network.Client, host, domain, password string, ip net.IP) (newIP net.IP, err error) {
-	url := constants.NamecheapURL + "?host=" + strings.ToLower(host) + "&domain=" + strings.ToLower(domain) + "&password=" + password
-	if ip != nil {
-		url += "&ip=" + ip.String()
+	u := url.URL{
+		Scheme: "https",
+		Host:   "dynamicdns.park-your-domain.com",
+		Path:   "/update",
+		// User:   url.UserPassword(username, password),
 	}
-	r, err := http.NewRequest(http.MethodGet, url, nil)
+	values := url.Values{}
+	values.Set("host", host)
+	values.Set("domain", domain)
+	values.Set("password", password)
+	if ip != nil {
+		values.Set("ip", ip.String())
+	}
+	u.RawQuery = values.Encode()
+	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
+	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return nil, err

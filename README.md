@@ -148,12 +148,12 @@ Namecheap:
 
 Cloudflare:
 
-- `"zone_identifier"`
-- `"identifier"`
+- `"zone_identifier"` is the Zone ID of your site
+- `"identifier"` is the DNS record identifier as returned by the Cloudflare "List DNS Records" API (see below)
 - `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
 - `"ttl"` integer value for record TTL in seconds (specify 1 for automatic)
 - One of the following:
-    - Email `"email"` and key `"key"`
+    - Email `"email"` and Global API Key `"key"`
     - User service key `"user_service_key"`
     - API Token `"token"`, configured with DNS edit permissions for your DNS name's zone.
 - *Optionally*, `"proxied"` can be `true` or `false` to use the proxy services of Cloudflare

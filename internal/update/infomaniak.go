@@ -4,26 +4,33 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/qdm12/golibs/network"
 )
 
 func updateInfomaniak(client network.Client, domain, host, username, password string, ip net.IP) (newIP net.IP, err error) {
-	var hostname string
-	if host == "@" {
-		hostname = strings.ToLower(domain)
-	} else {
-		hostname = strings.ToLower(host + "." + domain)
+	u := url.URL{
+		Scheme: "https",
+		Host:   "infomaniak.com",
+		Path:   "/nic/update",
+		User:   url.UserPassword(username, password),
 	}
-	url := fmt.Sprintf("https://%s:%s@infomaniak.com/nic/update?hostname=%s", username, password, hostname)
+	values := url.Values{}
+	values.Set("hostname", domain)
+	if host != "@" {
+		values.Set("hostname", host+"."+domain)
+	}
 	if ip != nil {
-		url += fmt.Sprintf("&myip=%s", ip)
+		values.Set("myip", ip.String())
 	}
-	r, err := http.NewRequest(http.MethodGet, url, nil)
+	u.RawQuery = values.Encode()
+	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
+	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return nil, err

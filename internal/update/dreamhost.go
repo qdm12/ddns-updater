@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
+	"net/url"
 
 	"github.com/google/uuid"
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/golibs/network"
 )
 
@@ -30,12 +29,26 @@ type (
 	}
 )
 
+func makeDreamhostDefaultValues(key string) (values url.Values) { //nolint:unparam
+	values.Set("key", key)
+	values.Set("unique_id", uuid.New().String())
+	values.Set("format", "json")
+	return values
+}
+
 func listDreamhostRecords(client network.Client, key string) (records dreamHostRecords, err error) {
-	url := constants.DreamhostURL + "/?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-list_records"
-	r, err := http.NewRequest(http.MethodGet, url, nil)
+	u := url.URL{
+		Scheme: "https",
+		Host:   "api.dreamhost.com",
+	}
+	values := makeDreamhostDefaultValues(key)
+	values.Set("cmd", "dns-list_records")
+	u.RawQuery = values.Encode()
+	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
 		return records, err
 	}
+	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return records, err
@@ -50,12 +63,22 @@ func listDreamhostRecords(client network.Client, key string) (records dreamHostR
 	return records, nil
 }
 
-func removeDreamhostRecord(client network.Client, key, domain string, ip net.IP) error {
-	url := constants.DreamhostURL + "?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-remove_record&record=" + strings.ToLower(domain) + "&type=A&value=" + ip.String()
-	r, err := http.NewRequest(http.MethodGet, url, nil)
+func removeDreamhostRecord(client network.Client, key, domain string, ip net.IP) error { //nolint:dupl
+	u := url.URL{
+		Scheme: "https",
+		Host:   "api.dreamhost.com",
+	}
+	values := makeDreamhostDefaultValues(key)
+	values.Set("cmd", "dns-remove_record")
+	values.Set("record", domain)
+	values.Set("type", "A")
+	values.Set("value", ip.String())
+	u.RawQuery = values.Encode()
+	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
 		return err
 	}
+	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return err
@@ -71,12 +94,22 @@ func removeDreamhostRecord(client network.Client, key, domain string, ip net.IP)
 	return nil
 }
 
-func addDreamhostRecord(client network.Client, key, domain string, ip net.IP) error {
-	url := constants.DreamhostURL + "?key=" + key + "&unique_id=" + uuid.New().String() + "&format=json&cmd=dns-add_record&record=" + strings.ToLower(domain) + "&type=A&value=" + ip.String()
-	r, err := http.NewRequest(http.MethodGet, url, nil)
+func addDreamhostRecord(client network.Client, key, domain string, ip net.IP) error { //nolint:dupl
+	u := url.URL{
+		Scheme: "https",
+		Host:   "api.dreamhost.com",
+	}
+	values := makeDreamhostDefaultValues(key)
+	values.Set("cmd", "dns-add_record")
+	values.Set("record", domain)
+	values.Set("type", "A")
+	values.Set("value", ip.String())
+	u.RawQuery = values.Encode()
+	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
 		return err
 	}
+	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return err

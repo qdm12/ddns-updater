@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
+	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/network"
 	libnetwork "github.com/qdm12/golibs/network"
 )
@@ -19,18 +18,16 @@ func updateGoDaddy(client libnetwork.Client, host, domain, key, secret string, i
 	type goDaddyPutBody struct {
 		Data string `json:"data"` // IP address to update to
 	}
-	URL := constants.GoDaddyURL + "/" + strings.ToLower(domain) + "/records/A/" + strings.ToLower(host)
-	r, err := network.BuildHTTPPut(
-		URL,
-		[]goDaddyPutBody{
-			{
-				ip.String(),
-			},
-		},
-	)
+	u := url.URL{
+		Scheme: "https",
+		Host:   "api.godaddy.com",
+		Path:   fmt.Sprintf("/v1/domains/%s/records/A/%s", domain, host),
+	}
+	r, err := network.BuildHTTPPut(u.String(), []goDaddyPutBody{{ip.String()}})
 	if err != nil {
 		return err
 	}
+	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	r.Header.Set("Authorization", "sso-key "+key+":"+secret)
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {

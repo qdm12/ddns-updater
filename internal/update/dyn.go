@@ -35,12 +35,22 @@ func updateDyn(client network.Client, username, password, domain, host string, i
 		return err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	status, _, err := client.DoHTTPRequest(r)
+	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return err
 	}
 	if status != http.StatusOK {
 		return fmt.Errorf("HTTP status %d", status)
 	}
-	return nil
+	s := string(content)
+	switch s {
+	case "notfqdn":
+		return fmt.Errorf("fully qualified domain name is not valid")
+	case "badrequest":
+		return fmt.Errorf("bad request")
+	case "success":
+		return nil
+	default:
+		return fmt.Errorf("unknown response: %s", s)
+	}
 }

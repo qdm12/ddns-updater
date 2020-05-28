@@ -94,7 +94,7 @@ func (r *reader) GetSettings(filePath string) (allSettings []settings.Settings, 
 		default:
 			return nil, nil, fmt.Errorf("provider %q is not supported", provider)
 		}
-		allSettings[i], err = settingsConstructor(rawConfig.Settings[i], s.Domain, s.Host, s.IPVersion, s.NoDNSLookup)
+		allSettings[i], err = settingsConstructor(rawConfig.Settings[i], s.Domain, s.Host, ipVersion, s.NoDNSLookup)
 		if err != nil {
 			return nil, nil, err
 		}

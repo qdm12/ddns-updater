@@ -102,11 +102,11 @@ func (r *runner) updateNecessary(records []librecords.Record, ip, ipv4, ipv6 net
 		var err error
 		switch {
 		case updateIP && record.Settings.IPVersion() == constants.IPv4OrIPv6:
-			err = r.updater.Update(id, ip, now)
+			err = r.updater.Update(id, newIP, now)
 		case updateIPv4 && record.Settings.IPVersion() == constants.IPv4:
-			err = r.updater.Update(id, ipv4, now)
+			err = r.updater.Update(id, newIPv4, now)
 		case updateIPv6 && record.Settings.IPVersion() == constants.IPv6:
-			err = r.updater.Update(id, ipv6, now)
+			err = r.updater.Update(id, newIPv6, now)
 		}
 		if err != nil {
 			r.logger.Error(err)

@@ -1,21 +1,24 @@
-package models
+package records
 
 import (
 	"fmt"
 	"time"
+
+	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/settings"
 )
 
 // Record contains all the information to update and display a DNS record
 type Record struct { // internal
-	Settings Settings // fixed
-	History  History  // past information
-	Status   Status
+	Settings settings.Settings // fixed
+	History  models.History    // past information
+	Status   models.Status
 	Message  string
 	Time     time.Time
 }
 
-// NewRecord returns a new Record with settings and some history
-func NewRecord(settings Settings, events []HistoryEvent) Record {
+// New returns a new Record with settings and some history
+func New(settings settings.Settings, events []models.HistoryEvent) Record {
 	return Record{
 		Settings: settings,
 		History:  events,

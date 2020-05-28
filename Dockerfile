@@ -5,7 +5,7 @@ FROM alpine:${ALPINE_VERSION} AS alpine
 RUN apk --update add ca-certificates tzdata
 
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
-ARG GOLANGCI_LINT_VERSION=v1.26.0
+ARG GOLANGCI_LINT_VERSION=v1.27.0
 RUN apk --update add git
 ENV CGO_ENABLED=0
 RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s ${GOLANGCI_LINT_VERSION}
@@ -39,16 +39,27 @@ EXPOSE 8000
 HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=2 CMD ["/updater/app", "healthcheck"]
 USER 1000
 ENTRYPOINT ["/updater/app"]
-ENV DELAY=10m \
-    ROOT_URL=/ \
+ENV \
+    # Core
+    PERIOD=5m \
+    IP_METHOD=cycle \
+    IPV4_METHOD=cycle \
+    IPV6_METHOD=cycle \
+    HTTP_TIMEOUT=10s \
+
+    # Web UI
     LISTENING_PORT=8000 \
+    ROOT_URL=/ \
+
+    # Backup
+    BACKUP_PERIOD=0 \
+    BACKUP_DIRECTORY=/updater/data \
+
+    # Other
     LOG_ENCODING=console \
     LOG_LEVEL=info \
-    NODE_ID=0 \
-    HTTP_TIMEOUT=10s \
+    NODE_ID=-1 \
     GOTIFY_URL= \
-    GOTIFY_TOKEN= \
-    BACKUP_PERIOD=0 \
-    BACKUP_DIRECTORY=/updater/data
+    GOTIFY_TOKEN=
 COPY --from=builder --chown=1000 /tmp/gobuild/app /updater/app
 COPY --chown=1000 ui/* /updater/ui/

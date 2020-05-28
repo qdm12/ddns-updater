@@ -30,7 +30,7 @@ type cloudflare struct {
 	ttl            uint
 }
 
-func NewCloudflare(data json.RawMessage, domain, host, ipVersion string, noDNSLookup bool) (s Settings, err error) {
+func NewCloudflare(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
 	extraSettings := struct {
 		Key            string `json:"key"`
 		Token          string `json:"token"`
@@ -47,7 +47,7 @@ func NewCloudflare(data json.RawMessage, domain, host, ipVersion string, noDNSLo
 	c := &cloudflare{
 		domain:         domain,
 		host:           host,
-		ipVersion:      models.IPVersion(ipVersion),
+		ipVersion:      ipVersion,
 		dnsLookup:      !noDNSLookup,
 		key:            extraSettings.Key,
 		token:          extraSettings.Token,

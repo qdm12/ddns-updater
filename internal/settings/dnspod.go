@@ -20,7 +20,7 @@ type dnspod struct {
 	token     string
 }
 
-func NewDNSPod(data json.RawMessage, domain, host, ipVersion string, noDNSLookup bool) (s Settings, err error) {
+func NewDNSPod(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
@@ -30,7 +30,7 @@ func NewDNSPod(data json.RawMessage, domain, host, ipVersion string, noDNSLookup
 	d := &dnspod{
 		domain:    domain,
 		host:      host,
-		ipVersion: models.IPVersion(ipVersion),
+		ipVersion: ipVersion,
 		dnsLookup: !noDNSLookup,
 		token:     extraSettings.Token,
 	}

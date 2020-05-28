@@ -21,7 +21,7 @@ type dreamhost struct {
 	key       string
 }
 
-func NewDreamhost(data json.RawMessage, domain, host, ipVersion string, noDNSLookup bool) (s Settings, err error) {
+func NewDreamhost(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
 	extraSettings := struct {
 		Key string `json:"key"`
 	}{}
@@ -31,7 +31,7 @@ func NewDreamhost(data json.RawMessage, domain, host, ipVersion string, noDNSLoo
 	d := &dreamhost{
 		domain:    domain,
 		host:      host,
-		ipVersion: models.IPVersion(ipVersion),
+		ipVersion: ipVersion,
 		dnsLookup: !noDNSLookup,
 		key:       extraSettings.Key,
 	}

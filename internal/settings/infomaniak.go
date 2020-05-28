@@ -23,7 +23,7 @@ type infomaniak struct {
 	useProviderIP bool
 }
 
-func NewInfomaniak(data json.RawMessage, domain, host, ipVersion string, noDNSLookup bool) (s Settings, err error) {
+func NewInfomaniak(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -35,7 +35,7 @@ func NewInfomaniak(data json.RawMessage, domain, host, ipVersion string, noDNSLo
 	i := &infomaniak{
 		domain:        domain,
 		host:          host,
-		ipVersion:     models.IPVersion(ipVersion),
+		ipVersion:     ipVersion,
 		dnsLookup:     !noDNSLookup,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,

@@ -23,7 +23,7 @@ type duckdns struct {
 	useProviderIP bool
 }
 
-func NewDuckdns(data json.RawMessage, domain, host, ipVersion string, noDNSLookup bool) (s Settings, err error) {
+func NewDuckdns(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
 	extraSettings := struct {
 		Token         string `json:"token"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -34,7 +34,7 @@ func NewDuckdns(data json.RawMessage, domain, host, ipVersion string, noDNSLooku
 	d := &duckdns{
 		domain:        domain,
 		host:          host,
-		ipVersion:     models.IPVersion(ipVersion),
+		ipVersion:     ipVersion,
 		dnsLookup:     !noDNSLookup,
 		token:         extraSettings.Token,
 		useProviderIP: extraSettings.UseProviderIP,

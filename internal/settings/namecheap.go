@@ -23,7 +23,7 @@ type namecheap struct {
 	useProviderIP bool
 }
 
-func NewNamecheap(data json.RawMessage, domain, host, ipVersion string, noDNSLookup bool) (s Settings, err error) {
+func NewNamecheap(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
 	extraSettings := struct {
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -34,7 +34,7 @@ func NewNamecheap(data json.RawMessage, domain, host, ipVersion string, noDNSLoo
 	n := &namecheap{
 		domain:        domain,
 		host:          host,
-		ipVersion:     models.IPVersion(ipVersion),
+		ipVersion:     ipVersion,
 		dnsLookup:     !noDNSLookup,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,

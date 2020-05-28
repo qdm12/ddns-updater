@@ -22,7 +22,7 @@ type godaddy struct {
 	secret    string
 }
 
-func NewGodaddy(data json.RawMessage, domain, host, ipVersion string, noDNSLookup bool) (s Settings, err error) {
+func NewGodaddy(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
 	extraSettings := struct {
 		Key    string `json:"key"`
 		Secret string `json:"secret"`
@@ -33,7 +33,7 @@ func NewGodaddy(data json.RawMessage, domain, host, ipVersion string, noDNSLooku
 	g := &godaddy{
 		domain:    domain,
 		host:      host,
-		ipVersion: models.IPVersion(ipVersion),
+		ipVersion: ipVersion,
 		dnsLookup: !noDNSLookup,
 		key:       extraSettings.Key,
 		secret:    extraSettings.Secret,

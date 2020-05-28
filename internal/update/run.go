@@ -33,20 +33,20 @@ func NewRunner(updater Updater, ipGetter IPGetter, logger logging.Logger, timeNo
 func readPersistedIPs(records []librecords.Record) (ip, ipv4, ipv6 net.IP) {
 	for _, record := range records {
 		switch record.Settings.IPVersion() {
-		case "":
+		case constants.IPv4OrIPv6:
 			ip = record.History.GetCurrentIP()
 			if ip == nil {
 				ip = net.IP{127, 0, 0, 1}
 			}
 		case constants.IPv4:
 			ipv4 = record.History.GetCurrentIP()
-			if ip == nil {
-				ip = net.IP{127, 0, 0, 1}
+			if ipv4 == nil {
+				ipv4 = net.IP{127, 0, 0, 1}
 			}
 		case constants.IPv6:
 			ipv6 = record.History.GetCurrentIP()
-			if ip == nil {
-				ip = net.IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
+			if ipv6 == nil {
+				ipv6 = net.IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
 			}
 		}
 		if ip != nil && ipv4 != nil && ipv6 != nil {
@@ -79,23 +79,29 @@ func (r *runner) getNewIPs(doIP, doIPv4, doIPv6 bool) (ip, ipv4, ipv6 net.IP, er
 	return ip, ipv4, ipv6, errors
 }
 
-func (r *runner) updateNecessary(records []librecords.Record, ip, ipv4, ipv6 net.IP) (newIP, newIPv4, newIPv6 net.IP) {
+func (r *runner) updateNecessary(records []librecords.Record, ip, ipv4, ipv6 net.IP, force bool) (newIP, newIPv4, newIPv6 net.IP) {
 	newIP, newIPv4, newIPv6, errors := r.getNewIPs(ip != nil, ipv4 != nil, ipv6 != nil)
 	for _, err := range errors {
 		r.logger.Error(err)
 	}
 	var updateIP, updateIPv4, updateIPv6 bool
-	if ip != nil && newIP != nil && !ip.Equal(newIP) {
-		r.logger.Info("IP address changed from %s to %s", ip, newIP)
+	if ip != nil && newIP != nil && (force || !ip.Equal(newIP)) {
 		updateIP = true
+		if !force {
+			r.logger.Info("IP address changed from %s to %s", ip, newIP)
+		}
 	}
-	if ipv4 != nil && newIPv4 != nil && !ipv4.Equal(newIPv4) {
-		r.logger.Info("IPv4 address changed from %s to %s", ipv4, newIPv4)
+	if ipv4 != nil && newIPv4 != nil && (force || !ipv4.Equal(newIPv4)) {
 		updateIPv4 = true
+		if !force {
+			r.logger.Info("IPv4 address changed from %s to %s", ipv4, newIPv4)
+		}
 	}
-	if ipv6 != nil && newIPv6 != nil && !ipv6.Equal(newIPv6) {
-		r.logger.Info("IPv6 address changed from %s to %s", ipv6, newIPv6)
+	if ipv6 != nil && newIPv6 != nil && (force || !ipv6.Equal(newIPv6)) {
 		updateIPv6 = true
+		if !force {
+			r.logger.Info("IPv6 address changed from %s to %s", ipv6, newIPv6)
+		}
 	}
 	for id, record := range records {
 		now := r.timeNow()
@@ -121,13 +127,15 @@ func (r *runner) Run(ctx context.Context, period time.Duration, records []librec
 	timer := time.NewTicker(period)
 	forceChannel := make(chan struct{})
 	go func() {
+		r.logger.Info("reading persisted ips")
 		ip, ipv4, ipv6 := readPersistedIPs(records)
+		r.logger.Info("done reading persisted ips")
 		for {
 			select {
 			case <-timer.C:
-				ip, ipv4, ipv6 = r.updateNecessary(records, ip, ipv4, ipv6)
+				ip, ipv4, ipv6 = r.updateNecessary(records, ip, ipv4, ipv6, false)
 			case <-forceChannel:
-				ip, ipv4, ipv6 = r.updateNecessary(records, ip, ipv4, ipv6)
+				ip, ipv4, ipv6 = r.updateNecessary(records, ip, ipv4, ipv6, true)
 			case <-ctx.Done():
 				timer.Stop()
 				return

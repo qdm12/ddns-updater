@@ -79,29 +79,36 @@ func (r *runner) getNewIPs(doIP, doIPv4, doIPv6 bool) (ip, ipv4, ipv6 net.IP, er
 	return ip, ipv4, ipv6, errors
 }
 
+func shouldUpdate(ip, newIP net.IP, force bool) bool {
+	ipVersionDisabled := ip == nil
+	ipFetchFailed := newIP == nil
+	ipChanged := !ip.Equal(newIP)
+	switch {
+	case ipVersionDisabled, ipFetchFailed:
+		return false
+	case ipChanged, force:
+		return true
+	default:
+		return false
+	}
+}
+
 func (r *runner) updateNecessary(records []librecords.Record, ip, ipv4, ipv6 net.IP, force bool) (newIP, newIPv4, newIPv6 net.IP) {
 	newIP, newIPv4, newIPv6, errors := r.getNewIPs(ip != nil, ipv4 != nil, ipv6 != nil)
 	for _, err := range errors {
 		r.logger.Error(err)
 	}
-	var updateIP, updateIPv4, updateIPv6 bool
-	if ip != nil && newIP != nil && (force || !ip.Equal(newIP)) {
-		updateIP = true
-		if !force {
-			r.logger.Info("IP address changed from %s to %s", ip, newIP)
-		}
+	updateIP := shouldUpdate(ip, newIP, force)
+	updateIPv4 := shouldUpdate(ipv4, newIPv4, force)
+	updateIPv6 := shouldUpdate(ipv6, newIPv6, force)
+	if updateIP && !force {
+		r.logger.Info("IP address changed from %s to %s", ip, newIP)
 	}
-	if ipv4 != nil && newIPv4 != nil && (force || !ipv4.Equal(newIPv4)) {
-		updateIPv4 = true
-		if !force {
-			r.logger.Info("IPv4 address changed from %s to %s", ipv4, newIPv4)
-		}
+	if updateIPv4 && !force {
+		r.logger.Info("IPv4 address changed from %s to %s", ipv4, newIPv4)
 	}
-	if ipv6 != nil && newIPv6 != nil && (force || !ipv6.Equal(newIPv6)) {
-		updateIPv6 = true
-		if !force {
-			r.logger.Info("IPv6 address changed from %s to %s", ipv6, newIPv6)
-		}
+	if updateIPv6 && !force {
+		r.logger.Info("IPv6 address changed from %s to %s", ipv6, newIPv6)
 	}
 	for id, record := range records {
 		now := r.timeNow()

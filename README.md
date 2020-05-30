@@ -119,7 +119,7 @@ For all record update configuration, you need the following:
 You can optionnally add the parameters:
 
 - `"no_dns_lookup"` can be `true` or `false` and allows, if `true`, to prevent the periodic Docker healthcheck from running a DNS lookup on your domain.
-- `"provider_ip"` can be `true` or `false`. It is only available for the providers `ddnss`, `duckdns`, `infomaniak`, `namecheap` and `noip`. It allows to let your DNS provider to determine your IPv4 address (and/or IPv6 address) automatically when you send an update request, without sending the new IP address detected by the program in the request.
+- `"provider_ip"` can be `true` or `false`. It is only available for the providers `ddnss`, `duckdns`, `infomaniak`, `namecheap`, `noip` and `dyndns`. It allows to let your DNS provider to determine your IPv4 address (and/or IPv6 address) automatically when you send an update request, without sending the new IP address detected by the program in the request.
 
 For each DNS provider exist some specific parameters you need to add, as described below:
 

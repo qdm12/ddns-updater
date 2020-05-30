@@ -91,6 +91,8 @@ func (r *reader) GetSettings(filePath string) (allSettings []settings.Settings, 
 			settingsConstructor = settings.NewNamecheap
 		case constants.NOIP:
 			settingsConstructor = settings.NewNoip
+		case constants.DYN:
+			settingsConstructor = settings.NewDyn
 		default:
 			return nil, nil, fmt.Errorf("provider %q is not supported", provider)
 		}

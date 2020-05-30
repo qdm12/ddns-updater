@@ -153,6 +153,7 @@ Cloudflare:
     - User service key `"user_service_key"`
     - API Token `"token"`, configured with DNS edit permissions for your DNS name's zone.
 - *Optionally*, `"proxied"` can be `true` or `false` to use the proxy services of Cloudflare
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 GoDaddy:
 

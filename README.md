@@ -145,7 +145,6 @@ Namecheap:
 Cloudflare:
 
 - `"zone_identifier"` is the Zone ID of your site
-- `"identifier"` is the DNS record identifier as returned by the Cloudflare "List DNS Records" API (see below)
 - `"domain"`
 - `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
 - `"ttl"` integer value for record TTL in seconds (specify 1 for automatic)

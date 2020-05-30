@@ -121,6 +121,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) 
 		settingsConstructor = settings.NewDuckdns
 	case constants.GODADDY:
 		settingsConstructor = settings.NewGodaddy
+	case constants.GOOGLE:
+		settingsConstructor = settings.NewGoogle
 	case constants.INFOMANIAK:
 		settingsConstructor = settings.NewInfomaniak
 	case constants.NAMECHEAP:

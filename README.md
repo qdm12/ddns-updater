@@ -179,6 +179,11 @@ DDNSS.de:
 - `"host"` is your host and can be a subdomain or `"@"`
 - `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
+### Additional notes
+
+You can specify multiple hosts for the same domain using a comma separated list.
+For example with `"host": "@,subdomain1,subdomain2",`.
+
 ### Environment variables
 
 | Environment variable | Default | Description |
@@ -376,6 +381,7 @@ To set it up with DDNS updater:
 
 ## TODOs
 
+- DuckDNS is host without domain
 - [ ] Move provider specific setup from readme to Wiki
 - [ ] ReactJS frontend
     - Change settings

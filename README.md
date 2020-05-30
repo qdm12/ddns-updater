@@ -1,6 +1,6 @@
 # Lightweight universal DDNS Updater with Docker and web UI
 
-*Light container updating DNS A records periodically for GoDaddy, Namecheap, Cloudflare, Dreamhost, NoIP, DNSPod, Infomaniak, ddnss.de and DuckDNS*
+*Light container updating DNS A records periodically for Cloudflare, DDNSS.de, DNSPod, Dreamhost, DuckDNS, GoDaddy, Infomaniak, Namecheap and NoIP*
 
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
@@ -17,7 +17,7 @@
 
 ## Features
 
-- Updates periodically A records for different DNS providers: Namecheap, GoDaddy, Cloudflare, NoIP, Dreamhost, DuckDNS, DNSPod and Infomaniak (ask for more)
+- Updates periodically A records for different DNS providers: Cloudflare, DDNSS.de, DNSPod, Dreamhost, DuckDNS, GoDaddy, Infomaniak, Namecheap and NoIP ([create an issue](https://github.com/qdm12/ddns-updater/issues/new/choose) for more)
 - Web User interface
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
@@ -128,7 +128,7 @@ Start by having the following content in *config.json*, or in your `CONFIG` envi
 
 The following parameters are to be added:
 
-For all record update configuration, you have to specify the DNS provider with `"provider"` which can be `"godaddy"`, `"namecheap"`, `"duckdns"`, `"dreamhost"`, `"cloudflare"`, `"noip"`, `"dnspod"` or `"ddnss"`.
+For all record update configuration, you have to specify the DNS provider with `"provider"` which can be `"cloudflare"`, `"ddnss"`, `"dnspod"`, `"dreamhost"`, `"duckdns"`, `"godaddy"`, `"infomaniak"`, `"namecheap"` or `"noip"`.
 You can optionnally add the parameters:
 
 - `"no_dns_lookup"` can be `true` or `false` and allows, if `true`, to prevent the periodic Docker healthcheck from running a DNS lookup on your domain.

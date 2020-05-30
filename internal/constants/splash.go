@@ -4,7 +4,7 @@ const (
 	// Announcement is a message announcement
 	Announcement = "Support for Dyn DNS"
 	// AnnouncementExpiration is the expiration date of the announcement in format yyyy-mm-dd
-	AnnouncementExpiration = "2020-05-20"
+	AnnouncementExpiration = "2020-06-15"
 )
 
 const (

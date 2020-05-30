@@ -12,7 +12,7 @@ type HTMLRow struct {
 	Domain      HTML
 	Host        HTML
 	Provider    HTML
-	IPMethod    HTML
+	IPVersion   HTML
 	Status      HTML
 	CurrentIP   HTML
 	PreviousIPs HTML

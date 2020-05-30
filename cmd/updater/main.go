@@ -11,14 +11,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/qdm12/golibs/admin"
-	libhealthcheck "github.com/qdm12/golibs/healthcheck"
-	"github.com/qdm12/golibs/logging"
-	"github.com/qdm12/golibs/network"
-	"github.com/qdm12/golibs/network/connectivity"
-	libparams "github.com/qdm12/golibs/params"
-	"github.com/qdm12/golibs/server"
-
 	"github.com/qdm12/ddns-updater/internal/backup"
 	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/handlers"
@@ -26,15 +18,34 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/params"
 	"github.com/qdm12/ddns-updater/internal/persistence"
+	recordslib "github.com/qdm12/ddns-updater/internal/records"
 	"github.com/qdm12/ddns-updater/internal/splash"
-	"github.com/qdm12/ddns-updater/internal/trigger"
 	"github.com/qdm12/ddns-updater/internal/update"
+	"github.com/qdm12/golibs/admin"
+	libhealthcheck "github.com/qdm12/golibs/healthcheck"
+	"github.com/qdm12/golibs/logging"
+	"github.com/qdm12/golibs/network"
+	"github.com/qdm12/golibs/network/connectivity"
+	"github.com/qdm12/golibs/server"
 )
 
 func main() {
 	os.Exit(_main(context.Background(), time.Now))
 	// returns 1 on error
 	// returns 2 on os signal
+}
+
+type allParams struct {
+	period          time.Duration
+	ipMethod        models.IPMethod
+	ipv4Method      models.IPMethod
+	ipv6Method      models.IPMethod
+	dir             string
+	dataDir         string
+	listeningPort   string
+	rootURL         string
+	backupPeriod    time.Duration
+	backupDirectory string
 }
 
 func _main(ctx context.Context, timeNow func() time.Time) int {
@@ -66,20 +77,20 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		return 1
 	}
 
-	dir, dataDir, listeningPort, rootURL, defaultPeriod, backupPeriod, backupDirectory, err := getParams(paramsReader)
+	p, err := getParams(paramsReader, logger)
 	if err != nil {
 		logger.Error(err)
 		notify(4, err)
 		return 1
 	}
 
-	persistentDB, err := persistence.NewJSON(dataDir)
+	persistentDB, err := persistence.NewJSON(p.dataDir)
 	if err != nil {
 		logger.Error(err)
 		notify(4, err)
 		return 1
 	}
-	settings, warnings, err := paramsReader.GetSettings(dataDir + "/config.json")
+	settings, warnings, err := paramsReader.GetSettings(p.dataDir + "/config.json")
 	for _, w := range warnings {
 		logger.Warn(w)
 		notify(2, w)
@@ -92,28 +103,21 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	if len(settings) > 1 {
 		logger.Info("Found %d settings to update records", len(settings))
 	} else if len(settings) == 1 {
-		logger.Info("Found single setting to update records")
+		logger.Info("Found single setting to update record")
 	}
 	for _, err := range connectivity.NewConnectivity(5 * time.Second).Checks("google.com") {
 		logger.Warn(err)
 	}
-	records := make([]models.Record, len(settings))
-	idToPeriod := make(map[int]time.Duration)
-	i := 0
-	for id, setting := range settings {
-		logger.Info("Reading history from database: domain %s host %s", setting.Domain, setting.Host)
-		events, err := persistentDB.GetEvents(setting.Domain, setting.Host)
+	records := make([]recordslib.Record, len(settings))
+	for i, s := range settings {
+		logger.Info("Reading history from database: domain %s host %s", s.Domain(), s.Host())
+		events, err := persistentDB.GetEvents(s.Domain(), s.Host())
 		if err != nil {
 			logger.Error(err)
 			notify(4, err)
 			return 1
 		}
-		records[i] = models.NewRecord(setting, events)
-		idToPeriod[id] = defaultPeriod
-		if setting.Delay > 0 {
-			idToPeriod[id] = setting.Delay
-		}
-		i++
+		records[i] = recordslib.New(s, events)
 	}
 	HTTPTimeout, err := paramsReader.GetHTTPTimeout()
 	if err != nil {
@@ -130,30 +134,27 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		}
 	}()
 	updater := update.NewUpdater(db, logger, client, notify)
+	ipGetter := update.NewIPGetter(client, p.ipMethod, p.ipv4Method, p.ipv6Method)
+	runner := update.NewRunner(updater, ipGetter, logger, timeNow)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	checkError := func(err error) {
-		if err != nil {
-			logger.Error(err)
-		}
-	}
-	forceUpdate := trigger.StartUpdates(ctx, updater, idToPeriod, checkError)
+	forceUpdate := runner.Run(ctx, p.period, records)
 	forceUpdate()
-	productionHandlerFunc := handlers.NewHandler(rootURL, dir, db, logger, forceUpdate, checkError).GetHandlerFunc()
+	productionHandlerFunc := handlers.MakeHandler(p.rootURL, p.dir+"/ui", db, logger, forceUpdate, timeNow)
 	healthcheckHandlerFunc := libhealthcheck.GetHandler(func() error {
 		return healthcheck.IsHealthy(db, net.LookupIP, logger)
 	})
-	logger.Info("Web UI listening at address 0.0.0.0:%s with root URL %s", listeningPort, rootURL)
+	logger.Info("Web UI listening at address 0.0.0.0:%s with root URL %q", p.listeningPort, p.rootURL)
 	notify(1, fmt.Sprintf("Launched with %d records to watch", len(records)))
 	serverErrors := make(chan []error)
 	go func() {
 		serverErrors <- server.RunServers(ctx,
-			server.Settings{Name: "production", Addr: "0.0.0.0:" + listeningPort, Handler: productionHandlerFunc},
+			server.Settings{Name: "production", Addr: "0.0.0.0:" + p.listeningPort, Handler: productionHandlerFunc},
 			server.Settings{Name: "healthcheck", Addr: "127.0.0.1:9999", Handler: healthcheckHandlerFunc},
 		)
 	}()
 
-	go backupRunLoop(ctx, backupPeriod, dir, backupDirectory, logger, timeNow)
+	go backupRunLoop(ctx, p.backupPeriod, p.dir, p.backupDirectory, logger, timeNow)
 
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals,
@@ -207,42 +208,52 @@ func setupGotify(paramsReader params.Reader, logger logging.Logger) (notify func
 	}, nil
 }
 
-func getParams(paramsReader params.Reader) (
-	dir, dataDir,
-	listeningPort, rootURL string,
-	defaultPeriod time.Duration,
-	backupPeriod time.Duration, backupDirectory string,
-	err error) {
-	dir, err = paramsReader.GetExeDir()
-	if err != nil {
-		return "", "", "", "", 0, 0, "", err
+func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, err error) {
+	var warnings []string
+	p.period, warnings, err = paramsReader.GetPeriod()
+	for _, warning := range warnings {
+		logger.Warn(warning)
 	}
-	dataDir, err = paramsReader.GetDataDir(dir)
 	if err != nil {
-		return "", "", "", "", 0, 0, "", err
+		return p, err
 	}
-	listeningPort, _, err = paramsReader.GetListeningPort()
+	p.ipMethod, err = paramsReader.GetIPMethod()
 	if err != nil {
-		return "", "", "", "", 0, 0, "", err
+		return p, err
 	}
-	rootURL, err = paramsReader.GetRootURL()
+	p.ipv4Method, err = paramsReader.GetIPv4Method()
 	if err != nil {
-		return "", "", "", "", 0, 0, "", err
+		return p, err
 	}
-	defaultPeriod, err = paramsReader.GetDelay(libparams.Default("10m"))
+	p.ipv6Method, err = paramsReader.GetIPv6Method()
 	if err != nil {
-		return "", "", "", "", 0, 0, "", err
+		return p, err
 	}
-
-	backupPeriod, err = paramsReader.GetBackupPeriod()
+	p.dir, err = paramsReader.GetExeDir()
 	if err != nil {
-		return "", "", "", "", 0, 0, "", err
+		return p, err
 	}
-	backupDirectory, err = paramsReader.GetBackupDirectory()
+	p.dataDir, err = paramsReader.GetDataDir(p.dir)
 	if err != nil {
-		return "", "", "", "", 0, 0, "", err
+		return p, err
 	}
-	return dir, dataDir, listeningPort, rootURL, defaultPeriod, backupPeriod, backupDirectory, nil
+	p.listeningPort, _, err = paramsReader.GetListeningPort()
+	if err != nil {
+		return p, err
+	}
+	p.rootURL, err = paramsReader.GetRootURL()
+	if err != nil {
+		return p, err
+	}
+	p.backupPeriod, err = paramsReader.GetBackupPeriod()
+	if err != nil {
+		return p, err
+	}
+	p.backupDirectory, err = paramsReader.GetBackupDirectory()
+	if err != nil {
+		return p, err
+	}
+	return p, nil
 }
 
 func backupRunLoop(ctx context.Context, backupPeriod time.Duration, exeDir, outputDir string,

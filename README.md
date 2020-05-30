@@ -22,7 +22,7 @@
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
-- 12.3MB Docker image based on a Go static binary in a Scratch Docker image with ca-certificates and timezone data
+- 14MB Docker image based on a Go static binary in a Scratch Docker image with ca-certificates and timezone data
 - Persistence with a JSON file *updates.json* to store old IP addresses with change times for each record
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
@@ -56,21 +56,17 @@
                 "provider": "namecheap",
                 "domain": "example.com",
                 "host": "@",
-                "ip_method": "provider",
-                "delay": 86400,
                 "password": "e5322165c1d74692bfa6d807100c0310"
             },
             {
                 "provider": "duckdns",
                 "domain": "example.duckdns.org",
-                "ip_method": "provider",
                 "token": "00000000-0000-0000-0000-000000000000"
             },
             {
                 "provider": "godaddy",
                 "domain": "example.org",
                 "host": "subdomain",
-                "ip_method": "duckduckgo",
                 "key": "aaaaaaaaaaaaaaaa",
                 "secret": "aaaaaaaaaaaaaaaa"
             }
@@ -104,12 +100,10 @@ Start by having the following content in *config.json*:
         {
             "provider": "",
             "domain": "",
-            "ip_method": "",
         },
         {
             "provider": "",
             "domain": "",
-            "ip_method": "",
         }
     ]
 }
@@ -121,23 +115,11 @@ For all record update configuration, you need the following:
 
 - `"provider"` is the DNS provider and can be `"godaddy"`, `"namecheap"`, `"duckdns"`, `"dreamhost"`, `"cloudflare"`, `"noip"`, `"dnspod"` or `"ddnss"`
 - `"domain"`
-- `"ip_method"` is the method to obtain your public IP address and can be:
-  - `"provider"` means the public IP is automatically determined by the DNS provider (**only for DuckDNs, Namecheap, Infomaniak and NoIP**), most reliable.
-  - `"opendns"` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip) (reliable)
-  - `"ifconfig"` using [https://ifconfig.io/ip](https://ifconfig.io/ip) (may be rate limited)
-  - `"ipinfo"` using [https://ipinfo.io/ip](https://ipinfo.io/ip) (may be rate limited)
-  - `"ipify"` using [https://api.ipify.org](https://api.ipify.org) (may be rate limited)
-  - `"ipify6"` using [https://api6.ipify.org](https://api.ipify.org) for IPv6 only (may be rate limited)
-  - `"ddnss"` using [https://ddnss.de/meineip.php](https://ddnss.de/meineip.php)
-  - `"ddnss4"` using [https://ip4.ddnss.de/meineip.php](https://ip4.ddnss.de/meineip.php) for IPv4 only
-  - `"ddnss6"` using [https://ip6.ddnss.de/meineip.php](https://ip6.ddnss.de/meineip.php) for IPv6 only
-  - `"cycle"` to cycle between each external methods, in order to avoid being rate limited
-  - You can also specify an HTTPS URL to obtain your public IP address (i.e. `"ip_method": "https://ipinfo.io/ip"`)
 
 You can optionnally add the parameters:
 
-- `"delay"` is the delay in seconds between each update. It defaults to the `DELAY` environment variable value.
 - `"no_dns_lookup"` can be `true` or `false` and allows, if `true`, to prevent the periodic Docker healthcheck from running a DNS lookup on your domain.
+- `"provider_ip"` can be `true` or `false`. It is only available for the providers `ddnss`, `duckdns`, `infomaniak`, `namecheap` and `noip`. It allows to let your DNS provider to determine your IPv4 address (and/or IPv6 address) automatically when you send an update request, without sending the new IP address detected by the program in the request.
 
 For each DNS provider exist some specific parameters you need to add, as described below:
 
@@ -188,37 +170,53 @@ Infomaniak:
 - `"user"`
 - `"password"`
 - `"host"` is your host and can be a subdomain or `"@"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records)
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 DDNSS.de:
 
 - `"user"`
 - `"password"`
 - `"host"` is your host and can be a subdomain or `"@"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records)
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 DYNDNS:
 
 - `"user"`
 - `"password"`
 - `"host"` is your host and can be a subdomain or `"@"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records)
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 ### Environment variables
 
 | Environment variable | Default | Description |
 | --- | --- | --- |
-| `DELAY` | `10m` | Default delay between updates, following [this format](https://golang.org/pkg/time/#ParseDuration) |
-| `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
+| `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
+| `IP_METHOD` | `cycle` | Method to obtain the public IP address (ipv4 or ipv6). Can be `cycle`, `opendns`, `ifconfig`, `ipinfo` or an https url |
+| `IPV4_METHOD` | `cycle` | Method to obtain the public IPv4 address only. Can be `cycle`, `ipify`, `ddnss4` or an https url |
+| `IPV6_METHOD` | `cycle` | Method to obtain the public IPv6 address only. Can be `cycle`, `ipify6`, `ddnss6` or an https url |
+| `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
+| `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
+| `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file |
+| `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`.
 | `LOG_ENCODING` | `console` | Format of logging, `json` or `console` |
 | `LOG_LEVEL` | `info` | Level of logging, `info`, `warning` or `error` |
 | `NODE_ID` | `0` | Node ID (for distributed systems), can be any integer |
-| `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
 | `GOTIFY_URL` |  | (optional) HTTP(s) URL to your Gotify server |
 | `GOTIFY_TOKEN` |  | (optional) Token to access your Gotify server |
-| `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file |
-| `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`.
+
+The ip methods available are as follows:
+
+- `cycle` cycles between all ip methods available for the specified ip version, if any. This allows you not to be blocked for making too many requests.
+- `opendns` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
+- `ifconfig` using [https://ifconfig.io/ip](https://ifconfig.io/ip)
+- `ipinfo` using [https://ipinfo.io/ip](https://ipinfo.io/ip)
+- `ipify` using [https://api.ipify.org](https://api.ipify.org)
+- `ipify6` using [https://api6.ipify.org](https://api.ipify.org)
+- `"ddnss"` using [https://ddnss.de/meineip.php](https://ddnss.de/meineip.php)
+- `"ddnss4"` using [https://ip4.ddnss.de/meineip.php](https://ip4.ddnss.de/meineip.php)
+- `"ddnss6"` using [https://ip6.ddnss.de/meineip.php](https://ip6.ddnss.de/meineip.php)
+- You can also specify an HTTPS URL to obtain your public IP address (i.e. `-e IP_METHOD=https://ipinfo.io/ip`)
 
 ### Host firewall
 
@@ -385,13 +383,12 @@ To set it up with DDNS updater:
 
 ## TODOs
 
-- [ ] Update dependencies
-- [ ] Mockgen instead of mockery
-- [ ] Other types or records
-- [ ] icon.ico for webpage
-- [ ] Record events log
-- [ ] Hot reload of config.json
-- [ ] Unit tests
+- [ ] Move provider specific setup from readme to Wiki
 - [ ] ReactJS frontend
-    - [ ] Live update of website
-    - [ ] Change settings
+    - Change settings
+    - icon.ico for webpage
+    - Live update periodically (websocket?)
+- [ ] Record events log
+- [ ] Other types or records: AAAA, C, MX
+- [ ] Unit tests
+- [ ] Hot reload of config.json

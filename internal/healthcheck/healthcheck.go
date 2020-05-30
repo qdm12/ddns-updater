@@ -22,7 +22,7 @@ func IsHealthy(db data.Database, lookupIP lookupIPFunc, logger logging.Logger) (
 	for _, record := range records {
 		if record.Status == constants.FAIL {
 			return fmt.Errorf("%s", record.String())
-		} else if record.Settings.NoDNSLookup {
+		} else if !record.Settings.DNSLookup() {
 			continue
 		}
 		lookedUpIPs, err := lookupIP(record.Settings.BuildDomainName())

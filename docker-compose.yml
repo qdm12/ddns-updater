@@ -9,15 +9,24 @@ services:
     volumes:
       - ./data:/updater/data
     environment:
-      - DELAY=300s
-      - ROOT_URL=/
+      - PERIOD=5m
+      - IP_METHOD=cycle
+      - IPV4_METHOD=cycle
+      - IPV6_METHOD=cycle
+      - HTTP_TIMEOUT=10s
+
+      # Web UI
       - LISTENING_PORT=8000
+      - ROOT_URL=/
+
+      # Backup
+      - BACKUP_PERIOD=0 # 0 to disable
+      - BACKUP_DIRECTORY=/updater/data
+
+      # Other
       - LOG_ENCODING=console
       - LOG_LEVEL=info
-      - NODE_ID=0
-      - HTTP_TIMEOUT=10s
+      - NODE_ID=-1 # -1 to disable
       - GOTIFY_URL=
       - GOTIFY_TOKEN=
-      - BACKUP_PERIOD=0
-      - BACKUP_DIRECTORY=/updater/data
     restart: always

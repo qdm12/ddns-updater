@@ -99,11 +99,9 @@ Start by having the following content in *config.json*:
     "settings": [
         {
             "provider": "",
-            "domain": "",
         },
         {
             "provider": "",
-            "domain": "",
         }
     ]
 }
@@ -111,11 +109,7 @@ Start by having the following content in *config.json*:
 
 The following parameters are to be added in *config.json*
 
-For all record update configuration, you need the following:
-
-- `"provider"` is the DNS provider and can be `"godaddy"`, `"namecheap"`, `"duckdns"`, `"dreamhost"`, `"cloudflare"`, `"noip"`, `"dnspod"` or `"ddnss"`
-- `"domain"`
-
+For all record update configuration, you have to specify the DNS provider with `"provider"` which can be `"godaddy"`, `"namecheap"`, `"duckdns"`, `"dreamhost"`, `"cloudflare"`, `"noip"`, `"dnspod"` or `"ddnss"`.
 You can optionnally add the parameters:
 
 - `"no_dns_lookup"` can be `true` or `false` and allows, if `true`, to prevent the periodic Docker healthcheck from running a DNS lookup on your domain.
@@ -125,6 +119,7 @@ For each DNS provider exist some specific parameters you need to add, as describ
 
 Namecheap:
 
+- `"domain"`
 - `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
 - `"password"`
 
@@ -132,6 +127,7 @@ Cloudflare:
 
 - `"zone_identifier"` is the Zone ID of your site
 - `"identifier"` is the DNS record identifier as returned by the Cloudflare "List DNS Records" API (see below)
+- `"domain"`
 - `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
 - `"ttl"` integer value for record TTL in seconds (specify 1 for automatic)
 - One of the following:
@@ -142,41 +138,48 @@ Cloudflare:
 
 GoDaddy:
 
+- `"domain"`
 - `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
 - `"key"`
 - `"secret"`
 
 DuckDNS:
 
+- `"domain"` is your fqdn, for example `subdomain.duckdns.org`
 - `"token"`
 
 Dreamhost:
 
+- `"domain"`
 - `"key"`
 
 NoIP:
 
+- `"domain"`
 - `"host"` is your host and can be a subdomain or `"@"`
 - `"username"`
 - `"password"`
 
 DNSPOD:
 
+- `"domain"`
 - `"host"` is your host and can be a subdomain or `"@"`
 - `"token"`
 
 Infomaniak:
 
+- `"domain"`
+- `"host"` is your host and can be a subdomain or `"@"`
 - `"user"`
 - `"password"`
-- `"host"` is your host and can be a subdomain or `"@"`
 - `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 DDNSS.de:
 
+- `"domain"`
+- `"host"` is your host and can be a subdomain or `"@"`
 - `"user"`
 - `"password"`
-- `"host"` is your host and can be a subdomain or `"@"`
 - `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 ### Additional notes
@@ -199,7 +202,7 @@ For example with `"host": "@,subdomain1,subdomain2",`.
 | `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`.
 | `LOG_ENCODING` | `console` | Format of logging, `json` or `console` |
 | `LOG_LEVEL` | `info` | Level of logging, `info`, `warning` or `error` |
-| `NODE_ID` | `0` | Node ID (for distributed systems), can be any integer |
+| `NODE_ID` | `-1` | Node ID (for distributed systems), can be any integer |
 | `GOTIFY_URL` |  | (optional) HTTP(s) URL to your Gotify server |
 | `GOTIFY_TOKEN` |  | (optional) Token to access your Gotify server |
 
@@ -227,81 +230,7 @@ If you have a host firewall in place, this container needs the following ports:
 
 ## Domain set up
 
-### Namecheap
-
-[![Namecheap Website](https://github.com/qdm12/ddns-updater/raw/master/readme/namecheap.png)](https://www.namecheap.com)
-
-1. Create a Namecheap account and buy a domain name - *example.com* as an example
-1. Login to Namecheap at [https://www.namecheap.com/myaccount/login.aspx](https://www.namecheap.com/myaccount/login.aspx)
-
-For **each domain name** you want to add, replace *example.com* in the following link with your domain name and go to [https://ap.www.namecheap.com/Domains/DomainControlPanel/**example.com**/advancedns](https://ap.www.namecheap.com/Domains/DomainControlPanel/example.com/advancedns)
-
-1. For each host you want to add (if you don't know, create one record with the host set to `*`):
-    1. In the *HOST RECORDS* section, click on *ADD NEW RECORD*
-
-        ![https://ap.www.namecheap.com/Domains/DomainControlPanel/mealracle.com/advancedns](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/namecheap1.png)
-
-    1. Select the following settings and create the *A + Dynamic DNS Record*:
-
-        ![https://ap.www.namecheap.com/Domains/DomainControlPanel/mealracle.com/advancedns](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/namecheap2.png)
-
-1. Scroll down and turn on the switch for *DYNAMIC DNS*
-
-    ![https://ap.www.namecheap.com/Domains/DomainControlPanel/mealracle.com/advancedns](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/namecheap3.png)
-
-1. The Dynamic DNS Password will appear, which is `0e4512a9c45a4fe88313bcc2234bf547` in this example.
-
-    ![https://ap.www.namecheap.com/Domains/DomainControlPanel/mealracle.com/advancedns](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/namecheap4.png)
-
-***
-
-### GoDaddy
-
-[![GoDaddy Website](https://github.com/qdm12/ddns-updater/raw/master/readme/godaddy.png)](https://godaddy.com)
-
-1. Login to [https://developer.godaddy.com/keys](https://developer.godaddy.com/keys/) with your account credentials.
-
-[![GoDaddy Developer Login](https://github.com/qdm12/ddns-updater/raw/master/readme/godaddy1.gif)](https://developer.godaddy.com/keys)
-
-1. Generate a Test key and secret.
-
-[![GoDaddy Developer Test Key](https://github.com/qdm12/ddns-updater/raw/master/readme/godaddy2.gif)](https://developer.godaddy.com/keys)
-
-1. Generate a **Production** key and secret.
-
-[![GoDaddy Developer Production Key](https://github.com/qdm12/ddns-updater/raw/master/readme/godaddy3.gif)](https://developer.godaddy.com/keys)
-
-Obtain the **key** and **secret** of that production key.
-
-In this example, the key is `dLP4WKz5PdkS_GuUDNigHcLQFpw4CWNwAQ5` and the secret is `GuUFdVFj8nJ1M79RtdwmkZ`.
-
-***
-
-### DuckDNS
-
-[![DuckDNS Website](https://github.com/qdm12/ddns-updater/raw/master/readme/duckdns.png)](https://duckdns.org)
-
-*See [duckdns website](https://duckdns.org)*
-
-### Cloudflare
-
-1. Make sure you have `curl` installed
-1. Obtain your API key from Cloudflare website ([see this](https://support.cloudflare.com/hc/en-us/articles/200167836-Where-do-I-find-my-Cloudflare-API-key-))
-1. Obtain your zone identifier for your domain name, from the domain's overview page written as *Zone ID*
-1. Find your **identifier** in the `id` field with
-
-    ```sh
-    ZONEID=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-    EMAIL=example@example.com
-    APIKEY=aaaaaaaaaaaaaaaaaa
-    curl -X GET "https://api.cloudflare.com/client/v4/zones/$ZONEID/dns_records" \
-        -H "X-Auth-Email: $EMAIL" \
-        -H "X-Auth-Key: $APIKEY"
-    ```
-
-You can now fill in the necessary parameters in *config.json*
-
-Special thanks to @Starttoaster for helping out with the [documentation](https://gist.github.com/Starttoaster/07d568c2a99ad7631dd776688c988326) and testing.
+Instructions to setup your domain for this program are available for DuckDNS, Cloudflare, GoDaddy and Namecheap on the [Github Wiki](https://github.com/qdm12/ddns-updater/wiki).
 
 ## Gotify
 
@@ -324,70 +253,34 @@ To set it up with DDNS updater:
 ## Testing
 
 - The automated healthcheck verifies all your records are up to date [using DNS lookups](https://github.com/qdm12/ddns-updater/blob/master/internal/healthcheck/healthcheck.go#L15)
-- You can check manually at:
-  - GoDaddy: [https://dcc.godaddy.com/manage/yourdomain.com/dns](https://dcc.godaddy.com/manage/yourdomain.com/dns) (replace yourdomain.com)
+- You can also manually check, by:
+    1. Going to your DNS management webpage
+    1. Setting your record to `127.0.0.1`
+    1. Run the container
+    1. Refresh the DNS management webpage and verify the update happened
 
-    [![GoDaddy DNS management](https://github.com/qdm12/ddns-updater/raw/master/readme/godaddydnsmanagement.png)](https://dcc.godaddy.com/manage/)
+    Better testing instructions are written in the [Wiki for GoDaddy](https://github.com/qdm12/ddns-updater/wiki/GoDaddy#testing)
 
-    You might want to try to change the IP address to `127.0.0.1` to see if the update actually occurs.
+## Development and contributing
 
-## Development
+- Contribute with code: see [the Wiki](https://github.com/qdm12/ddns-updater/wiki/Contributing)
+- [Github workflows to know what's building](https://github.com/qdm12/ddns-updater/actions)
+- [List of issues and feature requests](https://github.com/qdm12/ddns-updater/issues)
+- [Kanban board](https://github.com/qdm12/ddns-updater/projects/1)
 
-1. Setup your environment
+## License
 
-    <details><summary>Using VSCode and Docker (easier)</summary><p>
-
-    1. Install [Docker](https://docs.docker.com/install/)
-       - On Windows, share a drive with Docker Desktop and have the project on that partition
-       - On OSX, share your project directory with Docker Desktop
-    1. With [Visual Studio Code](https://code.visualstudio.com/download), install the [remote containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-    1. In Visual Studio Code, press on `F1` and select `Remote-Containers: Open Folder in Container...`
-    1. Your dev environment is ready to go!... and it's running in a container :+1: So you can discard it and update it easily!
-
-    </p></details>
-
-    <details><summary>Locally</summary><p>
-
-    1. Install [Go](https://golang.org/dl/), [Docker](https://www.docker.com/products/docker-desktop) and [Git](https://git-scm.com/downloads)
-    1. Install Go dependencies with
-
-        ```sh
-        go mod download
-        ```
-
-    1. Install [golangci-lint](https://github.com/golangci/golangci-lint#install)
-    1. You might want to use an editor such as [Visual Studio Code](https://code.visualstudio.com/download) with the [Go extension](https://code.visualstudio.com/docs/languages/go). Working settings are already in [.vscode/settings.json](https://github.com/qdm12/ddns-updater/master/.vscode/settings.json).
-
-    </p></details>
-
-1. Commands available:
-
-    ```sh
-    # Build the binary
-    go build cmd/app/main.go
-    # Test the code
-    go test ./...
-    # Lint the code
-    golangci-lint run
-    # Build the Docker image
-    docker build -t qmcgaw/ddns-updater .
-    ```
-
-1. See [Contributing](https://github.com/qdm12/ddns-updater/master/.github/CONTRIBUTING.md) for more information on how to contribute to this repository.
+This repository is under an [MIT license](https://github.com/qdm12/ddns-updater/master/license)
 
 ## Used in external projects
 
 - [Starttoaster/docker-traefik](https://github.com/Starttoaster/docker-traefik#home-networks-extra-credit-dynamic-dns)
 
-## TODOs
+## Support
 
-- DuckDNS is host without domain
-- [ ] Move provider specific setup from readme to Wiki
-- [ ] ReactJS frontend
-    - Change settings
-    - icon.ico for webpage
-    - Live update periodically (websocket?)
-- [ ] Record events log
-- [ ] Other types or records: AAAA, C, MX
-- [ ] Unit tests
-- [ ] Hot reload of config.json
+Sponsor me on [Github](https://github.com/sponsors/qdm12) or donate to [paypal.me/qmcgaw](https://www.paypal.me/qmcgaw)
+
+[![https://github.com/sponsors/qdm12](https://raw.githubusercontent.com/qdm12/private-internet-access-docker/master/doc/sponsors.jpg)](https://github.com/sponsors/qdm12)
+[![https://www.paypal.me/qmcgaw](https://raw.githubusercontent.com/qdm12/private-internet-access-docker/master/doc/paypal.jpg)](https://www.paypal.me/qmcgaw)
+
+Many thanks to J. Famiglietti for supporting me financially 🥇👍

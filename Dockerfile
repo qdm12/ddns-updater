@@ -41,6 +41,7 @@ USER 1000
 ENTRYPOINT ["/updater/app"]
 ENV \
     # Core
+    CONFIG= \
     PERIOD=5m \
     IP_METHOD=cycle \
     IPV4_METHOD=cycle \

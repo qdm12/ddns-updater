@@ -31,23 +31,9 @@
 
 ## Setup
 
-1. To setup your domains initially, see the [Domain set up](#domain-set-up) section.
-1. Create a directory of your choice, say *data* with a file named **config.json** inside:
+The program reads the configuration from a JSON configuration file.
 
-    ```sh
-    mkdir data
-    touch data/config.json
-    # Owned by user ID of Docker container (1000)
-    chown -R 1000 data
-    # all access (for creating json database file data/updates.json)
-    chmod 700 data
-    # read access only
-    chmod 400 data/config.json
-    ```
-
-    *(You could change the user ID, for example with `1001`, by running the container with `--user=1001`)*
-
-1. Modify the *data/config.json* file similarly to:
+1. First, create a JSON configuration starting from, for example:
 
     ```json
     {
@@ -74,25 +60,58 @@
     }
     ```
 
-    See more information in the [configuration section](#configuration)
+1. You can find more information in the [configuration section](#configuration) to customize it.
+1. You can either use a bind mounted file or put all your JSON in a single line with the `CONFIG` environment variable, see the two subsections below for each
 
+### Using the CONFIG variable
+
+1. Remove all 'new lines' in order to put your entire JSON in a single line (i.e. `{"settings": [{"provider": "namecheap", ...}]}`)
+1. Set the `CONFIG` environment variable to your single line configuration
 1. Use the following command:
 
-    ```bash
+    ```sh
+    docker run -d -p 8000:8000/tcp -e CONFIG='{"settings": [{"provider": "namecheap", ...}]}' qmcgaw/ddns-updater
+    ```
+
+Note that this CONFIG environment variable takes precedence over the config.json file if it is set.
+
+### Using a file
+
+1. Create a directory of your choice, say *data* with a file named **config.json** inside:
+
+    ```sh
+    mkdir data
+    touch data/config.json
+    # Owned by user ID of Docker container (1000)
+    chown -R 1000 data
+    # all access (for creating json database file data/updates.json)
+    chmod 700 data
+    # read access only
+    chmod 400 data/config.json
+    ```
+
+    *(You could change the user ID, for example with `1001`, by running the container with `--user=1001`)*
+
+1. Place your JSON configuration in `data/config.json`
+1. Use the following command:
+
+    ```sh
     docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data qmcgaw/ddns-updater
     ```
 
-    You can also use [docker-compose.yml](https://github.com/qdm12/ddns-updater/blob/master/docker-compose.yml) with:
+### Next steps
 
-    ```sh
-    docker-compose up -d
-    ```
+You can also use [docker-compose.yml](https://github.com/qdm12/ddns-updater/blob/master/docker-compose.yml) with:
 
-1. You can update the image with `docker pull qmcgaw/ddns-updater`. Other [Docker image tags are available](https://hub.docker.com/repository/docker/qmcgaw/ddns-updater/tags).
+```sh
+docker-compose up -d
+```
+
+You can update the image with `docker pull qmcgaw/ddns-updater`. Other [Docker image tags are available](https://hub.docker.com/repository/docker/qmcgaw/ddns-updater/tags).
 
 ## Configuration
 
-Start by having the following content in *config.json*:
+Start by having the following content in *config.json*, or in your `CONFIG` environment variable:
 
 ```json
 {
@@ -107,7 +126,7 @@ Start by having the following content in *config.json*:
 }
 ```
 
-The following parameters are to be added in *config.json*
+The following parameters are to be added:
 
 For all record update configuration, you have to specify the DNS provider with `"provider"` which can be `"godaddy"`, `"namecheap"`, `"duckdns"`, `"dreamhost"`, `"cloudflare"`, `"noip"`, `"dnspod"` or `"ddnss"`.
 You can optionnally add the parameters:
@@ -184,13 +203,13 @@ DDNSS.de:
 
 ### Additional notes
 
-You can specify multiple hosts for the same domain using a comma separated list.
-For example with `"host": "@,subdomain1,subdomain2",`.
+- You can specify multiple hosts for the same domain using a comma separated list. For example with `"host": "@,subdomain1,subdomain2",`.
 
 ### Environment variables
 
 | Environment variable | Default | Description |
 | --- | --- | --- |
+| `CONFIG` | | One line JSON object containing the entire config (takes precendence over config.json file) if specified |
 | `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
 | `IP_METHOD` | `cycle` | Method to obtain the public IP address (ipv4 or ipv6). Can be `cycle`, `opendns`, `ifconfig`, `ipinfo` or an https url |
 | `IPV4_METHOD` | `cycle` | Method to obtain the public IPv4 address only. Can be `cycle`, `ipify`, `ddnss4` or an https url |

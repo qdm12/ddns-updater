@@ -9,6 +9,7 @@ services:
     volumes:
       - ./data:/updater/data
     environment:
+      - CONFIG=
       - PERIOD=5m
       - IP_METHOD=cycle
       - IPV4_METHOD=cycle

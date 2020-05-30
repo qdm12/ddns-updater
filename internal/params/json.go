@@ -23,22 +23,47 @@ type commonSettings struct {
 	Delay    *uint64 `json:"delay,omitempty"`
 }
 
-// GetSettings obtain the update settings from config.json
+// GetSettings obtain the update settings from the JSON content, first trying from the environment variable CONFIG
+// and then from the file config.json
 func (r *reader) GetSettings(filePath string) (allSettings []settings.Settings, warnings []string, err error) {
+	allSettings, warnings, err = r.getSettingsFromEnv()
+	if allSettings != nil || warnings != nil || err != nil {
+		return allSettings, warnings, err
+	}
+	return r.getSettingsFromFile(filePath)
+}
+
+// getSettingsFromFile obtain the update settings from config.json
+func (r *reader) getSettingsFromFile(filePath string) (allSettings []settings.Settings, warnings []string, err error) {
 	bytes, err := r.readFile(filePath)
 	if err != nil {
 		return nil, nil, err
 	}
+	return extractAllSettings(bytes)
+}
+
+// getSettingsFromEnv obtain the update settings from the environment variable CONFIG
+func (r *reader) getSettingsFromEnv() (allSettings []settings.Settings, warnings []string, err error) {
+	s, err := r.envParams.GetEnv("CONFIG")
+	if err != nil {
+		return nil, nil, err
+	} else if len(s) == 0 {
+		return nil, nil, nil
+	}
+	return extractAllSettings([]byte(s))
+}
+
+func extractAllSettings(jsonBytes []byte) (allSettings []settings.Settings, warnings []string, err error) {
 	config := struct {
 		CommonSettings []commonSettings `json:"settings"`
 	}{}
 	rawConfig := struct {
 		Settings []json.RawMessage `json:"settings"`
 	}{}
-	if err := json.Unmarshal(bytes, &config); err != nil {
+	if err := json.Unmarshal(jsonBytes, &config); err != nil {
 		return nil, nil, err
 	}
-	if err := json.Unmarshal(bytes, &rawConfig); err != nil {
+	if err := json.Unmarshal(jsonBytes, &rawConfig); err != nil {
 		return nil, nil, err
 	}
 	for i, common := range config.CommonSettings {
@@ -50,7 +75,7 @@ func (r *reader) GetSettings(filePath string) (allSettings []settings.Settings, 
 		allSettings = append(allSettings, newSettings...)
 	}
 	if len(allSettings) == 0 {
-		warnings = append(warnings, "no settings found in config.json")
+		warnings = append(warnings, "no settings found in JSON data")
 	}
 	return allSettings, warnings, nil
 }

@@ -21,6 +21,7 @@ assignees:
     - [ ] DNSPod
     - [ ] Dreamhost
     - [ ] DuckDNS
+    - [ ] DynDNS
     - [ ] GoDaddy
     - [ ] Infomaniak
     - [ ] Namecheap

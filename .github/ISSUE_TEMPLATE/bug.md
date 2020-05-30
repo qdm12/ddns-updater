@@ -21,6 +21,7 @@ assignees: qdm12
     - [ ] DNSPod
     - [ ] Dreamhost
     - [ ] DuckDNS
+    - [ ] DynDNS
     - [ ] GoDaddy
     - [ ] Infomaniak
     - [ ] Namecheap

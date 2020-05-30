@@ -211,7 +211,7 @@ DDNSS.de:
 | --- | --- | --- |
 | `CONFIG` | | One line JSON object containing the entire config (takes precendence over config.json file) if specified |
 | `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
-| `IP_METHOD` | `cycle` | Method to obtain the public IP address (ipv4 or ipv6). Can be `cycle`, `opendns`, `ifconfig`, `ipinfo` or an https url |
+| `IP_METHOD` | `cycle` | Method to obtain the public IP address (ipv4 or ipv6). Can be `cycle`, `opendns`, `ifconfig`, `ipinfo`, `google` or an https url |
 | `IPV4_METHOD` | `cycle` | Method to obtain the public IPv4 address only. Can be `cycle`, `ipify`, `ddnss4` or an https url |
 | `IPV6_METHOD` | `cycle` | Method to obtain the public IPv6 address only. Can be `cycle`, `ipify6`, `ddnss6` or an https url |
 | `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
@@ -236,6 +236,7 @@ The ip methods available are as follows:
 - `"ddnss"` using [https://ddnss.de/meineip.php](https://ddnss.de/meineip.php)
 - `"ddnss4"` using [https://ip4.ddnss.de/meineip.php](https://ip4.ddnss.de/meineip.php)
 - `"ddnss6"` using [https://ip6.ddnss.de/meineip.php](https://ip6.ddnss.de/meineip.php)
+- `"google"` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
 - You can also specify an HTTPS URL to obtain your public IP address (i.e. `-e IP_METHOD=https://ipinfo.io/ip`)
 
 ### Host firewall

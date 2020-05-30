@@ -47,5 +47,11 @@ func IPMethods() []models.IPMethod {
 			URL:  "https://ip6.ddnss.de/meineip.php",
 			IPv6: true,
 		},
+		{
+			Name: "google",
+			URL:  "https://domains.google.com/checkip",
+			IPv4: true,
+			IPv6: true,
+		},
 	}
 }

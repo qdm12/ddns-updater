@@ -56,26 +56,25 @@ func (r *reader) GetSettings(filePath string) (allSettings []settings.Settings, 
 }
 
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) (settingsSlice []settings.Settings, warnings []string, err error) {
-	hosts := strings.Split(common.Host, ",")
 	provider := models.Provider(common.Provider)
-	switch provider {
-	case constants.DREAMHOST, constants.DUCKDNS:
-		for i, host := range hosts {
-			if host != "" && host != "@" {
-				warnings = append(warnings, fmt.Sprintf("Provider %s only supports @ host configurations, forcing host to @", provider))
+	if provider == constants.DUCKDNS { // only hosts, no domain
+		if len(common.Domain) > 0 { // retro compatibility
+			if len(common.Host) == 0 {
+				common.Host = strings.TrimSuffix(common.Domain, ".duckdns.org")
+				warnings = append(warnings, fmt.Sprintf("DuckDNS record should have %q specified as host instead of %q as domain", common.Host, common.Domain))
+			} else {
+				warnings = append(warnings, fmt.Sprintf("ignoring domain %q because host %q is specified for DuckDNS record", common.Domain, common.Host))
 			}
-			hosts[i] = "@"
 		}
+	} else if !verification.NewVerifier().MatchDomain(common.Domain) {
+		return nil, warnings, fmt.Errorf("invalid domain name format %q", common.Domain)
 	}
+	hosts := strings.Split(common.Host, ",")
 	for _, host := range hosts {
 		if len(host) == 0 {
 			return nil, warnings, fmt.Errorf("host cannot be empty")
 		}
 	}
-	if !verification.NewVerifier().MatchDomain(common.Domain) {
-		return nil, warnings, fmt.Errorf("invalid domain name format %q", common.Domain)
-	}
-
 	ipVersion := models.IPVersion(common.IPVersion)
 	if len(ipVersion) == 0 {
 		ipVersion = constants.IPv4OrIPv6 // default

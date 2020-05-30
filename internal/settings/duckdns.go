@@ -15,7 +15,6 @@ import (
 
 //nolint:maligned
 type duckdns struct {
-	domain        string
 	host          string
 	ipVersion     models.IPVersion
 	dnsLookup     bool
@@ -32,7 +31,6 @@ func NewDuckdns(data json.RawMessage, domain, host string, ipVersion models.IPVe
 		return nil, err
 	}
 	d := &duckdns{
-		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
 		dnsLookup:     !noDNSLookup,
@@ -46,21 +44,22 @@ func NewDuckdns(data json.RawMessage, domain, host string, ipVersion models.IPVe
 }
 
 func (d *duckdns) isValid() error {
-	switch {
-	case !constants.MatchDuckDNSToken(d.token):
+	if !constants.MatchDuckDNSToken(d.token) {
 		return fmt.Errorf("invalid token format")
-	case d.host != "@":
-		return fmt.Errorf(`host can only be "@"`)
+	}
+	switch d.host {
+	case "@", "*":
+		return fmt.Errorf("host cannot be @ or * and must be a subdomain for DuckDNS")
 	}
 	return nil
 }
 
 func (d *duckdns) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Duckdns]", d.domain, d.host)
+	return fmt.Sprintf("[domain: duckdns.org | host: %s | provider: Duckdns]", d.host)
 }
 
 func (d *duckdns) Domain() string {
-	return d.domain
+	return "duckdns.org"
 }
 
 func (d *duckdns) Host() string {
@@ -76,7 +75,7 @@ func (d *duckdns) DNSLookup() bool {
 }
 
 func (d *duckdns) BuildDomainName() string {
-	return buildDomainName(d.host, d.domain)
+	return buildDomainName(d.host, "duckdns.org")
 }
 
 func (d *duckdns) HTML() models.HTMLRow {
@@ -96,7 +95,7 @@ func (d *duckdns) Update(client network.Client, ip net.IP) (newIP net.IP, err er
 	}
 	values := url.Values{}
 	values.Set("verbose", "true")
-	values.Set("domains", d.domain)
+	values.Set("domains", d.host+".duckdns.org")
 	values.Set("token", d.token)
 	u.RawQuery = values.Encode()
 	if !d.useProviderIP {

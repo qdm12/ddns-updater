@@ -28,6 +28,9 @@ func NewDreamhost(data json.RawMessage, domain, host string, ipVersion models.IP
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
+	if len(host) == 0 {
+		host = "@" // default
+	}
 	d := &dreamhost{
 		domain:    domain,
 		host:      host,

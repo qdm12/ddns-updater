@@ -134,9 +134,7 @@ func (r *runner) Run(ctx context.Context, period time.Duration, records []librec
 	timer := time.NewTicker(period)
 	forceChannel := make(chan struct{})
 	go func() {
-		r.logger.Info("reading persisted ips")
 		ip, ipv4, ipv6 := readPersistedIPs(records)
-		r.logger.Info("done reading persisted ips")
 		for {
 			select {
 			case <-timer.C:

@@ -143,7 +143,7 @@ func (n *noip) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error)
 		if newIP == nil {
 			return nil, fmt.Errorf("IP address received %q is malformed", ips[0])
 		}
-		if ip != nil && !ip.Equal(newIP) {
+		if !n.useProviderIP && !ip.Equal(newIP) {
 			return nil, fmt.Errorf("new IP address %s is not %s", newIP.String(), ip.String())
 		}
 		return newIP, nil

@@ -87,8 +87,6 @@ func (d *dreamhost) HTML() models.HTMLRow {
 	}
 }
 
-const success = "success"
-
 func (d *dreamhost) Update(client network.Client, ip net.IP) (newIP net.IP, err error) {
 	if ip == nil {
 		return nil, fmt.Errorf("IP address was not given to updater")

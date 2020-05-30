@@ -129,9 +129,9 @@ func (n *noip) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error)
 		return nil, fmt.Errorf("user has not this extra feature")
 	case "badagent":
 		return nil, fmt.Errorf("user agent is banned")
-	case "badauth":
+	case badauth:
 		return nil, fmt.Errorf("invalid username password combination")
-	case "nohost":
+	case nohost:
 		return nil, fmt.Errorf("hostname does not exist")
 	}
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {

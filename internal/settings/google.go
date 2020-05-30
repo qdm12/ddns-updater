@@ -118,9 +118,9 @@ func (g *google) Update(client netlib.Client, ip net.IP) (newIP net.IP, err erro
 	switch s {
 	case "":
 		return nil, fmt.Errorf("HTTP status %d", status)
-	case "nohost":
+	case nohost:
 		return nil, fmt.Errorf("hostname does not exist")
-	case "badauth":
+	case badauth:
 		return nil, fmt.Errorf("invalid username password combination")
 	case "notfqdn":
 		return nil, fmt.Errorf("hostname %q is not a valid fully qualified domain name", fqdn)

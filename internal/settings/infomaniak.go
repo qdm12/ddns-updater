@@ -142,9 +142,9 @@ func (i *infomaniak) Update(client network.Client, ip net.IP) (newIP net.IP, err
 		}
 	case http.StatusBadRequest:
 		switch s {
-		case "nohost":
+		case nohost:
 			return nil, fmt.Errorf("infomaniak.com: host %q does not exist for domain %q", i.host, i.domain)
-		case "badauth":
+		case badauth:
 			return nil, fmt.Errorf("infomaniak.com: bad authentication")
 		default:
 			return nil, fmt.Errorf("infomaniak.com: bad request: %s", s)

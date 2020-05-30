@@ -3,17 +3,17 @@ package data
 import (
 	"fmt"
 
-	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/records"
 )
 
-func (db *database) Insert(record models.Record) (id int) {
+func (db *database) Insert(record records.Record) (id int) {
 	db.Lock()
 	defer db.Unlock()
 	db.data = append(db.data, record)
 	return len(db.data) - 1
 }
 
-func (db *database) Select(id int) (record models.Record, err error) {
+func (db *database) Select(id int) (record records.Record, err error) {
 	db.RLock()
 	defer db.RUnlock()
 	if id < 0 {
@@ -25,7 +25,7 @@ func (db *database) Select(id int) (record models.Record, err error) {
 	return db.data[id], nil
 }
 
-func (db *database) SelectAll() (records []models.Record) {
+func (db *database) SelectAll() (records []records.Record) {
 	db.RLock()
 	defer db.RUnlock()
 	return db.data

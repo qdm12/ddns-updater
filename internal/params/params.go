@@ -1,29 +1,49 @@
 package params
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/url"
 	"time"
 
+	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/settings"
 	"github.com/qdm12/golibs/logging"
+	"github.com/qdm12/golibs/params"
 	libparams "github.com/qdm12/golibs/params"
 	"github.com/qdm12/golibs/verification"
 )
 
+const https = "https"
+
 type Reader interface {
-	GetSettings(filePath string) (settings []models.Settings, warnings []string, err error)
-	GetDataDir(currentDir string) (string, error)
-	GetListeningPort() (listeningPort, warning string, err error)
-	GetLoggerConfig() (encoding logging.Encoding, level logging.Level, nodeID int, err error)
-	GetGotifyURL(setters ...libparams.GetEnvSetter) (URL *url.URL, err error)
-	GetGotifyToken(setters ...libparams.GetEnvSetter) (token string, err error)
-	GetRootURL(setters ...libparams.GetEnvSetter) (rootURL string, err error)
-	GetDelay(setters ...libparams.GetEnvSetter) (duration time.Duration, err error)
-	GetExeDir() (dir string, err error)
+	// JSON
+	GetSettings(filePath string) (allSettings []settings.Settings, warnings []string, err error)
+
+	// Core
+	GetPeriod() (period time.Duration, warnings []string, err error)
+	GetIPMethod() (method models.IPMethod, err error)
+	GetIPv4Method() (method models.IPMethod, err error)
+	GetIPv6Method() (method models.IPMethod, err error)
 	GetHTTPTimeout() (duration time.Duration, err error)
+
+	// File paths
+	GetExeDir() (dir string, err error)
+	GetDataDir(currentDir string) (string, error)
+
+	// Web UI
+	GetListeningPort() (listeningPort, warning string, err error)
+	GetRootURL() (rootURL string, err error)
+
+	// Backup
 	GetBackupPeriod() (duration time.Duration, err error)
 	GetBackupDirectory() (directory string, err error)
+
+	// Other
+	GetLoggerConfig() (encoding logging.Encoding, level logging.Level, nodeID int, err error)
+	GetGotifyURL() (URL *url.URL, err error)
+	GetGotifyToken() (token string, err error)
 
 	// Version getters
 	GetVersion() string
@@ -34,7 +54,6 @@ type Reader interface {
 type reader struct {
 	envParams libparams.EnvParams
 	verifier  verification.Verifier
-	logger    logging.Logger
 	readFile  func(filename string) ([]byte, error)
 }
 
@@ -42,7 +61,6 @@ func NewReader(logger logging.Logger) Reader {
 	return &reader{
 		envParams: libparams.NewEnvParams(),
 		verifier:  verification.NewVerifier(),
-		logger:    logger,
 		readFile:  ioutil.ReadFile,
 	}
 }
@@ -61,26 +79,107 @@ func (r *reader) GetLoggerConfig() (encoding logging.Encoding, level logging.Lev
 	return r.envParams.GetLoggerConfig()
 }
 
-func (r *reader) GetGotifyURL(setters ...libparams.GetEnvSetter) (url *url.URL, err error) {
+func (r *reader) GetGotifyURL() (url *url.URL, err error) {
 	return r.envParams.GetGotifyURL()
 }
 
-func (r *reader) GetGotifyToken(setters ...libparams.GetEnvSetter) (token string, err error) {
+func (r *reader) GetGotifyToken() (token string, err error) {
 	return r.envParams.GetGotifyToken()
 }
 
-func (r *reader) GetRootURL(setters ...libparams.GetEnvSetter) (rootURL string, err error) {
+func (r *reader) GetRootURL() (rootURL string, err error) {
 	return r.envParams.GetRootURL()
 }
 
-func (r *reader) GetDelay(setters ...libparams.GetEnvSetter) (period time.Duration, err error) {
+func (r *reader) GetPeriod() (period time.Duration, warnings []string, err error) {
 	// Backward compatibility
-	n, err := r.envParams.GetEnvInt("DELAY", libparams.Compulsory()) // TODO change to PERIOD
-	if err == nil {                                                  // integer only, treated as seconds
-		r.logger.Warn("The value for the duration period of the updater does not have a time unit, you might want to set it to \"%ds\" instead of \"%d\"", n, n)
-		return time.Duration(n) * time.Second, nil
+	n, err := r.envParams.GetEnvInt("DELAY", libparams.Compulsory())
+	if err == nil { // integer only, treated as seconds
+		return time.Duration(n) * time.Second,
+			[]string{
+				"the environment variable DELAY should be changed to PERIOD",
+				fmt.Sprintf("the value for the duration period of the updater does not have a time unit, you might want to set it to \"%ds\" instead of \"%d\"", n, n),
+			}, nil
 	}
-	return r.envParams.GetDuration("DELAY", setters...)
+	period, err = r.envParams.GetDuration("DELAY", libparams.Compulsory())
+	if err == nil {
+		return period,
+			[]string{
+				"the environment variable DELAY should be changed to PERIOD",
+			}, nil
+	}
+	period, err = r.envParams.GetDuration("PERIOD", libparams.Default("10m"))
+	return period, nil, err
+}
+
+func (r *reader) GetIPMethod() (method models.IPMethod, err error) {
+	s, err := r.envParams.GetEnv("IP_METHOD", params.Default("cycle"))
+	if err != nil {
+		return method, err
+	}
+	for _, choice := range constants.IPMethods() {
+		if choice.Name == s {
+			return choice, nil
+		}
+	}
+	url, err := url.Parse(s)
+	if err != nil || url == nil || url.Scheme != https {
+		return method, fmt.Errorf("ip method %q is not valid", s)
+	}
+	return models.IPMethod{
+		Name: s,
+		URL:  s,
+		IPv4: true,
+		IPv6: true,
+	}, nil
+}
+
+func (r *reader) GetIPv4Method() (method models.IPMethod, err error) {
+	s, err := r.envParams.GetEnv("IPV4_METHOD", params.Default("cycle"))
+	if err != nil {
+		return method, err
+	}
+	for _, choice := range constants.IPMethods() {
+		if choice.Name == s {
+			if s != "cycle" && !choice.IPv4 {
+				return method, fmt.Errorf("ip method %s does not support IPv4", s)
+			}
+			return choice, nil
+		}
+	}
+	url, err := url.Parse(s)
+	if err != nil || url == nil || url.Scheme != https {
+		return method, fmt.Errorf("ipv4 method %q is not valid", s)
+	}
+	return models.IPMethod{
+		Name: s,
+		URL:  s,
+		IPv4: true,
+	}, nil
+}
+
+func (r *reader) GetIPv6Method() (method models.IPMethod, err error) {
+	s, err := r.envParams.GetEnv("IPV6_METHOD", params.Default("cycle"))
+	if err != nil {
+		return method, err
+	}
+	for _, choice := range constants.IPMethods() {
+		if choice.Name == s {
+			if s != "cycle" && !choice.IPv6 {
+				return method, fmt.Errorf("ip method %s does not support IPv6", s)
+			}
+			return choice, nil
+		}
+	}
+	url, err := url.Parse(s)
+	if err != nil || url == nil || url.Scheme != https {
+		return method, fmt.Errorf("ipv6 method %q is not valid", s)
+	}
+	return models.IPMethod{
+		Name: s,
+		URL:  s,
+		IPv4: true,
+	}, nil
 }
 
 func (r *reader) GetExeDir() (dir string, err error) {

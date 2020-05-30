@@ -4,29 +4,29 @@ import "github.com/qdm12/ddns-updater/internal/models"
 
 // All possible provider values
 const (
-	GODADDY    models.Provider = "godaddy"
-	NAMECHEAP  models.Provider = "namecheap"
-	DUCKDNS    models.Provider = "duckdns"
-	DREAMHOST  models.Provider = "dreamhost"
 	CLOUDFLARE models.Provider = "cloudflare"
-	NOIP       models.Provider = "noip"
-	DNSPOD     models.Provider = "dnspod"
-	INFOMANIAK models.Provider = "infomaniak"
 	DDNSSDE    models.Provider = "ddnss"
+	DNSPOD     models.Provider = "dnspod"
+	DUCKDNS    models.Provider = "duckdns"
 	DYN        models.Provider = "dyn"
+	DREAMHOST  models.Provider = "dreamhost"
+	GODADDY    models.Provider = "godaddy"
+	INFOMANIAK models.Provider = "infomaniak"
+	NAMECHEAP  models.Provider = "namecheap"
+	NOIP       models.Provider = "noip"
 )
 
 func ProviderChoices() []models.Provider {
 	return []models.Provider{
-		GODADDY,
-		NAMECHEAP,
-		DUCKDNS,
-		DREAMHOST,
 		CLOUDFLARE,
-		NOIP,
-		DNSPOD,
-		INFOMANIAK,
 		DDNSSDE,
+		DNSPOD,
+		DUCKDNS,
 		DYN,
+		DREAMHOST,
+		GODADDY,
+		INFOMANIAK,
+		NAMECHEAP,
+		NOIP,
 	}
 }

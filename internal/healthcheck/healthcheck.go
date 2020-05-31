@@ -3,6 +3,7 @@ package healthcheck
 import (
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/data"
@@ -25,20 +26,26 @@ func IsHealthy(db data.Database, lookupIP lookupIPFunc, logger logging.Logger) (
 		} else if !record.Settings.DNSLookup() {
 			continue
 		}
-		lookedUpIPs, err := lookupIP(record.Settings.BuildDomainName())
+		hostname := record.Settings.BuildDomainName()
+		lookedUpIPs, err := lookupIP(hostname)
 		if err != nil {
 			return err
 		}
 		currentIP := record.History.GetCurrentIP()
 		if currentIP == nil {
-			return fmt.Errorf("no set IP address found")
+			return fmt.Errorf("no database set IP address found for %s", hostname)
 		}
-		for _, lookedUpIP := range lookedUpIPs {
-			if !lookedUpIP.Equal(currentIP) {
-				return fmt.Errorf(
-					"lookup IP address of %s is %s instead of %s",
-					record.Settings.BuildDomainName(), lookedUpIP, currentIP)
+		found := false
+		lookedUpIPsString := make([]string, len(lookedUpIPs))
+		for i, lookedUpIP := range lookedUpIPs {
+			lookedUpIPsString[i] = lookedUpIP.String()
+			if lookedUpIP.Equal(currentIP) {
+				found = true
+				break
 			}
+		}
+		if !found {
+			return fmt.Errorf("lookup IP addresses for %s are %s instead of %s", hostname, strings.Join(lookedUpIPsString, ","), currentIP)
 		}
 	}
 	return nil

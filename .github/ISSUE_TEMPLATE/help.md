@@ -22,6 +22,7 @@ assignees:
     - [ ] Dreamhost
     - [ ] DuckDNS
     - [ ] GoDaddy
+    - [ ] Google
     - [ ] Infomaniak
     - [ ] Namecheap
     - [ ] NoIP

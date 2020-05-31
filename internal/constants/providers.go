@@ -10,6 +10,7 @@ const (
 	DUCKDNS    models.Provider = "duckdns"
 	DREAMHOST  models.Provider = "dreamhost"
 	GODADDY    models.Provider = "godaddy"
+	GOOGLE     models.Provider = "google"
 	INFOMANIAK models.Provider = "infomaniak"
 	NAMECHEAP  models.Provider = "namecheap"
 	NOIP       models.Provider = "noip"
@@ -23,6 +24,7 @@ func ProviderChoices() []models.Provider {
 		DUCKDNS,
 		DREAMHOST,
 		GODADDY,
+		GOOGLE,
 		INFOMANIAK,
 		NAMECHEAP,
 		NOIP,

@@ -87,8 +87,6 @@ func (d *dreamhost) HTML() models.HTMLRow {
 	}
 }
 
-const success = "success"
-
 func (d *dreamhost) Update(client network.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := "A"
 	if ip.To4() == nil {

@@ -105,7 +105,11 @@ func (n *noip) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error)
 	values := url.Values{}
 	values.Set("hostname", n.BuildDomainName())
 	if !n.useProviderIP {
-		values.Set("myip", ip.String())
+		if ip.To4() == nil {
+			values.Set("myipv6", ip.String())
+		} else {
+			values.Set("myip", ip.String())
+		}
 	}
 	u.RawQuery = values.Encode()
 	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
@@ -129,9 +133,9 @@ func (n *noip) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error)
 		return nil, fmt.Errorf("user has not this extra feature")
 	case "badagent":
 		return nil, fmt.Errorf("user agent is banned")
-	case "badauth":
+	case badauth:
 		return nil, fmt.Errorf("invalid username password combination")
-	case "nohost":
+	case nohost:
 		return nil, fmt.Errorf("hostname does not exist")
 	}
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
@@ -143,7 +147,7 @@ func (n *noip) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error)
 		if newIP == nil {
 			return nil, fmt.Errorf("IP address received %q is malformed", ips[0])
 		}
-		if ip != nil && !ip.Equal(newIP) {
+		if !n.useProviderIP && !ip.Equal(newIP) {
 			return nil, fmt.Errorf("new IP address %s is not %s", newIP.String(), ip.String())
 		}
 		return newIP, nil

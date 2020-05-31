@@ -23,6 +23,7 @@ assignees: qdm12
     - [ ] DuckDNS
     - [ ] DynDNS
     - [ ] GoDaddy
+    - [ ] Google
     - [ ] Infomaniak
     - [ ] Namecheap
     - [ ] NoIP

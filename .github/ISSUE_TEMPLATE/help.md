@@ -23,6 +23,7 @@ assignees:
     - [ ] DuckDNS
     - [ ] DynDNS
     - [ ] GoDaddy
+    - [ ] Google
     - [ ] Infomaniak
     - [ ] Namecheap
     - [ ] NoIP

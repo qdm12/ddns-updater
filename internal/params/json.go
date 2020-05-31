@@ -104,8 +104,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) 
 	if len(ipVersion) == 0 {
 		ipVersion = constants.IPv4OrIPv6 // default
 	}
-	if err := settingsIPVersionChecks(ipVersion, provider); err != nil {
-		return nil, warnings, err
+	if ipVersion != constants.IPv4OrIPv6 && ipVersion != constants.IPv4 && ipVersion != constants.IPv6 {
+		return nil, warnings, fmt.Errorf("ip version %q is not valid", ipVersion)
 	}
 	var settingsConstructor settings.Constructor
 	switch provider {
@@ -121,6 +121,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) 
 		settingsConstructor = settings.NewDuckdns
 	case constants.GODADDY:
 		settingsConstructor = settings.NewGodaddy
+	case constants.GOOGLE:
+		settingsConstructor = settings.NewGoogle
 	case constants.INFOMANIAK:
 		settingsConstructor = settings.NewInfomaniak
 	case constants.NAMECHEAP:

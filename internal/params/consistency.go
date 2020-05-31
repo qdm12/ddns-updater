@@ -12,7 +12,7 @@ func settingsIPVersionChecks(ipVersion models.IPVersion, provider models.Provide
 	case constants.IPv4OrIPv6, constants.IPv4:
 	case constants.IPv6:
 		switch provider {
-		case constants.GODADDY, constants.CLOUDFLARE, constants.DUCKDNS, constants.NOIP:
+		case constants.CLOUDFLARE, constants.DUCKDNS, constants.NOIP:
 			return fmt.Errorf("IPv6 support for %s is not supported yet", provider)
 		}
 	default:

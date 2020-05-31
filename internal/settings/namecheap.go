@@ -56,7 +56,7 @@ func (n *namecheap) isValid() error {
 }
 
 func (n *namecheap) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Namecheap]", n.domain, n.host)
+	return toString(n.domain, n.host, constants.NAMECHEAP, n.ipVersion)
 }
 
 func (n *namecheap) Domain() string {

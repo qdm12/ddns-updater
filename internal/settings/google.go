@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	netlib "github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
@@ -59,7 +60,7 @@ func (g *google) isValid() error {
 }
 
 func (g *google) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Google]", g.domain, g.host)
+	return toString(g.domain, g.host, constants.GOOGLE, g.ipVersion)
 }
 
 func (g *google) Domain() string {

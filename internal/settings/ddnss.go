@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/golibs/network"
 )
@@ -60,7 +61,7 @@ func (d *ddnss) isValid() error {
 }
 
 func (d *ddnss) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Ddnss]", d.domain, d.host)
+	return toString(d.domain, d.host, constants.DDNSSDE, d.ipVersion)
 }
 
 func (d *ddnss) Domain() string {

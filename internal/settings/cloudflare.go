@@ -90,7 +90,7 @@ func (c *cloudflare) isValid() error {
 }
 
 func (c *cloudflare) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Cloudflare]", c.domain, c.host)
+	return toString(c.domain, c.host, constants.DREAMHOST, c.ipVersion)
 }
 
 func (c *cloudflare) Domain() string {

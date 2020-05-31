@@ -88,8 +88,9 @@ func (g *godaddy) HTML() models.HTMLRow {
 }
 
 func (g *godaddy) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
-	if ip == nil {
-		return nil, fmt.Errorf("IP address was not given to updater")
+	recordType := A
+	if ip.To4() == nil {
+		recordType = AAAA
 	}
 	type goDaddyPutBody struct {
 		Data string `json:"data"` // IP address to update to
@@ -97,7 +98,7 @@ func (g *godaddy) Update(client netlib.Client, ip net.IP) (newIP net.IP, err err
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.godaddy.com",
-		Path:   fmt.Sprintf("/v1/domains/%s/records/A/%s", g.domain, g.host),
+		Path:   fmt.Sprintf("/v1/domains/%s/records/%s/%s", g.domain, recordType, g.host),
 	}
 	r, err := network.BuildHTTPPut(u.String(), []goDaddyPutBody{{ip.String()}})
 	if err != nil {

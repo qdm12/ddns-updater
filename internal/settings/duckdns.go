@@ -95,11 +95,15 @@ func (d *duckdns) Update(client network.Client, ip net.IP) (newIP net.IP, err er
 	}
 	values := url.Values{}
 	values.Set("verbose", "true")
-	values.Set("domains", d.host+".duckdns.org")
+	values.Set("domains", d.host)
 	values.Set("token", d.token)
 	u.RawQuery = values.Encode()
 	if !d.useProviderIP {
-		values.Set("ip", ip.String())
+		if ip.To4() == nil {
+			values.Set("ip6", ip.String())
+		} else {
+			values.Set("ip", ip.String())
+		}
 	}
 	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {

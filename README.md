@@ -161,16 +161,19 @@ GoDaddy:
 - `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
 - `"key"`
 - `"secret"`
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 DuckDNS:
 
 - `"domain"` is your fqdn, for example `subdomain.duckdns.org`
 - `"token"`
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 Dreamhost:
 
 - `"domain"`
 - `"key"`
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 NoIP:
 
@@ -178,12 +181,14 @@ NoIP:
 - `"host"` is your host and can be a subdomain or `"@"`
 - `"username"`
 - `"password"`
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 DNSPOD:
 
 - `"domain"`
 - `"host"` is your host and can be a subdomain or `"@"`
 - `"token"`
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 Infomaniak:
 

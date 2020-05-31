@@ -138,9 +138,9 @@ func setHeaders(r *http.Request, token, userServiceKey, email, key string) {
 // Obtain domain identifier
 // See https://api.cloudflare.com/#dns-records-for-a-zone-list-dns-records
 func (c *cloudflare) getRecordIdentifier(client netlib.Client, newIP net.IP) (identifier string, upToDate bool, err error) {
-	recordType := "A"
+	recordType := A
 	if newIP.To4() == nil {
-		recordType = "AAAA"
+		recordType = AAAA
 	}
 	u := url.URL{
 		Scheme: "https",
@@ -191,9 +191,9 @@ func (c *cloudflare) getRecordIdentifier(client netlib.Client, newIP net.IP) (id
 }
 
 func (c *cloudflare) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
-	recordType := "A"
+	recordType := A
 	if newIP.To4() == nil {
-		recordType = "AAAA"
+		recordType = AAAA
 	}
 	identifier, upToDate, err := c.getRecordIdentifier(client, ip)
 	if err != nil {

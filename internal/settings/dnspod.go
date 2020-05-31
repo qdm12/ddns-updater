@@ -81,8 +81,9 @@ func (d *dnspod) HTML() models.HTMLRow {
 }
 
 func (d *dnspod) Update(client network.Client, ip net.IP) (newIP net.IP, err error) {
-	if ip == nil {
-		return nil, fmt.Errorf("IP address was not given to updater")
+	recordType := "A"
+	if ip.To4() == nil {
+		recordType = "AAAA"
 	}
 	u := url.URL{
 		Scheme: "https",
@@ -95,7 +96,7 @@ func (d *dnspod) Update(client network.Client, ip net.IP) (newIP net.IP, err err
 	values.Set("domain", d.domain)
 	values.Set("length", "200")
 	values.Set("sub_domain", d.host)
-	values.Set("record_type", "A")
+	values.Set("record_type", recordType)
 	u.RawQuery = values.Encode()
 	r, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBufferString(values.Encode()))
 	if err != nil {

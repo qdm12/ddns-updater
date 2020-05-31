@@ -224,9 +224,9 @@ Google:
 | --- | --- | --- |
 | `CONFIG` | | One line JSON object containing the entire config (takes precendence over config.json file) if specified |
 | `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
-| `IP_METHOD` | `cycle` | Method to obtain the public IP address (ipv4 or ipv6). Can be `cycle`, `opendns`, `ifconfig`, `ipinfo`, `google` or an https url |
-| `IPV4_METHOD` | `cycle` | Method to obtain the public IPv4 address only. Can be `cycle`, `ipify`, `ddnss4` or an https url |
-| `IPV6_METHOD` | `cycle` | Method to obtain the public IPv6 address only. Can be `cycle`, `ipify6`, `ddnss6` or an https url |
+| `IP_METHOD` | `cycle` | Method to obtain the public IP address (ipv4 or ipv6). See the [IP Methods section](#IP-methods) |
+| `IPV4_METHOD` | `cycle` | Method to obtain the public IPv4 address only. See the [IP Methods section](#IP-methods) |
+| `IPV6_METHOD` | `cycle` | Method to obtain the public IPv6 address only. See the [IP Methods section](#IP-methods) |
 | `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
@@ -238,19 +238,29 @@ Google:
 | `GOTIFY_URL` |  | (optional) HTTP(s) URL to your Gotify server |
 | `GOTIFY_TOKEN` |  | (optional) Token to access your Gotify server |
 
-The ip methods available are as follows:
+#### IP methods
 
-- `cycle` cycles between all ip methods available for the specified ip version, if any. This allows you not to be blocked for making too many requests.
-- `opendns` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
-- `ifconfig` using [https://ifconfig.io/ip](https://ifconfig.io/ip)
-- `ipinfo` using [https://ipinfo.io/ip](https://ipinfo.io/ip)
-- `ipify` using [https://api.ipify.org](https://api.ipify.org)
-- `ipify6` using [https://api6.ipify.org](https://api.ipify.org)
-- `"ddnss"` using [https://ddnss.de/meineip.php](https://ddnss.de/meineip.php)
-- `"ddnss4"` using [https://ip4.ddnss.de/meineip.php](https://ip4.ddnss.de/meineip.php)
-- `"ddnss6"` using [https://ip6.ddnss.de/meineip.php](https://ip6.ddnss.de/meineip.php)
-- `"google"` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
-- You can also specify an HTTPS URL to obtain your public IP address (i.e. `-e IP_METHOD=https://ipinfo.io/ip`)
+By default, all ip methods are cycled through between all ip methods available for the specified ip version, if any. This allows you not to be blocked for making too many requests. You can otherwise pick one of the following.
+
+- IPv4 or IPv6 (for most cases)
+  - `opendns` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
+  - `ifconfig` using [https://ifconfig.io/ip](https://ifconfig.io/ip)
+  - `ipinfo` using [https://ipinfo.io/ip](https://ipinfo.io/ip)
+  - `ipify` using [https://api.ipify.org](https://api.ipify.org)
+  - `"ddnss"` using [https://ddnss.de/meineip.php](https://ddnss.de/meineip.php)
+  - `"google"` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
+- IPv4 only (useful for updating both ipv4 and ipv6)
+  - `ipify` using [https://api.ipify.org](https://api.ipify.org)
+  - `"ddnss4"` using [https://ip4.ddnss.de/meineip.php](https://ip4.ddnss.de/meineip.php)
+  - `"noip4"` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
+  - `"noip8245_4"` using [http://ip1.dynupdate.no-ip.com:8245](http://ip1.dynupdate.no-ip.com:8245)
+- IPv6 only
+  - `ipify6` using [https://api6.ipify.org](https://api.ipify.org)
+  - `"ddnss6"` using [https://ip6.ddnss.de/meineip.php](https://ip6.ddnss.de/meineip.php)
+  - `"noip6"` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
+  - `"noip8245_6"` using [http://ip1.dynupdate.no-ip.com:8245](http://ip1.dynupdate.no-ip.com:8245)
+
+You can also specify an HTTPS URL to obtain your public IP address (i.e. `-e IPV6_METHOD=https://ipinfo.io/ip`)
 
 ### Host firewall
 

@@ -133,7 +133,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 			logger.Error(err)
 		}
 	}()
-	updater := update.NewUpdater(db, logger, client, notify)
+	updater := update.NewUpdater(db, client, notify)
 	ipGetter := update.NewIPGetter(client, p.ipMethod, p.ipv4Method, p.ipv6Method)
 	runner := update.NewRunner(updater, ipGetter, logger, timeNow)
 	ctx, cancel := context.WithCancel(ctx)

@@ -5,7 +5,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/qdm12/golibs/logging"
 	netlib "github.com/qdm12/golibs/network"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
@@ -19,17 +18,15 @@ type Updater interface {
 
 type updater struct {
 	db     data.Database
-	logger logging.Logger
 	client netlib.Client
 	notify notifyFunc
 }
 
 type notifyFunc func(priority int, messageArgs ...interface{})
 
-func NewUpdater(db data.Database, logger logging.Logger, client netlib.Client, notify notifyFunc) Updater {
+func NewUpdater(db data.Database, client netlib.Client, notify notifyFunc) Updater {
 	return &updater{
 		db:     db,
-		logger: logger,
 		client: client,
 		notify: notify,
 	}

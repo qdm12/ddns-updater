@@ -24,6 +24,9 @@ type namecheap struct {
 }
 
 func NewNamecheap(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
+	if ipVersion == constants.IPv6 {
+		return s, fmt.Errorf("IPv6 is not supported by Namecheap API sadly")
+	}
 	extraSettings := struct {
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`

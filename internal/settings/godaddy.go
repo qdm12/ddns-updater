@@ -88,9 +88,9 @@ func (g *godaddy) HTML() models.HTMLRow {
 }
 
 func (g *godaddy) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
-	recordType := "A"
+	recordType := A
 	if ip.To4() == nil {
-		recordType = "AAAA"
+		recordType = AAAA
 	}
 	type goDaddyPutBody struct {
 		Data string `json:"data"` // IP address to update to

@@ -88,9 +88,9 @@ func (d *dreamhost) HTML() models.HTMLRow {
 }
 
 func (d *dreamhost) Update(client network.Client, ip net.IP) (newIP net.IP, err error) {
-	recordType := "A"
+	recordType := A
 	if ip.To4() == nil {
-		recordType = "AAAA"
+		recordType = AAAA
 	}
 	records, err := listDreamhostRecords(client, d.key)
 	if err != nil {
@@ -168,9 +168,9 @@ func listDreamhostRecords(client network.Client, key string) (records dreamHostR
 }
 
 func removeDreamhostRecord(client network.Client, key, domain string, ip net.IP) error { //nolint:dupl
-	recordType := "A"
+	recordType := A
 	if ip.To4() == nil {
-		recordType = "AAAA"
+		recordType = AAAA
 	}
 	u := url.URL{
 		Scheme: "https",
@@ -203,9 +203,9 @@ func removeDreamhostRecord(client network.Client, key, domain string, ip net.IP)
 }
 
 func addDreamhostRecord(client network.Client, key, domain string, ip net.IP) error { //nolint:dupl
-	recordType := "A"
+	recordType := A
 	if ip.To4() == nil {
-		recordType = "AAAA"
+		recordType = AAAA
 	}
 	u := url.URL{
 		Scheme: "https",

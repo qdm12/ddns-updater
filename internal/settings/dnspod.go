@@ -81,9 +81,9 @@ func (d *dnspod) HTML() models.HTMLRow {
 }
 
 func (d *dnspod) Update(client network.Client, ip net.IP) (newIP net.IP, err error) {
-	recordType := "A"
+	recordType := A
 	if ip.To4() == nil {
-		recordType = "AAAA"
+		recordType = AAAA
 	}
 	u := url.URL{
 		Scheme: "https",
@@ -124,7 +124,7 @@ func (d *dnspod) Update(client network.Client, ip net.IP) (newIP net.IP, err err
 	}
 	var recordID, recordLine string
 	for _, record := range recordResp.Records {
-		if record.Type == "A" && record.Name == d.host {
+		if record.Type == A && record.Name == d.host {
 			receivedIP := net.ParseIP(record.Value)
 			if ip.Equal(receivedIP) {
 				return ip, nil

@@ -90,8 +90,9 @@ func (d *dreamhost) HTML() models.HTMLRow {
 const success = "success"
 
 func (d *dreamhost) Update(client network.Client, ip net.IP) (newIP net.IP, err error) {
-	if ip == nil {
-		return nil, fmt.Errorf("IP address was not given to updater")
+	recordType := "A"
+	if ip.To4() == nil {
+		recordType = "AAAA"
 	}
 	records, err := listDreamhostRecords(client, d.key)
 	if err != nil {
@@ -99,7 +100,7 @@ func (d *dreamhost) Update(client network.Client, ip net.IP) (newIP net.IP, err 
 	}
 	var oldIP net.IP
 	for _, data := range records.Data {
-		if data.Type == "A" && data.Record == d.BuildDomainName() {
+		if data.Type == recordType && data.Record == d.BuildDomainName() {
 			if data.Editable == "0" {
 				return nil, fmt.Errorf("record data is not editable")
 			}
@@ -169,6 +170,10 @@ func listDreamhostRecords(client network.Client, key string) (records dreamHostR
 }
 
 func removeDreamhostRecord(client network.Client, key, domain string, ip net.IP) error { //nolint:dupl
+	recordType := "A"
+	if ip.To4() == nil {
+		recordType = "AAAA"
+	}
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.dreamhost.com",
@@ -176,7 +181,7 @@ func removeDreamhostRecord(client network.Client, key, domain string, ip net.IP)
 	values := makeDreamhostDefaultValues(key)
 	values.Set("cmd", "dns-remove_record")
 	values.Set("record", domain)
-	values.Set("type", "A")
+	values.Set("type", recordType)
 	values.Set("value", ip.String())
 	u.RawQuery = values.Encode()
 	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
@@ -200,6 +205,10 @@ func removeDreamhostRecord(client network.Client, key, domain string, ip net.IP)
 }
 
 func addDreamhostRecord(client network.Client, key, domain string, ip net.IP) error { //nolint:dupl
+	recordType := "A"
+	if ip.To4() == nil {
+		recordType = "AAAA"
+	}
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.dreamhost.com",
@@ -207,7 +216,7 @@ func addDreamhostRecord(client network.Client, key, domain string, ip net.IP) er
 	values := makeDreamhostDefaultValues(key)
 	values.Set("cmd", "dns-add_record")
 	values.Set("record", domain)
-	values.Set("type", "A")
+	values.Set("type", recordType)
 	values.Set("value", ip.String())
 	u.RawQuery = values.Encode()
 	r, err := http.NewRequest(http.MethodGet, u.String(), nil)

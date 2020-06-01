@@ -192,7 +192,7 @@ func (c *cloudflare) getRecordIdentifier(client netlib.Client, newIP net.IP) (id
 
 func (c *cloudflare) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
-	if newIP.To4() == nil {
+	if ip.To4() == nil {
 		recordType = AAAA
 	}
 	identifier, upToDate, err := c.getRecordIdentifier(client, ip)

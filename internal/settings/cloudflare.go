@@ -90,7 +90,7 @@ func (c *cloudflare) isValid() error {
 }
 
 func (c *cloudflare) String() string {
-	return toString(c.domain, c.host, constants.DREAMHOST, c.ipVersion)
+	return toString(c.domain, c.host, constants.CLOUDFLARE, c.ipVersion)
 }
 
 func (c *cloudflare) Domain() string {

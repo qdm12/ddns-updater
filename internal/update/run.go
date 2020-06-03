@@ -136,15 +136,20 @@ func getIPMatchingVersion(ip, ipv4, ipv6 net.IP, ipVersion models.IPVersion) net
 	return nil
 }
 
-func (r *runner) setEmptyUpToDateRecord(id int, record librecords.Record, ip, ipv4, ipv6 net.IP, now time.Time) error {
-	updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
-	record.History = append(record.History, models.HistoryEvent{
-		IP:   updateIP,
-		Time: now,
-	})
+func setInitialUpToDateStatus(db data.Database, id int, updateIP net.IP, now time.Time) error {
+	record, err := db.Select(id)
+	if err != nil {
+		return err
+	}
 	record.Status = constants.UPTODATE
 	record.Time = now
-	return r.db.Update(id, record)
+	if record.History.GetCurrentIP() == nil {
+		record.History = append(record.History, models.HistoryEvent{
+			IP:   updateIP,
+			Time: now,
+		})
+	}
+	return db.Update(id, record)
 }
 
 func (r *runner) updateNecessary() {
@@ -158,12 +163,12 @@ func (r *runner) updateNecessary() {
 	now := r.timeNow()
 	for id, record := range records {
 		_, requireUpdate := recordIDs[id]
-		unset := record.History.GetCurrentIP() == nil && record.Status == constants.UNSET
-		if !requireUpdate && unset {
-			err := r.setEmptyUpToDateRecord(id, record, ip, ipv4, ipv6, now)
-			if err != nil {
-				r.logger.Error(err)
-			}
+		if requireUpdate || record.Status != constants.UNSET {
+			continue
+		}
+		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
+		if err := setInitialUpToDateStatus(r.db, id, updateIP, now); err != nil {
+			r.logger.Error(err)
 		}
 	}
 	for id := range recordIDs {

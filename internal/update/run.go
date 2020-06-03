@@ -97,7 +97,7 @@ func (r *runner) getRecordIDsToUpdate(records []librecords.Record, ip, ipv4, ipv
 		hostname := record.Settings.BuildDomainName()
 		recordIPv4, recordIPv6, err := r.lookupIPs(hostname)
 		if err != nil {
-			r.logger.Warn(err)
+			r.logger.Warn(err) // update anyway
 		}
 		switch record.Settings.IPVersion() {
 		case constants.IPv4OrIPv6:
@@ -106,17 +106,17 @@ func (r *runner) getRecordIDsToUpdate(records []librecords.Record, ip, ipv4, ipv
 				if ip.To4() == nil {
 					recordIP = recordIPv6
 				}
-				r.logger.Info("IP address changed from %s to %s", recordIP, ip)
+				r.logger.Info("IP address of %s is %s and your IP address is %s", hostname, recordIP, ip)
 				recordIDs[id] = struct{}{}
 			}
 		case constants.IPv4:
 			if ipv4 != nil && !ipv4.Equal(recordIPv4) {
-				r.logger.Info("IPv4 address changed from %s to %s", recordIPv4, ipv4)
+				r.logger.Info("IPv4 address of %s is %s and your IPv4 address is %s", hostname, recordIPv4, ipv4)
 				recordIDs[id] = struct{}{}
 			}
 		case constants.IPv6:
 			if ipv6 != nil && !ipv6.Equal(recordIPv6) {
-				r.logger.Info("IPv6 address changed from %s to %s", recordIPv6, ipv6)
+				r.logger.Info("IPv6 address of %s is %s and your IPv6 address is %s", hostname, recordIPv6, ipv6)
 				recordIDs[id] = struct{}{}
 			}
 		}

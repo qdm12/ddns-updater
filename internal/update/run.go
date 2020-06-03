@@ -169,7 +169,7 @@ func (r *runner) updateNecessary() {
 	for id := range recordIDs {
 		record := records[id]
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
-		r.logger.Info("Updating record %s", record.Settings)
+		r.logger.Info("Updating record %s to use %s", record.Settings, updateIP)
 		if err := r.updater.Update(id, updateIP, r.timeNow()); err != nil {
 			r.logger.Error(err)
 		}

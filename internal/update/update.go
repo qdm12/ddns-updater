@@ -42,29 +42,21 @@ func (u *updater) Update(id int, ip net.IP, now time.Time) (err error) {
 	if err := u.db.Update(id, record); err != nil {
 		return err
 	}
-	var newIP net.IP
 	record.Status = constants.FAIL
-	if ip.Equal(record.History.GetCurrentIP()) {
-		record.Status = constants.UPTODATE
-		record.Message = fmt.Sprintf("No IP change for %s", record.History.GetDurationSinceSuccess(now))
-	} else {
-		newIP, err = record.Settings.Update(u.client, ip)
-		if err != nil {
-			record.Message = err.Error()
-			if updateErr := u.db.Update(id, record); updateErr != nil {
-				return fmt.Errorf("%s, %s", err, updateErr)
-			}
-			return err
+	newIP, err := record.Settings.Update(u.client, ip)
+	if err != nil {
+		record.Message = err.Error()
+		if updateErr := u.db.Update(id, record); updateErr != nil {
+			return fmt.Errorf("%s, %s", err, updateErr)
 		}
-		record.Status = constants.SUCCESS
-		record.Message = fmt.Sprintf("changed to %s", ip.String())
+		return err
 	}
-	if newIP != nil {
-		record.History = append(record.History, models.HistoryEvent{
-			IP:   newIP,
-			Time: now,
-		})
-		u.notify(1, fmt.Sprintf("%s %s", record.Settings.BuildDomainName(), record.Message))
-	}
+	record.Status = constants.SUCCESS
+	record.Message = fmt.Sprintf("changed to %s", ip.String())
+	record.History = append(record.History, models.HistoryEvent{
+		IP:   newIP,
+		Time: now,
+	})
+	u.notify(1, fmt.Sprintf("%s %s", record.Settings.BuildDomainName(), record.Message))
 	return u.db.Update(id, record) // persists some data if needed (i.e new IP)
 }

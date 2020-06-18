@@ -178,7 +178,7 @@ func (r *reader) GetIPv6Method() (method models.IPMethod, err error) {
 	return models.IPMethod{
 		Name: s,
 		URL:  s,
-		IPv4: true,
+		IPv6: true,
 	}, nil
 }
 

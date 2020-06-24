@@ -113,6 +113,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) 
 		settingsConstructor = settings.NewCloudflare
 	case constants.DDNSSDE:
 		settingsConstructor = settings.NewDdnss
+	case constants.DONDOMINIO:
+		settingsConstructor = settings.NewDonDominio
 	case constants.DNSPOD:
 		settingsConstructor = settings.NewDNSPod
 	case constants.DREAMHOST:

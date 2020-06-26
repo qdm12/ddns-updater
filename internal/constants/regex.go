@@ -10,7 +10,7 @@ const (
 	dreamhostKey             = `[a-zA-Z0-9]{16}`
 	cloudflareKey            = `[a-zA-Z0-9]+`
 	cloudflareUserServiceKey = `v1\.0.+`
-	cloudflareToken          = `[a-zA-Z0-9_]{40}` // #nosec
+	cloudflareToken          = `[a-zA-Z0-9_-]{40}` // #nosec
 )
 
 func MatchGodaddyKey(s string) bool {

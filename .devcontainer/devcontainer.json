@@ -12,7 +12,7 @@
     "workspaceFolder": "/workspace",
     "appPort": 8000,
     "extensions": [
-        "ms-vscode.go",
+        "golang.go",
         "IBM.output-colorizer",
         "eamodio.gitlens",
         "mhutchie.git-graph",

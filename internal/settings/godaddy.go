@@ -55,7 +55,7 @@ func (g *godaddy) isValid() error {
 }
 
 func (g *godaddy) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Godaddy]", g.domain, g.host)
+	return toString(g.domain, g.host, constants.GODADDY, g.ipVersion)
 }
 
 func (g *godaddy) Domain() string {

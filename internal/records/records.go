@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/settings"
 )
@@ -22,6 +23,7 @@ func New(settings settings.Settings, events []models.HistoryEvent) Record {
 	return Record{
 		Settings: settings,
 		History:  events,
+		Status:   constants.UNSET,
 	}
 }
 

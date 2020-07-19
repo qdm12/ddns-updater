@@ -60,6 +60,8 @@ func convertStatus(status models.Status) models.HTML {
 		return `<font color="#00CC66"><b>Up to date</b></font>`
 	case constants.UPDATING:
 		return `<font color="orange"><b>Updating</b></font>`
+	case constants.UNSET:
+		return `<font color="purple"><b>Unset</b></font>`
 	default:
 		return "Unknown status"
 	}

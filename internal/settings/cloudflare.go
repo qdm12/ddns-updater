@@ -90,7 +90,7 @@ func (c *cloudflare) isValid() error {
 }
 
 func (c *cloudflare) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Cloudflare]", c.domain, c.host)
+	return toString(c.domain, c.host, constants.CLOUDFLARE, c.ipVersion)
 }
 
 func (c *cloudflare) Domain() string {
@@ -192,7 +192,7 @@ func (c *cloudflare) getRecordIdentifier(client netlib.Client, newIP net.IP) (id
 
 func (c *cloudflare) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
-	if newIP.To4() == nil {
+	if ip.To4() == nil {
 		recordType = AAAA
 	}
 	identifier, upToDate, err := c.getRecordIdentifier(client, ip)

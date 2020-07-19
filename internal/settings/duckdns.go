@@ -55,7 +55,7 @@ func (d *duckdns) isValid() error {
 }
 
 func (d *duckdns) String() string {
-	return fmt.Sprintf("[domain: duckdns.org | host: %s | provider: Duckdns]", d.host)
+	return toString("duckdns..org", d.host, constants.DUCKDNS, d.ipVersion)
 }
 
 func (d *duckdns) Domain() string {

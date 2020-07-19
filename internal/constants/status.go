@@ -7,4 +7,5 @@ const (
 	SUCCESS  models.Status = "success"
 	UPTODATE models.Status = "up to date"
 	UPDATING models.Status = "updating"
+	UNSET    models.Status = "unset"
 )

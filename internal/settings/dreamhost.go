@@ -55,7 +55,7 @@ func (d *dreamhost) isValid() error {
 }
 
 func (d *dreamhost) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Dreamhost]", d.domain, d.host)
+	return toString(d.domain, d.host, constants.DREAMHOST, d.ipVersion)
 }
 
 func (d *dreamhost) Domain() string {

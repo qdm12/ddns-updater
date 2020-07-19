@@ -133,12 +133,12 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 			logger.Error(err)
 		}
 	}()
-	updater := update.NewUpdater(db, logger, client, notify)
+	updater := update.NewUpdater(db, client, notify)
 	ipGetter := update.NewIPGetter(client, p.ipMethod, p.ipv4Method, p.ipv6Method)
-	runner := update.NewRunner(updater, ipGetter, logger, timeNow)
+	runner := update.NewRunner(db, updater, ipGetter, logger, timeNow)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	forceUpdate := runner.Run(ctx, p.period, records)
+	forceUpdate := runner.Run(ctx, p.period)
 	forceUpdate()
 	productionHandlerFunc := handlers.MakeHandler(p.rootURL, p.dir+"/ui", db, logger, forceUpdate, timeNow)
 	healthcheckHandlerFunc := libhealthcheck.GetHandler(func() error {

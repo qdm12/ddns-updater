@@ -6,54 +6,66 @@ import (
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
+	"github.com/qdm12/ddns-updater/internal/data"
+	"github.com/qdm12/ddns-updater/internal/models"
 	librecords "github.com/qdm12/ddns-updater/internal/records"
 	"github.com/qdm12/golibs/logging"
 )
 
 type Runner interface {
-	Run(ctx context.Context, period time.Duration, records []librecords.Record) (forceUpdate func())
+	Run(ctx context.Context, period time.Duration) (forceUpdate func())
 }
 
 type runner struct {
-	updater  Updater
-	ipGetter IPGetter
-	logger   logging.Logger
-	timeNow  func() time.Time
+	db          data.Database
+	updater     Updater
+	netLookupIP func(hostname string) ([]net.IP, error)
+	ipGetter    IPGetter
+	logger      logging.Logger
+	timeNow     func() time.Time
 }
 
-func NewRunner(updater Updater, ipGetter IPGetter, logger logging.Logger, timeNow func() time.Time) Runner {
+func NewRunner(db data.Database, updater Updater, ipGetter IPGetter, logger logging.Logger, timeNow func() time.Time) Runner {
 	return &runner{
-		updater:  updater,
-		ipGetter: ipGetter,
-		logger:   logger,
-		timeNow:  timeNow,
+		db:          db,
+		updater:     updater,
+		netLookupIP: net.LookupIP,
+		ipGetter:    ipGetter,
+		logger:      logger,
+		timeNow:     timeNow,
 	}
 }
 
-func readPersistedIPs(records []librecords.Record) (ip, ipv4, ipv6 net.IP) {
+func (r *runner) lookupIPs(hostname string) (ipv4 net.IP, ipv6 net.IP, err error) {
+	ips, err := r.netLookupIP(hostname)
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, ip := range ips {
+		if ip.To4() == nil {
+			ipv6 = ip
+		} else {
+			ipv4 = ip
+		}
+	}
+	return ipv4, ipv6, nil
+}
+
+func doIPVersion(records []librecords.Record) (doIP, doIPv4, doIPv6 bool) {
 	for _, record := range records {
 		switch record.Settings.IPVersion() {
 		case constants.IPv4OrIPv6:
-			ip = record.History.GetCurrentIP()
-			if ip == nil {
-				ip = net.IP{127, 0, 0, 1}
-			}
+			doIP = true
 		case constants.IPv4:
-			ipv4 = record.History.GetCurrentIP()
-			if ipv4 == nil {
-				ipv4 = net.IP{127, 0, 0, 1}
-			}
+			doIPv4 = true
 		case constants.IPv6:
-			ipv6 = record.History.GetCurrentIP()
-			if ipv6 == nil {
-				ipv6 = net.IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
-			}
+			doIPv6 = true
 		}
-		if ip != nil && ipv4 != nil && ipv6 != nil {
-			return ip, ipv4, ipv6
+		if doIP && doIPv4 && doIPv6 {
+			return true, true, true
 		}
 	}
-	return ip, ipv4, ipv6
+	return doIP, doIPv4, doIPv6
 }
 
 func (r *runner) getNewIPs(doIP, doIPv4, doIPv6 bool) (ip, ipv4, ipv6 net.IP, errors []error) {
@@ -79,68 +91,106 @@ func (r *runner) getNewIPs(doIP, doIPv4, doIPv6 bool) (ip, ipv4, ipv6 net.IP, er
 	return ip, ipv4, ipv6, errors
 }
 
-func shouldUpdate(ip, newIP net.IP, force bool) bool {
-	ipVersionDisabled := ip == nil
-	ipFetchFailed := newIP == nil
-	ipChanged := !ip.Equal(newIP)
-	switch {
-	case ipVersionDisabled, ipFetchFailed:
-		return false
-	case ipChanged, force:
-		return true
-	default:
-		return false
+func (r *runner) getRecordIDsToUpdate(records []librecords.Record, ip, ipv4, ipv6 net.IP) (recordIDs map[int]struct{}) {
+	recordIDs = make(map[int]struct{})
+	for id, record := range records {
+		hostname := record.Settings.BuildDomainName()
+		recordIPv4, recordIPv6, err := r.lookupIPs(hostname)
+		if err != nil {
+			r.logger.Warn(err) // update anyway
+		}
+		switch record.Settings.IPVersion() {
+		case constants.IPv4OrIPv6:
+			if ip != nil && !ip.Equal(recordIPv4) && !ip.Equal(recordIPv6) {
+				recordIP := recordIPv4
+				if ip.To4() == nil {
+					recordIP = recordIPv6
+				}
+				r.logger.Info("IP address of %s is %s and your IP address is %s", hostname, recordIP, ip)
+				recordIDs[id] = struct{}{}
+			}
+		case constants.IPv4:
+			if ipv4 != nil && !ipv4.Equal(recordIPv4) {
+				r.logger.Info("IPv4 address of %s is %s and your IPv4 address is %s", hostname, recordIPv4, ipv4)
+				recordIDs[id] = struct{}{}
+			}
+		case constants.IPv6:
+			if ipv6 != nil && !ipv6.Equal(recordIPv6) {
+				r.logger.Info("IPv6 address of %s is %s and your IPv6 address is %s", hostname, recordIPv6, ipv6)
+				recordIDs[id] = struct{}{}
+			}
+		}
 	}
+	return recordIDs
 }
 
-func (r *runner) updateNecessary(records []librecords.Record, ip, ipv4, ipv6 net.IP, force bool) (newIP, newIPv4, newIPv6 net.IP) {
-	newIP, newIPv4, newIPv6, errors := r.getNewIPs(ip != nil, ipv4 != nil, ipv6 != nil)
+func getIPMatchingVersion(ip, ipv4, ipv6 net.IP, ipVersion models.IPVersion) net.IP {
+	switch ipVersion {
+	case constants.IPv4OrIPv6:
+		return ip
+	case constants.IPv4:
+		return ipv4
+	case constants.IPv6:
+		return ipv6
+	}
+	return nil
+}
+
+func setInitialUpToDateStatus(db data.Database, id int, updateIP net.IP, now time.Time) error {
+	record, err := db.Select(id)
+	if err != nil {
+		return err
+	}
+	record.Status = constants.UPTODATE
+	record.Time = now
+	if record.History.GetCurrentIP() == nil {
+		record.History = append(record.History, models.HistoryEvent{
+			IP:   updateIP,
+			Time: now,
+		})
+	}
+	return db.Update(id, record)
+}
+
+func (r *runner) updateNecessary() {
+	records := r.db.SelectAll()
+	doIP, doIPv4, doIPv6 := doIPVersion(records)
+	ip, ipv4, ipv6, errors := r.getNewIPs(doIP, doIPv4, doIPv6)
 	for _, err := range errors {
 		r.logger.Error(err)
 	}
-	updateIP := shouldUpdate(ip, newIP, force)
-	updateIPv4 := shouldUpdate(ipv4, newIPv4, force)
-	updateIPv6 := shouldUpdate(ipv6, newIPv6, force)
-	if updateIP && !force {
-		r.logger.Info("IP address changed from %s to %s", ip, newIP)
-	}
-	if updateIPv4 && !force {
-		r.logger.Info("IPv4 address changed from %s to %s", ipv4, newIPv4)
-	}
-	if updateIPv6 && !force {
-		r.logger.Info("IPv6 address changed from %s to %s", ipv6, newIPv6)
-	}
+	recordIDs := r.getRecordIDsToUpdate(records, ip, ipv4, ipv6)
+	now := r.timeNow()
 	for id, record := range records {
-		now := r.timeNow()
-		var err error
-		switch {
-		case updateIP && record.Settings.IPVersion() == constants.IPv4OrIPv6:
-			err = r.updater.Update(id, newIP, now)
-		case updateIPv4 && record.Settings.IPVersion() == constants.IPv4:
-			err = r.updater.Update(id, newIPv4, now)
-		case updateIPv6 && record.Settings.IPVersion() == constants.IPv6:
-			err = r.updater.Update(id, newIPv6, now)
+		_, requireUpdate := recordIDs[id]
+		if requireUpdate || record.Status != constants.UNSET {
+			continue
 		}
-		if err != nil {
+		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
+		if err := setInitialUpToDateStatus(r.db, id, updateIP, now); err != nil {
 			r.logger.Error(err)
 		}
 	}
-	return newIP, newIPv4, newIPv6
+	for id := range recordIDs {
+		record := records[id]
+		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
+		r.logger.Info("Updating record %s to use %s", record.Settings, updateIP)
+		if err := r.updater.Update(id, updateIP, r.timeNow()); err != nil {
+			r.logger.Error(err)
+		}
+	}
 }
 
-func (r *runner) Run(ctx context.Context, period time.Duration, records []librecords.Record) (forceUpdate func()) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+func (r *runner) Run(ctx context.Context, period time.Duration) (forceUpdate func()) {
 	timer := time.NewTicker(period)
 	forceChannel := make(chan struct{})
 	go func() {
-		ip, ipv4, ipv6 := readPersistedIPs(records)
 		for {
 			select {
 			case <-timer.C:
-				ip, ipv4, ipv6 = r.updateNecessary(records, ip, ipv4, ipv6, false)
+				r.updateNecessary()
 			case <-forceChannel:
-				ip, ipv4, ipv6 = r.updateNecessary(records, ip, ipv4, ipv6, true)
+				r.updateNecessary()
 			case <-ctx.Done():
 				timer.Stop()
 				return

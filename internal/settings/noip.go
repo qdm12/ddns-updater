@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	netlib "github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
@@ -63,7 +64,7 @@ func (n *noip) isValid() error {
 }
 
 func (n *noip) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Noip]", n.domain, n.host)
+	return toString(n.domain, n.host, constants.NOIP, n.ipVersion)
 }
 
 func (n *noip) Domain() string {

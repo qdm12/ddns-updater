@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/golibs/network"
 )
@@ -60,7 +61,7 @@ func (i *infomaniak) isValid() error {
 }
 
 func (i *infomaniak) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Infomaniak]", i.domain, i.host)
+	return toString(i.domain, i.host, constants.INFOMANIAK, i.ipVersion)
 }
 
 func (i *infomaniak) Domain() string {

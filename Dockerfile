@@ -1,4 +1,4 @@
-ARG ALPINE_VERSION=3.11
+ARG ALPINE_VERSION=3.12
 ARG GO_VERSION=1.14
 
 FROM alpine:${ALPINE_VERSION} AS alpine
@@ -23,6 +23,9 @@ FROM scratch
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
+ENV VERSION=$VERSION \
+    BUILD_DATE=$BUILD_DATE \
+    VCS_REF=$VCS_REF
 LABEL \
     org.opencontainers.image.authors="quentin.mcgaw@gmail.com" \
     org.opencontainers.image.created=$BUILD_DATE \

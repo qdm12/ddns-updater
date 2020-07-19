@@ -18,6 +18,7 @@ assignees:
 
     - [x] Cloudflare
     - [ ] DDNSS.de
+    - [ ] DonDominio
     - [ ] DNSPod
     - [ ] Dreamhost
     - [ ] DuckDNS

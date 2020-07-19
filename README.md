@@ -1,6 +1,6 @@
 # Lightweight universal DDNS Updater with Docker and web UI
 
-*Light container updating DNS A records periodically for Cloudflare, DDNSS.de, DNSPod, Dreamhost, DuckDNS, DynDNS, GoDaddy, Google, Infomaniak, Namecheap and NoIP*
+*Light container updating DNS A records periodically for Cloudflare, DDNSS.de, DonDominio, DNSPod, Dreamhost, DuckDNS, DynDNS, GoDaddy, Google, Infomaniak, Namecheap and NoIP*
 
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
@@ -17,7 +17,7 @@
 
 ## Features
 
-- Updates periodically A records for different DNS providers: Cloudflare, DDNSS.de, DNSPod, Dreamhost, DuckDNS, DynDNS, GoDaddy, Google, Infomaniak, Namecheap and NoIP ([create an issue](https://github.com/qdm12/ddns-updater/issues/new/choose) for more)
+- Updates periodically A records for different DNS providers: Cloudflare, DDNSS.de, DonDominio, DNSPod, Dreamhost, DuckDNS, DynDNS, GoDaddy, Google, Infomaniak, Namecheap and NoIP ([create an issue](https://github.com/qdm12/ddns-updater/issues/new/choose) for more)
 - Web User interface
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
@@ -128,7 +128,7 @@ Start by having the following content in *config.json*, or in your `CONFIG` envi
 
 The following parameters are to be added:
 
-For all record update configuration, you have to specify the DNS provider with `"provider"` which can be `"cloudflare"`, `"ddnss"`, `"dnspod"`, `"dreamhost"`, `"duckdns"`, `"godaddy"`, `"google"`, `"infomaniak"`, `"namecheap"` or `"noip"`.
+For all record update configuration, you have to specify the DNS provider with `"provider"` which can be `"cloudflare"`, `"ddnss"`, `"dondominio"`, `"dnspod"`, `"dreamhost"`, `"duckdns"`, `"godaddy"`, `"google"`, `"infomaniak"`, `"namecheap"` or `"noip"`.
 You can optionnally add the parameters:
 
 - `"no_dns_lookup"` can be `true` or `false` and allows, if `true`, to prevent the periodic Docker healthcheck from running a DNS lookup on your domain.
@@ -222,6 +222,14 @@ Google:
 - `"password"`
 - `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
+DonDominio:
+
+- `"domain"`
+- `"username"`
+- `"password"`
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
+- `"name"` is the name server associated with the domain
+
 ### Additional notes
 
 - You can specify multiple hosts for the same domain using a comma separated list. For example with `"host": "@,subdomain1,subdomain2",`.
@@ -263,7 +271,7 @@ By default, all ip methods are cycled through between all ip methods available f
   - `"noip4"` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
   - `"noip8245_4"` using [http://ip1.dynupdate.no-ip.com:8245](http://ip1.dynupdate.no-ip.com:8245)
 - IPv6 only
-  - `ipify6` using [https://api6.ipify.org](https://api.ipify.org)
+  - `ipify6` using [https://api6.ipify.org](https://api6.ipify.org)
   - `"ddnss6"` using [https://ip6.ddnss.de/meineip.php](https://ip6.ddnss.de/meineip.php)
   - `"noip6"` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
   - `"noip8245_6"` using [http://ip1.dynupdate.no-ip.com:8245](http://ip1.dynupdate.no-ip.com:8245)

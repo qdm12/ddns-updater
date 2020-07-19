@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/golibs/network"
 )
@@ -48,7 +49,7 @@ func (d *dnspod) isValid() error {
 }
 
 func (d *dnspod) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: DNSPod]", d.domain, d.host)
+	return toString(d.domain, d.host, constants.DNSPOD, d.ipVersion)
 }
 
 func (d *dnspod) Domain() string {

@@ -2,6 +2,7 @@ package settings
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -30,4 +31,8 @@ func buildDomainName(host, domain string) string {
 	default:
 		return host + "." + domain
 	}
+}
+
+func toString(domain, host string, provider models.Provider, ipVersion models.IPVersion) string {
+	return fmt.Sprintf("[domain: %s | host: %s | provider: %s | ip: %s]", domain, host, provider, ipVersion)
 }

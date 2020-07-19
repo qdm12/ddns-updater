@@ -128,7 +128,7 @@ Start by having the following content in *config.json*, or in your `CONFIG` envi
 
 The following parameters are to be added:
 
-For all record update configuration, you have to specify the DNS provider with `"provider"` which can be `"cloudflare"`, `"ddnss"`, `"dondominio"`, `"dnspod"`, `"dreamhost"`, `"duckdns"`, `"godaddy"`, `"google"`, `"infomaniak"`, `"namecheap"` or `"noip"`.
+For all record update configuration, you have to specify the DNS provider with `"provider"` which can be `"cloudflare"`, `"ddnss"`, `"dondominio"`, `"dnspod"`, `"dreamhost"`, `"duckdns"`, `"dyn"`, `"godaddy"`, `"google"`, `"infomaniak"`, `"namecheap"` or `"noip"`.
 You can optionnally add the parameters:
 
 - `"no_dns_lookup"` can be `true` or `false` and allows, if `true`, to prevent the periodic Docker healthcheck from running a DNS lookup on your domain.

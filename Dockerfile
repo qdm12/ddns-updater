@@ -64,6 +64,7 @@ ENV \
     LOG_LEVEL=info \
     NODE_ID=-1 \
     GOTIFY_URL= \
-    GOTIFY_TOKEN=
+    GOTIFY_TOKEN= \
+    TZ=
 COPY --from=builder --chown=1000 /tmp/gobuild/app /updater/app
 COPY --chown=1000 ui/* /updater/ui/

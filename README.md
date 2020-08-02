@@ -253,6 +253,7 @@ DonDominio:
 | `NODE_ID` | `-1` | Node ID (for distributed systems), can be any integer |
 | `GOTIFY_URL` |  | (optional) HTTP(s) URL to your Gotify server |
 | `GOTIFY_TOKEN` |  | (optional) Token to access your Gotify server |
+| `TZ` | | Timezone to have accurate times, i.e. `America/Montreal` |
 
 #### IP methods
 

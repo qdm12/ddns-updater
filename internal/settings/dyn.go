@@ -98,7 +98,7 @@ func (d *dyn) Update(client network.Client, ip net.IP) (newIP net.IP, err error)
 		Host:   "members.dyndns.org",
 		Path:   "/v3/update",
 	}
-	var values url.Values
+	values := url.Values{}
 	switch d.host {
 	case "@":
 		values.Set("hostname", d.domain)

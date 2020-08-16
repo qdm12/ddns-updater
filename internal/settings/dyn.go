@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/golibs/network"
@@ -122,12 +123,12 @@ func (d *dyn) Update(client network.Client, ip net.IP) (newIP net.IP, err error)
 		return nil, fmt.Errorf("HTTP status %d", status)
 	}
 	s := string(content)
-	switch s {
-	case "notfqdn":
+	switch {
+	case strings.HasPrefix(s, "notfqdn"):
 		return nil, fmt.Errorf("fully qualified domain name is not valid")
-	case "badrequest":
+	case strings.HasPrefix(s, "badrequest"):
 		return nil, fmt.Errorf("bad request")
-	case "success":
+	case strings.HasPrefix(s, "good"):
 		return ip, nil
 	default:
 		return nil, fmt.Errorf("unknown response: %s", s)

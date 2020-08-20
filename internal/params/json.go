@@ -131,6 +131,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) 
 		settingsConstructor = settings.NewNamecheap
 	case constants.NOIP:
 		settingsConstructor = settings.NewNoip
+	case constants.DYN:
+		settingsConstructor = settings.NewDyn
 	default:
 		return nil, warnings, fmt.Errorf("provider %q is not supported", provider)
 	}

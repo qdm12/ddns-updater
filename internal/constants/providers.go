@@ -9,6 +9,7 @@ const (
 	DONDOMINIO models.Provider = "dondominio"
 	DNSPOD     models.Provider = "dnspod"
 	DUCKDNS    models.Provider = "duckdns"
+	DYN        models.Provider = "dyn"
 	DREAMHOST  models.Provider = "dreamhost"
 	GODADDY    models.Provider = "godaddy"
 	GOOGLE     models.Provider = "google"
@@ -24,6 +25,7 @@ func ProviderChoices() []models.Provider {
 		DONDOMINIO,
 		DNSPOD,
 		DUCKDNS,
+		DYN,
 		DREAMHOST,
 		GODADDY,
 		GOOGLE,

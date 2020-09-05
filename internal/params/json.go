@@ -8,7 +8,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/settings"
-	"github.com/qdm12/golibs/verification"
 )
 
 // nolint: maligned
@@ -91,8 +90,6 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) 
 				warnings = append(warnings, fmt.Sprintf("ignoring domain %q because host %q is specified for DuckDNS record", common.Domain, common.Host))
 			}
 		}
-	} else if !verification.NewVerifier().MatchDomain(common.Domain) {
-		return nil, warnings, fmt.Errorf("invalid domain name format %q", common.Domain)
 	}
 	hosts := strings.Split(common.Host, ",")
 	for _, host := range hosts {

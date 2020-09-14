@@ -1,6 +1,6 @@
 # Lightweight universal DDNS Updater with Docker and web UI
 
-*Light container updating DNS A records periodically for Cloudflare, DDNSS.de, DonDominio, DNSPod, Dreamhost, DuckDNS, DynDNS, GoDaddy, Google, Infomaniak, Namecheap and NoIP*
+*Light container updating DNS A records periodically for Cloudflare, DDNSS.de, DonDominio, DNSPod, Dreamhost, DuckDNS, DynDNS, GoDaddy, Google, He.net, Infomaniak, Namecheap and NoIP*
 
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
@@ -17,7 +17,7 @@
 
 ## Features
 
-- Updates periodically A records for different DNS providers: Cloudflare, DDNSS.de, DonDominio, DNSPod, Dreamhost, DuckDNS, DynDNS, GoDaddy, Google, Infomaniak, Namecheap and NoIP ([create an issue](https://github.com/qdm12/ddns-updater/issues/new/choose) for more)
+- Updates periodically A records for different DNS providers: Cloudflare, DDNSS.de, DonDominio, DNSPod, Dreamhost, DuckDNS, DynDNS, GoDaddy, Google, He.net, Infomaniak, Namecheap and NoIP ([create an issue](https://github.com/qdm12/ddns-updater/issues/new/choose) for more)
 - Web User interface
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
@@ -128,11 +128,11 @@ Start by having the following content in *config.json*, or in your `CONFIG` envi
 
 The following parameters are to be added:
 
-For all record update configuration, you have to specify the DNS provider with `"provider"` which can be `"cloudflare"`, `"ddnss"`, `"dondominio"`, `"dnspod"`, `"dreamhost"`, `"duckdns"`, `"dyn"`, `"godaddy"`, `"google"`, `"infomaniak"`, `"namecheap"` or `"noip"`.
+For all record update configuration, you have to specify the DNS provider with `"provider"` which can be `"cloudflare"`, `"ddnss"`, `"dondominio"`, `"dnspod"`, `"dreamhost"`, `"duckdns"`, `"dyn"`, `"godaddy"`, `"google"`, `"he"`, `"infomaniak"`, `"namecheap"` or `"noip"`.
 You can optionnally add the parameters:
 
 - `"no_dns_lookup"` can be `true` or `false` and allows, if `true`, to prevent the program from doing assumptions from DNS lookups returning an IP address not matching your public IP address (in example for proxied records on Cloudflare).
-- `"provider_ip"` can be `true` or `false`. It is only available for the providers `ddnss`, `duckdns`, `infomaniak`, `namecheap`, `noip` and `dyndns`. It allows to let your DNS provider to determine your IPv4 address (and/or IPv6 address) automatically when you send an update request, without sending the new IP address detected by the program in the request.
+- `"provider_ip"` can be `true` or `false`. It is only available for the providers `ddnss`, `duckdns`, `he`, `infomaniak`, `namecheap`, `noip` and `dyndns`. It allows to let your DNS provider to determine your IPv4 address (and/or IPv6 address) automatically when you send an update request, without sending the new IP address detected by the program in the request.
 
 For each DNS provider exist some specific parameters you need to add, as described below:
 
@@ -188,6 +188,13 @@ DNSPOD:
 - `"domain"`
 - `"host"` is your host and can be a subdomain or `"@"`
 - `"token"`
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
+
+HE.net:
+
+- `"domain"`
+- `"host"` is your host and can be a subdomain or `"@"` or `"*"` (untested)
+- `"password"`
 - `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 Infomaniak:

@@ -2,9 +2,9 @@ package constants
 
 const (
 	// Announcement is a message announcement
-	Announcement = "Support for Dyn DNS"
+	Announcement = "Support for he.net"
 	// AnnouncementExpiration is the expiration date of the announcement in format yyyy-mm-dd
-	AnnouncementExpiration = "2020-06-15"
+	AnnouncementExpiration = "2020-10-15"
 )
 
 const (

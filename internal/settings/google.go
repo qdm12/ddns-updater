@@ -124,13 +124,13 @@ func (g *google) Update(client netlib.Client, ip net.IP) (newIP net.IP, err erro
 		return nil, fmt.Errorf("hostname does not exist")
 	case badauth:
 		return nil, fmt.Errorf("invalid username password combination")
-	case "notfqdn":
+	case notfqdn:
 		return nil, fmt.Errorf("hostname %q is not a valid fully qualified domain name", fqdn)
-	case "badagent":
+	case badagent:
 		return nil, fmt.Errorf("user agent is banned")
-	case "abuse":
+	case abuse:
 		return nil, fmt.Errorf("username is banned due to abuse")
-	case "911":
+	case nineoneone:
 		return nil, fmt.Errorf("Google's internal server error 911")
 	case "conflict A":
 		return nil, fmt.Errorf("custom A record conflicts with the update")

@@ -117,6 +117,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, 
 		settingsConstructor = settings.NewDdnss
 	case constants.DONDOMINIO:
 		settingsConstructor = settings.NewDonDominio
+	case constants.DNSOMATIC:
+		settingsConstructor = settings.NewDNSOMatic
 	case constants.DNSPOD:
 		settingsConstructor = settings.NewDNSPod
 	case constants.DREAMHOST:

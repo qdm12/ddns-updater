@@ -19,6 +19,7 @@ assignees: qdm12
     - [x] Cloudflare
     - [ ] DDNSS.de
     - [ ] DonDominio
+    - [ ] DNSOMatic
     - [ ] DNSPod
     - [ ] Dreamhost
     - [ ] DuckDNS

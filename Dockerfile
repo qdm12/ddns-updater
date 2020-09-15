@@ -38,7 +38,7 @@ LABEL \
     org.opencontainers.image.documentation="https://github.com/qdm12/ddns-updater" \
     org.opencontainers.image.source="https://github.com/qdm12/ddns-updater" \
     org.opencontainers.image.title="ddns-updater" \
-    org.opencontainers.image.description="Universal DNS updater with WebUI. Works with Cloudflare, DDNSS.de, DNSPod, Dreamhost, DuckDNS, DynDNS, GoDaddy, Google, He.net, Infomaniak, Namecheap and NoIP"
+    org.opencontainers.image.description="Universal DNS updater with WebUI. Works with Cloudflare, DDNSS.de, DNSOMatic, DNSPod, Dreamhost, DuckDNS, DynDNS, GoDaddy, Google, He.net, Infomaniak, Namecheap and NoIP"
 COPY --from=alpine --chown=1000 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=alpine --chown=1000 /usr/share/zoneinfo /usr/share/zoneinfo
 EXPOSE 8000

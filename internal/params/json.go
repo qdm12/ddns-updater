@@ -7,6 +7,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/ddns-updater/internal/settings"
 )
 
@@ -65,8 +66,12 @@ func extractAllSettings(jsonBytes []byte) (allSettings []settings.Settings, warn
 	if err := json.Unmarshal(jsonBytes, &rawConfig); err != nil {
 		return nil, nil, err
 	}
+	matcher, err := regex.NewMatcher()
+	if err != nil {
+		return nil, nil, err
+	}
 	for i, common := range config.CommonSettings {
-		newSettings, newWarnings, err := makeSettingsFromObject(common, rawConfig.Settings[i])
+		newSettings, newWarnings, err := makeSettingsFromObject(common, rawConfig.Settings[i], matcher)
 		warnings = append(warnings, newWarnings...)
 		if err != nil {
 			return nil, warnings, err
@@ -79,7 +84,7 @@ func extractAllSettings(jsonBytes []byte) (allSettings []settings.Settings, warn
 	return allSettings, warnings, nil
 }
 
-func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) (settingsSlice []settings.Settings, warnings []string, err error) {
+func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, matcher regex.Matcher) (settingsSlice []settings.Settings, warnings []string, err error) {
 	provider := models.Provider(common.Provider)
 	if provider == constants.DUCKDNS { // only hosts, no domain
 		if len(common.Domain) > 0 { // retro compatibility
@@ -135,7 +140,7 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) 
 	}
 	settingsSlice = make([]settings.Settings, len(hosts))
 	for i, host := range hosts {
-		settingsSlice[i], err = settingsConstructor(rawSettings, common.Domain, host, ipVersion, common.NoDNSLookup)
+		settingsSlice[i], err = settingsConstructor(rawSettings, common.Domain, host, ipVersion, common.NoDNSLookup, matcher)
 		if err != nil {
 			return nil, warnings, err
 		}

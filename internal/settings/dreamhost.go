@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/golibs/network"
 )
 
@@ -19,9 +20,10 @@ type dreamhost struct {
 	ipVersion models.IPVersion
 	dnsLookup bool
 	key       string
+	matcher   regex.Matcher
 }
 
-func NewDreamhost(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
+func NewDreamhost(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key string `json:"key"`
 	}{}
@@ -37,6 +39,7 @@ func NewDreamhost(data json.RawMessage, domain, host string, ipVersion models.IP
 		ipVersion: ipVersion,
 		dnsLookup: !noDNSLookup,
 		key:       extraSettings.Key,
+		matcher:   matcher,
 	}
 	if err := d.isValid(); err != nil {
 		return nil, err
@@ -46,7 +49,7 @@ func NewDreamhost(data json.RawMessage, domain, host string, ipVersion models.IP
 
 func (d *dreamhost) isValid() error {
 	switch {
-	case !constants.MatchDreamhostKey(d.key):
+	case !d.matcher.DreamhostKey(d.key):
 		return fmt.Errorf("invalid key format")
 	case d.host != "@":
 		return fmt.Errorf(`host can only be "@"`)

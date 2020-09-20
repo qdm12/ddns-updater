@@ -10,6 +10,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/network"
+	"github.com/qdm12/ddns-updater/internal/regex"
 	netlib "github.com/qdm12/golibs/network"
 )
 
@@ -20,9 +21,10 @@ type godaddy struct {
 	dnsLookup bool
 	key       string
 	secret    string
+	matcher   regex.Matcher
 }
 
-func NewGodaddy(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
+func NewGodaddy(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key    string `json:"key"`
 		Secret string `json:"secret"`
@@ -37,6 +39,7 @@ func NewGodaddy(data json.RawMessage, domain, host string, ipVersion models.IPVe
 		dnsLookup: !noDNSLookup,
 		key:       extraSettings.Key,
 		secret:    extraSettings.Secret,
+		matcher:   matcher,
 	}
 	if err := g.isValid(); err != nil {
 		return nil, err
@@ -46,9 +49,9 @@ func NewGodaddy(data json.RawMessage, domain, host string, ipVersion models.IPVe
 
 func (g *godaddy) isValid() error {
 	switch {
-	case !constants.MatchGodaddyKey(g.key):
+	case !g.matcher.GodaddyKey(g.key):
 		return fmt.Errorf("invalid key format")
-	case !constants.MatchGodaddySecret(g.secret):
+	case !g.matcher.GodaddySecret(g.secret):
 		return fmt.Errorf("invalid secret format")
 	}
 	return nil

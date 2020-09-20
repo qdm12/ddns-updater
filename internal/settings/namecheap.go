@@ -10,6 +10,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/golibs/network"
 )
 
@@ -21,9 +22,10 @@ type namecheap struct {
 	dnsLookup     bool
 	password      string
 	useProviderIP bool
+	matcher       regex.Matcher
 }
 
-func NewNamecheap(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
+func NewNamecheap(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	if ipVersion == constants.IPv6 {
 		return s, fmt.Errorf("IPv6 is not supported by Namecheap API sadly")
 	}
@@ -41,6 +43,7 @@ func NewNamecheap(data json.RawMessage, domain, host string, ipVersion models.IP
 		dnsLookup:     !noDNSLookup,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
+		matcher:       matcher,
 	}
 	if err := n.isValid(); err != nil {
 		return nil, err
@@ -49,7 +52,7 @@ func NewNamecheap(data json.RawMessage, domain, host string, ipVersion models.IP
 }
 
 func (n *namecheap) isValid() error {
-	if !constants.MatchNamecheapPassword(n.password) {
+	if !n.matcher.NamecheapPassword(n.password) {
 		return fmt.Errorf("invalid password format")
 	}
 	return nil

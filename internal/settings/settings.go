@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/golibs/network"
 )
 
@@ -20,7 +21,7 @@ type Settings interface {
 	Update(client network.Client, ip net.IP) (newIP net.IP, err error)
 }
 
-type Constructor func(data json.RawMessage, domain string, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error)
+type Constructor func(data json.RawMessage, domain string, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error)
 
 func buildDomainName(host, domain string) string {
 	switch host {

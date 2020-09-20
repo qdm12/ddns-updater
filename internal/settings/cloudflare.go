@@ -11,6 +11,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/network"
+	"github.com/qdm12/ddns-updater/internal/regex"
 	netlib "github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
 )
@@ -28,9 +29,10 @@ type cloudflare struct {
 	zoneIdentifier string
 	proxied        bool
 	ttl            uint
+	matcher        regex.Matcher
 }
 
-func NewCloudflare(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
+func NewCloudflare(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key            string `json:"key"`
 		Token          string `json:"token"`
@@ -55,6 +57,7 @@ func NewCloudflare(data json.RawMessage, domain, host string, ipVersion models.I
 		zoneIdentifier: extraSettings.ZoneIdentifier,
 		proxied:        extraSettings.Proxied,
 		ttl:            extraSettings.TTL,
+		matcher:        matcher,
 	}
 	if err := c.isValid(); err != nil {
 		return nil, err
@@ -66,19 +69,16 @@ func (c *cloudflare) isValid() error {
 	switch {
 	case len(c.key) > 0: // email and key must be provided
 		switch {
-		case !constants.MatchCloudflareKey(c.key):
+		case !c.matcher.CloudflareKey(c.key):
 			return fmt.Errorf("invalid key format")
 		case !verification.NewVerifier().MatchEmail(c.email):
 			return fmt.Errorf("invalid email format")
 		}
 	case len(c.userServiceKey) > 0: // only user service key
-		if !constants.MatchCloudflareKey(c.key) {
+		if !c.matcher.CloudflareKey(c.key) {
 			return fmt.Errorf("invalid user service key format")
 		}
 	default: // API token only
-		if !constants.MatchCloudflareToken(c.token) {
-			return fmt.Errorf("invalid API token key format")
-		}
 	}
 	switch {
 	case len(c.zoneIdentifier) == 0:

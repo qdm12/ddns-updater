@@ -10,6 +10,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/golibs/network"
 )
 
@@ -24,7 +25,7 @@ type ddnss struct {
 	useProviderIP bool
 }
 
-func NewDdnss(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
+func NewDdnss(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`

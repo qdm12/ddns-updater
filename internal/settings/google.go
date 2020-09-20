@@ -10,6 +10,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/regex"
 	netlib "github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
 )
@@ -25,7 +26,7 @@ type google struct {
 	useProviderIP bool
 }
 
-func NewGoogle(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
+func NewGoogle(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`

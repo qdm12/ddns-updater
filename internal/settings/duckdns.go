@@ -9,6 +9,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
 )
@@ -20,9 +21,10 @@ type duckdns struct {
 	dnsLookup     bool
 	token         string
 	useProviderIP bool
+	matcher       regex.Matcher
 }
 
-func NewDuckdns(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool) (s Settings, err error) {
+func NewDuckdns(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Token         string `json:"token"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -36,6 +38,7 @@ func NewDuckdns(data json.RawMessage, domain, host string, ipVersion models.IPVe
 		dnsLookup:     !noDNSLookup,
 		token:         extraSettings.Token,
 		useProviderIP: extraSettings.UseProviderIP,
+		matcher:       matcher,
 	}
 	if err := d.isValid(); err != nil {
 		return nil, err
@@ -44,7 +47,7 @@ func NewDuckdns(data json.RawMessage, domain, host string, ipVersion models.IPVe
 }
 
 func (d *duckdns) isValid() error {
-	if !constants.MatchDuckDNSToken(d.token) {
+	if !d.matcher.DuckDNSToken(d.token) {
 		return fmt.Errorf("invalid token format")
 	}
 	switch d.host {

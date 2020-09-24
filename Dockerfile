@@ -19,7 +19,7 @@ RUN go test ./...
 RUN go build -trimpath -ldflags="-s -w" -o app
 RUN golangci-lint run --timeout=10m
 
-FROM scratch
+FROM alpine:${ALPINE_VERSION}
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION

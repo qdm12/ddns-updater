@@ -150,7 +150,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	go func() {
 		serverErrors <- server.RunServers(ctx,
 			server.Settings{Name: "production", Addr: "0.0.0.0:" + p.listeningPort, Handler: productionHandlerFunc},
-			server.Settings{Name: "healthcheck", Addr: "127.0.0.1:9999", Handler: healthcheckHandlerFunc},
+			server.Settings{Name: "healthcheck", Addr: "0.0.0.0:9999", Handler: healthcheckHandlerFunc},
 		)
 	}()
 

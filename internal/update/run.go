@@ -94,34 +94,71 @@ func (r *runner) getNewIPs(doIP, doIPv4, doIPv6 bool) (ip, ipv4, ipv6 net.IP, er
 func (r *runner) getRecordIDsToUpdate(records []librecords.Record, ip, ipv4, ipv6 net.IP) (recordIDs map[int]struct{}) {
 	recordIDs = make(map[int]struct{})
 	for id, record := range records {
-		hostname := record.Settings.BuildDomainName()
-		recordIPv4, recordIPv6, err := r.lookupIPs(hostname)
-		if err != nil {
-			r.logger.Warn(err) // update anyway
-		}
-		switch record.Settings.IPVersion() {
-		case constants.IPv4OrIPv6:
-			if ip != nil && !ip.Equal(recordIPv4) && !ip.Equal(recordIPv6) {
-				recordIP := recordIPv4
-				if ip.To4() == nil {
-					recordIP = recordIPv6
-				}
-				r.logger.Info("IP address of %s is %s and your IP address is %s", hostname, recordIP, ip)
-				recordIDs[id] = struct{}{}
-			}
-		case constants.IPv4:
-			if ipv4 != nil && !ipv4.Equal(recordIPv4) {
-				r.logger.Info("IPv4 address of %s is %s and your IPv4 address is %s", hostname, recordIPv4, ipv4)
-				recordIDs[id] = struct{}{}
-			}
-		case constants.IPv6:
-			if ipv6 != nil && !ipv6.Equal(recordIPv6) {
-				r.logger.Info("IPv6 address of %s is %s and your IPv6 address is %s", hostname, recordIPv6, ipv6)
-				recordIDs[id] = struct{}{}
-			}
+		if shouldUpdate := r.shouldUpdateRecord(record, ip, ipv4, ipv6); shouldUpdate {
+			recordIDs[id] = struct{}{}
 		}
 	}
 	return recordIDs
+}
+
+func (r *runner) shouldUpdateRecord(record librecords.Record, ip, ipv4, ipv6 net.IP) (update bool) {
+	hostname := record.Settings.BuildDomainName()
+	ipVersion := record.Settings.IPVersion()
+	if !record.Settings.DNSLookup() {
+		lastIP := record.History.GetCurrentIP() // can be nil
+		return r.shouldUpdateRecordNoLookup(hostname, ipVersion, lastIP, ip, ipv4, ipv6)
+	}
+	return r.shouldUpdateRecordWithLookup(hostname, ipVersion, ip, ipv4, ipv6)
+}
+
+func (r *runner) shouldUpdateRecordNoLookup(hostname string, ipVersion models.IPVersion, lastIP, ip, ipv4, ipv6 net.IP) (update bool) {
+	switch ipVersion {
+	case constants.IPv4OrIPv6:
+		if ip != nil && !ip.Equal(lastIP) {
+			r.logger.Info("Last IP address stored for %s is %s and your IP address is %s", hostname, lastIP, ip)
+			return true
+		}
+	case constants.IPv4:
+		if ipv4 != nil && !ipv4.Equal(lastIP) {
+			r.logger.Info("Last IPv4 address stored for %s is %s and your IPv4 address is %s", hostname, lastIP, ip)
+			return true
+		}
+	case constants.IPv6:
+		if ipv6 != nil && !ipv6.Equal(lastIP) {
+			r.logger.Info("Last IPv6 address stored for %s is %s and your IPv6 address is %s", hostname, lastIP, ip)
+			return true
+		}
+	}
+	return false
+}
+
+func (r *runner) shouldUpdateRecordWithLookup(hostname string, ipVersion models.IPVersion, ip, ipv4, ipv6 net.IP) (update bool) {
+	recordIPv4, recordIPv6, err := r.lookupIPs(hostname)
+	if err != nil {
+		r.logger.Warn(err) // update anyway
+	}
+	switch ipVersion {
+	case constants.IPv4OrIPv6:
+		if ip != nil && !ip.Equal(recordIPv4) && !ip.Equal(recordIPv6) {
+			recordIP := recordIPv4
+			if ip.To4() == nil {
+				recordIP = recordIPv6
+			}
+			r.logger.Info("IP address of %s is %s and your IP address is %s", hostname, recordIP, ip)
+			return true
+		}
+	case constants.IPv4:
+		if ipv4 != nil && !ipv4.Equal(recordIPv4) {
+			r.logger.Info("IPv4 address of %s is %s and your IPv4 address is %s", hostname, recordIPv4, ipv4)
+			return true
+		}
+	case constants.IPv6:
+		if ipv6 != nil && !ipv6.Equal(recordIPv6) {
+			r.logger.Info("IPv6 address of %s is %s and your IPv6 address is %s", hostname, recordIPv6, ipv6)
+			return true
+		}
+	}
+	return false
 }
 
 func getIPMatchingVersion(ip, ipv4, ipv6 net.IP, ipVersion models.IPVersion) net.IP {

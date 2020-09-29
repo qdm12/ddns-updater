@@ -14,6 +14,7 @@ type lookupIPFunc func(host string) ([]net.IP, error)
 
 // IsHealthy checks all the records were updated successfully and returns an error if not
 func IsHealthy(db data.Database, lookupIP lookupIPFunc, logger logging.Logger) (err error) {
+	logger.Info("Healthcheck triggered!")
 	defer func() {
 		if err != nil {
 			logger.Warn("unhealthy: %s", err)

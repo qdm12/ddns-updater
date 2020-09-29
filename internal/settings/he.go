@@ -87,14 +87,14 @@ func (h *he) HTML() models.HTMLRow {
 }
 
 func (h *he) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+	fqdn := h.BuildDomainName()
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dyn.dns.he.net",
 		Path:   "/nic/update",
-		User:   url.UserPassword(h.domain, h.password),
+		User:   url.UserPassword(fqdn, h.password),
 	}
 	values := url.Values{}
-	fqdn := h.BuildDomainName()
 	values.Set("hostname", fqdn)
 	if !h.useProviderIP {
 		values.Set("myip", ip.String())

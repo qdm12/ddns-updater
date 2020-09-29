@@ -13,6 +13,7 @@ const (
 	DREAMHOST  models.Provider = "dreamhost"
 	GODADDY    models.Provider = "godaddy"
 	GOOGLE     models.Provider = "google"
+	HE         models.Provider = "he"
 	INFOMANIAK models.Provider = "infomaniak"
 	NAMECHEAP  models.Provider = "namecheap"
 	NOIP       models.Provider = "noip"
@@ -29,6 +30,7 @@ func ProviderChoices() []models.Provider {
 		DREAMHOST,
 		GODADDY,
 		GOOGLE,
+		HE,
 		INFOMANIAK,
 		NAMECHEAP,
 		NOIP,

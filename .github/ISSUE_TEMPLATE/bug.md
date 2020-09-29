@@ -25,6 +25,7 @@ assignees: qdm12
     - [ ] DynDNS
     - [ ] GoDaddy
     - [ ] Google
+    - [ ] He.net
     - [ ] Infomaniak
     - [ ] Namecheap
     - [ ] NoIP

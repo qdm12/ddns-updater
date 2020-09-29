@@ -25,6 +25,7 @@ assignees:
     - [ ] DynDNS
     - [ ] GoDaddy
     - [ ] Google
+    - [ ] He.net
     - [ ] Infomaniak
     - [ ] Namecheap
     - [ ] NoIP

@@ -3,6 +3,9 @@ ARG GO_VERSION=1.15
 
 FROM alpine:${ALPINE_VERSION} AS alpine
 RUN apk --update add ca-certificates tzdata
+RUN mkdir /tmp/data && \
+    chown 1000 /tmp/data && \
+    chmod 700 /tmp/data
 
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 ARG GOLANGCI_LINT_VERSION=v1.31.0
@@ -66,5 +69,6 @@ ENV \
     GOTIFY_URL= \
     GOTIFY_TOKEN= \
     TZ=
+COPY --from=alpine --chown=1000 /tmp/data /updater/data/
 COPY --from=builder --chown=1000 /tmp/gobuild/app /updater/app
 COPY --chown=1000 ui/* /updater/ui/

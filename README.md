@@ -31,9 +31,24 @@
 
 ## Setup
 
-The program reads the configuration from a JSON configuration file.
+The program reads the configuration from a JSON object, either from a file or from an environment variable.
 
-1. First, create a JSON configuration starting from, for example:
+1. Create a directory of your choice, say *data* with a file named **config.json** inside:
+
+    ```sh
+    mkdir data
+    touch data/config.json
+    # Owned by user ID of Docker container (1000)
+    chown -R 1000 data
+    # all access (for creating json database file data/updates.json)
+    chmod 700 data
+    # read access only
+    chmod 400 data/config.json
+    ```
+
+    *(You could change the user ID, for example with `1001`, by running the container with `--user=1001`)*
+
+1. Write a JSON configuration in *data/config.json*, for example:
 
     ```json
     {
@@ -60,44 +75,15 @@ The program reads the configuration from a JSON configuration file.
     }
     ```
 
-1. You can find more information in the [configuration section](#configuration) to customize it.
-1. You can either use a bind mounted file or put all your JSON in a single line with the `CONFIG` environment variable, see the two subsections below for each
+    You can find more information in the [configuration section](#configuration) to customize it.
 
-### Using the CONFIG variable
-
-1. Remove all 'new lines' in order to put your entire JSON in a single line (i.e. `{"settings": [{"provider": "namecheap", ...}]}`)
-1. Set the `CONFIG` environment variable to your single line configuration
-1. Use the following command:
-
-    ```sh
-    docker run -d -p 8000:8000/tcp -e CONFIG='{"settings": [{"provider": "namecheap", ...}]}' qmcgaw/ddns-updater
-    ```
-
-Note that this CONFIG environment variable takes precedence over the config.json file if it is set.
-
-### Using a file
-
-1. Create a directory of your choice, say *data* with a file named **config.json** inside:
-
-    ```sh
-    mkdir data
-    touch data/config.json
-    # Owned by user ID of Docker container (1000)
-    chown -R 1000 data
-    # all access (for creating json database file data/updates.json)
-    chmod 700 data
-    # read access only
-    chmod 400 data/config.json
-    ```
-
-    *(You could change the user ID, for example with `1001`, by running the container with `--user=1001`)*
-
-1. Place your JSON configuration in `data/config.json`
-1. Use the following command:
+1. Run the container with
 
     ```sh
     docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data qmcgaw/ddns-updater
     ```
+
+1. (Optional) You can also set your JSON configuration as a single environment variable line (i.e. `{"settings": [{"provider": "namecheap", ...}]}`), which takes precedence over config.json. Note however that if you don't bind mount the `/updater/data` directory, there won't be a persistent database file `/updater/updates.json` but it will still work.
 
 ### Next steps
 

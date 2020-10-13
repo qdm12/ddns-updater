@@ -127,13 +127,13 @@ func (n *noip) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error)
 	switch s {
 	case "":
 		return nil, fmt.Errorf("HTTP status %d", status)
-	case "911":
+	case nineoneone:
 		return nil, fmt.Errorf("NoIP's internal server error 911")
-	case "abuse":
+	case abuse:
 		return nil, fmt.Errorf("username is banned due to abuse")
 	case "!donator":
 		return nil, fmt.Errorf("user has not this extra feature")
-	case "badagent":
+	case badagent:
 		return nil, fmt.Errorf("user agent is banned")
 	case badauth:
 		return nil, fmt.Errorf("invalid username password combination")

@@ -125,7 +125,7 @@ func (d *dyn) Update(client network.Client, ip net.IP) (newIP net.IP, err error)
 	}
 	s := string(content)
 	switch {
-	case strings.HasPrefix(s, "notfqdn"):
+	case strings.HasPrefix(s, notfqdn):
 		return nil, fmt.Errorf("fully qualified domain name is not valid")
 	case strings.HasPrefix(s, "badrequest"):
 		return nil, fmt.Errorf("bad request")

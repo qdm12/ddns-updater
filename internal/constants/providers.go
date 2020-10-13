@@ -7,6 +7,7 @@ const (
 	CLOUDFLARE models.Provider = "cloudflare"
 	DDNSSDE    models.Provider = "ddnss"
 	DONDOMINIO models.Provider = "dondominio"
+	DNSOMATIC  models.Provider = "dnsomatic"
 	DNSPOD     models.Provider = "dnspod"
 	DUCKDNS    models.Provider = "duckdns"
 	DYN        models.Provider = "dyn"
@@ -24,6 +25,7 @@ func ProviderChoices() []models.Provider {
 		CLOUDFLARE,
 		DDNSSDE,
 		DONDOMINIO,
+		DNSOMATIC,
 		DNSPOD,
 		DUCKDNS,
 		DYN,

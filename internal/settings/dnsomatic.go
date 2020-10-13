@@ -16,7 +16,7 @@ import (
 )
 
 //nolint:maligned
-type google struct {
+type dnsomatic struct {
 	domain        string
 	host          string
 	ipVersion     models.IPVersion
@@ -24,9 +24,10 @@ type google struct {
 	username      string
 	password      string
 	useProviderIP bool
+	matcher       regex.Matcher
 }
 
-func NewGoogle(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+func NewDNSOMatic(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -35,7 +36,7 @@ func NewGoogle(data json.RawMessage, domain, host string, ipVersion models.IPVer
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	g := &google{
+	d := &dnsomatic{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -44,82 +45,93 @@ func NewGoogle(data json.RawMessage, domain, host string, ipVersion models.IPVer
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := g.isValid(); err != nil {
+	if err := d.isValid(); err != nil {
 		return nil, err
 	}
-	return g, nil
+	return d, nil
 }
 
-func (g *google) isValid() error {
+func (d *dnsomatic) isValid() error {
 	switch {
-	case len(g.username) == 0:
+	case !d.matcher.DNSOMaticUsername(d.username):
+		return fmt.Errorf("username %q does not match DNS-O-Matic username format", d.username)
+	case !d.matcher.DNSOMaticPassword(d.password):
+		return fmt.Errorf("password does not match DNS-O-Matic password format")
+	case len(d.username) == 0:
 		return fmt.Errorf("username cannot be empty")
-	case len(g.password) == 0:
+	case len(d.password) == 0:
 		return fmt.Errorf("password cannot be empty")
 	}
 	return nil
 }
 
-func (g *google) String() string {
-	return toString(g.domain, g.host, constants.GOOGLE, g.ipVersion)
+func (d *dnsomatic) String() string {
+	return toString(d.domain, d.host, constants.DNSOMATIC, d.ipVersion)
 }
 
-func (g *google) Domain() string {
-	return g.domain
+func (d *dnsomatic) Domain() string {
+	return d.domain
 }
 
-func (g *google) Host() string {
-	return g.host
+func (d *dnsomatic) Host() string {
+	return d.host
 }
 
-func (g *google) DNSLookup() bool {
-	return g.dnsLookup
+func (d *dnsomatic) DNSLookup() bool {
+	return d.dnsLookup
 }
 
-func (g *google) IPVersion() models.IPVersion {
-	return g.ipVersion
+func (d *dnsomatic) IPVersion() models.IPVersion {
+	return d.ipVersion
 }
 
-func (g *google) BuildDomainName() string {
-	return buildDomainName(g.host, g.domain)
+func (d *dnsomatic) BuildDomainName() string {
+	return buildDomainName(d.host, d.domain)
 }
 
-func (g *google) HTML() models.HTMLRow {
+func (d *dnsomatic) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", g.BuildDomainName(), g.BuildDomainName())),
-		Host:      models.HTML(g.Host()),
-		Provider:  "<a href=\"https://domains.google.com/m/registrar\">Google</a>",
-		IPVersion: models.HTML(g.ipVersion),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
+		Host:      models.HTML(d.Host()),
+		Provider:  "<a href=\"https://www.dnsomatic.com/\">dnsomatic</a>",
+		IPVersion: models.HTML(d.ipVersion),
 	}
 }
 
-func (g *google) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (d *dnsomatic) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+	// Multiple hosts can be updated in one query, see https://www.dnsomatic.com/docs/api
 	u := url.URL{
 		Scheme: "https",
-		Host:   "domains.google.com",
+		Host:   "updates.dnsomatic.com",
 		Path:   "/nic/update",
-		User:   url.UserPassword(g.username, g.password),
+		User:   url.UserPassword(d.username, d.password),
 	}
 	values := url.Values{}
-	fqdn := g.BuildDomainName()
+	fqdn := d.BuildDomainName()
 	values.Set("hostname", fqdn)
-	if !g.useProviderIP {
+	if !d.useProviderIP {
 		values.Set("myip", ip.String())
 	}
+	values.Set("wildcard", "NOCHG")
+	if d.host == "*" {
+		values.Set("wildcard", "ON")
+	}
+	values.Set("mx", "NOCHG")
+	values.Set("backmx", "NOCHG")
 	u.RawQuery = values.Encode()
 	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentig.mcgaw@gmail.com")
+	r.Header.Set("User-Agent", "DDNS-Updater quentid.mcgaw@gmail.com")
 	status, content, err := client.DoHTTPRequest(r)
 	if err != nil {
 		return nil, err
+	} else if status != http.StatusOK {
+		return nil, fmt.Errorf("HTTP status %d", status)
 	}
 	s := string(content)
 	switch s {
-	case "":
-		return nil, fmt.Errorf("HTTP status %d", status)
 	case nohost:
 		return nil, fmt.Errorf("hostname does not exist")
 	case badauth:
@@ -130,12 +142,10 @@ func (g *google) Update(client netlib.Client, ip net.IP) (newIP net.IP, err erro
 		return nil, fmt.Errorf("user agent is banned")
 	case abuse:
 		return nil, fmt.Errorf("username is banned due to abuse")
+	case "dnserr":
+		return nil, fmt.Errorf("DNS error encountered, please contact DNS-O-Matic")
 	case nineoneone:
-		return nil, fmt.Errorf("Google's internal server error 911")
-	case "conflict A":
-		return nil, fmt.Errorf("custom A record conflicts with the update")
-	case "conflict AAAA":
-		return nil, fmt.Errorf("custom AAAA record conflicts with the update")
+		return nil, fmt.Errorf("dnsomatic's internal server error 911")
 	}
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
 		ipsV4 := verification.NewVerifier().SearchIPv4(s)
@@ -148,7 +158,7 @@ func (g *google) Update(client netlib.Client, ip net.IP) (newIP net.IP, err erro
 		if newIP == nil {
 			return nil, fmt.Errorf("IP address received %q is malformed", ips[0])
 		}
-		if !g.useProviderIP && !ip.Equal(newIP) {
+		if !d.useProviderIP && !ip.Equal(newIP) {
 			return nil, fmt.Errorf("new IP address %s is not %s", newIP.String(), ip.String())
 		}
 		return newIP, nil

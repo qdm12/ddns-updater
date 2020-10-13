@@ -134,7 +134,7 @@ func (d *ddnss) Update(client network.Client, ip net.IP) (newIP net.IP, err erro
 		return nil, fmt.Errorf("ddnss.de: invalid system parameter")
 	case strings.Contains(s, badauth):
 		return nil, fmt.Errorf("ddnss.de: bad authentication")
-	case strings.Contains(s, "notfqdn"):
+	case strings.Contains(s, notfqdn):
 		return nil, fmt.Errorf("ddnss.de: hostname %q does not exist", fqdn)
 	case strings.Contains(s, "Updated 1 hostname"):
 		return ip, nil

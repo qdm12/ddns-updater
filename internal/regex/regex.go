@@ -10,10 +10,13 @@ type Matcher interface {
 	DreamhostKey(s string) bool
 	CloudflareKey(s string) bool
 	CloudflareUserServiceKey(s string) bool
+	DNSOMaticUsername(s string) bool
+	DNSOMaticPassword(s string) bool
 }
 
 type matcher struct {
-	goDaddyKey, goDaddySecret, duckDNSToken, namecheapPassword, dreamhostKey, cloudflareKey, cloudflareUserServiceKey *regexp.Regexp
+	goDaddyKey, goDaddySecret, duckDNSToken, namecheapPassword, dreamhostKey, cloudflareKey, cloudflareUserServiceKey,
+	dnsOMaticUsername, dnsOMaticPassword *regexp.Regexp
 }
 
 //nolint:gocritic
@@ -47,6 +50,14 @@ func NewMatcher() (m Matcher, err error) {
 	if err != nil {
 		return nil, err
 	}
+	matcher.dnsOMaticUsername, err = regexp.Compile(`^[a-zA-Z0-9._-]{3,25}$`)
+	if err != nil {
+		return nil, err
+	}
+	matcher.dnsOMaticPassword, err = regexp.Compile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{5,19}$`)
+	if err != nil {
+		return nil, err
+	}
 	return matcher, nil
 }
 
@@ -59,3 +70,5 @@ func (m *matcher) CloudflareKey(s string) bool     { return m.cloudflareKey.Matc
 func (m *matcher) CloudflareUserServiceKey(s string) bool {
 	return m.cloudflareUserServiceKey.MatchString(s)
 }
+func (m *matcher) DNSOMaticUsername(s string) bool { return m.dnsOMaticUsername.MatchString(s) }
+func (m *matcher) DNSOMaticPassword(s string) bool { return m.dnsOMaticPassword.MatchString(s) }

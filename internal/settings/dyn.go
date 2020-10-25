@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -93,7 +94,7 @@ func (d *dyn) HTML() models.HTMLRow {
 	}
 }
 
-func (d *dyn) Update(client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (d *dyn) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		User:   url.UserPassword(d.username, d.password),
@@ -116,12 +117,13 @@ func (d *dyn) Update(client network.Client, ip net.IP) (newIP net.IP, err error)
 		return nil, err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	status, content, err := client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err
 	}
 	if status != http.StatusOK {
-		return nil, fmt.Errorf("HTTP status %d", status)
+		return nil, fmt.Errorf(http.StatusText(status))
 	}
 	s := string(content)
 	switch {

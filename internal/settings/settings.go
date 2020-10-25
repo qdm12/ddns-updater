@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -18,7 +19,7 @@ type Settings interface {
 	HTML() models.HTMLRow
 	DNSLookup() bool
 	IPVersion() models.IPVersion
-	Update(client network.Client, ip net.IP) (newIP net.IP, err error)
+	Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error)
 }
 
 type Constructor func(data json.RawMessage, domain string, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error)

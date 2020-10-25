@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -137,7 +138,7 @@ func setHeaders(r *http.Request, token, userServiceKey, email, key string) {
 
 // Obtain domain identifier
 // See https://api.cloudflare.com/#dns-records-for-a-zone-list-dns-records
-func (c *cloudflare) getRecordIdentifier(client netlib.Client, newIP net.IP) (identifier string, upToDate bool, err error) {
+func (c *cloudflare) getRecordIdentifier(ctx context.Context, client netlib.Client, newIP net.IP) (identifier string, upToDate bool, err error) {
 	recordType := A
 	if newIP.To4() == nil {
 		recordType = AAAA
@@ -158,11 +159,12 @@ func (c *cloudflare) getRecordIdentifier(client netlib.Client, newIP net.IP) (id
 		return "", false, err
 	}
 	setHeaders(r, c.token, c.userServiceKey, c.email, c.key)
-	status, content, err := client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return "", false, err
 	} else if status != http.StatusOK {
-		return "", false, fmt.Errorf("HTTP status %d", status)
+		return "", false, fmt.Errorf(http.StatusText(status))
 	}
 	listRecordsResponse := struct {
 		Success bool     `json:"success"`
@@ -190,12 +192,12 @@ func (c *cloudflare) getRecordIdentifier(client netlib.Client, newIP net.IP) (id
 	return listRecordsResponse.Result[0].ID, false, nil
 }
 
-func (c *cloudflare) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (c *cloudflare) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA
 	}
-	identifier, upToDate, err := c.getRecordIdentifier(client, ip)
+	identifier, upToDate, err := c.getRecordIdentifier(ctx, client, ip)
 	if err != nil {
 		return nil, err
 	} else if upToDate {
@@ -227,11 +229,12 @@ func (c *cloudflare) Update(client netlib.Client, ip net.IP) (newIP net.IP, err 
 		return nil, err
 	}
 	setHeaders(r, c.token, c.userServiceKey, c.email, c.key)
-	status, content, err := client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err
 	} else if status > http.StatusUnsupportedMediaType {
-		return nil, fmt.Errorf("HTTP status %d", status)
+		return nil, fmt.Errorf(http.StatusText(status))
 	}
 	var parsedJSON struct {
 		Success bool `json:"success"`

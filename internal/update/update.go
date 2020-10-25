@@ -1,6 +1,7 @@
 package update
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"time"
@@ -13,7 +14,7 @@ import (
 )
 
 type Updater interface {
-	Update(id int, ip net.IP, now time.Time) (err error)
+	Update(ctx context.Context, id int, ip net.IP, now time.Time) (err error)
 }
 
 type updater struct {
@@ -32,7 +33,7 @@ func NewUpdater(db data.Database, client netlib.Client, notify notifyFunc) Updat
 	}
 }
 
-func (u *updater) Update(id int, ip net.IP, now time.Time) (err error) {
+func (u *updater) Update(ctx context.Context, id int, ip net.IP, now time.Time) (err error) {
 	record, err := u.db.Select(id)
 	if err != nil {
 		return err
@@ -43,7 +44,7 @@ func (u *updater) Update(id int, ip net.IP, now time.Time) (err error) {
 		return err
 	}
 	record.Status = constants.FAIL
-	newIP, err := record.Settings.Update(u.client, ip)
+	newIP, err := record.Settings.Update(ctx, u.client, ip)
 	if err != nil {
 		record.Message = err.Error()
 		if updateErr := u.db.Update(id, record); updateErr != nil {

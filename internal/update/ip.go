@@ -1,6 +1,7 @@
 package update
 
 import (
+	"context"
 	"net"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
@@ -12,9 +13,9 @@ import (
 const cycle = "cycle"
 
 type IPGetter interface {
-	IP() (ip net.IP, err error)
-	IPv4() (ip net.IP, err error)
-	IPv6() (ip net.IP, err error)
+	IP(ctx context.Context) (ip net.IP, err error)
+	IPv4(ctx context.Context) (ip net.IP, err error)
+	IPv6(ctx context.Context) (ip net.IP, err error)
 }
 
 type ipGetter struct {
@@ -52,26 +53,26 @@ func NewIPGetter(client libnet.Client, ipMethod, ipv4Method, ipv6Method models.I
 	}
 }
 
-func (i *ipGetter) IP() (ip net.IP, err error) {
+func (i *ipGetter) IP(ctx context.Context) (ip net.IP, err error) {
 	method := i.ipMethod
 	if method.Name == cycle {
 		method = i.cyclerIP.next()
 	}
-	return network.GetPublicIP(i.client, method.URL, constants.IPv4OrIPv6)
+	return network.GetPublicIP(ctx, i.client, method.URL, constants.IPv4OrIPv6)
 }
 
-func (i *ipGetter) IPv4() (ip net.IP, err error) {
+func (i *ipGetter) IPv4(ctx context.Context) (ip net.IP, err error) {
 	method := i.ipv4Method
 	if method.Name == cycle {
 		method = i.cyclerIPv4.next()
 	}
-	return network.GetPublicIP(i.client, method.URL, constants.IPv4)
+	return network.GetPublicIP(ctx, i.client, method.URL, constants.IPv4)
 }
 
-func (i *ipGetter) IPv6() (ip net.IP, err error) {
+func (i *ipGetter) IPv6(ctx context.Context) (ip net.IP, err error) {
 	method := i.ipv6Method
 	if method.Name == cycle {
 		method = i.cyclerIPv6.next()
 	}
-	return network.GetPublicIP(i.client, method.URL, constants.IPv6)
+	return network.GetPublicIP(ctx, i.client, method.URL, constants.IPv6)
 }

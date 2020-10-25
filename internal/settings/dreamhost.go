@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -90,12 +91,12 @@ func (d *dreamhost) HTML() models.HTMLRow {
 	}
 }
 
-func (d *dreamhost) Update(client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (d *dreamhost) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA
 	}
-	records, err := listDreamhostRecords(client, d.key)
+	records, err := listDreamhostRecords(ctx, client, d.key)
 	if err != nil {
 		return nil, err
 	}
@@ -113,11 +114,11 @@ func (d *dreamhost) Update(client network.Client, ip net.IP) (newIP net.IP, err 
 		}
 	}
 	if oldIP != nil { // Found editable record with a different IP address, so remove it
-		if err := removeDreamhostRecord(client, d.key, d.domain, oldIP); err != nil {
+		if err := removeDreamhostRecord(ctx, client, d.key, d.domain, oldIP); err != nil {
 			return nil, err
 		}
 	}
-	return ip, addDreamhostRecord(client, d.key, d.domain, ip)
+	return ip, addDreamhostRecord(ctx, client, d.key, d.domain, ip)
 }
 
 type (
@@ -143,7 +144,7 @@ func makeDreamhostDefaultValues(key string) (values url.Values) { //nolint:unpar
 	return values
 }
 
-func listDreamhostRecords(client network.Client, key string) (records dreamHostRecords, err error) {
+func listDreamhostRecords(ctx context.Context, client network.Client, key string) (records dreamHostRecords, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.dreamhost.com",
@@ -156,11 +157,12 @@ func listDreamhostRecords(client network.Client, key string) (records dreamHostR
 		return records, err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	status, content, err := client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return records, err
 	} else if status != http.StatusOK {
-		return records, fmt.Errorf("HTTP status %d", status)
+		return records, fmt.Errorf(http.StatusText(status))
 	}
 	if err := json.Unmarshal(content, &records); err != nil {
 		return records, err
@@ -170,7 +172,7 @@ func listDreamhostRecords(client network.Client, key string) (records dreamHostR
 	return records, nil
 }
 
-func removeDreamhostRecord(client network.Client, key, domain string, ip net.IP) error { //nolint:dupl
+func removeDreamhostRecord(ctx context.Context, client network.Client, key, domain string, ip net.IP) error { //nolint:dupl
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA
@@ -190,11 +192,12 @@ func removeDreamhostRecord(client network.Client, key, domain string, ip net.IP)
 		return err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	status, content, err := client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return err
 	} else if status != http.StatusOK {
-		return fmt.Errorf("HTTP status %d", status)
+		return fmt.Errorf(http.StatusText(status))
 	}
 	var dhResponse dreamhostReponse
 	if err := json.Unmarshal(content, &dhResponse); err != nil {
@@ -205,7 +208,7 @@ func removeDreamhostRecord(client network.Client, key, domain string, ip net.IP)
 	return nil
 }
 
-func addDreamhostRecord(client network.Client, key, domain string, ip net.IP) error { //nolint:dupl
+func addDreamhostRecord(ctx context.Context, client network.Client, key, domain string, ip net.IP) error { //nolint:dupl
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA
@@ -225,11 +228,12 @@ func addDreamhostRecord(client network.Client, key, domain string, ip net.IP) er
 		return err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	status, content, err := client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return err
 	} else if status != http.StatusOK {
-		return fmt.Errorf("HTTP status %d", status)
+		return fmt.Errorf(http.StatusText(status))
 	}
 	var dhResponse dreamhostReponse
 	if err := json.Unmarshal(content, &dhResponse); err != nil {

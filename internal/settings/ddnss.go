@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -94,7 +95,7 @@ func (d *ddnss) HTML() models.HTMLRow {
 	}
 }
 
-func (d *ddnss) Update(client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (d *ddnss) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "www.ddnss.de",
@@ -121,7 +122,8 @@ func (d *ddnss) Update(client network.Client, ip net.IP) (newIP net.IP, err erro
 		return nil, err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	status, content, err := client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err
 	}

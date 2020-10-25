@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -87,7 +88,7 @@ func (h *he) HTML() models.HTMLRow {
 	}
 }
 
-func (h *he) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (h *he) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP net.IP, err error) {
 	fqdn := h.BuildDomainName()
 	u := url.URL{
 		Scheme: "https",
@@ -106,14 +107,15 @@ func (h *he) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
 		return nil, err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentih.mcgaw@gmail.com")
-	status, content, err := client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err
 	}
 	s := string(content)
 	switch s {
 	case "":
-		return nil, fmt.Errorf("HTTP status %d", status)
+		return nil, fmt.Errorf(http.StatusText(status))
 	case badauth:
 		return nil, fmt.Errorf("invalid username password combination")
 	}

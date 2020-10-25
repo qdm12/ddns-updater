@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -94,7 +95,7 @@ func (i *infomaniak) HTML() models.HTMLRow {
 	}
 }
 
-func (i *infomaniak) Update(client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (i *infomaniak) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "infomaniak.com",
@@ -115,7 +116,8 @@ func (i *infomaniak) Update(client network.Client, ip net.IP) (newIP net.IP, err
 		return nil, err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	status, content, err := client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err
 	}

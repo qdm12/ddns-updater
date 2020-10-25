@@ -68,22 +68,22 @@ func doIPVersion(records []librecords.Record) (doIP, doIPv4, doIPv6 bool) {
 	return doIP, doIPv4, doIPv6
 }
 
-func (r *runner) getNewIPs(doIP, doIPv4, doIPv6 bool) (ip, ipv4, ipv6 net.IP, errors []error) {
+func (r *runner) getNewIPs(ctx context.Context, doIP, doIPv4, doIPv6 bool) (ip, ipv4, ipv6 net.IP, errors []error) {
 	var err error
 	if doIP {
-		ip, err = r.ipGetter.IP()
+		ip, err = r.ipGetter.IP(ctx)
 		if err != nil {
 			errors = append(errors, err)
 		}
 	}
 	if doIPv4 {
-		ipv4, err = r.ipGetter.IPv4()
+		ipv4, err = r.ipGetter.IPv4(ctx)
 		if err != nil {
 			errors = append(errors, err)
 		}
 	}
 	if doIPv6 {
-		ipv6, err = r.ipGetter.IPv6()
+		ipv6, err = r.ipGetter.IPv6(ctx)
 		if err != nil {
 			errors = append(errors, err)
 		}
@@ -189,10 +189,10 @@ func setInitialUpToDateStatus(db data.Database, id int, updateIP net.IP, now tim
 	return db.Update(id, record)
 }
 
-func (r *runner) updateNecessary() {
+func (r *runner) updateNecessary(ctx context.Context) {
 	records := r.db.SelectAll()
 	doIP, doIPv4, doIPv6 := doIPVersion(records)
-	ip, ipv4, ipv6, errors := r.getNewIPs(doIP, doIPv4, doIPv6)
+	ip, ipv4, ipv6, errors := r.getNewIPs(ctx, doIP, doIPv4, doIPv6)
 	for _, err := range errors {
 		r.logger.Error(err)
 	}
@@ -212,7 +212,7 @@ func (r *runner) updateNecessary() {
 		record := records[id]
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
 		r.logger.Info("Updating record %s to use %s", record.Settings, updateIP)
-		if err := r.updater.Update(id, updateIP, r.timeNow()); err != nil {
+		if err := r.updater.Update(ctx, id, updateIP, r.timeNow()); err != nil {
 			r.logger.Error(err)
 		}
 	}
@@ -225,9 +225,9 @@ func (r *runner) Run(ctx context.Context, period time.Duration) (forceUpdate fun
 		for {
 			select {
 			case <-timer.C:
-				r.updateNecessary()
+				r.updateNecessary(ctx)
 			case <-forceChannel:
-				r.updateNecessary()
+				r.updateNecessary(ctx)
 			case <-ctx.Done():
 				timer.Stop()
 				return

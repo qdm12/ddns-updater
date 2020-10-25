@@ -53,7 +53,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the
 		// long running instance of the program about its status
-		if err := libhealthcheck.Query(); err != nil {
+		if err := libhealthcheck.Query(ctx); err != nil {
 			fmt.Println(err)
 			return 1
 		}
@@ -105,7 +105,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	} else if len(settings) == 1 {
 		logger.Info("Found single setting to update record")
 	}
-	for _, err := range connectivity.NewConnectivity(5 * time.Second).Checks("google.com") {
+	for _, err := range connectivity.NewConnectivity(5*time.Second).Checks(ctx, "google.com") {
 		logger.Warn(err)
 	}
 	records := make([]recordslib.Record, len(settings))
@@ -182,11 +182,11 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 
 func setupLogger() (logging.Logger, error) {
 	paramsReader := params.NewReader(nil)
-	encoding, level, nodeID, err := paramsReader.GetLoggerConfig()
+	encoding, level, err := paramsReader.GetLoggerConfig()
 	if err != nil {
 		return nil, err
 	}
-	return logging.NewLogger(encoding, level, nodeID)
+	return logging.NewLogger(encoding, level)
 }
 
 func setupGotify(paramsReader params.Reader, logger logging.Logger) (notify func(priority int, messageArgs ...interface{}), err error) {

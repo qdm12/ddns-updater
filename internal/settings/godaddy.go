@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -90,7 +91,7 @@ func (g *godaddy) HTML() models.HTMLRow {
 	}
 }
 
-func (g *godaddy) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (g *godaddy) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA
@@ -109,7 +110,8 @@ func (g *godaddy) Update(client netlib.Client, ip net.IP) (newIP net.IP, err err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	r.Header.Set("Authorization", "sso-key "+g.key+":"+g.secret)
-	status, content, err := client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {
@@ -121,7 +123,7 @@ func (g *godaddy) Update(client netlib.Client, ip net.IP) (newIP net.IP, err err
 		} else if len(parsedJSON.Message) > 0 {
 			return nil, fmt.Errorf("HTTP status %d - %s", status, parsedJSON.Message)
 		}
-		return nil, fmt.Errorf("HTTP status %d", status)
+		return nil, fmt.Errorf(http.StatusText(status))
 	}
 	return ip, nil
 }

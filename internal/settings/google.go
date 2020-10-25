@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -93,7 +94,7 @@ func (g *google) HTML() models.HTMLRow {
 	}
 }
 
-func (g *google) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (g *google) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "domains.google.com",
@@ -112,14 +113,15 @@ func (g *google) Update(client netlib.Client, ip net.IP) (newIP net.IP, err erro
 		return nil, err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentig.mcgaw@gmail.com")
-	status, content, err := client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err
 	}
 	s := string(content)
 	switch s {
 	case "":
-		return nil, fmt.Errorf("HTTP status %d", status)
+		return nil, fmt.Errorf(http.StatusText(status))
 	case nohost:
 		return nil, fmt.Errorf("hostname does not exist")
 	case badauth:

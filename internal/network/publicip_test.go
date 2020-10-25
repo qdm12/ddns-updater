@@ -1,6 +1,7 @@
 package network
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -71,6 +72,7 @@ func Test_GetPublicIP(t *testing.T) {
 		},
 	}
 	const URL = "https://getmyip.com"
+	ctx := context.Background()
 	for name, tc := range tests {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
@@ -78,8 +80,8 @@ func Test_GetPublicIP(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 			client := mock_network.NewMockClient(mockCtrl)
-			client.EXPECT().GetContent(URL).Return(tc.mockContent, tc.mockStatus, tc.mockErr).Times(1)
-			ip, err := GetPublicIP(client, URL, tc.IPVersion)
+			client.EXPECT().Get(ctx, URL).Return(tc.mockContent, tc.mockStatus, tc.mockErr).Times(1)
+			ip, err := GetPublicIP(ctx, client, URL, tc.IPVersion)
 			if tc.err != nil {
 				require.Error(t, err)
 				assert.Equal(t, tc.err.Error(), err.Error())

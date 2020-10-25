@@ -1,6 +1,7 @@
 package update
 
 import (
+	"context"
 	"net"
 	"net/http"
 	"testing"
@@ -53,13 +54,14 @@ func Test_IP(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 			client := mock_network.NewMockClient(mockCtrl)
+			ctx := context.Background()
 			url := tc.ipMethod.URL
 			if tc.ipMethod.Name == cycle {
 				url = "https://diagnostic.opendns.com/myip"
 			}
-			client.EXPECT().GetContent(url).Return(tc.mockContent, http.StatusOK, nil).Times(1)
+			client.EXPECT().Get(ctx, url).Return(tc.mockContent, http.StatusOK, nil).Times(1)
 			ig := NewIPGetter(client, tc.ipMethod, models.IPMethod{}, models.IPMethod{})
-			ip, err := ig.IP()
+			ip, err := ig.IP(ctx)
 			assert.Nil(t, err)
 			assert.True(t, tc.ip.Equal(ip))
 		})
@@ -91,13 +93,14 @@ func Test_IPv4(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 			client := mock_network.NewMockClient(mockCtrl)
+			ctx := context.Background()
 			url := tc.ipMethod.URL
 			if tc.ipMethod.Name == cycle {
 				url = "https://api.ipify.org"
 			}
-			client.EXPECT().GetContent(url).Return(tc.mockContent, http.StatusOK, nil).Times(1)
+			client.EXPECT().Get(ctx, url).Return(tc.mockContent, http.StatusOK, nil).Times(1)
 			ig := NewIPGetter(client, models.IPMethod{}, tc.ipMethod, models.IPMethod{})
-			ip, err := ig.IPv4()
+			ip, err := ig.IPv4(ctx)
 			assert.Nil(t, err)
 			assert.True(t, tc.ip.Equal(ip))
 		})
@@ -129,13 +132,14 @@ func Test_IPv6(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 			client := mock_network.NewMockClient(mockCtrl)
+			ctx := context.Background()
 			url := tc.ipMethod.URL
 			if tc.ipMethod.Name == cycle {
 				url = "https://api6.ipify.org"
 			}
-			client.EXPECT().GetContent(url).Return(tc.mockContent, http.StatusOK, nil).Times(1)
+			client.EXPECT().Get(ctx, url).Return(tc.mockContent, http.StatusOK, nil).Times(1)
 			ig := NewIPGetter(client, models.IPMethod{}, models.IPMethod{}, tc.ipMethod)
-			ip, err := ig.IPv6()
+			ip, err := ig.IPv6(ctx)
 			assert.Nil(t, err)
 			assert.True(t, tc.ip.Equal(ip))
 		})

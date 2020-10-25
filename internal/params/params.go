@@ -41,7 +41,7 @@ type Reader interface {
 	GetBackupDirectory() (directory string, err error)
 
 	// Other
-	GetLoggerConfig() (encoding logging.Encoding, level logging.Level, nodeID int, err error)
+	GetLoggerConfig() (encoding logging.Encoding, level logging.Level, err error)
 	GetGotifyURL() (URL *url.URL, err error)
 	GetGotifyToken() (token string, err error)
 
@@ -75,7 +75,7 @@ func (r *reader) GetListeningPort() (listeningPort, warning string, err error) {
 	return r.envParams.GetListeningPort()
 }
 
-func (r *reader) GetLoggerConfig() (encoding logging.Encoding, level logging.Level, nodeID int, err error) {
+func (r *reader) GetLoggerConfig() (encoding logging.Encoding, level logging.Level, err error) {
 	return r.envParams.GetLoggerConfig()
 }
 

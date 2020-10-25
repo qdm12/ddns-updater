@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -97,7 +98,7 @@ func (n *noip) HTML() models.HTMLRow {
 	}
 }
 
-func (n *noip) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (n *noip) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dynupdate.no-ip.com",
@@ -119,14 +120,15 @@ func (n *noip) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error)
 		return nil, err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	status, content, err := client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err
 	}
 	s := string(content)
 	switch s {
 	case "":
-		return nil, fmt.Errorf("HTTP status %d", status)
+		return nil, fmt.Errorf(http.StatusText(status))
 	case nineoneone:
 		return nil, fmt.Errorf("NoIP's internal server error 911")
 	case abuse:

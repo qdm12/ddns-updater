@@ -2,6 +2,7 @@ package settings
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -82,7 +83,7 @@ func (d *dnspod) HTML() models.HTMLRow {
 	}
 }
 
-func (d *dnspod) Update(client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA
@@ -106,11 +107,12 @@ func (d *dnspod) Update(client network.Client, ip net.IP) (newIP net.IP, err err
 	}
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	status, content, err := client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {
-		return nil, fmt.Errorf("HTTP status %d", status)
+		return nil, fmt.Errorf(http.StatusText(status))
 	}
 	var recordResp struct {
 		Records []struct {
@@ -156,11 +158,12 @@ func (d *dnspod) Update(client network.Client, ip net.IP) (newIP net.IP, err err
 	}
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	status, content, err = client.DoHTTPRequest(r)
+	r = r.WithContext(ctx)
+	content, status, err = client.Do(r)
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {
-		return nil, fmt.Errorf("HTTP status %d", status)
+		return nil, fmt.Errorf(http.StatusText(status))
 	}
 	var ddnsResp struct {
 		Record struct {

@@ -2,6 +2,7 @@ package network
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -15,8 +16,8 @@ import (
 )
 
 // GetPublicIP downloads a webpage and extracts the IP address from it
-func GetPublicIP(client network.Client, url string, ipVersion models.IPVersion) (ip net.IP, err error) {
-	content, status, err := client.GetContent(url)
+func GetPublicIP(ctx context.Context, client network.Client, url string, ipVersion models.IPVersion) (ip net.IP, err error) {
+	content, status, err := client.Get(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get public %s address: %w", ipVersion, err)
 	} else if status != http.StatusOK {

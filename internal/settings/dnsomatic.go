@@ -28,7 +28,8 @@ type dnsomatic struct {
 	matcher       regex.Matcher
 }
 
-func NewDNSOMatic(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+func NewDNSOMatic(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`

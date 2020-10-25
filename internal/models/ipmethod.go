@@ -1,6 +1,6 @@
 package models
 
-// IPMethod is a method to obtain your public IP address
+// IPMethod is a method to obtain your public IP address.
 type IPMethod struct {
 	Name string
 	URL  string

@@ -22,7 +22,8 @@ type Settings interface {
 	Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error)
 }
 
-type Constructor func(data json.RawMessage, domain string, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error)
+type Constructor func(data json.RawMessage, domain string, host string, ipVersion models.IPVersion,
+	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error)
 
 func buildDomainName(host, domain string) string {
 	switch host {

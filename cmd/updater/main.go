@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
-	"net"
-	"os/signal"
-	"syscall"
-
 	"fmt"
+	"net"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/backup"
@@ -80,24 +79,24 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	p, err := getParams(paramsReader, logger)
 	if err != nil {
 		logger.Error(err)
-		notify(4, err)
+		notify(4, err) //nolint:gomnd
 		return 1
 	}
 
 	persistentDB, err := persistence.NewJSON(p.dataDir)
 	if err != nil {
 		logger.Error(err)
-		notify(4, err)
+		notify(4, err) //nolint:gomnd
 		return 1
 	}
 	settings, warnings, err := paramsReader.GetSettings(p.dataDir + "/config.json")
 	for _, w := range warnings {
 		logger.Warn(w)
-		notify(2, w)
+		notify(2, w) //nolint:gomnd
 	}
 	if err != nil {
 		logger.Error(err)
-		notify(4, err)
+		notify(4, err) //nolint:gomnd
 		return 1
 	}
 	if len(settings) > 1 {
@@ -105,7 +104,9 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	} else if len(settings) == 1 {
 		logger.Info("Found single setting to update record")
 	}
-	for _, err := range connectivity.NewConnectivity(5*time.Second).Checks(ctx, "google.com") {
+	const connectivyCheckTimeout = 5 * time.Second
+	for _, err := range connectivity.NewConnectivity(connectivyCheckTimeout).
+		Checks(ctx, "google.com") {
 		logger.Warn(err)
 	}
 	records := make([]recordslib.Record, len(settings))
@@ -114,7 +115,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		events, err := persistentDB.GetEvents(s.Domain(), s.Host())
 		if err != nil {
 			logger.Error(err)
-			notify(4, err)
+			notify(4, err) //nolint:gomnd
 			return 1
 		}
 		records[i] = recordslib.New(s, events)
@@ -122,7 +123,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	HTTPTimeout, err := paramsReader.GetHTTPTimeout()
 	if err != nil {
 		logger.Error(err)
-		notify(4, err)
+		notify(4, err) //nolint:gomnd
 		return 1
 	}
 	client := network.NewClient(HTTPTimeout)
@@ -171,8 +172,8 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	case signal := <-osSignals:
 		message := fmt.Sprintf("Stopping program: caught OS signal %q", signal)
 		logger.Warn(message)
-		notify(2, message)
-		return 2
+		notify(2, message) //nolint:gomnd
+		return 2           //nolint:gomnd
 	case <-ctx.Done():
 		message := fmt.Sprintf("Stopping program: %s", ctx.Err())
 		logger.Warn(message)
@@ -189,7 +190,8 @@ func setupLogger() (logging.Logger, error) {
 	return logging.NewLogger(encoding, level)
 }
 
-func setupGotify(paramsReader params.Reader, logger logging.Logger) (notify func(priority int, messageArgs ...interface{}), err error) {
+func setupGotify(paramsReader params.Reader, logger logging.Logger) (
+	notify func(priority int, messageArgs ...interface{}), err error) {
 	gotifyURL, err := paramsReader.GetGotifyURL()
 	if err != nil {
 		return nil, err

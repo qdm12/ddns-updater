@@ -6,11 +6,10 @@ import (
 	"net"
 	"time"
 
-	netlib "github.com/qdm12/golibs/network"
-
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/models"
+	netlib "github.com/qdm12/golibs/network"
 )
 
 type Updater interface {

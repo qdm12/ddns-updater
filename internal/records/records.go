@@ -9,7 +9,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings"
 )
 
-// Record contains all the information to update and display a DNS record
+// Record contains all the information to update and display a DNS record.
 type Record struct { // internal
 	Settings settings.Settings // fixed
 	History  models.History    // past information
@@ -18,7 +18,7 @@ type Record struct { // internal
 	Time     time.Time
 }
 
-// New returns a new Record with settings and some history
+// New returns a new Record with settings and some history.
 func New(settings settings.Settings, events []models.HistoryEvent) Record {
 	return Record{
 		Settings: settings,
@@ -32,5 +32,6 @@ func (r *Record) String() string {
 	if len(r.Message) > 0 {
 		status += " (" + r.Message + ")"
 	}
-	return fmt.Sprintf("%s: %s %s; %s", r.Settings.String(), status, r.Time.Format("2006-01-02 15:04:05 MST"), r.History.String())
+	return fmt.Sprintf("%s: %s %s; %s",
+		r.Settings, status, r.Time.Format("2006-01-02 15:04:05 MST"), r.History)
 }

@@ -25,7 +25,8 @@ type duckdns struct {
 	matcher       regex.Matcher
 }
 
-func NewDuckdns(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+func NewDuckdns(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Token         string `json:"token"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -122,12 +123,13 @@ func (d *duckdns) Update(ctx context.Context, client network.Client, ip net.IP) 
 		return nil, fmt.Errorf(http.StatusText(status))
 	}
 	s := string(content)
+	const minChars = 2
 	switch {
-	case len(s) < 2:
+	case len(s) < minChars:
 		return nil, fmt.Errorf("response %q is too short", s)
-	case s[0:2] == "KO":
+	case s[0:minChars] == "KO":
 		return nil, fmt.Errorf("invalid domain token combination")
-	case s[0:2] == "OK":
+	case s[0:minChars] == "OK":
 		ips := verification.NewVerifier().SearchIPv4(s)
 		if ips == nil {
 			return nil, fmt.Errorf("no IP address in response")

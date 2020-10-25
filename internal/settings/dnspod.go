@@ -23,7 +23,8 @@ type dnspod struct {
 	token     string
 }
 
-func NewDNSPod(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+func NewDNSPod(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}

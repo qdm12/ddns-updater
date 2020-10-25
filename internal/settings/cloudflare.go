@@ -33,7 +33,8 @@ type cloudflare struct {
 	matcher        regex.Matcher
 }
 
-func NewCloudflare(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+func NewCloudflare(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key            string `json:"key"`
 		Token          string `json:"token"`
@@ -136,9 +137,10 @@ func setHeaders(r *http.Request, token, userServiceKey, email, key string) {
 	}
 }
 
-// Obtain domain identifier
-// See https://api.cloudflare.com/#dns-records-for-a-zone-list-dns-records
-func (c *cloudflare) getRecordIdentifier(ctx context.Context, client netlib.Client, newIP net.IP) (identifier string, upToDate bool, err error) {
+// Obtain domain identifier.
+// See https://api.cloudflare.com/#dns-records-for-a-zone-list-dns-records.
+func (c *cloudflare) getRecordIdentifier(ctx context.Context, client netlib.Client, newIP net.IP) (
+	identifier string, upToDate bool, err error) {
 	recordType := A
 	if newIP.To4() == nil {
 		recordType = AAAA
@@ -154,12 +156,11 @@ func (c *cloudflare) getRecordIdentifier(ctx context.Context, client netlib.Clie
 	values.Set("page", "1")
 	values.Set("per_page", "1")
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
+	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return "", false, err
 	}
 	setHeaders(r, c.token, c.userServiceKey, c.email, c.key)
-	r = r.WithContext(ctx)
 	content, status, err := client.Do(r)
 	if err != nil {
 		return "", false, err
@@ -215,7 +216,7 @@ func (c *cloudflare) Update(ctx context.Context, client netlib.Client, ip net.IP
 		Host:   "api.cloudflare.com",
 		Path:   fmt.Sprintf("/client/v4/zones/%s/dns_records/%s", c.zoneIdentifier, identifier),
 	}
-	r, err := network.BuildHTTPPut(
+	r, err := network.BuildHTTPPut(ctx,
 		u.String(),
 		cloudflarePutBody{
 			Type:    recordType,
@@ -229,7 +230,6 @@ func (c *cloudflare) Update(ctx context.Context, client netlib.Client, ip net.IP
 		return nil, err
 	}
 	setHeaders(r, c.token, c.userServiceKey, c.email, c.key)
-	r = r.WithContext(ctx)
 	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err

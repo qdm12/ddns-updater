@@ -25,7 +25,8 @@ type godaddy struct {
 	matcher   regex.Matcher
 }
 
-func NewGodaddy(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+func NewGodaddy(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key    string `json:"key"`
 		Secret string `json:"secret"`
@@ -104,13 +105,12 @@ func (g *godaddy) Update(ctx context.Context, client netlib.Client, ip net.IP) (
 		Host:   "api.godaddy.com",
 		Path:   fmt.Sprintf("/v1/domains/%s/records/%s/%s", g.domain, recordType, g.host),
 	}
-	r, err := network.BuildHTTPPut(u.String(), []goDaddyPutBody{{ip.String()}})
+	r, err := network.BuildHTTPPut(ctx, u.String(), []goDaddyPutBody{{ip.String()}})
 	if err != nil {
 		return nil, err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	r.Header.Set("Authorization", "sso-key "+g.key+":"+g.secret)
-	r = r.WithContext(ctx)
 	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err

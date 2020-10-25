@@ -1,5 +1,6 @@
 package params
 
+//nolint:gci
 import (
 	"fmt"
 	"io/ioutil"
@@ -66,7 +67,7 @@ func NewReader(logger logging.Logger) Reader {
 }
 
 // GetDataDir obtains the data directory from the environment
-// variable DATADIR
+// variable DATADIR.
 func (r *reader) GetDataDir(currentDir string) (string, error) {
 	return r.envParams.GetEnv("DATADIR", libparams.Default(currentDir+"/data"))
 }
@@ -98,7 +99,7 @@ func (r *reader) GetPeriod() (period time.Duration, warnings []string, err error
 		return time.Duration(n) * time.Second,
 			[]string{
 				"the environment variable DELAY should be changed to PERIOD",
-				fmt.Sprintf("the value for the duration period of the updater does not have a time unit, you might want to set it to \"%ds\" instead of \"%d\"", n, n),
+				fmt.Sprintf("the value for the duration period of the updater does not have a time unit, you might want to set it to \"%ds\" instead of \"%d\"", n, n), //nolint:lll
 			}, nil
 	}
 	period, err = r.envParams.GetDuration("DELAY", libparams.Compulsory())

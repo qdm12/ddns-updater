@@ -2,7 +2,7 @@ package constants
 
 import "github.com/qdm12/ddns-updater/internal/models"
 
-// All possible provider values
+// All possible provider values.
 const (
 	CLOUDFLARE models.Provider = "cloudflare"
 	DDNSSDE    models.Provider = "ddnss"

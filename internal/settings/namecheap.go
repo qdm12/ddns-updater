@@ -26,7 +26,8 @@ type namecheap struct {
 	matcher       regex.Matcher
 }
 
-func NewNamecheap(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+func NewNamecheap(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	if ipVersion == constants.IPv6 {
 		return s, fmt.Errorf("IPv6 is not supported by Namecheap API sadly")
 	}

@@ -8,7 +8,7 @@ import (
 )
 
 // History contains current and previous IP address for a particular record
-// with the latest success time
+// with the latest success time.
 type History []HistoryEvent // current and previous ips
 
 type HistoryEvent struct { // current and previous ips
@@ -23,13 +23,14 @@ func (h History) GetPreviousIPs() []net.IP {
 		return nil
 	}
 	IPs := make([]net.IP, len(h)-1)
-	for i := len(h) - 2; i >= 0; i-- {
+	const two = 2
+	for i := len(h) - two; i >= 0; i-- {
 		IPs[i] = h[i].IP
 	}
 	return IPs
 }
 
-// GetCurrentIP returns the current IP address (latest in history)
+// GetCurrentIP returns the current IP address (latest in history).
 func (h History) GetCurrentIP() net.IP {
 	if len(h) < 1 {
 		return nil
@@ -37,7 +38,7 @@ func (h History) GetCurrentIP() net.IP {
 	return h[len(h)-1].IP
 }
 
-// GetSuccessTime returns the latest success update time
+// GetSuccessTime returns the latest success update time.
 func (h History) GetSuccessTime() time.Time {
 	if len(h) < 1 {
 		return time.Time{}
@@ -50,6 +51,7 @@ func (h History) GetDurationSinceSuccess(now time.Time) string {
 		return "N/A"
 	}
 	duration := now.Sub(h[len(h)-1].Time)
+	const hoursInDay = 24
 	switch {
 	case duration < time.Minute:
 		return fmt.Sprintf("%ds", int(duration.Round(time.Second).Seconds()))
@@ -58,7 +60,7 @@ func (h History) GetDurationSinceSuccess(now time.Time) string {
 	case duration < 24*time.Hour:
 		return fmt.Sprintf("%dh", int(duration.Round(time.Hour).Hours()))
 	default:
-		return fmt.Sprintf("%dd", int(duration.Round(time.Hour*24).Hours()/24))
+		return fmt.Sprintf("%dd", int(duration.Round(time.Hour*hoursInDay).Hours()/hoursInDay))
 	}
 }
 

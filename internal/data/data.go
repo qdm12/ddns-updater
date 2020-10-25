@@ -24,7 +24,7 @@ type database struct {
 	persistentDB persistence.Database
 }
 
-// NewDatabase creates a new in memory database
+// NewDatabase creates a new in memory database.
 func NewDatabase(data []records.Record, persistentDB persistence.Database) Database {
 	return &database{
 		data:         data,

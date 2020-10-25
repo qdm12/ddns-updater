@@ -25,7 +25,8 @@ type runner struct {
 	timeNow     func() time.Time
 }
 
-func NewRunner(db data.Database, updater Updater, ipGetter IPGetter, logger logging.Logger, timeNow func() time.Time) Runner {
+func NewRunner(db data.Database, updater Updater, ipGetter IPGetter,
+	logger logging.Logger, timeNow func() time.Time) Runner {
 	return &runner{
 		db:          db,
 		updater:     updater,
@@ -111,7 +112,8 @@ func (r *runner) shouldUpdateRecord(record librecords.Record, ip, ipv4, ipv6 net
 	return r.shouldUpdateRecordWithLookup(hostname, ipVersion, ip, ipv4, ipv6)
 }
 
-func (r *runner) shouldUpdateRecordNoLookup(hostname string, ipVersion models.IPVersion, lastIP, ip, ipv4, ipv6 net.IP) (update bool) {
+func (r *runner) shouldUpdateRecordNoLookup(hostname string, ipVersion models.IPVersion,
+	lastIP, ip, ipv4, ipv6 net.IP) (update bool) {
 	switch ipVersion {
 	case constants.IPv4OrIPv6:
 		if ip != nil && !ip.Equal(lastIP) {
@@ -132,7 +134,8 @@ func (r *runner) shouldUpdateRecordNoLookup(hostname string, ipVersion models.IP
 	return false
 }
 
-func (r *runner) shouldUpdateRecordWithLookup(hostname string, ipVersion models.IPVersion, ip, ipv4, ipv6 net.IP) (update bool) {
+func (r *runner) shouldUpdateRecordWithLookup(hostname string, ipVersion models.IPVersion,
+	ip, ipv4, ipv6 net.IP) (update bool) {
 	recordIPv4, recordIPv6, err := r.lookupIPs(hostname)
 	if err != nil {
 		r.logger.Warn(err) // update anyway

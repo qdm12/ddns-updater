@@ -15,8 +15,9 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-// GetPublicIP downloads a webpage and extracts the IP address from it
-func GetPublicIP(ctx context.Context, client network.Client, url string, ipVersion models.IPVersion) (ip net.IP, err error) {
+// GetPublicIP downloads a webpage and extracts the IP address from it.
+func GetPublicIP(ctx context.Context, client network.Client, url string,
+	ipVersion models.IPVersion) (ip net.IP, err error) {
 	content, status, err := client.Get(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get public %s address: %w", ipVersion, err)

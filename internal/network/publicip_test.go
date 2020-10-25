@@ -137,7 +137,7 @@ func Test_searchIP(t *testing.T) {
 		"2 ipv6 addresses": {
 			IPVersion: constants.IPv6,
 			s:         "bd07:e846:51ac:6cd0:0000:0000:0000:0000  ad07:e846:51ac:6cd0:0000:0000:0000:0000",
-			err:       fmt.Errorf("multiple public ipv6 addresses found: ad07:e846:51ac:6cd0:: bd07:e846:51ac:6cd0::"), //nolint:golint
+			err:       fmt.Errorf("multiple public ipv6 addresses found: ad07:e846:51ac:6cd0:: bd07:e846:51ac:6cd0::"), //nolint:golint,lll
 		},
 	}
 	for name, tc := range tests {

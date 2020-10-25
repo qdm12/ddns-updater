@@ -9,7 +9,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 )
 
-// Splash returns the welcome spash message
+// Splash returns the welcome spash message.
 func Splash(version, vcsRef, buildDate string) string {
 	lines := title()
 	lines = append(lines, "")

@@ -27,7 +27,8 @@ type noip struct {
 	useProviderIP bool
 }
 
-func NewNoip(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+func NewNoip(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -52,10 +53,11 @@ func NewNoip(data json.RawMessage, domain, host string, ipVersion models.IPVersi
 }
 
 func (n *noip) isValid() error {
+	const maxUsernameLength = 50
 	switch {
 	case len(n.username) == 0:
 		return fmt.Errorf("username cannot be empty")
-	case len(n.username) > 50:
+	case len(n.username) > maxUsernameLength:
 		return fmt.Errorf("username cannot be longer than 50 characters")
 	case len(n.password) == 0:
 		return fmt.Errorf("password cannot be empty")

@@ -12,7 +12,7 @@ import (
 
 type lookupIPFunc func(host string) ([]net.IP, error)
 
-// IsHealthy checks all the records were updated successfully and returns an error if not
+// IsHealthy checks all the records were updated successfully and returns an error if not.
 func IsHealthy(db data.Database, lookupIP lookupIPFunc, logger logging.Logger) (err error) {
 	defer func() {
 		if err != nil {
@@ -45,7 +45,8 @@ func IsHealthy(db data.Database, lookupIP lookupIPFunc, logger logging.Logger) (
 			}
 		}
 		if !found {
-			return fmt.Errorf("lookup IP addresses for %s are %s instead of %s", hostname, strings.Join(lookedUpIPsString, ","), currentIP)
+			return fmt.Errorf("lookup IP addresses for %s are %s instead of %s",
+				hostname, strings.Join(lookedUpIPsString, ","), currentIP)
 		}
 	}
 	return nil

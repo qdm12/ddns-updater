@@ -24,7 +24,8 @@ type dreamhost struct {
 	matcher   regex.Matcher
 }
 
-func NewDreamhost(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+func NewDreamhost(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key string `json:"key"`
 	}{}
@@ -144,7 +145,8 @@ func makeDreamhostDefaultValues(key string) (values url.Values) { //nolint:unpar
 	return values
 }
 
-func listDreamhostRecords(ctx context.Context, client network.Client, key string) (records dreamHostRecords, err error) {
+func listDreamhostRecords(ctx context.Context, client network.Client, key string) (
+	records dreamHostRecords, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.dreamhost.com",
@@ -152,12 +154,11 @@ func listDreamhostRecords(ctx context.Context, client network.Client, key string
 	values := makeDreamhostDefaultValues(key)
 	values.Set("cmd", "dns-list_records")
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
+	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return records, err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	r = r.WithContext(ctx)
 	content, status, err := client.Do(r)
 	if err != nil {
 		return records, err
@@ -172,7 +173,9 @@ func listDreamhostRecords(ctx context.Context, client network.Client, key string
 	return records, nil
 }
 
-func removeDreamhostRecord(ctx context.Context, client network.Client, key, domain string, ip net.IP) error { //nolint:dupl
+//nolint:dupl
+func removeDreamhostRecord(ctx context.Context, client network.Client,
+	key, domain string, ip net.IP) error {
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA

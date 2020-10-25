@@ -11,7 +11,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings"
 )
 
-// nolint: maligned
 type commonSettings struct {
 	Provider    string `json:"provider"`
 	Domain      string `json:"domain"`
@@ -24,7 +23,7 @@ type commonSettings struct {
 }
 
 // GetSettings obtain the update settings from the JSON content, first trying from the environment variable CONFIG
-// and then from the file config.json
+// and then from the file config.json.
 func (r *reader) GetSettings(filePath string) (allSettings []settings.Settings, warnings []string, err error) {
 	allSettings, warnings, err = r.getSettingsFromEnv()
 	if allSettings != nil || warnings != nil || err != nil {
@@ -33,7 +32,7 @@ func (r *reader) GetSettings(filePath string) (allSettings []settings.Settings, 
 	return r.getSettingsFromFile(filePath)
 }
 
-// getSettingsFromFile obtain the update settings from config.json
+// getSettingsFromFile obtain the update settings from config.json.
 func (r *reader) getSettingsFromFile(filePath string) (allSettings []settings.Settings, warnings []string, err error) {
 	bytes, err := r.readFile(filePath)
 	if err != nil {
@@ -42,7 +41,7 @@ func (r *reader) getSettingsFromFile(filePath string) (allSettings []settings.Se
 	return extractAllSettings(bytes)
 }
 
-// getSettingsFromEnv obtain the update settings from the environment variable CONFIG
+// getSettingsFromEnv obtain the update settings from the environment variable CONFIG.
 func (r *reader) getSettingsFromEnv() (allSettings []settings.Settings, warnings []string, err error) {
 	s, err := r.envParams.GetEnv("CONFIG")
 	if err != nil {
@@ -84,15 +83,20 @@ func extractAllSettings(jsonBytes []byte) (allSettings []settings.Settings, warn
 	return allSettings, warnings, nil
 }
 
-func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, matcher regex.Matcher) (settingsSlice []settings.Settings, warnings []string, err error) {
+func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, matcher regex.Matcher) (
+	settingsSlice []settings.Settings, warnings []string, err error) {
 	provider := models.Provider(common.Provider)
 	if provider == constants.DUCKDNS { // only hosts, no domain
 		if len(common.Domain) > 0 { // retro compatibility
 			if len(common.Host) == 0 {
 				common.Host = strings.TrimSuffix(common.Domain, ".duckdns.org")
-				warnings = append(warnings, fmt.Sprintf("DuckDNS record should have %q specified as host instead of %q as domain", common.Host, common.Domain))
+				warnings = append(warnings,
+					fmt.Sprintf("DuckDNS record should have %q specified as host instead of %q as domain",
+						common.Host, common.Domain))
 			} else {
-				warnings = append(warnings, fmt.Sprintf("ignoring domain %q because host %q is specified for DuckDNS record", common.Domain, common.Host))
+				warnings = append(warnings,
+					fmt.Sprintf("ignoring domain %q because host %q is specified for DuckDNS record",
+						common.Domain, common.Host))
 			}
 		}
 	}

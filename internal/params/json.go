@@ -101,11 +101,6 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, 
 		}
 	}
 	hosts := strings.Split(common.Host, ",")
-	for _, host := range hosts {
-		if len(host) == 0 {
-			return nil, warnings, fmt.Errorf("host cannot be empty")
-		}
-	}
 	ipVersion := models.IPVersion(common.IPVersion)
 	if len(ipVersion) == 0 {
 		ipVersion = constants.IPv4OrIPv6 // default

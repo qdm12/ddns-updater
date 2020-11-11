@@ -139,6 +139,7 @@ type (
 )
 
 func makeDreamhostDefaultValues(key string) (values url.Values) { //nolint:unparam
+	values = make(url.Values)
 	values.Set("key", key)
 	values.Set("unique_id", uuid.New().String())
 	values.Set("format", "json")

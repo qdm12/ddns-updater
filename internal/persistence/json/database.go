@@ -51,7 +51,7 @@ func NewDatabase(dataDir string) (*Database, error) {
 		return nil, err
 	}
 	if err := db.Check(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s validation error: %w", db.filepath, err)
 	}
 	return &db, nil
 }

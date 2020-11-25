@@ -65,7 +65,6 @@ ENV \
     # Other
     LOG_ENCODING=console \
     LOG_LEVEL=info \
-    NODE_ID=-1 \
     GOTIFY_URL= \
     GOTIFY_TOKEN= \
     TZ=

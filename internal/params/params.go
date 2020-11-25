@@ -34,7 +34,7 @@ type Reader interface {
 	GetDataDir(currentDir string) (string, error)
 
 	// Web UI
-	GetListeningPort() (listeningPort, warning string, err error)
+	GetListeningPort() (listeningPort uint16, warning string, err error)
 	GetRootURL() (rootURL string, err error)
 
 	// Backup
@@ -72,8 +72,8 @@ func (r *reader) GetDataDir(currentDir string) (string, error) {
 	return r.envParams.GetEnv("DATADIR", libparams.Default(currentDir+"/data"))
 }
 
-func (r *reader) GetListeningPort() (listeningPort, warning string, err error) {
-	return r.envParams.GetListeningPort()
+func (r *reader) GetListeningPort() (listeningPort uint16, warning string, err error) {
+	return r.envParams.GetListeningPort("LISTENING_PORT")
 }
 
 func (r *reader) GetLoggerConfig() (encoding logging.Encoding, level logging.Level, err error) {

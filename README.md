@@ -251,7 +251,6 @@ DonDominio:
 | `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`.
 | `LOG_ENCODING` | `console` | Format of logging, `json` or `console` |
 | `LOG_LEVEL` | `info` | Level of logging, `info`, `warning` or `error` |
-| `NODE_ID` | `-1` | Node ID (for distributed systems), can be any integer |
 | `GOTIFY_URL` |  | (optional) HTTP(s) URL to your Gotify server |
 | `GOTIFY_TOKEN` |  | (optional) Token to access your Gotify server |
 | `TZ` | | Timezone to have accurate times, i.e. `America/Montreal` |

@@ -41,7 +41,7 @@ type allParams struct {
 	ipv6Method      models.IPMethod
 	dir             string
 	dataDir         string
-	listeningPort   string
+	listeningPort   uint16
 	rootURL         string
 	backupPeriod    time.Duration
 	backupDirectory string
@@ -150,7 +150,8 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	serverErrors := make(chan []error)
 	go func() {
 		serverErrors <- server.RunServers(ctx,
-			server.Settings{Name: "production", Addr: "0.0.0.0:" + p.listeningPort, Handler: productionHandlerFunc},
+			server.Settings{
+				Name: "production", Addr: fmt.Sprintf("0.0.0.0:%d", p.listeningPort), Handler: productionHandlerFunc},
 			server.Settings{Name: "healthcheck", Addr: "127.0.0.1:9999", Handler: healthcheckHandlerFunc},
 		)
 	}()

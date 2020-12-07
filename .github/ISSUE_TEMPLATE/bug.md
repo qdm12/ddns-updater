@@ -30,6 +30,7 @@ assignees: qdm12
     - [ ] Infomaniak
     - [ ] Namecheap
     - [ ] NoIP
+    - [ ] Selfhost.de
 
 3. What's the version of the program?
 

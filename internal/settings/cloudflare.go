@@ -220,7 +220,7 @@ func (c *cloudflare) Update(ctx context.Context, client netlib.Client, ip net.IP
 		u.String(),
 		cloudflarePutBody{
 			Type:    recordType,
-			Name:    c.host,
+			Name:    c.BuildDomainName(),
 			Content: ip.String(),
 			Proxied: c.proxied,
 			TTL:     c.ttl,

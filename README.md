@@ -217,6 +217,8 @@ DYNDNS:
 
 Google:
 
+Note that you must enable Dynamic DNS in the Synthetic records section of DNS management. The username and password is generated once you . You cannot create a wildcard entry for Dynamic DNS but you can CNAME `"*"` to the `"@"` domain for the same effect.
+
 - `"domain"`
 - `"host"` is your host and can be a subdomain or `"@"` or `"*"`
 - `"username"`

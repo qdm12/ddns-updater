@@ -1,6 +1,6 @@
 # Lightweight universal DDNS Updater with Docker and web UI
 
-*Light container updating DNS A records periodically for Cloudflare, DDNSS.de, DonDominio, DNSOMatic, DNSPod, Dreamhost, DuckDNS, DynDNS, GoDaddy, Google, He.net, Infomaniak, Namecheap and NoIP*
+_Light container updating DNS A records periodically for Cloudflare, DDNSS.de, DonDominio, DNSOMatic, DNSPod, Dreamhost, DuckDNS, DynDNS, GoDaddy, Google, He.net, Infomaniak, Namecheap and NoIP_
 
 [![DDNS Updater by Quentin McGaw](https://github.com/qdm12/ddns-updater/raw/master/readme/title.png)](https://hub.docker.com/r/qmcgaw/ddns-updater)
 
@@ -23,7 +23,7 @@
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
 - 14MB Docker image based on a Go static binary in a Scratch Docker image with ca-certificates and timezone data
-- Persistence with a JSON file *updates.json* to store old IP addresses with change times for each record
+- Persistence with a JSON file _updates.json_ to store old IP addresses with change times for each record
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
 - Sends notifications to your Android phone, see the [**Gotify**](#Gotify) section (it's free, open source and self hosted 🆒)
@@ -33,55 +33,55 @@
 
 The program reads the configuration from a JSON object, either from a file or from an environment variable.
 
-1. Create a directory of your choice, say *data* with a file named **config.json** inside:
+1. Create a directory of your choice, say _data_ with a file named **config.json** inside:
 
-    ```sh
-    mkdir data
-    touch data/config.json
-    # Owned by user ID of Docker container (1000)
-    chown -R 1000 data
-    # all access (for creating json database file data/updates.json)
-    chmod 700 data
-    # read access only
-    chmod 400 data/config.json
-    ```
+   ```sh
+   mkdir data
+   touch data/config.json
+   # Owned by user ID of Docker container (1000)
+   chown -R 1000 data
+   # all access (for creating json database file data/updates.json)
+   chmod 700 data
+   # read access only
+   chmod 400 data/config.json
+   ```
 
-    *(You could change the user ID, for example with `1001`, by running the container with `--user=1001`)*
+   _(You could change the user ID, for example with `1001`, by running the container with `--user=1001`)_
 
-1. Write a JSON configuration in *data/config.json*, for example:
+1. Write a JSON configuration in _data/config.json_, for example:
 
-    ```json
-    {
-        "settings": [
-            {
-                "provider": "namecheap",
-                "domain": "example.com",
-                "host": "@",
-                "password": "e5322165c1d74692bfa6d807100c0310"
-            },
-            {
-                "provider": "duckdns",
-                "domain": "example.duckdns.org",
-                "token": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-                "provider": "godaddy",
-                "domain": "example.org",
-                "host": "subdomain",
-                "key": "aaaaaaaaaaaaaaaa",
-                "secret": "aaaaaaaaaaaaaaaa"
-            }
-        ]
-    }
-    ```
+   ```json
+   {
+     "settings": [
+       {
+         "provider": "namecheap",
+         "domain": "example.com",
+         "host": "@",
+         "password": "e5322165c1d74692bfa6d807100c0310"
+       },
+       {
+         "provider": "duckdns",
+         "domain": "example.duckdns.org",
+         "token": "00000000-0000-0000-0000-000000000000"
+       },
+       {
+         "provider": "godaddy",
+         "domain": "example.org",
+         "host": "subdomain",
+         "key": "aaaaaaaaaaaaaaaa",
+         "secret": "aaaaaaaaaaaaaaaa"
+       }
+     ]
+   }
+   ```
 
-    You can find more information in the [configuration section](#configuration) to customize it.
+   You can find more information in the [configuration section](#configuration) to customize it.
 
 1. Run the container with
 
-    ```sh
-    docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data qmcgaw/ddns-updater
-    ```
+   ```sh
+   docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data qmcgaw/ddns-updater
+   ```
 
 1. (Optional) You can also set your JSON configuration as a single environment variable line (i.e. `{"settings": [{"provider": "namecheap", ...}]}`), which takes precedence over config.json. Note however that if you don't bind mount the `/updater/data` directory, there won't be a persistent database file `/updater/updates.json` but it will still work.
 
@@ -97,18 +97,18 @@ You can update the image with `docker pull qmcgaw/ddns-updater`. Other [Docker i
 
 ## Configuration
 
-Start by having the following content in *config.json*, or in your `CONFIG` environment variable:
+Start by having the following content in _config.json_, or in your `CONFIG` environment variable:
 
 ```json
 {
-    "settings": [
-        {
-            "provider": "",
-        },
-        {
-            "provider": "",
-        }
-    ]
+  "settings": [
+    {
+      "provider": ""
+    },
+    {
+      "provider": ""
+    }
+  ]
 }
 ```
 
@@ -135,10 +135,10 @@ Cloudflare:
 - `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
 - `"ttl"` integer value for record TTL in seconds (specify 1 for automatic)
 - One of the following:
-    - Email `"email"` and Global API Key `"key"`
-    - User service key `"user_service_key"`
-    - API Token `"token"`, configured with DNS edit permissions for your DNS name's zone.
-- *Optionally*, `"proxied"` can be `true` or `false` to use the proxy services of Cloudflare
+  - Email `"email"` and Global API Key `"key"`
+  - User service key `"user_service_key"`
+  - API Token `"token"`, configured with DNS edit permissions for your DNS name's zone.
+- _Optionally_, `"proxied"` can be `true` or `false` to use the proxy services of Cloudflare
 - `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 GoDaddy:
@@ -217,6 +217,8 @@ DYNDNS:
 
 Google:
 
+Note that you must enable Dynamic DNS in the Synthetic records section of DNS management. The username and password is generated once you . You cannot create a wildcard entry for Dynamic DNS but you can CNAME `"*"` to the `"@"` domain for the same effect.
+
 - `"domain"`
 - `"host"` is your host and can be a subdomain or `"@"` or `"*"`
 - `"username"`
@@ -237,23 +239,23 @@ DonDominio:
 
 ### Environment variables
 
-| Environment variable | Default | Description |
-| --- | --- | --- |
-| `CONFIG` | | One line JSON object containing the entire config (takes precendence over config.json file) if specified |
-| `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
-| `IP_METHOD` | `cycle` | Method to obtain the public IP address (ipv4 or ipv6). See the [IP Methods section](#IP-methods) |
-| `IPV4_METHOD` | `cycle` | Method to obtain the public IPv4 address only. See the [IP Methods section](#IP-methods) |
-| `IPV6_METHOD` | `cycle` | Method to obtain the public IPv6 address only. See the [IP Methods section](#IP-methods) |
-| `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
-| `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
-| `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
-| `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file |
-| `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`.
-| `LOG_ENCODING` | `console` | Format of logging, `json` or `console` |
-| `LOG_LEVEL` | `info` | Level of logging, `info`, `warning` or `error` |
-| `GOTIFY_URL` |  | (optional) HTTP(s) URL to your Gotify server |
-| `GOTIFY_TOKEN` |  | (optional) Token to access your Gotify server |
-| `TZ` | | Timezone to have accurate times, i.e. `America/Montreal` |
+| Environment variable | Default         | Description                                                                                                          |
+| -------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `CONFIG`             |                 | One line JSON object containing the entire config (takes precendence over config.json file) if specified             |
+| `PERIOD`             | `5m`            | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration)              |
+| `IP_METHOD`          | `cycle`         | Method to obtain the public IP address (ipv4 or ipv6). See the [IP Methods section](#IP-methods)                     |
+| `IPV4_METHOD`        | `cycle`         | Method to obtain the public IPv4 address only. See the [IP Methods section](#IP-methods)                             |
+| `IPV6_METHOD`        | `cycle`         | Method to obtain the public IPv6 address only. See the [IP Methods section](#IP-methods)                             |
+| `HTTP_TIMEOUT`       | `10s`           | Timeout for all HTTP requests                                                                                        |
+| `LISTENING_PORT`     | `8000`          | Internal TCP listening port for the web UI                                                                           |
+| `ROOT_URL`           | `/`             | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
+| `BACKUP_PERIOD`      | `0`             | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file        |
+| `BACKUP_DIRECTORY`   | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`.                                                |
+| `LOG_ENCODING`       | `console`       | Format of logging, `json` or `console`                                                                               |
+| `LOG_LEVEL`          | `info`          | Level of logging, `info`, `warning` or `error`                                                                       |
+| `GOTIFY_URL`         |                 | (optional) HTTP(s) URL to your Gotify server                                                                         |
+| `GOTIFY_TOKEN`       |                 | (optional) Token to access your Gotify server                                                                        |
+| `TZ`                 |                 | Timezone to have accurate times, i.e. `America/Montreal`                                                             |
 
 #### IP methods
 
@@ -314,12 +316,13 @@ To set it up with DDNS updater:
 
 - The automated healthcheck verifies all your records are up to date [using DNS lookups](https://github.com/qdm12/ddns-updater/blob/master/internal/healthcheck/healthcheck.go#L15)
 - You can also manually check, by:
-    1. Going to your DNS management webpage
-    1. Setting your record to `127.0.0.1`
-    1. Run the container
-    1. Refresh the DNS management webpage and verify the update happened
 
-    Better testing instructions are written in the [Wiki for GoDaddy](https://github.com/qdm12/ddns-updater/wiki/GoDaddy#testing)
+  1. Going to your DNS management webpage
+  1. Setting your record to `127.0.0.1`
+  1. Run the container
+  1. Refresh the DNS management webpage and verify the update happened
+
+  Better testing instructions are written in the [Wiki for GoDaddy](https://github.com/qdm12/ddns-updater/wiki/GoDaddy#testing)
 
 ## Development and contributing
 

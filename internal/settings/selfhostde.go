@@ -122,10 +122,23 @@ func (sd *selfhostde) Update(ctx context.Context, client network.Client, ip net.
 	if err != nil {
 		return nil, err
 	}
+	// see their PDF file
 	switch status {
-	case http.StatusOK:
+	case http.StatusOK: // DynDNS v2 specification
+	case http.StatusNoContent: // no change
+		return ip, nil
 	case http.StatusUnauthorized:
 		return nil, fmt.Errorf("bad credentials (%s)", http.StatusText(status))
+	case http.StatusConflict:
+		return nil, fmt.Errorf("no zone found")
+	case http.StatusGone:
+		return nil, fmt.Errorf("account inactive")
+	case http.StatusLengthRequired:
+		return nil, fmt.Errorf("incorrect IP %s", ip)
+	case http.StatusPreconditionFailed:
+		return nil, fmt.Errorf("private IPs cannot be routed: %s", ip)
+	case http.StatusServiceUnavailable:
+		return nil, fmt.Errorf("server overloaded")
 	default:
 		return nil, fmt.Errorf(http.StatusText(status))
 	}
@@ -133,9 +146,9 @@ func (sd *selfhostde) Update(ctx context.Context, client network.Client, ip net.
 	switch {
 	case strings.HasPrefix(s, notfqdn):
 		return nil, fmt.Errorf("fully qualified domain name is not valid")
-	case strings.HasPrefix(s, "badrequest"):
-		return nil, fmt.Errorf("bad request")
-	case strings.HasPrefix(s, "good"):
+	case strings.HasPrefix(s, "abuse"), strings.HasPrefix(s, "badrequest"):
+		return nil, fmt.Errorf("bad request sent")
+	case strings.HasPrefix(s, "good"), strings.HasPrefix(s, "nochg"):
 		return ip, nil
 	default:
 		return nil, fmt.Errorf("unknown response: %s", s)

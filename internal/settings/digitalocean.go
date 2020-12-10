@@ -2,6 +2,7 @@ package settings
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -24,7 +25,8 @@ type digitalOcean struct {
 	token     string
 }
 
-func NewDigitalOcean(data json.RawMessage, domain, host string, ipVersion models.IPVersion, noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+func NewDigitalOcean(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
@@ -84,7 +86,8 @@ func (d *digitalOcean) HTML() models.HTMLRow {
 	}
 }
 
-func getRecordID(domain, fqdn, recordType, token string, client netlib.Client) (recordID int, err error) {
+func getRecordID(ctx context.Context, domain, fqdn, recordType, token string,
+	client netlib.Client) (recordID int, err error) {
 	values := url.Values{}
 	values.Set("name", fqdn)
 	values.Set("type", recordType)
@@ -94,14 +97,14 @@ func getRecordID(domain, fqdn, recordType, token string, client netlib.Client) (
 		Path:     fmt.Sprintf("/v2/domains/%s/records", domain),
 		RawQuery: values.Encode(),
 	}
-	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
+	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return 0, err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentid.mcgaw@gmail.com")
 	r.Header.Set("Content-Type", "application/json")
 	r.Header.Set("Authorization", "Bearer "+token)
-	status, content, err := client.DoHTTPRequest(r)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return 0, err
 	} else if status != http.StatusOK {
@@ -125,12 +128,12 @@ func getRecordID(domain, fqdn, recordType, token string, client netlib.Client) (
 	}
 }
 
-func (d *digitalOcean) Update(client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (d *digitalOcean) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
 	if ip.To4() == nil { // IPv6
 		recordType = AAAA
 	}
-	recordID, err := getRecordID(d.domain, d.BuildDomainName(), recordType, d.token, client)
+	recordID, err := getRecordID(ctx, d.domain, d.BuildDomainName(), recordType, d.token, client)
 	if err != nil {
 		return nil, err
 	}
@@ -152,14 +155,14 @@ func (d *digitalOcean) Update(client netlib.Client, ip net.IP) (newIP net.IP, er
 	if err != nil {
 		return nil, err
 	}
-	r, err := http.NewRequest(http.MethodPut, u.String(), bytes.NewBuffer(requestBody))
+	r, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentid.mcgaw@gmail.com")
 	r.Header.Set("Content-Type", "application/json")
 	r.Header.Set("Authorization", "Bearer "+d.token)
-	status, content, err := client.DoHTTPRequest(r)
+	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err
 	}

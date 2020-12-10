@@ -13,7 +13,7 @@ import (
 )
 
 type Runner interface {
-	Run(ctx context.Context, period time.Duration) (forceUpdate func())
+	Run(ctx context.Context, period time.Duration, force <-chan struct{})
 }
 
 type runner struct {
@@ -221,23 +221,17 @@ func (r *runner) updateNecessary(ctx context.Context) {
 	}
 }
 
-func (r *runner) Run(ctx context.Context, period time.Duration) (forceUpdate func()) {
-	timer := time.NewTicker(period)
-	forceChannel := make(chan struct{})
-	go func() {
-		for {
-			select {
-			case <-timer.C:
-				r.updateNecessary(ctx)
-			case <-forceChannel:
-				r.updateNecessary(ctx)
-			case <-ctx.Done():
-				timer.Stop()
-				return
-			}
+func (r *runner) Run(ctx context.Context, period time.Duration, force <-chan struct{}) {
+	ticker := time.NewTicker(period)
+	for {
+		select {
+		case <-ticker.C:
+			r.updateNecessary(ctx)
+		case <-force:
+			r.updateNecessary(ctx)
+		case <-ctx.Done():
+			ticker.Stop()
+			return
 		}
-	}()
-	return func() {
-		forceChannel <- struct{}{}
 	}
 }

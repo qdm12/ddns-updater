@@ -139,8 +139,9 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	runner := update.NewRunner(db, updater, ipGetter, logger, timeNow)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	forceUpdate := runner.Run(ctx, p.period)
-	forceUpdate()
+	forceUpdate := make(chan struct{})
+	go runner.Run(ctx, p.period, forceUpdate)
+	forceUpdate <- struct{}{}
 	productionHandlerFunc := handlers.MakeHandler(p.rootURL, p.dir+"/ui", db, logger, forceUpdate, timeNow)
 	healthcheckHandlerFunc := libhealthcheck.GetHandler(func() error {
 		return healthcheck.IsHealthy(db, net.LookupIP, logger)

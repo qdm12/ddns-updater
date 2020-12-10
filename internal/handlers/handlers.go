@@ -13,7 +13,7 @@ import (
 
 // MakeHandler returns a router with all the necessary routes configured.
 func MakeHandler(rootURL, uiDir string, db data.Database, logger logging.Logger,
-	forceUpdate func(), timeNow func() time.Time) http.HandlerFunc {
+	forceUpdate chan<- struct{}, timeNow func() time.Time) http.HandlerFunc {
 	logger = logger.WithPrefix("http server: ")
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("HTTP %s %s", r.Method, r.RequestURI)
@@ -31,7 +31,7 @@ func MakeHandler(rootURL, uiDir string, db data.Database, logger logging.Logger,
 			}
 		case r.Method == http.MethodGet && r.RequestURI == rootURL+"/update":
 			logger.Info("Update started manually")
-			forceUpdate()
+			forceUpdate <- struct{}{}
 			http.Redirect(w, r, rootURL, 301)
 		}
 	}

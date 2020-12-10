@@ -5,25 +5,14 @@ on:
       - '*'
       - '*/*'
       - '!master'
-    paths-ignore:
-      - .devcontainer
-      - .github/ISSUE_TEMPLATE
-      - .github/workflows/build.yml
-      - .github/workflows/buildx-release.yml
-      - .github/workflows/buildx-latest.yml
-      - .github/workflows/dockerhub-description.yml
-      - .github/workflows/labels.yml
-      - .github/CODEOWNERS
-      - .github/CONTRIBUTING.md
-      - .github/FUNDING.yml
-      - .github/labels.yml
-      - .vscode
-      - readme
-      - .gitignore
-      - config.json
-      - docker-compose.yml
-      - LICENSE
-      - README.md
+    paths:
+      - .github/workflows/buildx-branch.yml
+      - cmd/**
+      - internal/**
+      - .golangci.yml
+      - Dockerfile
+      - go.mod
+      - go.sum
 jobs:
   buildx:
     runs-on: ubuntu-latest

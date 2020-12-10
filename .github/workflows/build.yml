@@ -2,25 +2,14 @@ name: Docker build
 on:
   pull_request:
     branches: [master]
-    paths-ignore:
-      - .devcontainer
-      - .github/ISSUE_TEMPLATE
-      - .github/workflows/build-branch.yml
-      - .github/workflows/buildx-release.yml
-      - .github/workflows/buildx-latest.yml
-      - .github/workflows/dockerhub-description.yml
-      - .github/workflows/labels.yml
-      - .github/CODEOWNERS
-      - .github/CONTRIBUTING.md
-      - .github/FUNDING.yml
-      - .github/labels.yml
-      - .vscode
-      - readme
-      - .gitignore
-      - config.json
-      - docker-compose.yml
-      - LICENSE
-      - README.md
+    paths:
+      - .github/workflows/build.yml
+      - cmd/**
+      - internal/**
+      - .golangci.yml
+      - Dockerfile
+      - go.mod
+      - go.sum
 jobs:
   build:
     runs-on: ubuntu-latest

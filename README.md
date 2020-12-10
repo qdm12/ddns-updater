@@ -34,6 +34,7 @@
     - LuaDNS
     - Namecheap
     - NoIP
+    - OVH
     - Selfhost.de
     - Strato.de
     - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
@@ -138,6 +139,7 @@ Check the documentation for your DNS provider:
 - [LuaDNS](docs/luadns.md)
 - [Namecheap](docs/namecheap.md)
 - [NoIP](docs/noip.md)
+- [OVH](docs/ovh.md)
 - [Selfhost.de](docs/selfhost.de.md)
 - [Strato.de](docs/strato.md)
 

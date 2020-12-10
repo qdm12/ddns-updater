@@ -20,6 +20,7 @@ const (
 	LUADNS       models.Provider = "luadns"
 	NAMECHEAP    models.Provider = "namecheap"
 	NOIP         models.Provider = "noip"
+	OVH          models.Provider = "ovh"
 	SELFHOSTDE   models.Provider = "selfhost.de"
 	STRATO       models.Provider = "strato"
 )
@@ -42,6 +43,7 @@ func ProviderChoices() []models.Provider {
 		LUADNS,
 		NAMECHEAP,
 		NOIP,
+		OVH,
 		SELFHOSTDE,
 		STRATO,
 	}

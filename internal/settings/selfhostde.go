@@ -47,7 +47,7 @@ func NewSelfhostde(data json.RawMessage, domain, host string, ipVersion models.I
 	if err := sd.isValid(); err != nil {
 		return nil, err
 	}
-	return s, nil
+	return sd, nil
 }
 
 func (sd *selfhostde) isValid() error {

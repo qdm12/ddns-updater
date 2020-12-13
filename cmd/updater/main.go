@@ -7,25 +7,24 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/backup"
 	"github.com/qdm12/ddns-updater/internal/data"
-	"github.com/qdm12/ddns-updater/internal/handlers"
-	"github.com/qdm12/ddns-updater/internal/healthcheck"
+	"github.com/qdm12/ddns-updater/internal/health"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/params"
 	"github.com/qdm12/ddns-updater/internal/persistence"
 	recordslib "github.com/qdm12/ddns-updater/internal/records"
+	"github.com/qdm12/ddns-updater/internal/server"
 	"github.com/qdm12/ddns-updater/internal/splash"
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/golibs/admin"
-	libhealthcheck "github.com/qdm12/golibs/healthcheck"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/network/connectivity"
-	"github.com/qdm12/golibs/server"
 )
 
 func main() {
@@ -48,11 +47,12 @@ type allParams struct {
 }
 
 func _main(ctx context.Context, timeNow func() time.Time) int {
-	if libhealthcheck.Mode(os.Args) {
+	if health.IsClientMode(os.Args) {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the
 		// long running instance of the program about its status
-		if err := libhealthcheck.Query(ctx); err != nil {
+		client := health.NewClient()
+		if err := client.Query(ctx); err != nil {
 			fmt.Println(err)
 			return 1
 		}
@@ -134,6 +134,10 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 			logger.Error(err)
 		}
 	}()
+
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+
 	updater := update.NewUpdater(db, client, notify)
 	ipGetter := update.NewIPGetter(client, p.ipMethod, p.ipv4Method, p.ipv6Method)
 	runner := update.NewRunner(db, updater, ipGetter, logger, timeNow)
@@ -142,20 +146,21 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	forceUpdate := make(chan struct{})
 	go runner.Run(ctx, p.period, forceUpdate)
 	forceUpdate <- struct{}{}
-	productionHandlerFunc := handlers.MakeHandler(p.rootURL, p.dir+"/ui", db, logger, forceUpdate, timeNow)
-	healthcheckHandlerFunc := libhealthcheck.GetHandler(func() error {
-		return healthcheck.IsHealthy(db, net.LookupIP, logger)
-	})
-	logger.Info("Web UI listening at address 0.0.0.0:%s with root URL %q", p.listeningPort, p.rootURL)
+
+	const healthServerAddr = "127.0.0.1:9999"
+	isHealthy := health.MakeIsHealthy(db, net.LookupIP, logger)
+	healthServer := health.NewServer(healthServerAddr,
+		logger.WithPrefix("healthcheck server: "),
+		isHealthy)
+	wg.Add(1)
+	go healthServer.Run(ctx, wg)
+
+	address := fmt.Sprintf("0.0.0.0:%d", p.listeningPort)
+	uiDir := p.dir + "/ui"
+	server := server.New(address, p.rootURL, uiDir, db, logger.WithPrefix("http server: "), forceUpdate)
+	wg.Add(1)
+	go server.Run(ctx, wg)
 	notify(1, fmt.Sprintf("Launched with %d records to watch", len(records)))
-	serverErrors := make(chan []error)
-	go func() {
-		serverErrors <- server.RunServers(ctx,
-			server.Settings{
-				Name: "production", Addr: fmt.Sprintf("0.0.0.0:%d", p.listeningPort), Handler: productionHandlerFunc},
-			server.Settings{Name: "healthcheck", Addr: "127.0.0.1:9999", Handler: healthcheckHandlerFunc},
-		)
-	}()
 
 	go backupRunLoop(ctx, p.backupPeriod, p.dir, p.backupDirectory, logger, timeNow)
 
@@ -166,11 +171,6 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		os.Interrupt,
 	)
 	select {
-	case errors := <-serverErrors:
-		for _, err := range errors {
-			logger.Error(err)
-		}
-		return 1
 	case signal := <-osSignals:
 		message := fmt.Sprintf("Stopping program: caught OS signal %q", signal)
 		logger.Warn(message)

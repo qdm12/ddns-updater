@@ -1,4 +1,4 @@
-package healthcheck
+package health
 
 import (
 	"fmt"
@@ -12,13 +12,18 @@ import (
 
 type lookupIPFunc func(host string) ([]net.IP, error)
 
-// IsHealthy checks all the records were updated successfully and returns an error if not.
-func IsHealthy(db data.Database, lookupIP lookupIPFunc, logger logging.Logger) (err error) {
-	defer func() {
+func MakeIsHealthy(db data.Database, lookupIP lookupIPFunc, logger logging.Logger) func() error {
+	return func() (err error) {
+		err = isHealthy(db, lookupIP)
 		if err != nil {
 			logger.Warn("unhealthy: %s", err)
 		}
-	}()
+		return err
+	}
+}
+
+// isHealthy checks all the records were updated successfully and returns an error if not.
+func isHealthy(db data.Database, lookupIP lookupIPFunc) (err error) {
 	records := db.SelectAll()
 	for _, record := range records {
 		if record.Status == constants.FAIL {

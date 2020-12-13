@@ -32,7 +32,7 @@ Note that Namecheap only supports ipv4 addresses for now.
 
 ## Domain setup
 
-[![Namecheap Website](https://github.com/qdm12/ddns-updater/raw/master/readme/namecheap.png)](https://www.namecheap.com)
+[![Namecheap Website](../readme/namecheap.png)](https://www.namecheap.com)
 
 1. Create a Namecheap account and buy a domain name - *example.com* as an example
 1. Login to Namecheap at [https://www.namecheap.com/myaccount/login.aspx](https://www.namecheap.com/myaccount/login.aspx)

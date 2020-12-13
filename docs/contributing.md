@@ -29,7 +29,7 @@ go mod download
 
 And finally install [golangci-lint](https://github.com/golangci/golangci-lint#install).
 
-You might want to use an editor such as [Visual Studio Code](https://code.visualstudio.com/download) with the [Go extension](https://code.visualstudio.com/docs/languages/go). Working settings are already in [.vscode/settings.json](https://github.com/qdm12/ddns-updater/master/.vscode/settings.json).
+You might want to use an editor such as [Visual Studio Code](https://code.visualstudio.com/download) with the [Go extension](https://code.visualstudio.com/docs/languages/go). Working settings are already in [.vscode/settings.json](../.vscode/settings.json).
 
 ## Commands available
 
@@ -40,6 +40,6 @@ You might want to use an editor such as [Visual Studio Code](https://code.visual
 
 ## Guidelines
 
-The Go code is in the Go file [cmd/updater/main.go](https://github.com/qdm12/ddns-updater/blob/master/cmd/updater/main.go) and the [internal directory](https://github.com/qdm12/ddns-updater/tree/master/internal), you might want to start reading the main.go file.
+The Go code is in the Go file [cmd/updater/main.go](](../cmd/updater/main.go) and the [internal directory](](../internal), you might want to start reading the main.go file.
 
-See the [Contributing document](https://github.com/qdm12/ddns-updater/blob/master/.github/CONTRIBUTING.md) for more information on how to contribute to this repository.
+See the [Contributing document](](../.github/CONTRIBUTING.md) for more information on how to contribute to this repository.

@@ -30,6 +30,6 @@
 
 ## Domain setup
 
-[![DuckDNS Website](https://github.com/qdm12/ddns-updater/raw/master/readme/duckdns.png)](https://duckdns.org)
+[![DuckDNS Website](../readme/duckdns.png)](https://duckdns.org)
 
-*See [duckdns website](https://duckdns.org)*
+*See the [duckdns website](https://duckdns.org)*

@@ -34,7 +34,7 @@
     - Namecheap
     - NoIP
     - Selfhost.de
-    - Want more? [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose))
+    - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
 - Web User interface
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
@@ -75,18 +75,6 @@ The program reads the configuration from a JSON object, either from a file or fr
                 "domain": "example.com",
                 "host": "@",
                 "password": "e5322165c1d74692bfa6d807100c0310"
-            },
-            {
-                "provider": "duckdns",
-                "domain": "example.duckdns.org",
-                "token": "00000000-0000-0000-0000-000000000000"
-            },
-            {
-                "provider": "godaddy",
-                "domain": "example.org",
-                "host": "subdomain",
-                "key": "aaaaaaaaaaaaaaaa",
-                "secret": "aaaaaaaaaaaaaaaa"
             }
         ]
     }
@@ -129,161 +117,29 @@ Start by having the following content in *config.json*, or in your `CONFIG` envi
 }
 ```
 
-The following parameters are to be added:
+For each setting, you need to fill in parameters.
+Check the documentation for your DNS provider:
 
-For all record update configuration, you have to specify the DNS provider with `"provider"` which can be:
+- [Cloudflare](docs/cloudflare.md)
+- [DDNSS.de](docs/ddnss.de.md)
+- [DigitalOcean](docs/digitalocean.md)
+- [DonDominio](docs/dondominio.md)
+- [DNSOMatic](docs/dnsomatic.md)
+- [DNSPod](docs/dnspod.md)
+- [Dreamhost](docs/dreamhost.md)
+- [DuckDNS](docs/duckdns.md)
+- [DynDNS](docs/dyndns.md)
+- [GoDaddy](docs/godaddy.md)
+- [Google](docs/google.md)
+- [He.net](docs/he.net.md)
+- [Infomaniak](docs/infomaniak.md)
+- [Namecheap](docs/namecheap.md)
+- [NoIP](docs/noip.md)
+- [Selfhost.de](docs/selfhost.de.md)
 
-- `"cloudflare"`
-- `"ddnss"`
-- `"digitalocean"`
-- `"dondominio"`
-- `"dnsomatic"`
-- `"dnspod"`
-- `"dreamhost"`
-- `"duckdns"`
-- `"dyn"`
-- `"godaddy"`
-- `"google"`
-- `"he"`
-- `"infomaniak"`
-- `"namecheap"`
-- `"noip"`
-- `"selfhost.de"`
+Note that:
 
-You can optionnally add the parameters:
-
-- `"no_dns_lookup"` can be `true` or `false` and allows, if `true`, to prevent the program from doing assumptions from DNS lookups returning an IP address not matching your public IP address (in example for proxied records on Cloudflare).
-- `"provider_ip"` can be `true` or `false`. It is only available for the providers `ddnss`, `duckdns`, `he`, `infomaniak`, `namecheap`, `noip`, `dyndns` and `selfhost.de`. It allows to let your DNS provider to determine your IPv4 address (and/or IPv6 address) automatically when you send an update request, without sending the new IP address detected by the program in the request.
-
-For each DNS provider exist some specific parameters you need to add, as described below:
-
-Namecheap:
-
-- `"domain"`
-- `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
-- `"password"`
-
-Cloudflare:
-
-- `"zone_identifier"` is the Zone ID of your site
-- `"domain"`
-- `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
-- `"ttl"` integer value for record TTL in seconds (specify 1 for automatic)
-- One of the following:
-    - Email `"email"` and Global API Key `"key"`
-    - User service key `"user_service_key"`
-    - API Token `"token"`, configured with DNS edit permissions for your DNS name's zone.
-- *Optionally*, `"proxied"` can be `true` or `false` to use the proxy services of Cloudflare
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-GoDaddy:
-
-- `"domain"`
-- `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
-- `"key"`
-- `"secret"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-DigitalOcean:
-
-- `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"` or `"*"`
-- `"token"` is your token that you can create [here](https://cloud.digitalocean.com/settings/applications)
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-DuckDNS:
-
-- `"domain"` is your fqdn, for example `subdomain.duckdns.org`
-- `"token"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-Dreamhost:
-
-- `"domain"`
-- `"key"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-NoIP:
-
-- `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
-- `"username"`
-- `"password"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-DNSOMatic:
-
-- `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"` or `"*"`
-- `"username"`
-- `"password"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-DNSPOD:
-
-- `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
-- `"token"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-HE.net:
-
-- `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"` or `"*"` (untested)
-- `"password"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-Infomaniak:
-
-- `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
-- `"user"`
-- `"password"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-DDNSS.de:
-
-- `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
-- `"user"`
-- `"password"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-DYNDNS:
-
-- `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
-- `"username"`
-- `"password"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-Google:
-
-- `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"` or `"*"`
-- `"username"`
-- `"password"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-DonDominio:
-
-- `"domain"`
-- `"username"`
-- `"password"`
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-- `"name"` is the name server associated with the domain
-
-Selfhost.de:
-
-- `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
-- `"username"` (use your DynDNS username)
-- `"password"` (use your DynDNS password)
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-
-### Additional notes
-
-- You can specify multiple hosts for the same domain using a comma separated list. For example with `"host": "@,subdomain1,subdomain2",`.
+- you can specify multiple hosts for the same domain using a comma separated list. For example with `"host": "@,subdomain1,subdomain2",`.
 
 ### Environment variables
 
@@ -314,18 +170,18 @@ By default, all ip methods are cycled through between all ip methods available f
   - `ifconfig` using [https://ifconfig.io/ip](https://ifconfig.io/ip)
   - `ipinfo` using [https://ipinfo.io/ip](https://ipinfo.io/ip)
   - `ipify` using [https://api.ipify.org](https://api.ipify.org)
-  - `"ddnss"` using [https://ddnss.de/meineip.php](https://ddnss.de/meineip.php)
-  - `"google"` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
+  - `ddnss` using [https://ddnss.de/meineip.php](https://ddnss.de/meineip.php)
+  - `google` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
 - IPv4 only (useful for updating both ipv4 and ipv6)
   - `ipify` using [https://api.ipify.org](https://api.ipify.org)
-  - `"ddnss4"` using [https://ip4.ddnss.de/meineip.php](https://ip4.ddnss.de/meineip.php)
-  - `"noip4"` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
-  - `"noip8245_4"` using [http://ip1.dynupdate.no-ip.com:8245](http://ip1.dynupdate.no-ip.com:8245)
+  - `ddnss4` using [https://ip4.ddnss.de/meineip.php](https://ip4.ddnss.de/meineip.php)
+  - `noip4` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
+  - `noip8245_4` using [http://ip1.dynupdate.no-ip.com:8245](http://ip1.dynupdate.no-ip.com:8245)
 - IPv6 only
   - `ipify6` using [https://api6.ipify.org](https://api6.ipify.org)
-  - `"ddnss6"` using [https://ip6.ddnss.de/meineip.php](https://ip6.ddnss.de/meineip.php)
-  - `"noip6"` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
-  - `"noip8245_6"` using [http://ip1.dynupdate.no-ip.com:8245](http://ip1.dynupdate.no-ip.com:8245)
+  - `ddnss6` using [https://ip6.ddnss.de/meineip.php](https://ip6.ddnss.de/meineip.php)
+  - `noip6` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
+  - `noip8245_6` using [http://ip1.dynupdate.no-ip.com:8245](http://ip1.dynupdate.no-ip.com:8245)
 
 You can also specify an HTTPS URL to obtain your public IP address (i.e. `-e IPV6_METHOD=https://ipinfo.io/ip`)
 
@@ -337,10 +193,6 @@ If you have a host firewall in place, this container needs the following ports:
 - TCP 80 outbound if you use a local unsecured HTTP connection to your Gotify server
 - UDP 53 outbound for outbound DNS resolution
 - TCP 8000 inbound (or other) for the WebUI
-
-## Domain set up
-
-Instructions to setup your domain for this program are available for DuckDNS, Cloudflare, GoDaddy and Namecheap on the [Github Wiki](https://github.com/qdm12/ddns-updater/wiki).
 
 ## Gotify
 
@@ -369,11 +221,9 @@ To set it up with DDNS updater:
     1. Run the container
     1. Refresh the DNS management webpage and verify the update happened
 
-    Better testing instructions are written in the [Wiki for GoDaddy](https://github.com/qdm12/ddns-updater/wiki/GoDaddy#testing)
-
 ## Development and contributing
 
-- Contribute with code: see [the Wiki](https://github.com/qdm12/ddns-updater/wiki/Contributing)
+- [Contribute with code](docs/contributing.md)
 - [Github workflows to know what's building](https://github.com/qdm12/ddns-updater/actions)
 - [List of issues and feature requests](https://github.com/qdm12/ddns-updater/issues)
 - [Kanban board](https://github.com/qdm12/ddns-updater/projects/1)

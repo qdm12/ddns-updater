@@ -9,6 +9,12 @@ assignees: qdm12
 
 1. What's the feature?
 
-2. Why do you need this feature?
+2. Extra information?
 
-3. Extra information?
+<!--
+
+YOU CAN CHAT THERE EVENTUALLY:
+
+https://github.com/qdm12/ddns-updater/discussions
+
+-->

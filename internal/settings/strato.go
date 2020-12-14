@@ -15,101 +15,96 @@ import (
 )
 
 //nolint:maligned
-type dyn struct {
+type strato struct {
 	domain        string
 	host          string
 	ipVersion     models.IPVersion
 	dnsLookup     bool
-	username      string
 	password      string
 	useProviderIP bool
 }
 
-func NewDyn(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewStrato(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
 	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
-		Username      string `json:"username"`
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	d := &dyn{
+	ss := &strato{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
 		dnsLookup:     !noDNSLookup,
-		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := d.isValid(); err != nil {
+	if err := ss.isValid(); err != nil {
 		return nil, err
 	}
-	return d, nil
+	return ss, nil
 }
 
-func (d *dyn) isValid() error {
+func (s *strato) isValid() error {
 	switch {
-	case len(d.username) == 0:
-		return fmt.Errorf("username cannot be empty")
-	case len(d.password) == 0:
+	case len(s.password) == 0:
 		return fmt.Errorf("password cannot be empty")
-	case d.host == "*":
+	case s.host == "*":
 		return fmt.Errorf(`host cannot be "*"`)
 	}
 	return nil
 }
 
-func (d *dyn) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Dyn]", d.domain, d.host)
+func (s *strato) String() string {
+	return fmt.Sprintf("[domain: %s | host: %s | provider: Strato]", s.domain, s.host)
 }
 
-func (d *dyn) Domain() string {
-	return d.domain
+func (s *strato) Domain() string {
+	return s.domain
 }
 
-func (d *dyn) Host() string {
-	return d.host
+func (s *strato) Host() string {
+	return s.host
 }
 
-func (d *dyn) IPVersion() models.IPVersion {
-	return d.ipVersion
+func (s *strato) IPVersion() models.IPVersion {
+	return s.ipVersion
 }
 
-func (d *dyn) DNSLookup() bool {
-	return d.dnsLookup
+func (s *strato) DNSLookup() bool {
+	return s.dnsLookup
 }
 
-func (d *dyn) BuildDomainName() string {
-	return buildDomainName(d.host, d.domain)
+func (s *strato) BuildDomainName() string {
+	return buildDomainName(s.host, s.domain)
 }
 
-func (d *dyn) HTML() models.HTMLRow {
+func (s *strato) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
-		Provider:  "<a href=\"https://dyn.com/\">Dyn DNS</a>",
-		IPVersion: models.HTML(d.ipVersion),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", s.BuildDomainName(), s.BuildDomainName())),
+		Host:      models.HTML(s.Host()),
+		Provider:  "<a href=\"https://strato.com/\">Strato DNS</a>",
+		IPVersion: models.HTML(s.ipVersion),
 	}
 }
 
-func (d *dyn) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) { //nolint:dupl
+func (s *strato) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) { //nolint:dupl
 	u := url.URL{
 		Scheme: "https",
-		User:   url.UserPassword(d.username, d.password),
-		Host:   "members.dyndns.org",
-		Path:   "/v3/update",
+		User:   url.UserPassword(s.domain, s.password),
+		Host:   "dydns.strato.com",
+		Path:   "/nic/update",
 	}
 	values := url.Values{}
-	switch d.host {
+	switch s.host {
 	case "@":
-		values.Set("hostname", d.domain)
+		values.Set("hostname", s.domain)
 	default:
-		values.Set("hostname", fmt.Sprintf("%s.%s", d.host, d.domain))
+		values.Set("hostname", fmt.Sprintf("%s.%s", s.host, s.domain))
 	}
-	if !d.useProviderIP {
+	if !s.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()
@@ -126,13 +121,13 @@ func (d *dyn) Update(ctx context.Context, client network.Client, ip net.IP) (new
 	if status != http.StatusOK {
 		return nil, fmt.Errorf(http.StatusText(status))
 	}
-	s := string(content)
+	str := string(content)
 	switch {
-	case strings.HasPrefix(s, notfqdn):
+	case strings.HasPrefix(str, notfqdn):
 		return nil, fmt.Errorf("fully qualified domain name is not valid")
-	case strings.HasPrefix(s, "badrequest"):
+	case strings.HasPrefix(str, "badrequest"):
 		return nil, fmt.Errorf("bad request")
-	case strings.HasPrefix(s, "good"):
+	case strings.HasPrefix(str, "good"):
 		return ip, nil
 	default:
 		return nil, fmt.Errorf("unknown response: %s", s)

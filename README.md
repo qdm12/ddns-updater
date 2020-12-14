@@ -34,6 +34,7 @@
     - Namecheap
     - NoIP
     - Selfhost.de
+    - Strato.de
     - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
 - Web User interface
 
@@ -136,6 +137,7 @@ Check the documentation for your DNS provider:
 - [Namecheap](docs/namecheap.md)
 - [NoIP](docs/noip.md)
 - [Selfhost.de](docs/selfhost.de.md)
+- [Strato.de](docs/strato.md)
 
 Note that:
 

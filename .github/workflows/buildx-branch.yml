@@ -9,6 +9,7 @@ on:
       - .github/workflows/buildx-branch.yml
       - cmd/**
       - internal/**
+      - .dockerignore
       - .golangci.yml
       - Dockerfile
       - go.mod

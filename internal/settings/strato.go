@@ -94,7 +94,7 @@ func (s *strato) Update(ctx context.Context, client network.Client, ip net.IP) (
 	u := url.URL{
 		Scheme: "https",
 		User:   url.UserPassword(s.domain, s.password),
-		Host:   "dydns.strato.com",
+		Host:   "dyndns.strato.com",
 		Path:   "/nic/update",
 	}
 	values := url.Values{}

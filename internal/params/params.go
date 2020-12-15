@@ -45,11 +45,6 @@ type Reader interface {
 	GetLoggerConfig() (encoding logging.Encoding, level logging.Level, err error)
 	GetGotifyURL() (URL *url.URL, err error)
 	GetGotifyToken() (token string, err error)
-
-	// Version getters
-	GetVersion() string
-	GetBuildDate() string
-	GetVcsRef() string
 }
 
 type reader struct {

@@ -4,6 +4,21 @@ linters-settings:
   misspell:
     locale: US
 
+issues:
+  exclude-rules:
+    - path: cmd/
+      text: buildInfo is a global variable
+      linters:
+        - gochecknoglobals
+    - path: cmd/
+      text: commit is a global variable
+      linters:
+        - gochecknoglobals
+    - path: cmd/
+      text: buildDate is a global variable
+      linters:
+        - gochecknoglobals
+
 linters:
   disable-all: true
   enable:

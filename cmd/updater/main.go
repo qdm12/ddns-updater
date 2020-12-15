@@ -27,7 +27,17 @@ import (
 	"github.com/qdm12/golibs/network/connectivity"
 )
 
+var (
+	buildInfo models.BuildInformation
+	version   = "unknown"
+	commit    = "unknown"
+	buildDate = "an unknown date"
+)
+
 func main() {
+	buildInfo.Version = version
+	buildInfo.Commit = commit
+	buildInfo.BuildDate = buildDate
 	os.Exit(_main(context.Background(), time.Now))
 	// returns 1 on error
 	// returns 2 on os signal
@@ -58,17 +68,15 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		}
 		return 0
 	}
+
+	fmt.Println(splash.Splash(buildInfo))
+
 	logger, err := setupLogger()
 	if err != nil {
 		fmt.Println(err)
 		return 1
 	}
 	paramsReader := params.NewReader(logger)
-
-	fmt.Println(splash.Splash(
-		paramsReader.GetVersion(),
-		paramsReader.GetVcsRef(),
-		paramsReader.GetBuildDate()))
 
 	notify, err := setupGotify(paramsReader, logger)
 	if err != nil {

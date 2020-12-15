@@ -8,7 +8,7 @@ RUN mkdir /tmp/data && \
     chmod 700 /tmp/data
 
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
-ARG GOLANGCI_LINT_VERSION=v1.32.2
+ARG GOLANGCI_LINT_VERSION=v1.33.0
 RUN apk --update add git
 ENV CGO_ENABLED=0
 RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s ${GOLANGCI_LINT_VERSION}

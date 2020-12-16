@@ -20,6 +20,7 @@ const (
 	NAMECHEAP    models.Provider = "namecheap"
 	NOIP         models.Provider = "noip"
 	SELFHOSTDE   models.Provider = "selfhost.de"
+	STRATO       models.Provider = "strato"
 )
 
 func ProviderChoices() []models.Provider {
@@ -40,5 +41,6 @@ func ProviderChoices() []models.Provider {
 		NAMECHEAP,
 		NOIP,
 		SELFHOSTDE,
+		STRATO,
 	}
 }

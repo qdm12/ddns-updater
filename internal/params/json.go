@@ -142,6 +142,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, 
 		settingsConstructor = settings.NewDyn
 	case constants.SELFHOSTDE:
 		settingsConstructor = settings.NewSelfhostde
+	case constants.STRATO:
+		settingsConstructor = settings.NewStrato
 	default:
 		return nil, warnings, fmt.Errorf("provider %q is not supported", provider)
 	}

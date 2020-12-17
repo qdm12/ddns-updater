@@ -182,8 +182,8 @@ By default, all ip methods are cycled through between all ip methods available f
 - IPv6 only
   - `ipify6` using [https://api6.ipify.org](https://api6.ipify.org)
   - `ddnss6` using [https://ip6.ddnss.de/meineip.php](https://ip6.ddnss.de/meineip.php)
-  - `noip6` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
-  - `noip8245_6` using [http://ip1.dynupdate.no-ip.com:8245](http://ip1.dynupdate.no-ip.com:8245)
+  - `noip6` using [http://ip1.dynupdate6.no-ip.com](http://ip1.dynupdate6.no-ip.com)
+  - `noip8245_6` using [http://ip1.dynupdate6.no-ip.com:8245](http://ip1.dynupdate6.no-ip.com:8245)
 
 You can also specify an HTTPS URL to obtain your public IP address (i.e. `-e IPV6_METHOD=https://ipinfo.io/ip`)
 

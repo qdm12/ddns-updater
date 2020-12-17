@@ -34,6 +34,14 @@ issues:
       linters:
         - maligned
         - dupl
+    - path: internal/settings/dreamhost\.go
+      text: "mnd: Magic number: 0x40, in <operation> detected"
+      linters:
+        - gomnd
+    - path: internal/settings/dreamhost\.go
+      text: "mnd: Magic number: 0x80, in <operation> detected"
+      linters:
+        - gomnd
 
 linters:
   disable-all: true

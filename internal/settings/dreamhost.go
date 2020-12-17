@@ -2,13 +2,14 @@ package settings
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
 
-	"github.com/google/uuid"
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
@@ -139,9 +140,13 @@ type (
 )
 
 func makeDreamhostDefaultValues(key string) (values url.Values) {
-	values = make(url.Values)
+	uuid := make([]byte, 16)
+	_, _ = io.ReadFull(rand.Reader, uuid)
+	uuid[6] = (uuid[6] & 0x0f) | 0x40 // Version 4
+	uuid[8] = (uuid[8] & 0x3f) | 0x80 // Variant is 10
+	values = url.Values{}
 	values.Set("key", key)
-	values.Set("unique_id", uuid.New().String())
+	values.Set("unique_id", string(uuid))
 	values.Set("format", "json")
 	return values
 }

@@ -45,8 +45,6 @@ github.com/gomodule/redigo v2.0.0+incompatible h1:K/R+8tc58AaqLkqG2Ol3Qk+DR/TlNu
 github.com/gomodule/redigo v2.0.0+incompatible/go.mod h1:B4C85qUVwatsJoIUNIfCRsp7qO0iAmpGFZ4EELWSbC4=
 github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm40UhjYkI=
 github.com/google/uuid v1.0.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/google/uuid v1.1.1 h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=
-github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.1.2 h1:EVhdT+1Kseyi1/pUmXKaFxYsDNy9RQYkMWRH68J/W7Y=
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/gotify/go-api-client/v2 v2.0.4 h1:0w8skCr8aLBDKaQDg31LKKHUGF7rt7zdRpR+6cqIAlE=
@@ -78,8 +76,6 @@ github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/qdm12/golibs v0.0.0-20201104030322-31e88ae3c5bf h1:CRRZZqv0SELF12+8WuGPCJHCYsrWnLVcd6CBzCSY70o=
-github.com/qdm12/golibs v0.0.0-20201104030322-31e88ae3c5bf/go.mod h1:pikkTN7g7zRuuAnERwqW1yAFq6pYmxrxpjiwGvb0Ysc=
 github.com/qdm12/golibs v0.0.0-20201129012909-4ea6318d1588 h1:K/ST/IXCViVJeJZ0eUHwGpHI3tCnyBRAvKHrB7fMNr0=
 github.com/qdm12/golibs v0.0.0-20201129012909-4ea6318d1588/go.mod h1:pikkTN7g7zRuuAnERwqW1yAFq6pYmxrxpjiwGvb0Ysc=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=

@@ -190,12 +190,11 @@ func removeDreamhostRecord(ctx context.Context, client network.Client,
 	values.Set("type", recordType)
 	values.Set("value", ip.String())
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
+	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	r = r.WithContext(ctx)
 	content, status, err := client.Do(r)
 	if err != nil {
 		return err
@@ -226,12 +225,11 @@ func addDreamhostRecord(ctx context.Context, client network.Client, key, domain 
 	values.Set("type", recordType)
 	values.Set("value", ip.String())
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
+	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	r = r.WithContext(ctx)
 	content, status, err := client.Do(r)
 	if err != nil {
 		return err

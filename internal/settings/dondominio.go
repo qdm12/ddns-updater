@@ -116,12 +116,11 @@ func (d *donDominio) Update(ctx context.Context, client netlib.Client, ip net.IP
 	} else {
 		values.Set("ipv6", ip.String())
 	}
-	r, err := http.NewRequest(http.MethodPost, u.String(), strings.NewReader(values.Encode()))
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), strings.NewReader(values.Encode()))
 	if err != nil {
 		return nil, err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentid.mcgaw@gmail.com")
-	r = r.WithContext(ctx)
 	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err

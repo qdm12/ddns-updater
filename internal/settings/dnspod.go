@@ -102,13 +102,12 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 	values.Set("sub_domain", d.host)
 	values.Set("record_type", recordType)
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBufferString(values.Encode()))
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBufferString(values.Encode()))
 	if err != nil {
 		return nil, err
 	}
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	r = r.WithContext(ctx)
 	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err
@@ -153,13 +152,12 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 	values.Set("record_line", recordLine)
 	values.Set("sub_domain", d.host)
 	u.RawQuery = values.Encode()
-	r, err = http.NewRequest(http.MethodPost, u.String(), bytes.NewBufferString(values.Encode()))
+	r, err = http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBufferString(values.Encode()))
 	if err != nil {
 		return nil, err
 	}
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	r = r.WithContext(ctx)
 	content, status, err = client.Do(r)
 	if err != nil {
 		return nil, err

@@ -117,12 +117,11 @@ func (d *ddnss) Update(ctx context.Context, client network.Client, ip net.IP) (n
 		}
 	}
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequest(http.MethodGet, u.String(), nil)
+	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	r = r.WithContext(ctx)
 	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err

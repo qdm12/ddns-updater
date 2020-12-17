@@ -132,6 +132,7 @@ Check the documentation for your DNS provider:
 - [Dreamhost](docs/dreamhost.md)
 - [DuckDNS](docs/duckdns.md)
 - [DynDNS](docs/dyndns.md)
+- [DynV6](docs/dynv6.md)
 - [GoDaddy](docs/godaddy.md)
 - [Google](docs/google.md)
 - [He.net](docs/he.net.md)

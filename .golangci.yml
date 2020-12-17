@@ -18,6 +18,22 @@ issues:
       text: buildDate is a global variable
       linters:
         - gochecknoglobals
+    - path: cmd/updater/main.go
+      text: "mnd: Magic number: 4, in <argument> detected"
+      linters:
+        - gomnd
+    - path: cmd/updater/main.go
+      text: "mnd: Magic number: 2, in <argument> detected"
+      linters:
+        - gomnd
+    - path: internal/regex/regex.go
+      text: "regexpMust: for const patterns like "
+      linters:
+        - gocritic
+    - path: internal/settings/
+      linters:
+        - maligned
+        - dupl
 
 linters:
   disable-all: true

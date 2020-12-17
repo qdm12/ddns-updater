@@ -15,7 +15,6 @@ import (
 	"github.com/qdm12/golibs/network"
 )
 
-//nolint:maligned
 type namecheap struct {
 	domain        string
 	host          string

@@ -15,7 +15,6 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-//nolint:maligned
 type duckdns struct {
 	host          string
 	ipVersion     models.IPVersion

@@ -1,6 +1,5 @@
 package params
 
-//nolint:gci
 import (
 	"fmt"
 	"io/ioutil"
@@ -12,7 +11,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/params"
-	libparams "github.com/qdm12/golibs/params"
 	"github.com/qdm12/golibs/verification"
 )
 
@@ -48,14 +46,14 @@ type Reader interface {
 }
 
 type reader struct {
-	envParams libparams.EnvParams
+	envParams params.EnvParams
 	verifier  verification.Verifier
 	readFile  func(filename string) ([]byte, error)
 }
 
 func NewReader(logger logging.Logger) Reader {
 	return &reader{
-		envParams: libparams.NewEnvParams(),
+		envParams: params.NewEnvParams(),
 		verifier:  verification.NewVerifier(),
 		readFile:  ioutil.ReadFile,
 	}
@@ -64,7 +62,7 @@ func NewReader(logger logging.Logger) Reader {
 // GetDataDir obtains the data directory from the environment
 // variable DATADIR.
 func (r *reader) GetDataDir(currentDir string) (string, error) {
-	return r.envParams.GetEnv("DATADIR", libparams.Default(currentDir+"/data"))
+	return r.envParams.GetEnv("DATADIR", params.Default(currentDir+"/data"))
 }
 
 func (r *reader) GetListeningPort() (listeningPort uint16, warning string, err error) {
@@ -89,22 +87,22 @@ func (r *reader) GetRootURL() (rootURL string, err error) {
 
 func (r *reader) GetPeriod() (period time.Duration, warnings []string, err error) {
 	// Backward compatibility
-	n, err := r.envParams.GetEnvInt("DELAY", libparams.Compulsory())
+	n, err := r.envParams.GetEnvInt("DELAY", params.Compulsory())
 	if err == nil { // integer only, treated as seconds
 		return time.Duration(n) * time.Second,
 			[]string{
 				"the environment variable DELAY should be changed to PERIOD",
-				fmt.Sprintf("the value for the duration period of the updater does not have a time unit, you might want to set it to \"%ds\" instead of \"%d\"", n, n), //nolint:lll
+				fmt.Sprintf(`the value for the duration period of the updater does not have a time unit, you might want to set it to "%ds" instead of "%d"`, n, n), //nolint:lll
 			}, nil
 	}
-	period, err = r.envParams.GetDuration("DELAY", libparams.Compulsory())
+	period, err = r.envParams.GetDuration("DELAY", params.Compulsory())
 	if err == nil {
 		return period,
 			[]string{
 				"the environment variable DELAY should be changed to PERIOD",
 			}, nil
 	}
-	period, err = r.envParams.GetDuration("PERIOD", libparams.Default("10m"))
+	period, err = r.envParams.GetDuration("PERIOD", params.Default("10m"))
 	return period, nil, err
 }
 
@@ -183,11 +181,11 @@ func (r *reader) GetExeDir() (dir string, err error) {
 }
 
 func (r *reader) GetHTTPTimeout() (duration time.Duration, err error) {
-	return r.envParams.GetHTTPTimeout(libparams.Default("10s"))
+	return r.envParams.GetHTTPTimeout(params.Default("10s"))
 }
 
 func (r *reader) GetBackupPeriod() (duration time.Duration, err error) {
-	s, err := r.envParams.GetEnv("BACKUP_PERIOD", libparams.Default("0"))
+	s, err := r.envParams.GetEnv("BACKUP_PERIOD", params.Default("0"))
 	if err != nil {
 		return 0, err
 	}
@@ -195,5 +193,5 @@ func (r *reader) GetBackupPeriod() (duration time.Duration, err error) {
 }
 
 func (r *reader) GetBackupDirectory() (directory string, err error) {
-	return r.envParams.GetEnv("BACKUP_DIRECTORY", libparams.Default("./data"))
+	return r.envParams.GetEnv("BACKUP_DIRECTORY", params.Default("./data"))
 }

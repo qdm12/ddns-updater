@@ -16,7 +16,6 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-//nolint:maligned
 type he struct {
 	domain        string
 	host          string

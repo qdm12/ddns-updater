@@ -17,7 +17,6 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-//nolint:maligned
 type cloudflare struct {
 	domain         string
 	host           string

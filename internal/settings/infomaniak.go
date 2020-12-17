@@ -15,7 +15,6 @@ import (
 	"github.com/qdm12/golibs/network"
 )
 
-//nolint:maligned
 type infomaniak struct {
 	domain        string
 	host          string

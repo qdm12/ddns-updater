@@ -14,7 +14,6 @@ import (
 	"github.com/qdm12/golibs/network"
 )
 
-//nolint:maligned
 type strato struct {
 	domain        string
 	host          string
@@ -90,7 +89,7 @@ func (s *strato) HTML() models.HTMLRow {
 	}
 }
 
-func (s *strato) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) { //nolint:dupl
+func (s *strato) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		User:   url.UserPassword(s.domain, s.password),

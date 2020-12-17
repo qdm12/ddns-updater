@@ -14,7 +14,6 @@ import (
 	"github.com/qdm12/golibs/network"
 )
 
-//nolint:maligned
 type dyn struct {
 	domain        string
 	host          string
@@ -95,7 +94,7 @@ func (d *dyn) HTML() models.HTMLRow {
 	}
 }
 
-func (d *dyn) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) { //nolint:dupl
+func (d *dyn) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		User:   url.UserPassword(d.username, d.password),

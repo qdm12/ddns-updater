@@ -16,7 +16,6 @@ import (
 	netlib "github.com/qdm12/golibs/network"
 )
 
-//nolint:maligned
 type digitalOcean struct {
 	domain    string
 	host      string

@@ -138,7 +138,7 @@ type (
 	}
 )
 
-func makeDreamhostDefaultValues(key string) (values url.Values) { //nolint:unparam
+func makeDreamhostDefaultValues(key string) (values url.Values) {
 	values = make(url.Values)
 	values.Set("key", key)
 	values.Set("unique_id", uuid.New().String())
@@ -174,7 +174,6 @@ func listDreamhostRecords(ctx context.Context, client network.Client, key string
 	return records, nil
 }
 
-//nolint:dupl
 func removeDreamhostRecord(ctx context.Context, client network.Client,
 	key, domain string, ip net.IP) error {
 	recordType := A
@@ -212,7 +211,7 @@ func removeDreamhostRecord(ctx context.Context, client network.Client,
 	return nil
 }
 
-func addDreamhostRecord(ctx context.Context, client network.Client, key, domain string, ip net.IP) error { //nolint:dupl
+func addDreamhostRecord(ctx context.Context, client network.Client, key, domain string, ip net.IP) error {
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA

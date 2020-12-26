@@ -148,6 +148,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, 
 		settingsConstructor = settings.NewStrato
 	case constants.OVH:
 		settingsConstructor = settings.NewOVH
+	case constants.DYNV6:
+		settingsConstructor = settings.NewDynV6
 	default:
 		return nil, warnings, fmt.Errorf("provider %q is not supported", provider)
 	}

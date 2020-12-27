@@ -48,7 +48,7 @@ func NewLuaDNS(data json.RawMessage, domain, host string, ipVersion models.IPVer
 
 func (l *luaDNS) isValid() error {
 	switch {
-	case verification.NewVerifier().MatchEmail(l.email):
+	case !verification.NewRegex().MatchEmail(l.email):
 		return fmt.Errorf("email %q is not valid", l.email)
 	case len(l.token) == 0:
 		return fmt.Errorf("token cannot be empty")

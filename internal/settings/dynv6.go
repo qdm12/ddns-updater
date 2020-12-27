@@ -26,7 +26,7 @@ type dynV6 struct {
 func NewDynV6(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
 	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
-		Token         string `json:"string"`
+		Token         string `json:"token"`
 		UseProviderIP bool   `json:"provider_ip"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {

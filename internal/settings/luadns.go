@@ -240,6 +240,8 @@ func (l *luaDNS) updateRecord(ctx context.Context, client netlib.Client,
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrCannotUpdateRecord, err)
 	}
+	r.Header.Set("Accept", "application/json")
+
 	b, status, err := client.Do(r)
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrCannotUpdateRecord, err)

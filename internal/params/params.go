@@ -11,7 +11,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/params"
-	"github.com/qdm12/golibs/verification"
 )
 
 const https = "https"
@@ -46,48 +45,61 @@ type Reader interface {
 }
 
 type reader struct {
-	envParams params.EnvParams
-	verifier  verification.Verifier
-	readFile  func(filename string) ([]byte, error)
+	env      params.Env
+	os       params.OS
+	readFile func(filename string) ([]byte, error)
 }
 
 func NewReader(logger logging.Logger) Reader {
 	return &reader{
-		envParams: params.NewEnvParams(),
-		verifier:  verification.NewVerifier(),
-		readFile:  ioutil.ReadFile,
+		env:      params.NewEnv(),
+		os:       params.NewOS(),
+		readFile: ioutil.ReadFile,
 	}
 }
 
 // GetDataDir obtains the data directory from the environment
 // variable DATADIR.
 func (r *reader) GetDataDir(currentDir string) (string, error) {
-	return r.envParams.GetEnv("DATADIR", params.Default(currentDir+"/data"))
+	return r.env.Get("DATADIR", params.Default(currentDir+"/data"))
 }
 
 func (r *reader) GetListeningPort() (listeningPort uint16, warning string, err error) {
-	return r.envParams.GetListeningPort("LISTENING_PORT")
+	return r.env.ListeningPort("LISTENING_PORT")
 }
 
 func (r *reader) GetLoggerConfig() (encoding logging.Encoding, level logging.Level, err error) {
-	return r.envParams.GetLoggerConfig()
+	encoding, err = r.env.LogEncoding("LOG_ENCODING", params.Default("console"))
+	if err != nil {
+		return encoding, level, err
+	}
+
+	level, err = r.env.LogLevel("LOG_LEVEL", params.Default("info"))
+	if err != nil {
+		return encoding, level, err
+	}
+
+	return encoding, level, nil
 }
 
 func (r *reader) GetGotifyURL() (url *url.URL, err error) {
-	return r.envParams.GetGotifyURL()
+	return r.env.URL("GOTIFY_URL")
 }
 
 func (r *reader) GetGotifyToken() (token string, err error) {
-	return r.envParams.GetGotifyToken()
+	return r.env.Get("GOTIFY_TOKEN",
+		params.CaseSensitiveValue(),
+		params.Compulsory(),
+		params.Unset())
 }
 
 func (r *reader) GetRootURL() (rootURL string, err error) {
-	return r.envParams.GetRootURL()
+	return r.env.RootURL("ROOT_URL")
 }
 
 func (r *reader) GetPeriod() (period time.Duration, warnings []string, err error) {
 	// Backward compatibility
-	n, err := r.envParams.GetEnvInt("DELAY", params.Compulsory())
+	n, err := r.env.Int("DELAY", params.Compulsory())
 	if err == nil { // integer only, treated as seconds
 		return time.Duration(n) * time.Second,
 			[]string{
@@ -95,19 +107,19 @@ func (r *reader) GetPeriod() (period time.Duration, warnings []string, err error
 				fmt.Sprintf(`the value for the duration period of the updater does not have a time unit, you might want to set it to "%ds" instead of "%d"`, n, n), //nolint:lll
 			}, nil
 	}
-	period, err = r.envParams.GetDuration("DELAY", params.Compulsory())
+	period, err = r.env.Duration("DELAY", params.Compulsory())
 	if err == nil {
 		return period,
 			[]string{
 				"the environment variable DELAY should be changed to PERIOD",
 			}, nil
 	}
-	period, err = r.envParams.GetDuration("PERIOD", params.Default("10m"))
+	period, err = r.env.Duration("PERIOD", params.Default("10m"))
 	return period, nil, err
 }
 
 func (r *reader) GetIPMethod() (method models.IPMethod, err error) {
-	s, err := r.envParams.GetEnv("IP_METHOD", params.Default("cycle"))
+	s, err := r.env.Get("IP_METHOD", params.Default("cycle"))
 	if err != nil {
 		return method, err
 	}
@@ -129,7 +141,7 @@ func (r *reader) GetIPMethod() (method models.IPMethod, err error) {
 }
 
 func (r *reader) GetIPv4Method() (method models.IPMethod, err error) {
-	s, err := r.envParams.GetEnv("IPV4_METHOD", params.Default("cycle"))
+	s, err := r.env.Get("IPV4_METHOD", params.Default("cycle"))
 	if err != nil {
 		return method, err
 	}
@@ -153,7 +165,7 @@ func (r *reader) GetIPv4Method() (method models.IPMethod, err error) {
 }
 
 func (r *reader) GetIPv6Method() (method models.IPMethod, err error) {
-	s, err := r.envParams.GetEnv("IPV6_METHOD", params.Default("cycle"))
+	s, err := r.env.Get("IPV6_METHOD", params.Default("cycle"))
 	if err != nil {
 		return method, err
 	}
@@ -177,15 +189,15 @@ func (r *reader) GetIPv6Method() (method models.IPMethod, err error) {
 }
 
 func (r *reader) GetExeDir() (dir string, err error) {
-	return r.envParams.GetExeDir()
+	return r.os.ExeDir()
 }
 
 func (r *reader) GetHTTPTimeout() (duration time.Duration, err error) {
-	return r.envParams.GetHTTPTimeout(params.Default("10s"))
+	return r.env.Duration("HTTP_TIMEOUT", params.Default("10s"))
 }
 
 func (r *reader) GetBackupPeriod() (duration time.Duration, err error) {
-	s, err := r.envParams.GetEnv("BACKUP_PERIOD", params.Default("0"))
+	s, err := r.env.Get("BACKUP_PERIOD", params.Default("0"))
 	if err != nil {
 		return 0, err
 	}
@@ -193,5 +205,5 @@ func (r *reader) GetBackupPeriod() (duration time.Duration, err error) {
 }
 
 func (r *reader) GetBackupDirectory() (directory string, err error) {
-	return r.envParams.GetEnv("BACKUP_DIRECTORY", params.Default("./data"))
+	return r.env.Path("BACKUP_DIRECTORY", params.Default("./data"))
 }

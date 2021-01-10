@@ -43,7 +43,7 @@ func (r *reader) getSettingsFromFile(filePath string) (allSettings []settings.Se
 
 // getSettingsFromEnv obtain the update settings from the environment variable CONFIG.
 func (r *reader) getSettingsFromEnv() (allSettings []settings.Settings, warnings []string, err error) {
-	s, err := r.envParams.GetEnv("CONFIG")
+	s, err := r.env.Get("CONFIG")
 	if err != nil {
 		return nil, nil, err
 	} else if len(s) == 0 {

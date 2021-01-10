@@ -128,6 +128,6 @@ func (s *strato) Update(ctx context.Context, client network.Client, ip net.IP) (
 	case strings.HasPrefix(str, "good"):
 		return ip, nil
 	default:
-		return nil, fmt.Errorf("unknown response: %s", s)
+		return nil, fmt.Errorf("unknown response: %s", str)
 	}
 }

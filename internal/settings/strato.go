@@ -125,7 +125,7 @@ func (s *strato) Update(ctx context.Context, client network.Client, ip net.IP) (
 		return nil, fmt.Errorf("fully qualified domain name is not valid")
 	case strings.HasPrefix(str, "badrequest"):
 		return nil, fmt.Errorf("bad request")
-	case strings.HasPrefix(str, "good"):
+	case strings.HasPrefix(str, "good"), strings.HasPrefix(str, "nochg"):
 		return ip, nil
 	default:
 		return nil, fmt.Errorf("unknown response: %s", str)

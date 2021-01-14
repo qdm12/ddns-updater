@@ -92,17 +92,21 @@ func (r *runner) getNewIPs(ctx context.Context, doIP, doIPv4, doIPv6 bool) (ip, 
 	return ip, ipv4, ipv6, errors
 }
 
-func (r *runner) getRecordIDsToUpdate(records []librecords.Record, ip, ipv4, ipv6 net.IP) (recordIDs map[int]struct{}) {
+func (r *runner) getRecordIDsToUpdate(records []librecords.Record, ip, ipv4, ipv6 net.IP,
+	now time.Time) (recordIDs map[int]struct{}) {
 	recordIDs = make(map[int]struct{})
 	for id, record := range records {
-		if shouldUpdate := r.shouldUpdateRecord(record, ip, ipv4, ipv6); shouldUpdate {
+		if shouldUpdate := r.shouldUpdateRecord(record, ip, ipv4, ipv6, now); shouldUpdate {
 			recordIDs[id] = struct{}{}
 		}
 	}
 	return recordIDs
 }
 
-func (r *runner) shouldUpdateRecord(record librecords.Record, ip, ipv4, ipv6 net.IP) (update bool) {
+func (r *runner) shouldUpdateRecord(record librecords.Record, ip, ipv4, ipv6 net.IP, now time.Time) (update bool) {
+	if record.LastBan != nil && now.Sub(*record.LastBan) < time.Hour {
+		return false
+	}
 	hostname := record.Settings.BuildDomainName()
 	ipVersion := record.Settings.IPVersion()
 	if !record.Settings.DNSLookup() {
@@ -199,8 +203,10 @@ func (r *runner) updateNecessary(ctx context.Context) {
 	for _, err := range errors {
 		r.logger.Error(err)
 	}
-	recordIDs := r.getRecordIDsToUpdate(records, ip, ipv4, ipv6)
+
 	now := r.timeNow()
+	recordIDs := r.getRecordIDsToUpdate(records, ip, ipv4, ipv6, now)
+
 	for id, record := range records {
 		_, requireUpdate := recordIDs[id]
 		if requireUpdate || record.Status != constants.UNSET {

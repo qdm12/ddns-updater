@@ -130,7 +130,7 @@ func (g *google) Update(ctx context.Context, client netlib.Client, ip net.IP) (n
 	case badagent:
 		return nil, fmt.Errorf("user agent is banned")
 	case abuse:
-		return nil, fmt.Errorf("username is banned due to abuse")
+		return nil, ErrAbuse
 	case nineoneone:
 		return nil, fmt.Errorf("Google's internal server error 911")
 	case "conflict A":

@@ -124,7 +124,7 @@ func (s *strato) Update(ctx context.Context, client network.Client, ip net.IP) (
 	case strings.HasPrefix(str, notfqdn):
 		return nil, fmt.Errorf("fully qualified domain name is not valid")
 	case strings.HasPrefix(str, abuse):
-		return nil, fmt.Errorf("abuse")
+		return nil, ErrAbuse
 	case strings.HasPrefix(str, "badrequest"):
 		return nil, fmt.Errorf("bad request")
 	case strings.HasPrefix(str, "good"), strings.HasPrefix(str, "nochg"):

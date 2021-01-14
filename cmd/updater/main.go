@@ -144,7 +144,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
-	updater := update.NewUpdater(db, client, notify)
+	updater := update.NewUpdater(db, client, notify, logger)
 	ipGetter := update.NewIPGetter(client, p.ipMethod, p.ipv4Method, p.ipv6Method)
 	runner := update.NewRunner(db, updater, ipGetter, logger, timeNow)
 	ctx, cancel := context.WithCancel(ctx)

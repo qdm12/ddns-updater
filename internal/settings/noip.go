@@ -132,7 +132,7 @@ func (n *noip) Update(ctx context.Context, client netlib.Client, ip net.IP) (new
 	case nineoneone:
 		return nil, fmt.Errorf("NoIP's internal server error 911")
 	case abuse:
-		return nil, fmt.Errorf("username is banned due to abuse")
+		return nil, ErrAbuse
 	case "!donator":
 		return nil, fmt.Errorf("user has not this extra feature")
 	case badagent:

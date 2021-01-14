@@ -16,6 +16,7 @@ type Record struct { // internal
 	Status   models.Status
 	Message  string
 	Time     time.Time
+	LastBan  *time.Time // nil means no last ban
 }
 
 // New returns a new Record with settings and some history.

@@ -142,7 +142,7 @@ func (d *dnsomatic) Update(ctx context.Context, client netlib.Client, ip net.IP)
 	case badagent:
 		return nil, fmt.Errorf("user agent is banned")
 	case abuse:
-		return nil, fmt.Errorf("username is banned due to abuse")
+		return nil, ErrAbuse
 	case "dnserr":
 		return nil, fmt.Errorf("DNS error encountered, please contact DNS-O-Matic")
 	case nineoneone:

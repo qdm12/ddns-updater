@@ -34,6 +34,7 @@
     - LuaDNS
     - Namecheap
     - NoIP
+    - OpenDNS
     - OVH
     - Selfhost.de
     - Strato.de
@@ -140,6 +141,7 @@ Check the documentation for your DNS provider:
 - [LuaDNS](docs/luadns.md)
 - [Namecheap](docs/namecheap.md)
 - [NoIP](docs/noip.md)
+- [OpenDNS](docs/opendns.md)
 - [OVH](docs/ovh.md)
 - [Selfhost.de](docs/selfhost.de.md)
 - [Strato.de](docs/strato.md)

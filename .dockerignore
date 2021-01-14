@@ -2,6 +2,7 @@
 .git
 .github
 .vscode
+docs
 readme
 .gitignore
 config.json

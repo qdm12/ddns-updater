@@ -142,7 +142,9 @@ type (
 func makeDreamhostDefaultValues(key string) (values url.Values) {
 	uuid := make([]byte, 16)
 	_, _ = io.ReadFull(rand.Reader, uuid)
+	//nolint:gomnd
 	uuid[6] = (uuid[6] & 0x0f) | 0x40 // Version 4
+	//nolint:gomnd
 	uuid[8] = (uuid[8] & 0x3f) | 0x80 // Variant is 10
 	values = url.Values{}
 	values.Set("key", key)

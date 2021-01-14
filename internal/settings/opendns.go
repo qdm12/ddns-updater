@@ -14,7 +14,6 @@ import (
 	"github.com/qdm12/golibs/network"
 )
 
-//nolint:maligned
 type opendns struct {
 	domain        string
 	host          string

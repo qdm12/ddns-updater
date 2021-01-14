@@ -13,7 +13,6 @@ import (
 	"github.com/qdm12/golibs/network"
 )
 
-//nolint:maligned
 type dynV6 struct {
 	domain        string
 	host          string

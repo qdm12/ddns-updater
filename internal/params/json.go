@@ -83,6 +83,8 @@ func extractAllSettings(jsonBytes []byte) (allSettings []settings.Settings, warn
 	return allSettings, warnings, nil
 }
 
+// TODO remove gocyclo.
+//nolint:gocyclo
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, matcher regex.Matcher) (
 	settingsSlice []settings.Settings, warnings []string, err error) {
 	provider := models.Provider(common.Provider)

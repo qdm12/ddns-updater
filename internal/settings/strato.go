@@ -97,12 +97,7 @@ func (s *strato) Update(ctx context.Context, client network.Client, ip net.IP) (
 		Path:   "/nic/update",
 	}
 	values := url.Values{}
-	switch s.host {
-	case "@":
-		values.Set("hostname", s.domain)
-	default:
-		values.Set("hostname", fmt.Sprintf("%s.%s", s.host, s.domain))
-	}
+	values.Set("hostname", s.BuildDomainName())
 	if !s.useProviderIP {
 		values.Set("myip", ip.String())
 	}
@@ -111,7 +106,7 @@ func (s *strato) Update(ctx context.Context, client network.Client, ip net.IP) (
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	// r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err

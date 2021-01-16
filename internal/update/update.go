@@ -56,7 +56,7 @@ func (u *updater) Update(ctx context.Context, id int, ip net.IP, now time.Time) 
 			record.LastBan = &lastBan
 			message := record.Settings.BuildDomainName() + ": " + record.Message + ", no more updates will be attempted"
 			u.notify(3, message) //nolint:gomnd
-			u.logger.Warn(message)
+			err = errors.New(message)
 		} else {
 			record.LastBan = nil // clear a previous ban
 		}

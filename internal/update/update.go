@@ -54,7 +54,8 @@ func (u *updater) Update(ctx context.Context, id int, ip net.IP, now time.Time) 
 		if errors.Is(err, settings.ErrAbuse) {
 			lastBan := time.Unix(now.Unix(), 0)
 			record.LastBan = &lastBan
-			message := record.Settings.BuildDomainName() + ": " + record.Message + ", no more updates will be attempted"
+			message := record.Settings.BuildDomainName() + ": " + record.Message +
+				", no more updates will be attempted for an hour"
 			u.notify(3, message) //nolint:gomnd
 			err = errors.New(message)
 		} else {

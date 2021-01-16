@@ -25,6 +25,7 @@ type Reader interface {
 	GetIPv4Method() (method models.IPMethod, err error)
 	GetIPv6Method() (method models.IPMethod, err error)
 	GetHTTPTimeout() (duration time.Duration, err error)
+	GetCooldownPeriod() (duration time.Duration, err error)
 
 	// File paths
 	GetExeDir() (dir string, err error)
@@ -206,4 +207,8 @@ func (r *reader) GetBackupPeriod() (duration time.Duration, err error) {
 
 func (r *reader) GetBackupDirectory() (directory string, err error) {
 	return r.env.Path("BACKUP_DIRECTORY", params.Default("./data"))
+}
+
+func (r *reader) GetCooldownPeriod() (duration time.Duration, err error) {
+	return r.env.Duration("UPDATE_COOLDOWN_PERIOD", params.Default("5m"))
 }

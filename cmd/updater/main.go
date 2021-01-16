@@ -44,6 +44,7 @@ func main() {
 
 type allParams struct {
 	period          time.Duration
+	cooldown        time.Duration
 	ipMethod        models.IPMethod
 	ipv4Method      models.IPMethod
 	ipv6Method      models.IPMethod
@@ -147,7 +148,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 
 	updater := update.NewUpdater(db, client, notify, logger)
 	ipGetter := update.NewIPGetter(client, p.ipMethod, p.ipv4Method, p.ipv6Method)
-	runner := update.NewRunner(db, updater, ipGetter, logger, timeNow)
+	runner := update.NewRunner(db, updater, ipGetter, p.cooldown, logger, timeNow)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	forceUpdate := make(chan struct{})
@@ -225,6 +226,10 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 	for _, warning := range warnings {
 		logger.Warn(warning)
 	}
+	if err != nil {
+		return p, err
+	}
+	p.cooldown, err = paramsReader.GetCooldownPeriod()
 	if err != nil {
 		return p, err
 	}

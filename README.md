@@ -159,6 +159,7 @@ Note that:
 | `IP_METHOD` | `cycle` | Method to obtain the public IP address (ipv4 or ipv6). See the [IP Methods section](#IP-methods) |
 | `IPV4_METHOD` | `cycle` | Method to obtain the public IPv4 address only. See the [IP Methods section](#IP-methods) |
 | `IPV6_METHOD` | `cycle` | Method to obtain the public IPv6 address only. See the [IP Methods section](#IP-methods) |
+| `UPDATE_COOLDOWN_PERIOD` | `5m` | Duration to cooldown between updates for each record. This is useful to avoid being rate limited or banned. |
 | `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |

@@ -19,6 +19,7 @@ type Runner interface {
 type runner struct {
 	db          data.Database
 	updater     Updater
+	cooldown    time.Duration
 	netLookupIP func(hostname string) ([]net.IP, error)
 	ipGetter    IPGetter
 	logger      logging.Logger
@@ -26,10 +27,11 @@ type runner struct {
 }
 
 func NewRunner(db data.Database, updater Updater, ipGetter IPGetter,
-	logger logging.Logger, timeNow func() time.Time) Runner {
+	cooldown time.Duration, logger logging.Logger, timeNow func() time.Time) Runner {
 	return &runner{
 		db:          db,
 		updater:     updater,
+		cooldown:    cooldown,
 		netLookupIP: net.LookupIP,
 		ipGetter:    ipGetter,
 		logger:      logger,
@@ -104,9 +106,12 @@ func (r *runner) getRecordIDsToUpdate(records []librecords.Record, ip, ipv4, ipv
 }
 
 func (r *runner) shouldUpdateRecord(record librecords.Record, ip, ipv4, ipv6 net.IP, now time.Time) (update bool) {
-	if record.LastBan != nil && now.Sub(*record.LastBan) < time.Hour {
+	isWithinBanPeriod := record.LastBan != nil && now.Sub(*record.LastBan) < time.Hour
+	isWithinCooldown := now.Sub(record.History.GetSuccessTime()) < r.cooldown
+	if isWithinBanPeriod || isWithinCooldown {
 		return false
 	}
+
 	hostname := record.Settings.BuildDomainName()
 	ipVersion := record.Settings.IPVersion()
 	if !record.Settings.DNSLookup() {

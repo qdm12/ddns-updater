@@ -97,7 +97,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		notify(4, err)
 		return 1
 	}
-	settings, warnings, err := paramsReader.GetSettings(filepath.Join(p.dataDir, "config.json"))
+	settings, warnings, err := paramsReader.JSONSettings(filepath.Join(p.dataDir, "config.json"))
 	for _, w := range warnings {
 		logger.Warn(w)
 		notify(2, w)
@@ -128,7 +128,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		}
 		records[i] = recordslib.New(s, events)
 	}
-	HTTPTimeout, err := paramsReader.GetHTTPTimeout()
+	HTTPTimeout, err := paramsReader.HTTPTimeout()
 	if err != nil {
 		logger.Error(err)
 		notify(4, err)
@@ -193,7 +193,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 
 func setupLogger() (logging.Logger, error) {
 	paramsReader := params.NewReader(nil)
-	encoding, level, err := paramsReader.GetLoggerConfig()
+	encoding, level, err := paramsReader.LoggerConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -202,13 +202,13 @@ func setupLogger() (logging.Logger, error) {
 
 func setupGotify(paramsReader params.Reader, logger logging.Logger) (
 	notify func(priority int, messageArgs ...interface{}), err error) {
-	gotifyURL, err := paramsReader.GetGotifyURL()
+	gotifyURL, err := paramsReader.GotifyURL()
 	if err != nil {
 		return nil, err
 	} else if gotifyURL == nil {
 		return func(priority int, messageArgs ...interface{}) {}, nil
 	}
-	gotifyToken, err := paramsReader.GetGotifyToken()
+	gotifyToken, err := paramsReader.GotifyToken()
 	if err != nil {
 		return nil, err
 	}
@@ -222,50 +222,50 @@ func setupGotify(paramsReader params.Reader, logger logging.Logger) (
 
 func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, err error) {
 	var warnings []string
-	p.period, warnings, err = paramsReader.GetPeriod()
+	p.period, warnings, err = paramsReader.Period()
 	for _, warning := range warnings {
 		logger.Warn(warning)
 	}
 	if err != nil {
 		return p, err
 	}
-	p.cooldown, err = paramsReader.GetCooldownPeriod()
+	p.cooldown, err = paramsReader.CooldownPeriod()
 	if err != nil {
 		return p, err
 	}
-	p.ipMethod, err = paramsReader.GetIPMethod()
+	p.ipMethod, err = paramsReader.IPMethod()
 	if err != nil {
 		return p, err
 	}
-	p.ipv4Method, err = paramsReader.GetIPv4Method()
+	p.ipv4Method, err = paramsReader.IPv4Method()
 	if err != nil {
 		return p, err
 	}
-	p.ipv6Method, err = paramsReader.GetIPv6Method()
+	p.ipv6Method, err = paramsReader.IPv6Method()
 	if err != nil {
 		return p, err
 	}
-	p.dir, err = paramsReader.GetExeDir()
+	p.dir, err = paramsReader.ExeDir()
 	if err != nil {
 		return p, err
 	}
-	p.dataDir, err = paramsReader.GetDataDir(p.dir)
+	p.dataDir, err = paramsReader.DataDir(p.dir)
 	if err != nil {
 		return p, err
 	}
-	p.listeningPort, _, err = paramsReader.GetListeningPort()
+	p.listeningPort, _, err = paramsReader.ListeningPort()
 	if err != nil {
 		return p, err
 	}
-	p.rootURL, err = paramsReader.GetRootURL()
+	p.rootURL, err = paramsReader.RootURL()
 	if err != nil {
 		return p, err
 	}
-	p.backupPeriod, err = paramsReader.GetBackupPeriod()
+	p.backupPeriod, err = paramsReader.BackupPeriod()
 	if err != nil {
 		return p, err
 	}
-	p.backupDirectory, err = paramsReader.GetBackupDirectory()
+	p.backupDirectory, err = paramsReader.BackupDirectory()
 	if err != nil {
 		return p, err
 	}

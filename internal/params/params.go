@@ -17,32 +17,32 @@ const https = "https"
 
 type Reader interface {
 	// JSON
-	GetSettings(filePath string) (allSettings []settings.Settings, warnings []string, err error)
+	JSONSettings(filePath string) (allSettings []settings.Settings, warnings []string, err error)
 
 	// Core
-	GetPeriod() (period time.Duration, warnings []string, err error)
-	GetIPMethod() (method models.IPMethod, err error)
-	GetIPv4Method() (method models.IPMethod, err error)
-	GetIPv6Method() (method models.IPMethod, err error)
-	GetHTTPTimeout() (duration time.Duration, err error)
-	GetCooldownPeriod() (duration time.Duration, err error)
+	Period() (period time.Duration, warnings []string, err error)
+	IPMethod() (method models.IPMethod, err error)
+	IPv4Method() (method models.IPMethod, err error)
+	IPv6Method() (method models.IPMethod, err error)
+	HTTPTimeout() (duration time.Duration, err error)
+	CooldownPeriod() (duration time.Duration, err error)
 
 	// File paths
-	GetExeDir() (dir string, err error)
-	GetDataDir(currentDir string) (string, error)
+	ExeDir() (dir string, err error)
+	DataDir(currentDir string) (string, error)
 
 	// Web UI
-	GetListeningPort() (listeningPort uint16, warning string, err error)
-	GetRootURL() (rootURL string, err error)
+	ListeningPort() (listeningPort uint16, warning string, err error)
+	RootURL() (rootURL string, err error)
 
 	// Backup
-	GetBackupPeriod() (duration time.Duration, err error)
-	GetBackupDirectory() (directory string, err error)
+	BackupPeriod() (duration time.Duration, err error)
+	BackupDirectory() (directory string, err error)
 
 	// Other
-	GetLoggerConfig() (encoding logging.Encoding, level logging.Level, err error)
-	GetGotifyURL() (URL *url.URL, err error)
-	GetGotifyToken() (token string, err error)
+	LoggerConfig() (encoding logging.Encoding, level logging.Level, err error)
+	GotifyURL() (URL *url.URL, err error)
+	GotifyToken() (token string, err error)
 }
 
 type reader struct {
@@ -61,15 +61,15 @@ func NewReader(logger logging.Logger) Reader {
 
 // GetDataDir obtains the data directory from the environment
 // variable DATADIR.
-func (r *reader) GetDataDir(currentDir string) (string, error) {
+func (r *reader) DataDir(currentDir string) (string, error) {
 	return r.env.Get("DATADIR", params.Default(currentDir+"/data"))
 }
 
-func (r *reader) GetListeningPort() (listeningPort uint16, warning string, err error) {
+func (r *reader) ListeningPort() (listeningPort uint16, warning string, err error) {
 	return r.env.ListeningPort("LISTENING_PORT")
 }
 
-func (r *reader) GetLoggerConfig() (encoding logging.Encoding, level logging.Level, err error) {
+func (r *reader) LoggerConfig() (encoding logging.Encoding, level logging.Level, err error) {
 	encoding, err = r.env.LogEncoding("LOG_ENCODING", params.Default("console"))
 	if err != nil {
 		return encoding, level, err
@@ -83,22 +83,22 @@ func (r *reader) GetLoggerConfig() (encoding logging.Encoding, level logging.Lev
 	return encoding, level, nil
 }
 
-func (r *reader) GetGotifyURL() (url *url.URL, err error) {
+func (r *reader) GotifyURL() (url *url.URL, err error) {
 	return r.env.URL("GOTIFY_URL")
 }
 
-func (r *reader) GetGotifyToken() (token string, err error) {
+func (r *reader) GotifyToken() (token string, err error) {
 	return r.env.Get("GOTIFY_TOKEN",
 		params.CaseSensitiveValue(),
 		params.Compulsory(),
 		params.Unset())
 }
 
-func (r *reader) GetRootURL() (rootURL string, err error) {
+func (r *reader) RootURL() (rootURL string, err error) {
 	return r.env.RootURL("ROOT_URL")
 }
 
-func (r *reader) GetPeriod() (period time.Duration, warnings []string, err error) {
+func (r *reader) Period() (period time.Duration, warnings []string, err error) {
 	// Backward compatibility
 	n, err := r.env.Int("DELAY", params.Compulsory())
 	if err == nil { // integer only, treated as seconds
@@ -119,7 +119,7 @@ func (r *reader) GetPeriod() (period time.Duration, warnings []string, err error
 	return period, nil, err
 }
 
-func (r *reader) GetIPMethod() (method models.IPMethod, err error) {
+func (r *reader) IPMethod() (method models.IPMethod, err error) {
 	s, err := r.env.Get("IP_METHOD", params.Default("cycle"))
 	if err != nil {
 		return method, err
@@ -141,7 +141,7 @@ func (r *reader) GetIPMethod() (method models.IPMethod, err error) {
 	}, nil
 }
 
-func (r *reader) GetIPv4Method() (method models.IPMethod, err error) {
+func (r *reader) IPv4Method() (method models.IPMethod, err error) {
 	s, err := r.env.Get("IPV4_METHOD", params.Default("cycle"))
 	if err != nil {
 		return method, err
@@ -165,7 +165,7 @@ func (r *reader) GetIPv4Method() (method models.IPMethod, err error) {
 	}, nil
 }
 
-func (r *reader) GetIPv6Method() (method models.IPMethod, err error) {
+func (r *reader) IPv6Method() (method models.IPMethod, err error) {
 	s, err := r.env.Get("IPV6_METHOD", params.Default("cycle"))
 	if err != nil {
 		return method, err
@@ -189,15 +189,15 @@ func (r *reader) GetIPv6Method() (method models.IPMethod, err error) {
 	}, nil
 }
 
-func (r *reader) GetExeDir() (dir string, err error) {
+func (r *reader) ExeDir() (dir string, err error) {
 	return r.os.ExeDir()
 }
 
-func (r *reader) GetHTTPTimeout() (duration time.Duration, err error) {
+func (r *reader) HTTPTimeout() (duration time.Duration, err error) {
 	return r.env.Duration("HTTP_TIMEOUT", params.Default("10s"))
 }
 
-func (r *reader) GetBackupPeriod() (duration time.Duration, err error) {
+func (r *reader) BackupPeriod() (duration time.Duration, err error) {
 	s, err := r.env.Get("BACKUP_PERIOD", params.Default("0"))
 	if err != nil {
 		return 0, err
@@ -205,10 +205,10 @@ func (r *reader) GetBackupPeriod() (duration time.Duration, err error) {
 	return time.ParseDuration(s)
 }
 
-func (r *reader) GetBackupDirectory() (directory string, err error) {
+func (r *reader) BackupDirectory() (directory string, err error) {
 	return r.env.Path("BACKUP_DIRECTORY", params.Default("./data"))
 }
 
-func (r *reader) GetCooldownPeriod() (duration time.Duration, err error) {
+func (r *reader) CooldownPeriod() (duration time.Duration, err error) {
 	return r.env.Duration("UPDATE_COOLDOWN_PERIOD", params.Default("5m"))
 }

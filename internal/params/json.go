@@ -22,9 +22,9 @@ type commonSettings struct {
 	Delay    *uint64 `json:"delay,omitempty"`
 }
 
-// GetSettings obtain the update settings from the JSON content, first trying from the environment variable CONFIG
+// JSONSettings obtain the update settings from the JSON content, first trying from the environment variable CONFIG
 // and then from the file config.json.
-func (r *reader) GetSettings(filePath string) (allSettings []settings.Settings, warnings []string, err error) {
+func (r *reader) JSONSettings(filePath string) (allSettings []settings.Settings, warnings []string, err error) {
 	allSettings, warnings, err = r.getSettingsFromEnv()
 	if allSettings != nil || warnings != nil || err != nil {
 		return allSettings, warnings, err

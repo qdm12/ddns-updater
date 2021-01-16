@@ -47,7 +47,7 @@ func NewDigitalOcean(data json.RawMessage, domain, host string, ipVersion models
 
 func (d *digitalOcean) isValid() error {
 	if len(d.token) == 0 {
-		return fmt.Errorf("token cannot be empty")
+		return ErrEmptyToken
 	}
 	return nil
 }
@@ -107,7 +107,7 @@ func getRecordID(ctx context.Context, domain, fqdn, recordType, token string,
 	if err != nil {
 		return 0, err
 	} else if status != http.StatusOK {
-		return 0, fmt.Errorf("cannot get record id: HTTP status code %d", status)
+		return 0, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	var result struct {
 		DomainRecords []struct {
@@ -117,11 +117,11 @@ func getRecordID(ctx context.Context, domain, fqdn, recordType, token string,
 	err = json.Unmarshal(content, &result)
 	switch {
 	case err != nil:
-		return 0, err
+		return 0, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	case len(result.DomainRecords) == 0:
-		return 0, fmt.Errorf("no domain records found")
+		return 0, ErrDomainRecordNotFound
 	case result.DomainRecords[0].ID == 0:
-		return 0, fmt.Errorf("ID not found in domain record")
+		return 0, ErrDomainIDNotFound
 	default:
 		return result.DomainRecords[0].ID, nil
 	}
@@ -134,7 +134,7 @@ func (d *digitalOcean) Update(ctx context.Context, client netlib.Client, ip net.
 	}
 	recordID, err := getRecordID(ctx, d.domain, d.BuildDomainName(), recordType, d.token, client)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", ErrGetRecordIdentifier, err)
 	}
 	u := url.URL{
 		Scheme: "https",
@@ -167,7 +167,8 @@ func (d *digitalOcean) Update(ctx context.Context, client netlib.Client, ip net.
 	}
 	s := string(content)
 	if status != http.StatusOK {
-		return nil, fmt.Errorf("HTTP status %d: %s", status, strings.ReplaceAll(s, "\n", ""))
+		return nil, fmt.Errorf("%w: %d with body %s",
+			ErrBadHTTPStatus, status, strings.ReplaceAll(s, "\n", ""))
 	}
 	var responseData struct {
 		DomainRecord struct {
@@ -175,7 +176,7 @@ func (d *digitalOcean) Update(ctx context.Context, client netlib.Client, ip net.
 		} `json:"domain_record"`
 	}
 	if err := json.Unmarshal(content, &responseData); err != nil {
-		return nil, fmt.Errorf("cannot unmarshal response from API update: %w", err)
+		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 	newIP = net.ParseIP(responseData.DomainRecord.Data)
 	if newIP == nil {

@@ -49,9 +49,9 @@ func NewStrato(data json.RawMessage, domain, host string, ipVersion models.IPVer
 func (s *strato) isValid() error {
 	switch {
 	case len(s.password) == 0:
-		return fmt.Errorf("password cannot be empty")
+		return ErrEmptyPassword
 	case s.host == "*":
-		return fmt.Errorf(`host cannot be "*"`)
+		return ErrHostWildcard
 	}
 	return nil
 }
@@ -112,21 +112,21 @@ func (s *strato) Update(ctx context.Context, client network.Client, ip net.IP) (
 		return nil, err
 	}
 	if status != http.StatusOK {
-		return nil, fmt.Errorf(http.StatusText(status))
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	str := string(content)
 	switch {
 	case strings.HasPrefix(str, notfqdn):
-		return nil, fmt.Errorf("fully qualified domain name is not valid")
+		return nil, ErrHostnameNotExists
 	case strings.HasPrefix(str, abuse):
 		return nil, ErrAbuse
 	case strings.HasPrefix(str, "badrequest"):
-		return nil, fmt.Errorf("bad request")
+		return nil, ErrBadRequest
 	case strings.HasPrefix(str, "badauth"):
 		return nil, ErrAuth
 	case strings.HasPrefix(str, "good"), strings.HasPrefix(str, "nochg"):
 		return ip, nil
 	default:
-		return nil, fmt.Errorf("unknown response: %s", str)
+		return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, str)
 	}
 }

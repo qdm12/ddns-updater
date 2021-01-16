@@ -52,11 +52,11 @@ func NewOVH(data json.RawMessage, _, host string, ipVersion models.IPVersion,
 func (d *ovh) isValid() error {
 	switch {
 	case len(d.username) == 0:
-		return fmt.Errorf("username cannot be empty")
+		return ErrEmptyUsername
 	case len(d.password) == 0:
-		return fmt.Errorf("password cannot be empty")
+		return ErrEmptyPassword
 	case d.host == "*":
-		return fmt.Errorf(`host cannot be "*"`)
+		return ErrHostWildcard
 	}
 	return nil
 }
@@ -123,17 +123,17 @@ func (d *ovh) Update(ctx context.Context, client network.Client, ip net.IP) (new
 		return nil, err
 	}
 	if status != http.StatusOK {
-		return nil, fmt.Errorf(http.StatusText(status))
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	s := string(content)
 	switch {
 	case strings.HasPrefix(s, notfqdn):
-		return nil, fmt.Errorf("fully qualified domain name is not valid")
+		return nil, ErrHostnameNotExists
 	case strings.HasPrefix(s, "badrequest"):
-		return nil, fmt.Errorf("bad request")
+		return nil, ErrBadRequest
 	case strings.HasPrefix(s, "good"):
 		return ip, nil
 	default:
-		return nil, fmt.Errorf("unknown response: %s", s)
+		return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
 	}
 }

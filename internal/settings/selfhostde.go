@@ -52,11 +52,11 @@ func NewSelfhostde(data json.RawMessage, domain, host string, ipVersion models.I
 func (sd *selfhostde) isValid() error {
 	switch {
 	case len(sd.username) == 0:
-		return fmt.Errorf("username cannot be empty")
+		return ErrEmptyUsername
 	case len(sd.password) == 0:
-		return fmt.Errorf("password cannot be empty")
+		return ErrEmptyPassword
 	case sd.host == "*":
-		return fmt.Errorf(`host cannot be "*"`)
+		return ErrHostWildcard
 	}
 	return nil
 }
@@ -127,29 +127,31 @@ func (sd *selfhostde) Update(ctx context.Context, client network.Client, ip net.
 	case http.StatusNoContent: // no change
 		return ip, nil
 	case http.StatusUnauthorized:
-		return nil, fmt.Errorf("bad credentials (%s)", http.StatusText(status))
+		return nil, ErrAuth
 	case http.StatusConflict:
-		return nil, fmt.Errorf("no zone found")
+		return nil, ErrZoneNotFound
 	case http.StatusGone:
-		return nil, fmt.Errorf("account inactive")
+		return nil, ErrAccountInactive
 	case http.StatusLengthRequired:
-		return nil, fmt.Errorf("incorrect IP %s", ip)
+		return nil, fmt.Errorf("%w: %s", ErrMalformedIPSent, ip)
 	case http.StatusPreconditionFailed:
-		return nil, fmt.Errorf("private IPs cannot be routed: %s", ip)
+		return nil, fmt.Errorf("%w: %s", ErrPrivateIPSent, ip)
 	case http.StatusServiceUnavailable:
-		return nil, fmt.Errorf("server overloaded")
+		return nil, ErrDNSServerSide
 	default:
-		return nil, fmt.Errorf(http.StatusText(status))
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	s := string(content)
 	switch {
 	case strings.HasPrefix(s, notfqdn):
-		return nil, fmt.Errorf("fully qualified domain name is not valid")
-	case strings.HasPrefix(s, "abuse"), strings.HasPrefix(s, "badrequest"):
-		return nil, fmt.Errorf("bad request sent")
+		return nil, ErrHostnameNotExists
+	case strings.HasPrefix(s, "abuse"):
+		return nil, ErrAbuse
+	case strings.HasPrefix(s, "badrequest"):
+		return nil, ErrBadRequest
 	case strings.HasPrefix(s, "good"), strings.HasPrefix(s, "nochg"):
 		return ip, nil
 	default:
-		return nil, fmt.Errorf("unknown response: %s", s)
+		return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
 	}
 }

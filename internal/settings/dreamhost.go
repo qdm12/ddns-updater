@@ -100,13 +100,13 @@ func (d *dreamhost) Update(ctx context.Context, client network.Client, ip net.IP
 	}
 	records, err := listDreamhostRecords(ctx, client, d.key)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", ErrListRecords, err)
 	}
 	var oldIP net.IP
 	for _, data := range records.Data {
 		if data.Type == recordType && data.Record == d.BuildDomainName() {
 			if data.Editable == "0" {
-				return nil, fmt.Errorf("record data is not editable")
+				return nil, ErrRecordNotEditable
 			}
 			oldIP = net.ParseIP(data.Value)
 			if ip.Equal(oldIP) { // success, nothing to change
@@ -117,10 +117,14 @@ func (d *dreamhost) Update(ctx context.Context, client network.Client, ip net.IP
 	}
 	if oldIP != nil { // Found editable record with a different IP address, so remove it
 		if err := removeDreamhostRecord(ctx, client, d.key, d.domain, oldIP); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %s", ErrRemoveRecord, err)
 		}
 	}
-	return ip, addDreamhostRecord(ctx, client, d.key, d.domain, ip)
+	if err := addDreamhostRecord(ctx, client, d.key, d.domain, ip); err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrAddRecord, err)
+	}
+
+	return ip, nil
 }
 
 type (
@@ -171,12 +175,12 @@ func listDreamhostRecords(ctx context.Context, client network.Client, key string
 	if err != nil {
 		return records, err
 	} else if status != http.StatusOK {
-		return records, fmt.Errorf(http.StatusText(status))
+		return records, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	if err := json.Unmarshal(content, &records); err != nil {
-		return records, err
+		return records, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	} else if records.Result != success {
-		return records, fmt.Errorf(records.Result)
+		return records, fmt.Errorf("%w: %s", ErrUnsuccessfulResponse, records.Result)
 	}
 	return records, nil
 }
@@ -206,13 +210,14 @@ func removeDreamhostRecord(ctx context.Context, client network.Client,
 	if err != nil {
 		return err
 	} else if status != http.StatusOK {
-		return fmt.Errorf(http.StatusText(status))
+		return fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	var dhResponse dreamhostReponse
 	if err := json.Unmarshal(content, &dhResponse); err != nil {
-		return err
+		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	} else if dhResponse.Result != success { // this should not happen
-		return fmt.Errorf("%s - %s", dhResponse.Result, dhResponse.Data)
+		return fmt.Errorf("%w: %s - %s",
+			ErrUnsuccessfulResponse, dhResponse.Result, dhResponse.Data)
 	}
 	return nil
 }
@@ -241,13 +246,14 @@ func addDreamhostRecord(ctx context.Context, client network.Client, key, domain 
 	if err != nil {
 		return err
 	} else if status != http.StatusOK {
-		return fmt.Errorf(http.StatusText(status))
+		return fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	var dhResponse dreamhostReponse
 	if err := json.Unmarshal(content, &dhResponse); err != nil {
-		return err
+		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	} else if dhResponse.Result != success {
-		return fmt.Errorf("%s - %s", dhResponse.Result, dhResponse.Data)
+		return fmt.Errorf("%w: %s - %s",
+			ErrUnsuccessfulResponse, dhResponse.Result, dhResponse.Data)
 	}
 	return nil
 }

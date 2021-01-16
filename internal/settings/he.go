@@ -50,7 +50,7 @@ func NewHe(data json.RawMessage, domain, host string, ipVersion models.IPVersion
 
 func (h *he) isValid() error {
 	if len(h.password) == 0 {
-		return fmt.Errorf("password cannot be empty")
+		return ErrEmptyPassword
 	}
 	return nil
 }
@@ -114,9 +114,9 @@ func (h *he) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP
 	s := string(content)
 	switch s {
 	case "":
-		return nil, fmt.Errorf(http.StatusText(status))
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	case badauth:
-		return nil, fmt.Errorf("invalid username password combination")
+		return nil, ErrAuth
 	}
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
 		verifier := verification.NewVerifier()
@@ -124,16 +124,15 @@ func (h *he) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP
 		ipsV6 := verifier.SearchIPv6(s)
 		ips := append(ipsV4, ipsV6...)
 		if ips == nil {
-			return nil, fmt.Errorf("no IP address in response")
+			return nil, ErrNoResultReceived
 		}
 		newIP = net.ParseIP(ips[0])
 		if newIP == nil {
-			return nil, fmt.Errorf("IP address received %q is malformed", ips[0])
-		}
-		if !h.useProviderIP && !ip.Equal(newIP) {
-			return nil, fmt.Errorf("new IP address %s is not %s", newIP.String(), ip.String())
+			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ips[0])
+		} else if !h.useProviderIP && !ip.Equal(newIP) {
+			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil
 	}
-	return nil, fmt.Errorf("invalid response %q", s)
+	return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
 }

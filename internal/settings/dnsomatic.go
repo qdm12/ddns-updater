@@ -55,13 +55,13 @@ func NewDNSOMatic(data json.RawMessage, domain, host string, ipVersion models.IP
 func (d *dnsomatic) isValid() error {
 	switch {
 	case !d.matcher.DNSOMaticUsername(d.username):
-		return fmt.Errorf("username %q does not match DNS-O-Matic username format", d.username)
+		return fmt.Errorf("%w: %s", ErrMalformedUsername, d.username)
 	case !d.matcher.DNSOMaticPassword(d.password):
-		return fmt.Errorf("password does not match DNS-O-Matic password format")
+		return ErrMalformedPassword
 	case len(d.username) == 0:
-		return fmt.Errorf("username cannot be empty")
+		return ErrEmptyUsername
 	case len(d.password) == 0:
-		return fmt.Errorf("password cannot be empty")
+		return ErrEmptyPassword
 	}
 	return nil
 }
@@ -129,24 +129,20 @@ func (d *dnsomatic) Update(ctx context.Context, client netlib.Client, ip net.IP)
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {
-		return nil, fmt.Errorf(http.StatusText(status))
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	s := string(content)
 	switch s {
-	case nohost:
-		return nil, fmt.Errorf("hostname does not exist")
+	case nohost, notfqdn:
+		return nil, ErrHostnameNotExists
 	case badauth:
-		return nil, fmt.Errorf("invalid username password combination")
-	case notfqdn:
-		return nil, fmt.Errorf("hostname %q is not a valid fully qualified domain name", fqdn)
+		return nil, ErrAuth
 	case badagent:
-		return nil, fmt.Errorf("user agent is banned")
+		return nil, ErrBannedUserAgent
 	case abuse:
 		return nil, ErrAbuse
-	case "dnserr":
-		return nil, fmt.Errorf("DNS error encountered, please contact DNS-O-Matic")
-	case nineoneone:
-		return nil, fmt.Errorf("dnsomatic's internal server error 911")
+	case "dnserr", nineoneone:
+		return nil, fmt.Errorf("%w: %s", ErrDNSServerSide, s)
 	}
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
 		ipsV4 := verification.NewVerifier().SearchIPv4(s)
@@ -157,12 +153,12 @@ func (d *dnsomatic) Update(ctx context.Context, client netlib.Client, ip net.IP)
 		}
 		newIP = net.ParseIP(ips[0])
 		if newIP == nil {
-			return nil, fmt.Errorf("IP address received %q is malformed", ips[0])
+			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ips[0])
 		}
 		if !d.useProviderIP && !ip.Equal(newIP) {
-			return nil, fmt.Errorf("new IP address %s is not %s", newIP.String(), ip.String())
+			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil
 	}
-	return nil, fmt.Errorf("invalid response %q", s)
+	return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
 }

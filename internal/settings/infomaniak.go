@@ -53,11 +53,11 @@ func NewInfomaniak(data json.RawMessage, domain, host string, ipVersion models.I
 func (i *infomaniak) isValid() error {
 	switch {
 	case len(i.username) == 0:
-		return fmt.Errorf("username cannot be empty")
+		return ErrEmptyUsername
 	case len(i.password) == 0:
-		return fmt.Errorf("password cannot be empty")
+		return ErrEmptyPassword
 	case i.host == "*":
-		return fmt.Errorf(`host cannot be "*"`)
+		return ErrHostWildcard
 	}
 	return nil
 }
@@ -127,32 +127,32 @@ func (i *infomaniak) Update(ctx context.Context, client network.Client, ip net.I
 		case strings.HasPrefix(s, "good "):
 			newIP = net.ParseIP(s[5:])
 			if newIP == nil {
-				return nil, fmt.Errorf("no received IP in response %q", s)
+				return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, s)
 			} else if ip != nil && !ip.Equal(newIP) {
-				return nil, fmt.Errorf("received IP %s is not equal to expected IP %s", newIP, ip)
+				return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP)
 			}
 			return newIP, nil
 		case strings.HasPrefix(s, "nochg "):
 			newIP = net.ParseIP(s[6:])
 			if newIP == nil {
-				return nil, fmt.Errorf("no received IP in response %q", s)
+				return nil, fmt.Errorf("%w: in response %q", ErrNoResultReceived, s)
 			} else if ip != nil && !ip.Equal(newIP) {
-				return nil, fmt.Errorf("received IP %s is not equal to expected IP %s", newIP, ip)
+				return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP)
 			}
 			return newIP, nil
 		default:
-			return nil, fmt.Errorf("ok status but unknown response %q", s)
+			return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
 		}
 	case http.StatusBadRequest:
 		switch s {
 		case nohost:
-			return nil, fmt.Errorf("infomaniak.com: host %q does not exist for domain %q", i.host, i.domain)
+			return nil, ErrHostnameNotExists
 		case badauth:
-			return nil, fmt.Errorf("infomaniak.com: bad authentication")
+			return nil, ErrAuth
 		default:
-			return nil, fmt.Errorf("infomaniak.com: bad request: %s", s)
+			return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 		}
 	default:
-		return nil, fmt.Errorf("received status %d with message: %s", status, s)
+		return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, status, s)
 	}
 }

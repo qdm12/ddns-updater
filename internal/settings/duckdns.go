@@ -49,17 +49,17 @@ func NewDuckdns(data json.RawMessage, domain, host string, ipVersion models.IPVe
 
 func (d *duckdns) isValid() error {
 	if !d.matcher.DuckDNSToken(d.token) {
-		return fmt.Errorf("invalid token format")
+		return ErrMalformedToken
 	}
 	switch d.host {
 	case "@", "*":
-		return fmt.Errorf("host cannot be @ or * and must be a subdomain for DuckDNS")
+		return ErrHostOnlySubdomain
 	}
 	return nil
 }
 
 func (d *duckdns) String() string {
-	return toString("duckdns..org", d.host, constants.DUCKDNS, d.ipVersion)
+	return toString("duckdns.org", d.host, constants.DUCKDNS, d.ipVersion)
 }
 
 func (d *duckdns) Domain() string {
@@ -118,29 +118,29 @@ func (d *duckdns) Update(ctx context.Context, client network.Client, ip net.IP) 
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {
-		return nil, fmt.Errorf(http.StatusText(status))
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	s := string(content)
 	const minChars = 2
 	switch {
 	case len(s) < minChars:
-		return nil, fmt.Errorf("response %q is too short", s)
+		return nil, fmt.Errorf("%w: response %q is too short", ErrUnmarshalResponse, s)
 	case s[0:minChars] == "KO":
-		return nil, fmt.Errorf("invalid domain token combination")
+		return nil, ErrAuth
 	case s[0:minChars] == "OK":
 		ips := verification.NewVerifier().SearchIPv4(s)
 		if ips == nil {
-			return nil, fmt.Errorf("no IP address in response")
+			return nil, ErrNoResultReceived
 		}
 		newIP = net.ParseIP(ips[0])
 		if newIP == nil {
-			return nil, fmt.Errorf("IP address received %q is malformed", ips[0])
+			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ips[0])
 		}
 		if ip != nil && !newIP.Equal(ip) {
-			return nil, fmt.Errorf("new IP address %s is not %s", newIP.String(), ip.String())
+			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil
 	default:
-		return nil, fmt.Errorf("invalid response %q", s)
+		return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
 	}
 }

@@ -52,11 +52,11 @@ func NewOpendns(data json.RawMessage, domain, host string, ipVersion models.IPVe
 func (d *opendns) isValid() error {
 	switch {
 	case len(d.username) == 0:
-		return fmt.Errorf("username cannot be empty")
+		return ErrEmptyUsername
 	case len(d.password) == 0:
-		return fmt.Errorf("password cannot be empty")
+		return ErrEmptyPassword
 	case d.host == "*":
-		return fmt.Errorf(`host cannot be "*"`)
+		return ErrHostWildcard
 	}
 	return nil
 }
@@ -123,18 +123,18 @@ func (d *opendns) Update(ctx context.Context, client network.Client, ip net.IP) 
 		return nil, err
 	}
 	if status != http.StatusOK {
-		return nil, fmt.Errorf("Bad HTTP status code %s: %s", http.StatusText(status), string(content))
+		return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, status, string(content))
 	}
 	s := string(content)
 	if !strings.HasPrefix(s, "good ") {
-		return nil, fmt.Errorf("malformed response: %q", s)
+		return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
 	}
 	responseIPString := strings.TrimPrefix(s, "good ")
 	responseIP := net.ParseIP(responseIPString)
 	if responseIP == nil {
-		return nil, fmt.Errorf("IP is malformed in response %q", responseIPString)
+		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, responseIPString)
 	} else if !newIP.Equal(ip) {
-		return nil, fmt.Errorf("IP %s in response is not the same as IP requested %s", responseIP, ip)
+		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, responseIP)
 	}
 	return ip, nil
 }

@@ -52,9 +52,9 @@ func NewGodaddy(data json.RawMessage, domain, host string, ipVersion models.IPVe
 func (g *godaddy) isValid() error {
 	switch {
 	case !g.matcher.GodaddyKey(g.key):
-		return fmt.Errorf("invalid key format")
+		return ErrMalformedKey
 	case !g.matcher.GodaddySecret(g.secret):
-		return fmt.Errorf("invalid secret format")
+		return ErrMalformedSecret
 	}
 	return nil
 }
@@ -114,16 +114,18 @@ func (g *godaddy) Update(ctx context.Context, client netlib.Client, ip net.IP) (
 	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err
-	} else if status != http.StatusOK {
-		var parsedJSON struct {
-			Message string `json:"message"`
-		}
-		if err := json.Unmarshal(content, &parsedJSON); err != nil {
-			return nil, err
-		} else if len(parsedJSON.Message) > 0 {
-			return nil, fmt.Errorf("HTTP status %d - %s", status, parsedJSON.Message)
-		}
-		return nil, fmt.Errorf(http.StatusText(status))
+	} else if status == http.StatusOK {
+		return ip, nil
 	}
-	return ip, nil
+
+	err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
+	var parsedJSON struct {
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(content, &parsedJSON); err != nil {
+		return nil, fmt.Errorf("%w: %s", err, string(content))
+	} else if len(parsedJSON.Message) > 0 {
+		return nil, fmt.Errorf("%w: %s", err, parsedJSON.Message)
+	}
+	return nil, err
 }

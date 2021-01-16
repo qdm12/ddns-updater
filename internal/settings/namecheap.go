@@ -28,7 +28,7 @@ type namecheap struct {
 func NewNamecheap(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
 	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	if ipVersion == constants.IPv6 {
-		return s, fmt.Errorf("IPv6 is not supported by Namecheap API sadly")
+		return s, ErrIPv6NotSupported
 	}
 	extraSettings := struct {
 		Password      string `json:"password"`
@@ -54,7 +54,7 @@ func NewNamecheap(data json.RawMessage, domain, host string, ipVersion models.IP
 
 func (n *namecheap) isValid() error {
 	if !n.matcher.NamecheapPassword(n.password) {
-		return fmt.Errorf("invalid password format")
+		return ErrMalformedPassword
 	}
 	return nil
 }
@@ -115,7 +115,7 @@ func (n *namecheap) Update(ctx context.Context, client network.Client, ip net.IP
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {
-		return nil, fmt.Errorf(http.StatusText(status))
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	var parsedXML struct {
 		Errors struct {
@@ -125,16 +125,16 @@ func (n *namecheap) Update(ctx context.Context, client network.Client, ip net.IP
 	}
 	err = xml.Unmarshal(content, &parsedXML)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	} else if parsedXML.Errors.Error != "" {
-		return nil, fmt.Errorf(parsedXML.Errors.Error)
+		return nil, fmt.Errorf("%w: %s", ErrUnsuccessfulResponse, parsedXML.Errors.Error)
 	}
 	newIP = net.ParseIP(parsedXML.IP)
 	if newIP == nil {
-		return nil, fmt.Errorf("IP address received %q is malformed", parsedXML.IP)
+		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, parsedXML.IP)
 	}
 	if ip != nil && !ip.Equal(newIP) {
-		return nil, fmt.Errorf("new IP address %s is not %s", newIP.String(), ip.String())
+		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
 	}
 	return newIP, nil
 }

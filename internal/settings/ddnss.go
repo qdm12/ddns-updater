@@ -53,11 +53,11 @@ func NewDdnss(data json.RawMessage, domain, host string, ipVersion models.IPVers
 func (d *ddnss) isValid() error {
 	switch {
 	case len(d.username) == 0:
-		return fmt.Errorf("username cannot be empty")
+		return ErrEmptyUsername
 	case len(d.password) == 0:
-		return fmt.Errorf("password cannot be empty")
+		return ErrEmptyPassword
 	case d.host == "*":
-		return fmt.Errorf(`host cannot be "*"`)
+		return ErrHostWildcard
 	}
 	return nil
 }
@@ -128,18 +128,18 @@ func (d *ddnss) Update(ctx context.Context, client network.Client, ip net.IP) (n
 	}
 	s := string(content)
 	if status != http.StatusOK {
-		return nil, fmt.Errorf("received status %d with message: %s", status, s)
+		return nil, fmt.Errorf("%w: %d with message: %s", ErrBadHTTPStatus, status, s)
 	}
 	switch {
 	case strings.Contains(s, "badysys"):
-		return nil, fmt.Errorf("ddnss.de: invalid system parameter")
+		return nil, ErrInvalidSystemParam
 	case strings.Contains(s, badauth):
-		return nil, fmt.Errorf("ddnss.de: bad authentication")
+		return nil, ErrAuth
 	case strings.Contains(s, notfqdn):
-		return nil, fmt.Errorf("ddnss.de: hostname %q does not exist", fqdn)
+		return nil, fmt.Errorf("%w: %s", ErrHostnameNotExists, fqdn)
 	case strings.Contains(s, "Updated 1 hostname"):
 		return ip, nil
 	default:
-		return nil, fmt.Errorf("unknown response received from ddnss.de: %s", s)
+		return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
 	}
 }

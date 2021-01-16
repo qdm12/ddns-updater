@@ -54,9 +54,9 @@ func NewGoogle(data json.RawMessage, domain, host string, ipVersion models.IPVer
 func (g *google) isValid() error {
 	switch {
 	case len(g.username) == 0:
-		return fmt.Errorf("username cannot be empty")
+		return ErrEmptyUsername
 	case len(g.password) == 0:
-		return fmt.Errorf("password cannot be empty")
+		return ErrEmptyPassword
 	}
 	return nil
 }
@@ -120,39 +120,34 @@ func (g *google) Update(ctx context.Context, client netlib.Client, ip net.IP) (n
 	s := string(content)
 	switch s {
 	case "":
-		return nil, fmt.Errorf(http.StatusText(status))
-	case nohost:
-		return nil, fmt.Errorf("hostname does not exist")
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
+	case nohost, notfqdn:
+		return nil, ErrHostnameNotExists
 	case badauth:
-		return nil, fmt.Errorf("invalid username password combination")
-	case notfqdn:
-		return nil, fmt.Errorf("hostname %q is not a valid fully qualified domain name", fqdn)
+		return nil, ErrAuth
 	case badagent:
-		return nil, fmt.Errorf("user agent is banned")
+		return nil, ErrBannedUserAgent
 	case abuse:
 		return nil, ErrAbuse
 	case nineoneone:
-		return nil, fmt.Errorf("Google's internal server error 911")
-	case "conflict A":
-		return nil, fmt.Errorf("custom A record conflicts with the update")
-	case "conflict AAAA":
-		return nil, fmt.Errorf("custom AAAA record conflicts with the update")
+		return nil, ErrDNSServerSide
+	case "conflict A", "conflict AAAA":
+		return nil, ErrConflictingRecord
 	}
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
 		ipsV4 := verification.NewVerifier().SearchIPv4(s)
 		ipsV6 := verification.NewVerifier().SearchIPv6(s)
 		ips := append(ipsV4, ipsV6...)
-		if ips == nil {
-			return nil, fmt.Errorf("no IP address in response")
+		if len(ips) == 0 {
+			return nil, ErrNoResultReceived
 		}
 		newIP = net.ParseIP(ips[0])
 		if newIP == nil {
-			return nil, fmt.Errorf("IP address received %q is malformed", ips[0])
-		}
-		if !g.useProviderIP && !ip.Equal(newIP) {
-			return nil, fmt.Errorf("new IP address %s is not %s", newIP.String(), ip.String())
+			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ips[0])
+		} else if !g.useProviderIP && !ip.Equal(newIP) {
+			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil
 	}
-	return nil, fmt.Errorf("invalid response %q", s)
+	return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
 }

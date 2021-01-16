@@ -48,9 +48,9 @@ func NewDynV6(data json.RawMessage, domain, host string, ipVersion models.IPVers
 func (d *dynV6) isValid() error {
 	switch {
 	case len(d.token) == 0:
-		return fmt.Errorf("token cannot be empty")
+		return ErrEmptyToken
 	case d.host == "*":
-		return fmt.Errorf(`host cannot be "*"`)
+		return ErrHostWildcard
 	}
 	return nil
 }
@@ -125,9 +125,8 @@ func (d *dynV6) Update(ctx context.Context, client network.Client, ip net.IP) (n
 	_, status, err := client.Do(r)
 	if err != nil {
 		return nil, err
-	}
-	if status != http.StatusOK {
-		return nil, fmt.Errorf(http.StatusText(status))
+	} else if status != http.StatusOK {
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	return ip, nil
 }

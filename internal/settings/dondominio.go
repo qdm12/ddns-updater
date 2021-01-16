@@ -56,13 +56,13 @@ func NewDonDominio(data json.RawMessage, domain, host string, ipVersion models.I
 func (d *donDominio) isValid() error {
 	switch {
 	case len(d.username) == 0:
-		return fmt.Errorf("username cannot be empty")
+		return ErrEmptyUsername
 	case len(d.password) == 0:
-		return fmt.Errorf("password cannot be empty")
+		return ErrEmptyPassword
 	case len(d.name) == 0:
-		return fmt.Errorf("name cannot be empty")
+		return ErrEmptyName
 	case d.host != "@":
-		return fmt.Errorf(`host can only be "@"`)
+		return ErrHostOnlyAt
 	}
 	return nil
 }
@@ -125,7 +125,7 @@ func (d *donDominio) Update(ctx context.Context, client netlib.Client, ip net.IP
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {
-		return nil, fmt.Errorf(http.StatusText(status))
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	response := struct {
 		Success          bool   `json:"success"`
@@ -139,10 +139,11 @@ func (d *donDominio) Update(ctx context.Context, client netlib.Client, ip net.IP
 		} `json:"responseData"`
 	}{}
 	if err := json.Unmarshal(content, &response); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 	if !response.Success {
-		return nil, fmt.Errorf("%s (error code %d)", response.ErrorCodeMessage, response.ErrorCode)
+		return nil, fmt.Errorf("%w: %s (error code %d)",
+			ErrUnsuccessfulResponse, response.ErrorCodeMessage, response.ErrorCode)
 	}
 	ipString := response.ResponseData.GlueRecords[0].IPv4
 	if !isIPv4 {
@@ -150,7 +151,9 @@ func (d *donDominio) Update(ctx context.Context, client netlib.Client, ip net.IP
 	}
 	newIP = net.ParseIP(ipString)
 	if newIP == nil {
-		return nil, fmt.Errorf("IP address received %q is malformed", ipString)
+		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ipString)
+	} else if !ip.Equal(newIP) {
+		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
 	}
 	return newIP, nil
 }

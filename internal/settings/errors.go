@@ -3,6 +3,65 @@ package settings
 import "errors"
 
 var (
-	ErrAbuse = errors.New("banned due to abuse")
-	ErrAuth  = errors.New("bad authentication")
+	ErrIPv6NotSupported = errors.New("IPv6 is not supported by this provider")
+)
+
+// Validation errors.
+var (
+	ErrEmptyName               = errors.New("empty name")
+	ErrEmptyPassword           = errors.New("empty password")
+	ErrEmptyToken              = errors.New("empty token")
+	ErrEmptyTTL                = errors.New("TTL is not set")
+	ErrEmptyUsername           = errors.New("empty username")
+	ErrEmptyZoneIdentifier     = errors.New("empty zone identifier")
+	ErrHostOnlyAt              = errors.New(`host can only be "@"`)
+	ErrHostOnlySubdomain       = errors.New("host can only be a subdomain")
+	ErrHostWildcard            = errors.New(`host cannot be a "*"`)
+	ErrMalformedEmail          = errors.New("malformed email address")
+	ErrMalformedKey            = errors.New("malformed key")
+	ErrMalformedPassword       = errors.New("malformed password")
+	ErrMalformedSecret         = errors.New("malformed secret")
+	ErrMalformedToken          = errors.New("malformed token")
+	ErrMalformedUsername       = errors.New("malformed username")
+	ErrMalformedUserServiceKey = errors.New("malformed user service key")
+)
+
+// Intermediary steps errors.
+var (
+	ErrAddRecord           = errors.New("cannot add record") // Dreamhost
+	ErrGetRecordIdentifier = errors.New("cannot get record identifier")
+	ErrGetRecordInZone     = errors.New("cannot get record in zone")    // LuaDNS
+	ErrGetZoneID           = errors.New("cannot get zone ID")           // LuaDNS
+	ErrListRecords         = errors.New("cannot list records")          // Dreamhost
+	ErrRemoveRecord        = errors.New("cannot remove record")         // Dreamhost
+	ErrUpdateRecordInZone  = errors.New("cannot update record in zone") // LuaDNS
+)
+
+// Update errors.
+var (
+	ErrAbuse                   = errors.New("banned due to abuse")
+	ErrAccountInactive         = errors.New("account is inactive")
+	ErrAuth                    = errors.New("bad authentication")
+	ErrBadHTTPStatus           = errors.New("bad HTTP status")
+	ErrBadRequest              = errors.New("bad request sent")
+	ErrBannedUserAgent         = errors.New("user agend is banned")
+	ErrConflictingRecord       = errors.New("conflicting record")
+	ErrDNSServerSide           = errors.New("server side DNS error")
+	ErrDomainIDNotFound        = errors.New("ID not found in domain record")
+	ErrDomainRecordNotFound    = errors.New("domain record not found")
+	ErrFeatureUnavailable      = errors.New("feature is not available to the user")
+	ErrHostnameNotExists       = errors.New("hostname does not exist")
+	ErrInvalidSystemParam      = errors.New("invalid system parameter")
+	ErrIPReceivedMalformed     = errors.New("malformed IP address received")
+	ErrIPReceivedMismatch      = errors.New("mismatching IP address received")
+	ErrMalformedIPSent         = errors.New("malformed IP address sent")
+	ErrNoResultReceived        = errors.New("no result received")
+	ErrNumberOfResultsReceived = errors.New("wrong number of results received")
+	ErrPrivateIPSent           = errors.New("private IP cannot be routed")
+	ErrRecordNotEditable       = errors.New("record is not editable") // Dreamhost
+	ErrRecordNotFound          = errors.New("record not found")
+	ErrUnknownResponse         = errors.New("unknown response received")
+	ErrUnmarshalResponse       = errors.New("cannot unmarshal update response")
+	ErrUnsuccessfulResponse    = errors.New("unsuccessful response")
+	ErrZoneNotFound            = errors.New("zone not found") // LuaDNS
 )

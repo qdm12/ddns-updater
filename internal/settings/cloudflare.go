@@ -71,21 +71,21 @@ func (c *cloudflare) isValid() error {
 	case len(c.key) > 0: // email and key must be provided
 		switch {
 		case !c.matcher.CloudflareKey(c.key):
-			return fmt.Errorf("invalid key format")
+			return ErrMalformedKey
 		case !verification.NewVerifier().MatchEmail(c.email):
-			return fmt.Errorf("invalid email format")
+			return ErrMalformedEmail
 		}
 	case len(c.userServiceKey) > 0: // only user service key
 		if !c.matcher.CloudflareKey(c.key) {
-			return fmt.Errorf("invalid user service key format")
+			return ErrMalformedUserServiceKey
 		}
 	default: // API token only
 	}
 	switch {
 	case len(c.zoneIdentifier) == 0:
-		return fmt.Errorf("zone identifier cannot be empty")
+		return ErrEmptyZoneIdentifier
 	case c.ttl == 0:
-		return fmt.Errorf("TTL cannot be left to 0")
+		return ErrEmptyTTL
 	}
 	return nil
 }
@@ -164,7 +164,7 @@ func (c *cloudflare) getRecordIdentifier(ctx context.Context, client netlib.Clie
 	if err != nil {
 		return "", false, err
 	} else if status != http.StatusOK {
-		return "", false, fmt.Errorf(http.StatusText(status))
+		return "", false, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	listRecordsResponse := struct {
 		Success bool     `json:"success"`
@@ -175,17 +175,19 @@ func (c *cloudflare) getRecordIdentifier(ctx context.Context, client netlib.Clie
 		} `json:"result"`
 	}{}
 	if err := json.Unmarshal(content, &listRecordsResponse); err != nil {
-		return "", false, err
+		return "", false, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 	switch {
 	case len(listRecordsResponse.Errors) > 0:
-		return "", false, fmt.Errorf(strings.Join(listRecordsResponse.Errors, ","))
+		return "", false, fmt.Errorf("%w: %s",
+			ErrUnsuccessfulResponse, strings.Join(listRecordsResponse.Errors, ","))
 	case !listRecordsResponse.Success:
-		return "", false, fmt.Errorf("request to Cloudflare not successful")
+		return "", false, ErrUnsuccessfulResponse
 	case len(listRecordsResponse.Result) == 0:
-		return "", false, fmt.Errorf("received no result from Cloudflare")
+		return "", false, ErrNoResultReceived
 	case len(listRecordsResponse.Result) > 1:
-		return "", false, fmt.Errorf("received %d results instead of 1 from Cloudflare", len(listRecordsResponse.Result))
+		return "", false, fmt.Errorf("%w: %d instead of 1",
+			ErrNumberOfResultsReceived, len(listRecordsResponse.Result))
 	case listRecordsResponse.Result[0].Content == newIP.String(): // up to date
 		return "", true, nil
 	}
@@ -199,7 +201,7 @@ func (c *cloudflare) Update(ctx context.Context, client netlib.Client, ip net.IP
 	}
 	identifier, upToDate, err := c.getRecordIdentifier(ctx, client, ip)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", ErrGetRecordIdentifier, err)
 	} else if upToDate {
 		return ip, nil
 	}
@@ -233,7 +235,7 @@ func (c *cloudflare) Update(ctx context.Context, client netlib.Client, ip net.IP
 	if err != nil {
 		return nil, err
 	} else if status > http.StatusUnsupportedMediaType {
-		return nil, fmt.Errorf(http.StatusText(status))
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	var parsedJSON struct {
 		Success bool `json:"success"`
@@ -246,19 +248,19 @@ func (c *cloudflare) Update(ctx context.Context, client netlib.Client, ip net.IP
 		} `json:"result"`
 	}
 	if err := json.Unmarshal(content, &parsedJSON); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	} else if !parsedJSON.Success {
 		var errStr string
 		for _, e := range parsedJSON.Errors {
 			errStr += fmt.Sprintf("error %d: %s; ", e.Code, e.Message)
 		}
-		return nil, fmt.Errorf(errStr)
+		return nil, fmt.Errorf("%w: %s", ErrUnsuccessfulResponse, errStr)
 	}
 	newIP = net.ParseIP(parsedJSON.Result.Content)
 	if newIP == nil {
-		return nil, fmt.Errorf("new IP %q is malformed", parsedJSON.Result.Content)
+		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, parsedJSON.Result.Content)
 	} else if !newIP.Equal(ip) {
-		return nil, fmt.Errorf("new IP address %s is not %s", newIP.String(), ip.String())
+		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
 	}
 	return newIP, nil
 }

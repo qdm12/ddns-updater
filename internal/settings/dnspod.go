@@ -46,7 +46,7 @@ func NewDNSPod(data json.RawMessage, domain, host string, ipVersion models.IPVer
 
 func (d *dnspod) isValid() error {
 	if len(d.token) == 0 {
-		return fmt.Errorf("token cannot be empty")
+		return ErrEmptyToken
 	}
 	return nil
 }
@@ -112,7 +112,7 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {
-		return nil, fmt.Errorf(http.StatusText(status))
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
 	var recordResp struct {
 		Records []struct {
@@ -124,7 +124,7 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 		} `json:"records"`
 	}
 	if err := json.Unmarshal(content, &recordResp); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 	var recordID, recordLine string
 	for _, record := range recordResp.Records {
@@ -139,7 +139,7 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 		}
 	}
 	if len(recordID) == 0 {
-		return nil, fmt.Errorf("record not found")
+		return nil, ErrDomainRecordNotFound
 	}
 
 	u.Path = "/Record.Ddns"
@@ -162,7 +162,7 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 	if err != nil {
 		return nil, err
 	} else if status != http.StatusOK {
-		return nil, fmt.Errorf(http.StatusText(status))
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, err)
 	}
 	var ddnsResp struct {
 		Record struct {
@@ -172,11 +172,15 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 		} `json:"record"`
 	}
 	if err := json.Unmarshal(content, &ddnsResp); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
-	receivedIP := net.ParseIP(ddnsResp.Record.Value)
-	if !ip.Equal(receivedIP) {
-		return nil, fmt.Errorf("ip not set")
+
+	ipStr := ddnsResp.Record.Value
+	receivedIP := net.ParseIP(ipStr)
+	if receivedIP == nil {
+		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ipStr)
+	} else if !ip.Equal(receivedIP) {
+		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, receivedIP.String())
 	}
 	return ip, nil
 }

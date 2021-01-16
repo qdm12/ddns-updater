@@ -55,13 +55,13 @@ func (n *noip) isValid() error {
 	const maxUsernameLength = 50
 	switch {
 	case len(n.username) == 0:
-		return fmt.Errorf("username cannot be empty")
+		return ErrEmptyUsername
 	case len(n.username) > maxUsernameLength:
-		return fmt.Errorf("username cannot be longer than 50 characters")
+		return fmt.Errorf("%w: longer than 50 characters", ErrMalformedUsername)
 	case len(n.password) == 0:
-		return fmt.Errorf("password cannot be empty")
+		return ErrEmptyPassword
 	case n.host == "*":
-		return fmt.Errorf(`host cannot be "*"`)
+		return ErrHostWildcard
 	}
 	return nil
 }
@@ -128,33 +128,35 @@ func (n *noip) Update(ctx context.Context, client netlib.Client, ip net.IP) (new
 	s := string(content)
 	switch s {
 	case "":
-		return nil, fmt.Errorf(http.StatusText(status))
+		if status != http.StatusOK {
+			return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
+		}
 	case nineoneone:
-		return nil, fmt.Errorf("NoIP's internal server error 911")
+		return nil, ErrDNSServerSide
 	case abuse:
 		return nil, ErrAbuse
 	case "!donator":
-		return nil, fmt.Errorf("user has not this extra feature")
+		return nil, ErrFeatureUnavailable
 	case badagent:
-		return nil, fmt.Errorf("user agent is banned")
+		return nil, ErrBannedUserAgent
 	case badauth:
-		return nil, fmt.Errorf("invalid username password combination")
+		return nil, ErrAuth
 	case nohost:
-		return nil, fmt.Errorf("hostname does not exist")
+		return nil, ErrHostnameNotExists
 	}
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
 		ips := verification.NewVerifier().SearchIPv4(s)
 		if ips == nil {
-			return nil, fmt.Errorf("no IP address in response")
+			return nil, ErrNoResultReceived
 		}
 		newIP = net.ParseIP(ips[0])
 		if newIP == nil {
-			return nil, fmt.Errorf("IP address received %q is malformed", ips[0])
+			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ips[0])
 		}
 		if !n.useProviderIP && !ip.Equal(newIP) {
-			return nil, fmt.Errorf("new IP address %s is not %s", newIP.String(), ip.String())
+			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil
 	}
-	return nil, fmt.Errorf("invalid response %q", s)
+	return nil, ErrUnknownResponse
 }

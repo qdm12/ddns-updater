@@ -49,62 +49,62 @@ func NewOVH(data json.RawMessage, _, host string, ipVersion models.IPVersion,
 	return o, nil
 }
 
-func (d *ovh) isValid() error {
+func (o *ovh) isValid() error {
 	switch {
-	case len(d.username) == 0:
+	case len(o.username) == 0:
 		return ErrEmptyUsername
-	case len(d.password) == 0:
+	case len(o.password) == 0:
 		return ErrEmptyPassword
-	case d.host == "*":
+	case o.host == "*":
 		return ErrHostWildcard
 	}
 	return nil
 }
 
-func (d *ovh) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: OVH]", d.domain, d.host)
+func (o *ovh) String() string {
+	return fmt.Sprintf("[domain: %s | host: %s | provider: OVH]", o.domain, o.host)
 }
 
-func (d *ovh) Domain() string {
-	return d.domain
+func (o *ovh) Domain() string {
+	return o.domain
 }
 
-func (d *ovh) Host() string {
-	return d.host
+func (o *ovh) Host() string {
+	return o.host
 }
 
-func (d *ovh) IPVersion() models.IPVersion {
-	return d.ipVersion
+func (o *ovh) IPVersion() models.IPVersion {
+	return o.ipVersion
 }
 
-func (d *ovh) DNSLookup() bool {
-	return d.dnsLookup
+func (o *ovh) DNSLookup() bool {
+	return o.dnsLookup
 }
 
-func (d *ovh) BuildDomainName() string {
-	return buildDomainName(d.host, d.domain)
+func (o *ovh) BuildDomainName() string {
+	return buildDomainName(o.host, o.domain)
 }
 
-func (d *ovh) HTML() models.HTMLRow {
+func (o *ovh) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", o.BuildDomainName(), o.BuildDomainName())),
+		Host:      models.HTML(o.Host()),
 		Provider:  "<a href=\"https://www.ovh.com/\">OVH DNS</a>",
-		IPVersion: models.HTML(d.ipVersion),
+		IPVersion: models.HTML(o.ipVersion),
 	}
 }
 
-func (d *ovh) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (o *ovh) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
-		User:   url.UserPassword(d.username, d.password),
+		User:   url.UserPassword(o.username, o.password),
 		Host:   "www.ovh.com",
 		Path:   "/nic/update",
 	}
 	values := url.Values{}
 	values.Set("system", "dyndns")
-	values.Set("hostname", d.BuildDomainName())
-	if !d.useProviderIP {
+	values.Set("hostname", o.BuildDomainName())
+	if !o.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()

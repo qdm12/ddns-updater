@@ -34,7 +34,7 @@ func NewOpendns(data json.RawMessage, domain, host string, ipVersion models.IPVe
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	d := &opendns{
+	o := &opendns{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -43,67 +43,67 @@ func NewOpendns(data json.RawMessage, domain, host string, ipVersion models.IPVe
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := d.isValid(); err != nil {
+	if err := o.isValid(); err != nil {
 		return nil, err
 	}
-	return d, nil
+	return o, nil
 }
 
-func (d *opendns) isValid() error {
+func (o *opendns) isValid() error {
 	switch {
-	case len(d.username) == 0:
+	case len(o.username) == 0:
 		return ErrEmptyUsername
-	case len(d.password) == 0:
+	case len(o.password) == 0:
 		return ErrEmptyPassword
-	case d.host == "*":
+	case o.host == "*":
 		return ErrHostWildcard
 	}
 	return nil
 }
 
-func (d *opendns) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Opendns]", d.domain, d.host)
+func (o *opendns) String() string {
+	return fmt.Sprintf("[domain: %s | host: %s | provider: Opendns]", o.domain, o.host)
 }
 
-func (d *opendns) Domain() string {
-	return d.domain
+func (o *opendns) Domain() string {
+	return o.domain
 }
 
-func (d *opendns) Host() string {
-	return d.host
+func (o *opendns) Host() string {
+	return o.host
 }
 
-func (d *opendns) IPVersion() models.IPVersion {
-	return d.ipVersion
+func (o *opendns) IPVersion() models.IPVersion {
+	return o.ipVersion
 }
 
-func (d *opendns) DNSLookup() bool {
-	return d.dnsLookup
+func (o *opendns) DNSLookup() bool {
+	return o.dnsLookup
 }
 
-func (d *opendns) BuildDomainName() string {
-	return buildDomainName(d.host, d.domain)
+func (o *opendns) BuildDomainName() string {
+	return buildDomainName(o.host, o.domain)
 }
 
-func (d *opendns) HTML() models.HTMLRow {
+func (o *opendns) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", o.BuildDomainName(), o.BuildDomainName())),
+		Host:      models.HTML(o.Host()),
 		Provider:  "<a href=\"https://opendns.com/\">Opendns DNS</a>",
-		IPVersion: models.HTML(d.ipVersion),
+		IPVersion: models.HTML(o.ipVersion),
 	}
 }
 
-func (d *opendns) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (o *opendns) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
-		User:   url.UserPassword(d.username, d.password),
+		User:   url.UserPassword(o.username, o.password),
 		Host:   "updates.opendns.com",
 		Path:   "/nic/update",
 	}
 	values := url.Values{}
-	values.Set("hostname", d.BuildDomainName())
-	if !d.useProviderIP {
+	values.Set("hostname", o.BuildDomainName())
+	if !o.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()

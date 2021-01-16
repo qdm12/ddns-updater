@@ -183,12 +183,10 @@ By default, all ip methods are cycled through between all ip methods available f
   - `google` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
 - IPv4 only (useful for updating both ipv4 and ipv6)
   - `ipify` using [https://api.ipify.org](https://api.ipify.org)
-  - `ddnss4` using [https://ip4.ddnss.de/meineip.php](https://ip4.ddnss.de/meineip.php)
   - `noip4` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
   - `noip8245_4` using [http://ip1.dynupdate.no-ip.com:8245](http://ip1.dynupdate.no-ip.com:8245)
 - IPv6 only
   - `ipify6` using [https://api6.ipify.org](https://api6.ipify.org)
-  - `ddnss6` using [https://ip6.ddnss.de/meineip.php](https://ip6.ddnss.de/meineip.php)
   - `noip6` using [http://ip1.dynupdate6.no-ip.com](http://ip1.dynupdate6.no-ip.com)
   - `noip8245_6` using [http://ip1.dynupdate6.no-ip.com:8245](http://ip1.dynupdate6.no-ip.com:8245)
 

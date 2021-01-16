@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sync"
 	"syscall"
 	"time"
@@ -95,7 +96,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		notify(4, err)
 		return 1
 	}
-	settings, warnings, err := paramsReader.GetSettings(p.dataDir + "/config.json")
+	settings, warnings, err := paramsReader.GetSettings(filepath.Join(p.dataDir, "config.json"))
 	for _, w := range warnings {
 		logger.Warn(w)
 		notify(2, w)

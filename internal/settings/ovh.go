@@ -103,12 +103,7 @@ func (d *ovh) Update(ctx context.Context, client network.Client, ip net.IP) (new
 	}
 	values := url.Values{}
 	values.Set("system", "dyndns")
-	switch d.host {
-	case "@":
-		values.Set("hostname", d.domain)
-	default:
-		values.Set("hostname", fmt.Sprintf("%s.%s", d.host, d.domain))
-	}
+	values.Set("hostname", d.BuildDomainName())
 	if !d.useProviderIP {
 		values.Set("myip", ip.String())
 	}

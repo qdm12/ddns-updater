@@ -102,12 +102,7 @@ func (sd *selfhostde) Update(ctx context.Context, client network.Client, ip net.
 		Path:   "/nic/update",
 	}
 	values := url.Values{}
-	switch sd.host {
-	case "@":
-		values.Set("hostname", sd.domain)
-	default:
-		values.Set("hostname", fmt.Sprintf("%sd.%s", sd.host, sd.domain))
-	}
+	values.Set("hostname", sd.BuildDomainName())
 	if !sd.useProviderIP {
 		values.Set("myip", ip.String())
 	}

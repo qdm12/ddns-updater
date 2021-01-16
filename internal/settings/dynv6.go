@@ -103,12 +103,7 @@ func (d *dynV6) Update(ctx context.Context, client network.Client, ip net.IP) (n
 	}
 	values := url.Values{}
 	values.Set("token", d.token)
-	switch d.host {
-	case "@":
-		values.Set("zone", d.domain)
-	default:
-		values.Set("zone", fmt.Sprintf("%s.%s", d.host, d.domain))
-	}
+	values.Set("zone", d.BuildDomainName())
 	if !d.useProviderIP {
 		if isIPv4 {
 			values.Set("ipv4", ip.String())

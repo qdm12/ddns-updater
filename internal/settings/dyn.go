@@ -102,12 +102,7 @@ func (d *dyn) Update(ctx context.Context, client network.Client, ip net.IP) (new
 		Path:   "/v3/update",
 	}
 	values := url.Values{}
-	switch d.host {
-	case "@":
-		values.Set("hostname", d.domain)
-	default:
-		values.Set("hostname", fmt.Sprintf("%s.%s", d.host, d.domain))
-	}
+	values.Set("hostname", d.BuildDomainName())
 	if !d.useProviderIP {
 		values.Set("myip", ip.String())
 	}

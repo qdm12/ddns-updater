@@ -101,7 +101,7 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 	values.Set("length", "200")
 	values.Set("sub_domain", d.host)
 	values.Set("record_type", recordType)
-	u.RawQuery = values.Encode()
+
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBufferString(values.Encode()))
 	if err != nil {
 		return nil, err
@@ -151,7 +151,7 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 	values.Set("value", ip.String())
 	values.Set("record_line", recordLine)
 	values.Set("sub_domain", d.host)
-	u.RawQuery = values.Encode()
+
 	r, err = http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBufferString(values.Encode()))
 	if err != nil {
 		return nil, err

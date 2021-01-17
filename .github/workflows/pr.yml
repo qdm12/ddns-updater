@@ -1,4 +1,4 @@
-name: Buildx branch
+name: pull request
 on:
   pull_request:
     branches: [master]
@@ -44,7 +44,7 @@ jobs:
         run: |
           echo ::set-output name=commit::$(git rev-parse --short HEAD)
           echo ::set-output name=build_date::$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          echo ::set-output name=version::branch-${GITHUB_REF#refs/heads/}
+          echo ::set-output name=version::${{ github.event.pull_request.head.ref }}
       - name: Build and push image
         uses: docker/build-push-action@v2
         with:

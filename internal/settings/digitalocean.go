@@ -119,7 +119,7 @@ func getRecordID(ctx context.Context, domain, fqdn, recordType, token string,
 	case err != nil:
 		return 0, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	case len(result.DomainRecords) == 0:
-		return 0, ErrDomainRecordNotFound
+		return 0, ErrNotFound
 	case result.DomainRecords[0].ID == 0:
 		return 0, ErrDomainIDNotFound
 	default:
@@ -134,7 +134,7 @@ func (d *digitalOcean) Update(ctx context.Context, client netlib.Client, ip net.
 	}
 	recordID, err := getRecordID(ctx, d.domain, d.BuildDomainName(), recordType, d.token, client)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", ErrGetRecordIdentifier, err)
+		return nil, fmt.Errorf("%s: %w", ErrGetRecordID, err)
 	}
 	u := url.URL{
 		Scheme: "https",

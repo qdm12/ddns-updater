@@ -139,7 +139,7 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 		}
 	}
 	if len(recordID) == 0 {
-		return nil, ErrDomainRecordNotFound
+		return nil, ErrNotFound
 	}
 
 	u.Path = "/Record.Ddns"

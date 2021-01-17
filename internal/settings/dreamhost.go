@@ -121,7 +121,7 @@ func (d *dreamhost) Update(ctx context.Context, client network.Client, ip net.IP
 		}
 	}
 	if err := addDreamhostRecord(ctx, client, d.key, d.domain, ip); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrAddRecord, err)
+		return nil, fmt.Errorf("%w: %s", ErrCreateRecord, err)
 	}
 
 	return ip, nil

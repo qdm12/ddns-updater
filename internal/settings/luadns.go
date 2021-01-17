@@ -49,9 +49,9 @@ func NewLuaDNS(data json.RawMessage, domain, host string, ipVersion models.IPVer
 func (l *luaDNS) isValid() error {
 	switch {
 	case !verification.NewRegex().MatchEmail(l.email):
-		return fmt.Errorf("email %q is not valid", l.email)
+		return ErrMalformedEmail
 	case len(l.token) == 0:
-		return fmt.Errorf("token cannot be empty")
+		return ErrEmptyToken
 	}
 	return nil
 }
@@ -104,7 +104,7 @@ func (l *luaDNS) Update(ctx context.Context, client netlib.Client, ip net.IP) (n
 	newRecord := record
 	newRecord.Content = ip.String()
 	if err := l.updateRecord(ctx, client, zoneID, newRecord); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUpdateRecordInZone, err)
+		return nil, fmt.Errorf("%w: %s", ErrUpdateRecord, err)
 	}
 	return ip, nil
 }

@@ -136,9 +136,9 @@ func setHeaders(r *http.Request, token, userServiceKey, email, key string) {
 	}
 }
 
-// Obtain domain identifier.
+// Obtain domain ID.
 // See https://api.cloudflare.com/#dns-records-for-a-zone-list-dns-records.
-func (c *cloudflare) getRecordIdentifier(ctx context.Context, client netlib.Client, newIP net.IP) (
+func (c *cloudflare) getRecordID(ctx context.Context, client netlib.Client, newIP net.IP) (
 	identifier string, upToDate bool, err error) {
 	recordType := A
 	if newIP.To4() == nil {
@@ -199,9 +199,9 @@ func (c *cloudflare) Update(ctx context.Context, client netlib.Client, ip net.IP
 	if ip.To4() == nil {
 		recordType = AAAA
 	}
-	identifier, upToDate, err := c.getRecordIdentifier(ctx, client, ip)
+	identifier, upToDate, err := c.getRecordID(ctx, client, ip)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", ErrGetRecordIdentifier, err)
+		return nil, fmt.Errorf("%s: %w", ErrGetRecordID, err)
 	} else if upToDate {
 		return ip, nil
 	}

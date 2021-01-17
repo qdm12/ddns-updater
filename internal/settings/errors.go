@@ -28,13 +28,13 @@ var (
 
 // Intermediary steps errors.
 var (
-	ErrAddRecord           = errors.New("cannot add record") // Dreamhost
-	ErrGetRecordIdentifier = errors.New("cannot get record identifier")
-	ErrGetRecordInZone     = errors.New("cannot get record in zone")    // LuaDNS
-	ErrGetZoneID           = errors.New("cannot get zone ID")           // LuaDNS
-	ErrListRecords         = errors.New("cannot list records")          // Dreamhost
-	ErrRemoveRecord        = errors.New("cannot remove record")         // Dreamhost
-	ErrUpdateRecordInZone  = errors.New("cannot update record in zone") // LuaDNS
+	ErrCreateRecord    = errors.New("cannot create record")
+	ErrGetRecordID     = errors.New("cannot get record ID")
+	ErrGetRecordInZone = errors.New("cannot get record in zone") // LuaDNS
+	ErrGetZoneID       = errors.New("cannot get zone ID")        // LuaDNS
+	ErrListRecords     = errors.New("cannot list records")       // Dreamhost
+	ErrRemoveRecord    = errors.New("cannot remove record")      // Dreamhost
+	ErrUpdateRecord    = errors.New("cannot update record")
 )
 
 // Update errors.
@@ -48,7 +48,6 @@ var (
 	ErrConflictingRecord       = errors.New("conflicting record")
 	ErrDNSServerSide           = errors.New("server side DNS error")
 	ErrDomainIDNotFound        = errors.New("ID not found in domain record")
-	ErrDomainRecordNotFound    = errors.New("domain record not found")
 	ErrFeatureUnavailable      = errors.New("feature is not available to the user")
 	ErrHostnameNotExists       = errors.New("hostname does not exist")
 	ErrInvalidSystemParam      = errors.New("invalid system parameter")
@@ -56,6 +55,7 @@ var (
 	ErrIPReceivedMismatch      = errors.New("mismatching IP address received")
 	ErrMalformedIPSent         = errors.New("malformed IP address sent")
 	ErrNoResultReceived        = errors.New("no result received")
+	ErrNotFound                = errors.New("not found")
 	ErrNumberOfResultsReceived = errors.New("wrong number of results received")
 	ErrPrivateIPSent           = errors.New("private IP cannot be routed")
 	ErrRecordNotEditable       = errors.New("record is not editable") // Dreamhost

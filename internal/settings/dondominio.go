@@ -99,6 +99,12 @@ func (d *donDominio) HTML() models.HTMLRow {
 	}
 }
 
+func (d *donDominio) setHeaders(request *http.Request) {
+	setUserAgent(request)
+	setContentType(request, "application/x-www-form-urlencoded")
+	setAccept(request, "application/json")
+}
+
 func (d *donDominio) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -121,7 +127,7 @@ func (d *donDominio) Update(ctx context.Context, client *http.Client, ip net.IP)
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Set("User-Agent", "DDNS-Updater quentid.mcgaw@gmail.com")
+	d.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

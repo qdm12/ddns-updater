@@ -88,6 +88,11 @@ func (l *luaDNS) HTML() models.HTMLRow {
 	}
 }
 
+func (l *luaDNS) setHeaders(request *http.Request) {
+	setUserAgent(request)
+	setAccept(request, "application/json")
+}
+
 // Using https://www.luadns.com/api.html
 func (l *luaDNS) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	zoneID, err := l.getZoneID(ctx, client)
@@ -182,8 +187,7 @@ func (l *luaDNS) getRecord(ctx context.Context, client *http.Client, zoneID int,
 	if err != nil {
 		return record, err
 	}
-	request.Header.Set("Accept", "application/json")
-	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	l.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -238,7 +242,7 @@ func (l *luaDNS) updateRecord(ctx context.Context, client *http.Client,
 	if err != nil {
 		return err
 	}
-	request.Header.Set("Accept", "application/json")
+	l.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

@@ -84,8 +84,9 @@ func (d *dnspod) HTML() models.HTMLRow {
 }
 
 func (d *dnspod) setHeaders(request *http.Request) {
-	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	setContentType(request, "application/x-www-form-urlencoded")
+	setAccept(request, "application/json")
+	setUserAgent(request)
 }
 
 func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
@@ -112,6 +113,7 @@ func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 	if err != nil {
 		return nil, err
 	}
+	d.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

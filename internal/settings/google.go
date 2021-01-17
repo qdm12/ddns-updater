@@ -108,11 +108,13 @@ func (g *google) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()
+
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Set("User-Agent", "DDNS-Updater quentig.mcgaw@gmail.com")
+	setUserAgent(request)
+
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, err

@@ -86,9 +86,10 @@ func (d *digitalOcean) HTML() models.HTMLRow {
 }
 
 func (d *digitalOcean) setHeaders(request *http.Request) {
-	request.Header.Set("User-Agent", "DDNS-Updater quentid.mcgaw@gmail.com")
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", "Bearer "+d.token)
+	setUserAgent(request)
+	setContentType(request, "application/json")
+	setAccept(request, "application/json")
+	setAuthBearer(request, d.token)
 }
 
 func (d *digitalOcean) getRecordID(ctx context.Context, recordType string, client *http.Client) (
@@ -107,6 +108,7 @@ func (d *digitalOcean) getRecordID(ctx context.Context, recordType string, clien
 	if err != nil {
 		return 0, err
 	}
+	d.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

@@ -92,8 +92,10 @@ func (g *godaddy) HTML() models.HTMLRow {
 }
 
 func (g *godaddy) setHeaders(request *http.Request) {
-	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	request.Header.Set("Authorization", "sso-key "+g.key+":"+g.secret)
+	setUserAgent(request)
+	setAuthSSOKey(request, g.key, g.secret)
+	setContentType(request, "application/json")
+	setAccept(request, "application/json")
 }
 
 func (g *godaddy) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {

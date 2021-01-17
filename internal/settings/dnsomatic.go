@@ -124,8 +124,8 @@ func (d *dnsomatic) Update(ctx context.Context, client *http.Client, ip net.IP) 
 	if err != nil {
 		return nil, err
 	}
+	setUserAgent(request)
 
-	request.Header.Set("User-Agent", "DDNS-Updater quentid.mcgaw@gmail.com")
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, err

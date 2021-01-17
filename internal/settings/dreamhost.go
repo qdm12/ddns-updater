@@ -172,7 +172,7 @@ func (d *dreamhost) getRecords(ctx context.Context, client *http.Client) (
 	if err != nil {
 		return records, err
 	}
-	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	setUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -216,7 +216,7 @@ func (d *dreamhost) removeRecord(ctx context.Context, client *http.Client, ip ne
 	if err != nil {
 		return err
 	}
-	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	setUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -262,7 +262,7 @@ func (d *dreamhost) createRecord(ctx context.Context, client *http.Client, ip ne
 	if err != nil {
 		return err
 	}
-	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	setUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {

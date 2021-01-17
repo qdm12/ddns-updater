@@ -91,6 +91,11 @@ func (n *namecheap) HTML() models.HTMLRow {
 	}
 }
 
+func (n *namecheap) setHeaders(request *http.Request) {
+	setUserAgent(request)
+	setAccept(request, "application/xml")
+}
+
 func (n *namecheap) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -105,11 +110,13 @@ func (n *namecheap) Update(ctx context.Context, client *http.Client, ip net.IP) 
 		values.Set("ip", ip.String())
 	}
 	u.RawQuery = values.Encode()
+
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	n.setHeaders(request)
+
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, err

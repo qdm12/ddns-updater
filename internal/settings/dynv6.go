@@ -116,7 +116,7 @@ func (d *dynV6) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	setUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {

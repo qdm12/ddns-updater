@@ -123,10 +123,12 @@ func (c *cloudflare) HTML() models.HTMLRow {
 }
 
 func (c *cloudflare) setHeaders(request *http.Request) {
-	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	setUserAgent(request)
+	setContentType(request, "application/json")
+	setAccept(request, "application/json")
 	switch {
 	case len(c.token) > 0:
-		request.Header.Set("Authorization", "Bearer "+c.token)
+		setAuthBearer(request, c.token)
 	case len(c.userServiceKey) > 0:
 		request.Header.Set("X-Auth-User-Service-Key", c.userServiceKey)
 	case len(c.email) > 0 && len(c.key) > 0:
@@ -246,7 +248,6 @@ func (c *cloudflare) Update(ctx context.Context, client *http.Client, ip net.IP)
 	}
 
 	c.setHeaders(request)
-	request.Header.Set("Content-Type", "application/json")
 
 	response, err := client.Do(request)
 	if err != nil {

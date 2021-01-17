@@ -1,16 +1,16 @@
 package network
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/golibs/network/mock_network"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,7 +28,7 @@ func Test_GetPublicIP(t *testing.T) {
 		"network error": {
 			IPVersion: constants.IPv4,
 			mockErr:   fmt.Errorf("error"),
-			err:       fmt.Errorf("cannot get public ipv4 address: error"),
+			err:       fmt.Errorf(`cannot get public ipv4 address: Get "https://getmyip.com": error`),
 		},
 		"bad status": {
 			IPVersion:  constants.IPv4,
@@ -77,10 +77,20 @@ func Test_GetPublicIP(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-			client := mock_network.NewMockClient(mockCtrl)
-			client.EXPECT().Get(ctx, URL).Return(tc.mockContent, tc.mockStatus, tc.mockErr).Times(1)
+
+			client := &http.Client{
+				Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+					assert.Equal(t, URL, r.URL.String())
+					if tc.mockErr != nil {
+						return nil, tc.mockErr
+					}
+					return &http.Response{
+						StatusCode: tc.mockStatus,
+						Body:       ioutil.NopCloser(bytes.NewReader(tc.mockContent)),
+					}, nil
+				}),
+			}
+
 			ip, err := GetPublicIP(ctx, client, URL, tc.IPVersion)
 			if tc.err != nil {
 				require.Error(t, err)

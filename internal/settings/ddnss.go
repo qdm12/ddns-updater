@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -12,7 +13,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	"github.com/qdm12/golibs/network"
 )
 
 type ddnss struct {
@@ -95,7 +95,7 @@ func (d *ddnss) HTML() models.HTMLRow {
 	}
 }
 
-func (d *ddnss) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (d *ddnss) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "www.ddnss.de",
@@ -104,11 +104,7 @@ func (d *ddnss) Update(ctx context.Context, client network.Client, ip net.IP) (n
 	values := url.Values{}
 	values.Set("user", d.username)
 	values.Set("pwd", d.password)
-	fqdn := d.domain
-	if d.host != "@" {
-		fqdn = d.host + "." + d.domain
-	}
-	values.Set("host", fqdn)
+	values.Set("host", d.BuildDomainName())
 	if !d.useProviderIP {
 		if ip.To4() == nil { // ipv6
 			values.Set("ip6", ip.String())
@@ -117,26 +113,36 @@ func (d *ddnss) Update(ctx context.Context, client network.Client, ip net.IP) (n
 		}
 	}
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	content, status, err := client.Do(r)
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
 	}
-	s := string(content)
-	if status != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d with message: %s", ErrBadHTTPStatus, status, s)
+	defer response.Body.Close()
+
+	b, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
+
+	s := string(b)
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: %d with message: %s", ErrBadHTTPStatus, response.StatusCode, s)
+	}
+
 	switch {
 	case strings.Contains(s, "badysys"):
 		return nil, ErrInvalidSystemParam
 	case strings.Contains(s, badauth):
 		return nil, ErrAuth
 	case strings.Contains(s, notfqdn):
-		return nil, fmt.Errorf("%w: %s", ErrHostnameNotExists, fqdn)
+		return nil, ErrHostnameNotExists
 	case strings.Contains(s, "Updated 1 hostname"):
 		return ip, nil
 	default:

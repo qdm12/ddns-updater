@@ -12,7 +12,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	"github.com/qdm12/golibs/network"
 )
 
 type namecheap struct {
@@ -92,7 +91,7 @@ func (n *namecheap) HTML() models.HTMLRow {
 	}
 }
 
-func (n *namecheap) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (n *namecheap) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dynamicdns.park-your-domain.com",
@@ -106,27 +105,33 @@ func (n *namecheap) Update(ctx context.Context, client network.Client, ip net.IP
 		values.Set("ip", ip.String())
 	}
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	content, status, err := client.Do(r)
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
-	} else if status != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+	}
+
+	decoder := xml.NewDecoder(response.Body)
 	var parsedXML struct {
 		Errors struct {
 			Error string `xml:"Err1"`
 		} `xml:"errors"`
 		IP string `xml:"IP"`
 	}
-	err = xml.Unmarshal(content, &parsedXML)
-	if err != nil {
+	if err := decoder.Decode(&parsedXML); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
-	} else if parsedXML.Errors.Error != "" {
+	}
+
+	if parsedXML.Errors.Error != "" {
 		return nil, fmt.Errorf("%w: %s", ErrUnsuccessfulResponse, parsedXML.Errors.Error)
 	}
 	newIP = net.ParseIP(parsedXML.IP)

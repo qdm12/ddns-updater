@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,9 +11,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/network"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	netlib "github.com/qdm12/golibs/network"
 )
 
 type godaddy struct {
@@ -92,7 +91,12 @@ func (g *godaddy) HTML() models.HTMLRow {
 	}
 }
 
-func (g *godaddy) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (g *godaddy) setHeaders(request *http.Request) {
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	request.Header.Set("Authorization", "sso-key "+g.key+":"+g.secret)
+}
+
+func (g *godaddy) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA
@@ -105,27 +109,40 @@ func (g *godaddy) Update(ctx context.Context, client netlib.Client, ip net.IP) (
 		Host:   "api.godaddy.com",
 		Path:   fmt.Sprintf("/v1/domains/%s/records/%s/%s", g.domain, recordType, g.host),
 	}
-	r, err := network.BuildHTTPPut(ctx, u.String(), []goDaddyPutBody{{ip.String()}})
+
+	buffer := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buffer)
+	requestData := []goDaddyPutBody{
+		{Data: ip.String()},
+	}
+	if err := encoder.Encode(requestData); err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrRequestEncode, err)
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	r.Header.Set("Authorization", "sso-key "+g.key+":"+g.secret)
-	content, status, err := client.Do(r)
+	g.setHeaders(request)
+
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
-	} else if status == http.StatusOK {
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode == http.StatusOK {
 		return ip, nil
 	}
 
-	err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
+	err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
 	var parsedJSON struct {
 		Message string `json:"message"`
 	}
-	if err := json.Unmarshal(content, &parsedJSON); err != nil {
-		return nil, fmt.Errorf("%w: %s", err, string(content))
-	} else if len(parsedJSON.Message) > 0 {
-		return nil, fmt.Errorf("%w: %s", err, parsedJSON.Message)
+	decoder := json.NewDecoder(response.Body)
+	jsonErr := decoder.Decode(&parsedJSON)
+	if jsonErr != nil || len(parsedJSON.Message) == 0 {
+		return nil, err
 	}
-	return nil, err
+	return nil, fmt.Errorf("%w: %s", err, parsedJSON.Message)
 }

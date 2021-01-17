@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/http"
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
@@ -12,7 +13,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/settings"
 	"github.com/qdm12/golibs/logging"
-	netlib "github.com/qdm12/golibs/network"
 )
 
 type Updater interface {
@@ -21,14 +21,14 @@ type Updater interface {
 
 type updater struct {
 	db     data.Database
-	client netlib.Client
+	client *http.Client
 	notify notifyFunc
 	logger logging.Logger
 }
 
 type notifyFunc func(priority int, messageArgs ...interface{})
 
-func NewUpdater(db data.Database, client netlib.Client, notify notifyFunc, logger logging.Logger) Updater {
+func NewUpdater(db data.Database, client *http.Client, notify notifyFunc, logger logging.Logger) Updater {
 	return &updater{
 		db:     db,
 		client: client,

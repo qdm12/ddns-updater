@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -12,7 +13,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	netlib "github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
 )
 
@@ -88,7 +88,7 @@ func (h *he) HTML() models.HTMLRow {
 	}
 }
 
-func (h *he) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (h *he) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	fqdn := h.BuildDomainName()
 	u := url.URL{
 		Scheme: "https",
@@ -102,19 +102,26 @@ func (h *he) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentih.mcgaw@gmail.com")
-	content, status, err := client.Do(r)
+	request.Header.Set("User-Agent", "DDNS-Updater quentih.mcgaw@gmail.com")
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
 	}
-	s := string(content)
+	defer response.Body.Close()
+
+	b, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+	}
+	s := string(b)
+
 	switch s {
 	case "":
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
 	case badauth:
 		return nil, ErrAuth
 	}

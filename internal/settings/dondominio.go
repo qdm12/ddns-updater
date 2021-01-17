@@ -12,7 +12,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	netlib "github.com/qdm12/golibs/network"
 )
 
 type donDominio struct {
@@ -100,7 +99,7 @@ func (d *donDominio) HTML() models.HTMLRow {
 	}
 }
 
-func (d *donDominio) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (d *donDominio) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "simple-api.dondominio.net",
@@ -116,18 +115,26 @@ func (d *donDominio) Update(ctx context.Context, client netlib.Client, ip net.IP
 	} else {
 		values.Set("ipv6", ip.String())
 	}
-	r, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), strings.NewReader(values.Encode()))
+	buffer := strings.NewReader(values.Encode())
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentid.mcgaw@gmail.com")
-	content, status, err := client.Do(r)
+	request.Header.Set("User-Agent", "DDNS-Updater quentid.mcgaw@gmail.com")
+
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
-	} else if status != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
-	response := struct {
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+	}
+
+	decoder := json.NewDecoder(response.Body)
+	var responseData struct {
 		Success          bool   `json:"success"`
 		ErrorCode        int    `json:"errorCode"`
 		ErrorCodeMessage string `json:"errorCodeMsg"`
@@ -137,17 +144,18 @@ func (d *donDominio) Update(ctx context.Context, client netlib.Client, ip net.IP
 				IPv6 string `json:"ipv6"`
 			} `json:"gluerecords"`
 		} `json:"responseData"`
-	}{}
-	if err := json.Unmarshal(content, &response); err != nil {
+	}
+	if err := decoder.Decode(&responseData); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
-	if !response.Success {
+
+	if !responseData.Success {
 		return nil, fmt.Errorf("%w: %s (error code %d)",
-			ErrUnsuccessfulResponse, response.ErrorCodeMessage, response.ErrorCode)
+			ErrUnsuccessfulResponse, responseData.ErrorCodeMessage, responseData.ErrorCode)
 	}
-	ipString := response.ResponseData.GlueRecords[0].IPv4
+	ipString := responseData.ResponseData.GlueRecords[0].IPv4
 	if !isIPv4 {
-		ipString = response.ResponseData.GlueRecords[0].IPv6
+		ipString = responseData.ResponseData.GlueRecords[0].IPv6
 	}
 	newIP = net.ParseIP(ipString)
 	if newIP == nil {

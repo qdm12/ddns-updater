@@ -42,6 +42,7 @@ var (
 	ErrAbuse                   = errors.New("banned due to abuse")
 	ErrAccountInactive         = errors.New("account is inactive")
 	ErrAuth                    = errors.New("bad authentication")
+	ErrRequestEncode           = errors.New("cannot encode request")
 	ErrBadHTTPStatus           = errors.New("bad HTTP status")
 	ErrBadRequest              = errors.New("bad request sent")
 	ErrBannedUserAgent         = errors.New("user agend is banned")

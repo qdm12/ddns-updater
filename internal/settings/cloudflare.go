@@ -123,16 +123,16 @@ func (c *cloudflare) HTML() models.HTMLRow {
 	}
 }
 
-func setHeaders(r *http.Request, token, userServiceKey, email, key string) {
+func (c *cloudflare) setHeaders(r *http.Request) {
 	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	switch {
-	case len(token) > 0:
-		r.Header.Set("Authorization", "Bearer "+token)
-	case len(userServiceKey) > 0:
-		r.Header.Set("X-Auth-User-Service-Key", userServiceKey)
-	case len(email) > 0 && len(key) > 0:
-		r.Header.Set("X-Auth-Email", email)
-		r.Header.Set("X-Auth-Key", key)
+	case len(c.token) > 0:
+		r.Header.Set("Authorization", "Bearer "+c.token)
+	case len(c.userServiceKey) > 0:
+		r.Header.Set("X-Auth-User-Service-Key", c.userServiceKey)
+	case len(c.email) > 0 && len(c.key) > 0:
+		r.Header.Set("X-Auth-Email", c.email)
+		r.Header.Set("X-Auth-Key", c.key)
 	}
 }
 
@@ -159,7 +159,7 @@ func (c *cloudflare) getRecordID(ctx context.Context, client netlib.Client, newI
 	if err != nil {
 		return "", false, err
 	}
-	setHeaders(r, c.token, c.userServiceKey, c.email, c.key)
+	c.setHeaders(r)
 	content, status, err := client.Do(r)
 	if err != nil {
 		return "", false, err
@@ -230,7 +230,7 @@ func (c *cloudflare) Update(ctx context.Context, client netlib.Client, ip net.IP
 	if err != nil {
 		return nil, err
 	}
-	setHeaders(r, c.token, c.userServiceKey, c.email, c.key)
+	c.setHeaders(r)
 	content, status, err := client.Do(r)
 	if err != nil {
 		return nil, err

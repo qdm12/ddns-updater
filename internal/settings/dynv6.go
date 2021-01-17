@@ -10,7 +10,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	"github.com/qdm12/golibs/network"
 )
 
 type dynV6 struct {
@@ -88,7 +87,7 @@ func (d *dynV6) HTML() models.HTMLRow {
 	}
 }
 
-func (d *dynV6) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (d *dynV6) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	isIPv4 := ip.To4() != nil
 	host := "dynv6.com"
 	if isIPv4 {
@@ -112,16 +111,22 @@ func (d *dynV6) Update(ctx context.Context, client network.Client, ip net.IP) (n
 		}
 	}
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	_, status, err := client.Do(r)
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
-	} else if status != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+	}
+
 	return ip, nil
 }

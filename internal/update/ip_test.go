@@ -1,22 +1,20 @@
 package update
 
 import (
+	"bytes"
 	"context"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"testing"
-	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/golibs/network"
-	"github.com/qdm12/golibs/network/mock_network"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_NewIPGetter(t *testing.T) {
 	t.Parallel()
-	client := network.NewClient(time.Second)
+	client := &http.Client{}
 	ipMethod := models.IPMethod{Name: "ip"}
 	ipv4Method := models.IPMethod{Name: "ipv4"}
 	ipv6Method := models.IPMethod{Name: "ipv6"}
@@ -51,15 +49,23 @@ func Test_IP(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-			client := mock_network.NewMockClient(mockCtrl)
+
 			ctx := context.Background()
 			url := tc.ipMethod.URL
 			if tc.ipMethod.Name == cycle {
 				url = "https://diagnostic.opendns.com/myip"
 			}
-			client.EXPECT().Get(ctx, url).Return(tc.mockContent, http.StatusOK, nil).Times(1)
+
+			client := &http.Client{
+				Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+					assert.Equal(t, url, r.URL.String())
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       ioutil.NopCloser(bytes.NewReader(tc.mockContent)),
+					}, nil
+				}),
+			}
+
 			ig := NewIPGetter(client, tc.ipMethod, models.IPMethod{}, models.IPMethod{})
 			ip, err := ig.IP(ctx)
 			assert.Nil(t, err)
@@ -90,15 +96,23 @@ func Test_IPv4(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-			client := mock_network.NewMockClient(mockCtrl)
+
 			ctx := context.Background()
 			url := tc.ipMethod.URL
 			if tc.ipMethod.Name == cycle {
 				url = "https://api.ipify.org"
 			}
-			client.EXPECT().Get(ctx, url).Return(tc.mockContent, http.StatusOK, nil).Times(1)
+
+			client := &http.Client{
+				Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+					assert.Equal(t, url, r.URL.String())
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       ioutil.NopCloser(bytes.NewReader(tc.mockContent)),
+					}, nil
+				}),
+			}
+
 			ig := NewIPGetter(client, models.IPMethod{}, tc.ipMethod, models.IPMethod{})
 			ip, err := ig.IPv4(ctx)
 			assert.Nil(t, err)
@@ -129,15 +143,23 @@ func Test_IPv6(t *testing.T) {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-			client := mock_network.NewMockClient(mockCtrl)
+
 			ctx := context.Background()
 			url := tc.ipMethod.URL
 			if tc.ipMethod.Name == cycle {
 				url = "https://api6.ipify.org"
 			}
-			client.EXPECT().Get(ctx, url).Return(tc.mockContent, http.StatusOK, nil).Times(1)
+
+			client := &http.Client{
+				Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+					assert.Equal(t, url, r.URL.String())
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       ioutil.NopCloser(bytes.NewReader(tc.mockContent)),
+					}, nil
+				}),
+			}
+
 			ig := NewIPGetter(client, models.IPMethod{}, models.IPMethod{}, tc.ipMethod)
 			ip, err := ig.IPv6(ctx)
 			assert.Nil(t, err)

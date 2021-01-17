@@ -12,7 +12,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	"github.com/qdm12/golibs/network"
 )
 
 type dnspod struct {
@@ -84,7 +83,12 @@ func (d *dnspod) HTML() models.HTMLRow {
 	}
 }
 
-func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (d *dnspod) setHeaders(request *http.Request) {
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+}
+
+func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA
@@ -94,6 +98,7 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 		Host:   "dnsapi.cn",
 		Path:   "/Record.List",
 	}
+
 	values := url.Values{}
 	values.Set("login_token", d.token)
 	values.Set("format", "json")
@@ -101,19 +106,24 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 	values.Set("length", "200")
 	values.Set("sub_domain", d.host)
 	values.Set("record_type", recordType)
+	buffer := bytes.NewBufferString(values.Encode())
 
-	r, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBufferString(values.Encode()))
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	content, status, err := client.Do(r)
+
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
-	} else if status != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+	}
+
+	decoder := json.NewDecoder(response.Body)
 	var recordResp struct {
 		Records []struct {
 			ID    string `json:"id"`
@@ -123,9 +133,10 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 			Line  string `json:"line"`
 		} `json:"records"`
 	}
-	if err := json.Unmarshal(content, &recordResp); err != nil {
+	if err := decoder.Decode(&recordResp); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
+
 	var recordID, recordLine string
 	for _, record := range recordResp.Records {
 		if record.Type == A && record.Name == d.host {
@@ -151,19 +162,25 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 	values.Set("value", ip.String())
 	values.Set("record_line", recordLine)
 	values.Set("sub_domain", d.host)
+	buffer = bytes.NewBufferString(values.Encode())
 
-	r, err = http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBufferString(values.Encode()))
+	request, err = http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	content, status, err = client.Do(r)
+	d.setHeaders(request)
+
+	response, err = client.Do(request)
 	if err != nil {
 		return nil, err
-	} else if status != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, err)
 	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+	}
+
+	decoder = json.NewDecoder(response.Body)
 	var ddnsResp struct {
 		Record struct {
 			ID    int64  `json:"id"`
@@ -171,7 +188,7 @@ func (d *dnspod) Update(ctx context.Context, client network.Client, ip net.IP) (
 			Name  string `json:"name"`
 		} `json:"record"`
 	}
-	if err := json.Unmarshal(content, &ddnsResp); err != nil {
+	if err := decoder.Decode(&ddnsResp); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 

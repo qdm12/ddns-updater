@@ -12,7 +12,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	netlib "github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
 )
 
@@ -90,7 +89,7 @@ func (l *luaDNS) HTML() models.HTMLRow {
 }
 
 // Using https://www.luadns.com/api.html
-func (l *luaDNS) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (l *luaDNS) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	zoneID, err := l.getZoneID(ctx, client)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrGetZoneID, err)
@@ -122,27 +121,33 @@ type luaDNSError struct {
 	Message string `json:"message"`
 }
 
-func (l *luaDNS) getZoneID(ctx context.Context, client netlib.Client) (zoneID int, err error) {
+func (l *luaDNS) getZoneID(ctx context.Context, client *http.Client) (zoneID int, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.luadns.com",
 		Path:   "/v1/zones",
 		User:   url.UserPassword(l.email, l.token),
 	}
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return 0, err
 	}
-	r.Header.Set("Accept", "application/json")
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	content, status, err := client.Do(r)
+	request.Header.Set("Accept", "application/json")
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+
+	response, err := client.Do(request)
 	if err != nil {
 		return 0, err
-	} else if status != http.StatusOK {
-		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
 		var errorObj luaDNSError
-		if jsonErr := json.Unmarshal(content, &errorObj); jsonErr != nil {
-			return 0, fmt.Errorf("%w: %s", err, string(content))
+		decoder := json.NewDecoder(response.Body)
+		if jsonErr := decoder.Decode(&errorObj); jsonErr != nil {
+			return 0, err
 		}
 		return 0, fmt.Errorf("%w: %s: %s", err, errorObj.Status, errorObj.Message)
 	}
@@ -151,7 +156,9 @@ func (l *luaDNS) getZoneID(ctx context.Context, client netlib.Client) (zoneID in
 		Name string `json:"name"`
 	}
 	var zones []zone
-	if err := json.Unmarshal(content, &zones); err != nil {
+
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&zones); err != nil {
 		return 0, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 	for _, zone := range zones {
@@ -162,7 +169,7 @@ func (l *luaDNS) getZoneID(ctx context.Context, client netlib.Client) (zoneID in
 	return 0, ErrZoneNotFound
 }
 
-func (l *luaDNS) getRecord(ctx context.Context, client netlib.Client, zoneID int, ip net.IP) (
+func (l *luaDNS) getRecord(ctx context.Context, client *http.Client, zoneID int, ip net.IP) (
 	record luaDNSRecord, err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -170,26 +177,35 @@ func (l *luaDNS) getRecord(ctx context.Context, client netlib.Client, zoneID int
 		Path:   fmt.Sprintf("/v1/zones/%d/records", zoneID),
 		User:   url.UserPassword(l.email, l.token),
 	}
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return record, err
 	}
-	r.Header.Set("Accept", "application/json")
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	content, status, err := client.Do(r)
+	request.Header.Set("Accept", "application/json")
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+
+	response, err := client.Do(request)
 	if err != nil {
 		return record, err
-	} else if status != http.StatusOK {
-		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
 		var errorObj luaDNSError
-		if err := json.Unmarshal(content, &errorObj); err != nil {
-			return record, fmt.Errorf("%w: %s", err, string(content))
+
+		decoder := json.NewDecoder(response.Body)
+		if jsonErr := decoder.Decode(&errorObj); jsonErr != nil {
+			return record, err
 		}
 		return record, fmt.Errorf("%w: %s: %s",
 			err, errorObj.Status, errorObj.Message)
 	}
 	var records []luaDNSRecord
-	if err := json.Unmarshal(content, &records); err != nil {
+
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&records); err != nil {
 		return record, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 	recordType := A
@@ -205,7 +221,7 @@ func (l *luaDNS) getRecord(ctx context.Context, client netlib.Client, zoneID int
 		ErrRecordNotFound, recordType, zoneID)
 }
 
-func (l *luaDNS) updateRecord(ctx context.Context, client netlib.Client,
+func (l *luaDNS) updateRecord(ctx context.Context, client *http.Client,
 	zoneID int, newRecord luaDNSRecord) (err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -218,29 +234,35 @@ func (l *luaDNS) updateRecord(ctx context.Context, client netlib.Client,
 		return err
 	}
 
-	r, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), bytes.NewBuffer(data))
+	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}
-	r.Header.Set("Accept", "application/json")
+	request.Header.Set("Accept", "application/json")
 
-	b, status, err := client.Do(r)
+	response, err := client.Do(request)
 	if err != nil {
 		return err
-	} else if status != http.StatusOK {
-		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
 		var errorObj luaDNSError
-		if err := json.Unmarshal(b, &errorObj); err != nil {
-			return fmt.Errorf("%w: %s", err, string(b))
+		decoder := json.NewDecoder(response.Body)
+		if jsonErr := decoder.Decode(&errorObj); jsonErr != nil {
+			return err
 		}
 		return fmt.Errorf("%w: %s: %s",
 			err, errorObj.Status, errorObj.Message)
 	}
 
 	var updatedRecord luaDNSRecord
-	if err := json.Unmarshal(b, &updatedRecord); err != nil {
+	decoder := json.NewDecoder(response.Body)
+	if jsonErr := decoder.Decode(&updatedRecord); jsonErr != nil {
 		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
+
 	if updatedRecord.Content != newRecord.Content {
 		return fmt.Errorf("%w: %s", ErrIPReceivedMismatch, updatedRecord.Content)
 	}

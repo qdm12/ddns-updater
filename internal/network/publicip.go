@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"sort"
@@ -11,20 +12,34 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
 )
 
 // GetPublicIP downloads a webpage and extracts the IP address from it.
-func GetPublicIP(ctx context.Context, client network.Client, url string,
+func GetPublicIP(ctx context.Context, client *http.Client, url string,
 	ipVersion models.IPVersion) (ip net.IP, err error) {
-	content, status, err := client.Get(ctx, url)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get public %s address: %w", ipVersion, err)
-	} else if status != http.StatusOK {
-		return nil, fmt.Errorf("cannot get public %s address from %s: HTTP status code %d", ipVersion, url, status)
 	}
-	s := string(content)
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("cannot get public %s address from %s: HTTP status code %d",
+			ipVersion, url, response.StatusCode)
+	}
+
+	b, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+	s := string(b)
+
 	switch ipVersion {
 	case constants.IPv4:
 		return searchIP(constants.IPv4, s)

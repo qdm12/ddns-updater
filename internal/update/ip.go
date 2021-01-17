@@ -3,11 +3,11 @@ package update
 import (
 	"context"
 	"net"
+	"net/http"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/network"
-	libnet "github.com/qdm12/golibs/network"
 )
 
 const cycle = "cycle"
@@ -19,7 +19,7 @@ type IPGetter interface {
 }
 
 type ipGetter struct {
-	client     libnet.Client
+	client     *http.Client
 	ipMethod   models.IPMethod
 	ipv4Method models.IPMethod
 	ipv6Method models.IPMethod
@@ -28,7 +28,7 @@ type ipGetter struct {
 	cyclerIPv6 cycler
 }
 
-func NewIPGetter(client libnet.Client, ipMethod, ipv4Method, ipv6Method models.IPMethod) IPGetter {
+func NewIPGetter(client *http.Client, ipMethod, ipv4Method, ipv6Method models.IPMethod) IPGetter {
 	ipMethods := []models.IPMethod{}
 	ipv4Methods := []models.IPMethod{}
 	ipv6Methods := []models.IPMethod{}

@@ -13,7 +13,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	"github.com/qdm12/golibs/network"
 )
 
 type dreamhost struct {
@@ -93,15 +92,17 @@ func (d *dreamhost) HTML() models.HTMLRow {
 	}
 }
 
-func (d *dreamhost) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (d *dreamhost) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA
 	}
-	records, err := listDreamhostRecords(ctx, client, d.key)
+
+	records, err := d.getRecords(ctx, client)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrListRecords, err)
 	}
+
 	var oldIP net.IP
 	for _, data := range records.Data {
 		if data.Type == recordType && data.Record == d.BuildDomainName() {
@@ -116,11 +117,11 @@ func (d *dreamhost) Update(ctx context.Context, client network.Client, ip net.IP
 		}
 	}
 	if oldIP != nil { // Found editable record with a different IP address, so remove it
-		if err := removeDreamhostRecord(ctx, client, d.key, d.domain, oldIP); err != nil {
+		if err := d.removeRecord(ctx, client, oldIP); err != nil {
 			return nil, fmt.Errorf("%w: %s", ErrRemoveRecord, err)
 		}
 	}
-	if err := addDreamhostRecord(ctx, client, d.key, d.domain, ip); err != nil {
+	if err := d.createRecord(ctx, client, ip); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrCreateRecord, err)
 	}
 
@@ -143,7 +144,7 @@ type (
 	}
 )
 
-func makeDreamhostDefaultValues(key string) (values url.Values) {
+func (d *dreamhost) defaultURLValues() (values url.Values) {
 	uuid := make([]byte, 16)
 	_, _ = io.ReadFull(rand.Reader, uuid)
 	//nolint:gomnd
@@ -151,107 +152,135 @@ func makeDreamhostDefaultValues(key string) (values url.Values) {
 	//nolint:gomnd
 	uuid[8] = (uuid[8] & 0x3f) | 0x80 // Variant is 10
 	values = url.Values{}
-	values.Set("key", key)
+	values.Set("key", d.key)
 	values.Set("unique_id", string(uuid))
 	values.Set("format", "json")
 	return values
 }
 
-func listDreamhostRecords(ctx context.Context, client network.Client, key string) (
+func (d *dreamhost) getRecords(ctx context.Context, client *http.Client) (
 	records dreamHostRecords, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.dreamhost.com",
 	}
-	values := makeDreamhostDefaultValues(key)
+	values := d.defaultURLValues()
 	values.Set("cmd", "dns-list_records")
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return records, err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	content, status, err := client.Do(r)
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+
+	response, err := client.Do(request)
 	if err != nil {
 		return records, err
-	} else if status != http.StatusOK {
-		return records, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
-	if err := json.Unmarshal(content, &records); err != nil {
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return records, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+	}
+
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&records); err != nil {
 		return records, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
-	} else if records.Result != success {
+	}
+
+	if records.Result != success {
 		return records, fmt.Errorf("%w: %s", ErrUnsuccessfulResponse, records.Result)
 	}
 	return records, nil
 }
 
-func removeDreamhostRecord(ctx context.Context, client network.Client,
-	key, domain string, ip net.IP) error {
+func (d *dreamhost) removeRecord(ctx context.Context, client *http.Client, ip net.IP) error {
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA
 	}
+
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.dreamhost.com",
 	}
-	values := makeDreamhostDefaultValues(key)
+	values := d.defaultURLValues()
 	values.Set("cmd", "dns-remove_record")
-	values.Set("record", domain)
+	values.Set("record", d.domain)
 	values.Set("type", recordType)
 	values.Set("value", ip.String())
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	content, status, err := client.Do(r)
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+
+	response, err := client.Do(request)
 	if err != nil {
 		return err
-	} else if status != http.StatusOK {
-		return fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+	}
+
 	var dhResponse dreamhostReponse
-	if err := json.Unmarshal(content, &dhResponse); err != nil {
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&dhResponse); err != nil {
 		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
-	} else if dhResponse.Result != success { // this should not happen
+	}
+
+	if dhResponse.Result != success { // this should not happen
 		return fmt.Errorf("%w: %s - %s",
 			ErrUnsuccessfulResponse, dhResponse.Result, dhResponse.Data)
 	}
 	return nil
 }
 
-func addDreamhostRecord(ctx context.Context, client network.Client, key, domain string, ip net.IP) error {
+func (d *dreamhost) createRecord(ctx context.Context, client *http.Client, ip net.IP) error {
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA
 	}
+
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.dreamhost.com",
 	}
-	values := makeDreamhostDefaultValues(key)
+	values := d.defaultURLValues()
 	values.Set("cmd", "dns-add_record")
-	values.Set("record", domain)
+	values.Set("record", d.domain)
 	values.Set("type", recordType)
 	values.Set("value", ip.String())
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	content, status, err := client.Do(r)
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+
+	response, err := client.Do(request)
 	if err != nil {
 		return err
-	} else if status != http.StatusOK {
-		return fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+	}
+
 	var dhResponse dreamhostReponse
-	if err := json.Unmarshal(content, &dhResponse); err != nil {
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&dhResponse); err != nil {
 		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
-	} else if dhResponse.Result != success {
+	}
+
+	if dhResponse.Result != success {
 		return fmt.Errorf("%w: %s - %s",
 			ErrUnsuccessfulResponse, dhResponse.Result, dhResponse.Data)
 	}

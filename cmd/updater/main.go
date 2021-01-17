@@ -24,7 +24,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/golibs/admin"
 	"github.com/qdm12/golibs/logging"
-	"github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/network/connectivity"
 )
 
@@ -134,8 +133,8 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		notify(4, err)
 		return 1
 	}
-	client := network.NewClient(HTTPTimeout)
-	defer client.Close()
+	client := &http.Client{Timeout: HTTPTimeout}
+	defer client.CloseIdleConnections()
 	db := data.NewDatabase(records, persistentDB)
 	defer func() {
 		if err := db.Close(); err != nil {

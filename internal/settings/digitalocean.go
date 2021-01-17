@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -13,7 +14,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	netlib "github.com/qdm12/golibs/network"
 )
 
 type digitalOcean struct {
@@ -85,62 +85,77 @@ func (d *digitalOcean) HTML() models.HTMLRow {
 	}
 }
 
-func getRecordID(ctx context.Context, domain, fqdn, recordType, token string,
-	client netlib.Client) (recordID int, err error) {
+func (d *digitalOcean) setHeaders(request *http.Request) {
+	request.Header.Set("User-Agent", "DDNS-Updater quentid.mcgaw@gmail.com")
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+d.token)
+}
+
+func (d *digitalOcean) getRecordID(ctx context.Context, recordType string, client *http.Client) (
+	recordID int, err error) {
 	values := url.Values{}
-	values.Set("name", fqdn)
+	values.Set("name", d.BuildDomainName())
 	values.Set("type", recordType)
 	u := url.URL{
 		Scheme:   "https",
 		Host:     "api.digitalocean.com",
-		Path:     fmt.Sprintf("/v2/domains/%s/records", domain),
+		Path:     "/v2/domains/" + d.domain + "/records",
 		RawQuery: values.Encode(),
 	}
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return 0, err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentid.mcgaw@gmail.com")
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Authorization", "Bearer "+token)
-	content, status, err := client.Do(r)
+
+	response, err := client.Do(request)
 	if err != nil {
 		return 0, err
-	} else if status != http.StatusOK {
-		return 0, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+	}
+
+	decoder := json.NewDecoder(response.Body)
 	var result struct {
 		DomainRecords []struct {
 			ID int `json:"id"`
 		} `json:"domain_records"`
 	}
-	err = json.Unmarshal(content, &result)
-	switch {
-	case err != nil:
+	if err = decoder.Decode(&result); err != nil {
 		return 0, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
-	case len(result.DomainRecords) == 0:
-		return 0, ErrNotFound
-	case result.DomainRecords[0].ID == 0:
-		return 0, ErrDomainIDNotFound
-	default:
-		return result.DomainRecords[0].ID, nil
 	}
+
+	if len(result.DomainRecords) == 0 {
+		return 0, ErrNotFound
+	} else if result.DomainRecords[0].ID == 0 {
+		return 0, ErrDomainIDNotFound
+	}
+
+	return result.DomainRecords[0].ID, nil
 }
 
-func (d *digitalOcean) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (d *digitalOcean) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
 	if ip.To4() == nil { // IPv6
 		recordType = AAAA
 	}
-	recordID, err := getRecordID(ctx, d.domain, d.BuildDomainName(), recordType, d.token, client)
+
+	recordID, err := d.getRecordID(ctx, recordType, client)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", ErrGetRecordID, err)
 	}
+
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.digitalocean.com",
 		Path:   fmt.Sprintf("/v2/domains/%s/records/%d", d.domain, recordID),
 	}
+
+	buffer := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buffer)
 	requestData := struct {
 		Type string `json:"type"`
 		Name string `json:"name"`
@@ -150,34 +165,42 @@ func (d *digitalOcean) Update(ctx context.Context, client netlib.Client, ip net.
 		Name: d.host,
 		Data: ip.String(),
 	}
-	requestBody, err := json.Marshal(requestData)
+	if err := encoder.Encode(requestData); err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrRequestEncode, err)
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {
 		return nil, err
 	}
-	r, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), bytes.NewBuffer(requestBody))
+	d.setHeaders(request)
+
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentid.mcgaw@gmail.com")
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Authorization", "Bearer "+d.token)
-	content, status, err := client.Do(r)
-	if err != nil {
-		return nil, err
-	}
-	s := string(content)
-	if status != http.StatusOK {
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		b, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		}
+		s := strings.ReplaceAll(string(b), "\n", "")
 		return nil, fmt.Errorf("%w: %d with body %s",
-			ErrBadHTTPStatus, status, strings.ReplaceAll(s, "\n", ""))
+			ErrBadHTTPStatus, response.StatusCode, s)
 	}
+
+	decoder := json.NewDecoder(response.Body)
 	var responseData struct {
 		DomainRecord struct {
 			Data string `json:"data"`
 		} `json:"domain_record"`
 	}
-	if err := json.Unmarshal(content, &responseData); err != nil {
+	if err := decoder.Decode(&responseData); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
+
 	newIP = net.ParseIP(responseData.DomainRecord.Data)
 	if newIP == nil {
 		return nil, fmt.Errorf("IP address received %q is malformed", responseData.DomainRecord.Data)

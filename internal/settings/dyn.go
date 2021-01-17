@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	"github.com/qdm12/golibs/network"
 )
 
 type dyn struct {
@@ -94,7 +94,7 @@ func (d *dyn) HTML() models.HTMLRow {
 	}
 }
 
-func (d *dyn) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (d *dyn) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		User:   url.UserPassword(d.username, d.password),
@@ -107,19 +107,29 @@ func (d *dyn) Update(ctx context.Context, client network.Client, ip net.IP) (new
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	content, status, err := client.Do(r)
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
 	}
-	if status != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
 	}
-	s := string(content)
+
+	b, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+	}
+	s := string(b)
+
 	switch {
 	case strings.HasPrefix(s, notfqdn):
 		return nil, ErrHostnameNotExists

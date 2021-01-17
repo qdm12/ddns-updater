@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	"github.com/qdm12/golibs/network"
 )
 
 type selfhostde struct {
@@ -94,7 +94,7 @@ func (sd *selfhostde) HTML() models.HTMLRow {
 	}
 }
 
-func (sd *selfhostde) Update(ctx context.Context, client network.Client, ip net.IP) (newIP net.IP, err error) {
+func (sd *selfhostde) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		User:   url.UserPassword(sd.username, sd.password),
@@ -107,17 +107,21 @@ func (sd *selfhostde) Update(ctx context.Context, client network.Client, ip net.
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	content, status, err := client.Do(r)
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
+
 	// see their PDF file
-	switch status {
+	switch response.StatusCode {
 	case http.StatusOK: // DynDNS v2 specification
 	case http.StatusNoContent: // no change
 		return ip, nil
@@ -134,9 +138,15 @@ func (sd *selfhostde) Update(ctx context.Context, client network.Client, ip net.
 	case http.StatusServiceUnavailable:
 		return nil, ErrDNSServerSide
 	default:
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
 	}
-	s := string(content)
+
+	b, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+	}
+	s := string(b)
+
 	switch {
 	case strings.HasPrefix(s, notfqdn):
 		return nil, ErrHostnameNotExists

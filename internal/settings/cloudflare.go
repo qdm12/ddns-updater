@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,9 +12,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/network"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	netlib "github.com/qdm12/golibs/network"
 	"github.com/qdm12/golibs/verification"
 )
 
@@ -123,27 +122,28 @@ func (c *cloudflare) HTML() models.HTMLRow {
 	}
 }
 
-func (c *cloudflare) setHeaders(r *http.Request) {
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+func (c *cloudflare) setHeaders(request *http.Request) {
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
 	switch {
 	case len(c.token) > 0:
-		r.Header.Set("Authorization", "Bearer "+c.token)
+		request.Header.Set("Authorization", "Bearer "+c.token)
 	case len(c.userServiceKey) > 0:
-		r.Header.Set("X-Auth-User-Service-Key", c.userServiceKey)
+		request.Header.Set("X-Auth-User-Service-Key", c.userServiceKey)
 	case len(c.email) > 0 && len(c.key) > 0:
-		r.Header.Set("X-Auth-Email", c.email)
-		r.Header.Set("X-Auth-Key", c.key)
+		request.Header.Set("X-Auth-Email", c.email)
+		request.Header.Set("X-Auth-Key", c.key)
 	}
 }
 
 // Obtain domain ID.
 // See https://api.cloudflare.com/#dns-records-for-a-zone-list-dns-records.
-func (c *cloudflare) getRecordID(ctx context.Context, client netlib.Client, newIP net.IP) (
+func (c *cloudflare) getRecordID(ctx context.Context, client *http.Client, newIP net.IP) (
 	identifier string, upToDate bool, err error) {
 	recordType := A
 	if newIP.To4() == nil {
 		recordType = AAAA
 	}
+
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.cloudflare.com",
@@ -155,17 +155,24 @@ func (c *cloudflare) getRecordID(ctx context.Context, client netlib.Client, newI
 	values.Set("page", "1")
 	values.Set("per_page", "1")
 	u.RawQuery = values.Encode()
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return "", false, err
 	}
-	c.setHeaders(r)
-	content, status, err := client.Do(r)
+	c.setHeaders(request)
+
+	response, err := client.Do(request)
 	if err != nil {
 		return "", false, err
-	} else if status != http.StatusOK {
-		return "", false, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return "", false, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+	}
+
+	decoder := json.NewDecoder(response.Body)
 	listRecordsResponse := struct {
 		Success bool     `json:"success"`
 		Errors  []string `json:"errors"`
@@ -174,9 +181,10 @@ func (c *cloudflare) getRecordID(ctx context.Context, client netlib.Client, newI
 			Content string `json:"content"`
 		} `json:"result"`
 	}{}
-	if err := json.Unmarshal(content, &listRecordsResponse); err != nil {
+	if err := decoder.Decode(&listRecordsResponse); err != nil {
 		return "", false, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
+
 	switch {
 	case len(listRecordsResponse.Errors) > 0:
 		return "", false, fmt.Errorf("%w: %s",
@@ -194,7 +202,7 @@ func (c *cloudflare) getRecordID(ctx context.Context, client netlib.Client, newI
 	return listRecordsResponse.Result[0].ID, false, nil
 }
 
-func (c *cloudflare) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (c *cloudflare) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA
@@ -205,38 +213,52 @@ func (c *cloudflare) Update(ctx context.Context, client netlib.Client, ip net.IP
 	} else if upToDate {
 		return ip, nil
 	}
-	type cloudflarePutBody struct {
-		Type    string `json:"type"`    // A or AAAA depending on ip address given
-		Name    string `json:"name"`    // DNS record name i.e. example.com
-		Content string `json:"content"` // ip address
-		Proxied bool   `json:"proxied"` // whether the record is receiving the performance and security benefits of Cloudflare
-		TTL     uint   `json:"ttl"`
-	}
+
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.cloudflare.com",
 		Path:   fmt.Sprintf("/client/v4/zones/%s/dns_records/%s", c.zoneIdentifier, identifier),
 	}
-	r, err := network.BuildHTTPPut(ctx,
-		u.String(),
-		cloudflarePutBody{
-			Type:    recordType,
-			Name:    c.BuildDomainName(),
-			Content: ip.String(),
-			Proxied: c.proxied,
-			TTL:     c.ttl,
-		},
-	)
+
+	requestData := struct {
+		Type    string `json:"type"`    // A or AAAA depending on ip address given
+		Name    string `json:"name"`    // DNS record name i.e. example.com
+		Content string `json:"content"` // ip address
+		Proxied bool   `json:"proxied"` // whether the record is receiving the performance and security benefits of Cloudflare
+		TTL     uint   `json:"ttl"`
+	}{
+		Type:    recordType,
+		Name:    c.BuildDomainName(),
+		Content: ip.String(),
+		Proxied: c.proxied,
+		TTL:     c.ttl,
+	}
+
+	buffer := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buffer)
+	if err := encoder.Encode(requestData); err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrRequestEncode, err)
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {
 		return nil, err
 	}
-	c.setHeaders(r)
-	content, status, err := client.Do(r)
+
+	c.setHeaders(request)
+	request.Header.Set("Content-Type", "application/json")
+
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
-	} else if status > http.StatusUnsupportedMediaType {
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
 	}
+	defer response.Body.Close()
+
+	if response.StatusCode > http.StatusUnsupportedMediaType {
+		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+	}
+
+	decoder := json.NewDecoder(response.Body)
 	var parsedJSON struct {
 		Success bool `json:"success"`
 		Errors  []struct {
@@ -247,15 +269,18 @@ func (c *cloudflare) Update(ctx context.Context, client netlib.Client, ip net.IP
 			Content string `json:"content"`
 		} `json:"result"`
 	}
-	if err := json.Unmarshal(content, &parsedJSON); err != nil {
+	if err := decoder.Decode(&parsedJSON); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
-	} else if !parsedJSON.Success {
+	}
+
+	if !parsedJSON.Success {
 		var errStr string
 		for _, e := range parsedJSON.Errors {
 			errStr += fmt.Sprintf("error %d: %s; ", e.Code, e.Message)
 		}
 		return nil, fmt.Errorf("%w: %s", ErrUnsuccessfulResponse, errStr)
 	}
+
 	newIP = net.ParseIP(parsedJSON.Result.Content)
 	if newIP == nil {
 		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, parsedJSON.Result.Content)

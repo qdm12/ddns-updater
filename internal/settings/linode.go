@@ -53,7 +53,7 @@ func (l *linode) isValid() error {
 }
 
 func (l *linode) String() string {
-	return toString(l.domain, l.host, constants.LUADNS, l.ipVersion)
+	return toString(l.domain, l.host, constants.LINODE, l.ipVersion)
 }
 
 func (l *linode) Domain() string {

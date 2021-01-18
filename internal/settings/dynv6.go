@@ -124,9 +124,9 @@ func (d *dynV6) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+	if response.StatusCode == http.StatusOK {
+		return ip, nil
 	}
-
-	return ip, nil
+	return nil, fmt.Errorf("%w: %d: %s",
+		ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
 }

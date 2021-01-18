@@ -5,11 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -117,7 +115,8 @@ func (d *digitalOcean) getRecordID(ctx context.Context, recordType string, clien
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		return 0, fmt.Errorf("%w: %d: %s",
+			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -184,13 +183,8 @@ func (d *digitalOcean) Update(ctx context.Context, client *http.Client, ip net.I
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		b, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
-		}
-		s := strings.ReplaceAll(string(b), "\n", "")
-		return nil, fmt.Errorf("%w: %d with body %s",
-			ErrBadHTTPStatus, response.StatusCode, s)
+		return nil, fmt.Errorf("%w: %d: %s",
+			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)

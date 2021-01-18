@@ -159,7 +159,7 @@ func (i *infomaniak) Update(ctx context.Context, client *http.Client, ip net.IP)
 		case badauth:
 			return nil, ErrAuth
 		default:
-			return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+			return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, s)
 		}
 	default:
 		return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, s)

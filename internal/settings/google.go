@@ -129,7 +129,7 @@ func (g *google) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 
 	switch s {
 	case "":
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, s)
 	case nohost, notfqdn:
 		return nil, ErrHostnameNotExists
 	case badauth:

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -147,12 +148,16 @@ func (l *luaDNS) getZoneID(ctx context.Context, client *http.Client) (zoneID int
 	}
 	defer response.Body.Close()
 
+	b, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return 0, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+	}
+
 	if response.StatusCode != http.StatusOK {
 		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
 		var errorObj luaDNSError
-		decoder := json.NewDecoder(response.Body)
-		if jsonErr := decoder.Decode(&errorObj); jsonErr != nil {
-			return 0, err
+		if jsonErr := json.Unmarshal(b, &errorObj); jsonErr != nil {
+			return 0, fmt.Errorf("%w: %s", err, bodyDataToSingleLine(string(b)))
 		}
 		return 0, fmt.Errorf("%w: %s: %s", err, errorObj.Status, errorObj.Message)
 	}
@@ -162,8 +167,7 @@ func (l *luaDNS) getZoneID(ctx context.Context, client *http.Client) (zoneID int
 	}
 	var zones []zone
 
-	decoder := json.NewDecoder(response.Body)
-	if err := decoder.Decode(&zones); err != nil {
+	if err := json.Unmarshal(b, &zones); err != nil {
 		return 0, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 	for _, zone := range zones {
@@ -195,21 +199,23 @@ func (l *luaDNS) getRecord(ctx context.Context, client *http.Client, zoneID int,
 	}
 	defer response.Body.Close()
 
+	b, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return record, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+	}
+
 	if response.StatusCode != http.StatusOK {
 		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
 		var errorObj luaDNSError
-
-		decoder := json.NewDecoder(response.Body)
-		if jsonErr := decoder.Decode(&errorObj); jsonErr != nil {
-			return record, err
+		if jsonErr := json.Unmarshal(b, &errorObj); jsonErr != nil {
+			return record, fmt.Errorf("%w: %s", err, bodyDataToSingleLine(string(b)))
 		}
 		return record, fmt.Errorf("%w: %s: %s",
 			err, errorObj.Status, errorObj.Message)
 	}
 	var records []luaDNSRecord
 
-	decoder := json.NewDecoder(response.Body)
-	if err := decoder.Decode(&records); err != nil {
+	if err := json.Unmarshal(b, &records); err != nil {
 		return record, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 	recordType := A
@@ -250,20 +256,23 @@ func (l *luaDNS) updateRecord(ctx context.Context, client *http.Client,
 	}
 	defer response.Body.Close()
 
+	b, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+	}
+
 	if response.StatusCode != http.StatusOK {
 		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
 		var errorObj luaDNSError
-		decoder := json.NewDecoder(response.Body)
-		if jsonErr := decoder.Decode(&errorObj); jsonErr != nil {
-			return err
+		if jsonErr := json.Unmarshal(b, &errorObj); jsonErr != nil {
+			return fmt.Errorf("%w: %s", err, bodyDataToSingleLine(string(b)))
 		}
 		return fmt.Errorf("%w: %s: %s",
 			err, errorObj.Status, errorObj.Message)
 	}
 
 	var updatedRecord luaDNSRecord
-	decoder := json.NewDecoder(response.Body)
-	if jsonErr := decoder.Decode(&updatedRecord); jsonErr != nil {
+	if jsonErr := json.Unmarshal(b, &updatedRecord); jsonErr != nil {
 		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 

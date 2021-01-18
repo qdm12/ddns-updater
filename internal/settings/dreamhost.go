@@ -181,7 +181,8 @@ func (d *dreamhost) getRecords(ctx context.Context, client *http.Client) (
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return records, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		return records, fmt.Errorf("%w: %d: %s",
+			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -225,7 +226,8 @@ func (d *dreamhost) removeRecord(ctx context.Context, client *http.Client, ip ne
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		return fmt.Errorf("%w: %d: %s",
+			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
 	}
 
 	var dhResponse dreamhostReponse
@@ -271,7 +273,8 @@ func (d *dreamhost) createRecord(ctx context.Context, client *http.Client, ip ne
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		return fmt.Errorf("%w: %d: %s",
+			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
 	}
 
 	var dhResponse dreamhostReponse

@@ -122,15 +122,16 @@ func (d *duckdns) Update(ctx context.Context, client *http.Client, ip net.IP) (n
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
-	}
-
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 	s := string(b)
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: %d: %s",
+			ErrBadHTTPStatus, response.StatusCode, bodyDataToSingleLine(s))
+	}
 
 	const minChars = 2
 	switch {

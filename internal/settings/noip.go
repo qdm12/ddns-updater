@@ -135,11 +135,13 @@ func (n *noip) Update(ctx context.Context, client *http.Client, ip net.IP) (newI
 	}
 	s := string(b)
 
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, s)
+	}
+
 	switch s {
 	case "":
-		if response.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
-		}
+		return nil, ErrNoResultReceived
 	case nineoneone:
 		return nil, ErrDNSServerSide
 	case abuse:

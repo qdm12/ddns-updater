@@ -136,7 +136,8 @@ func (d *donDominio) Update(ctx context.Context, client *http.Client, ip net.IP)
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		return nil, fmt.Errorf("%w: %d: %s",
+			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)

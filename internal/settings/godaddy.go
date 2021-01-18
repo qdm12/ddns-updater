@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -137,14 +138,18 @@ func (g *godaddy) Update(ctx context.Context, client *http.Client, ip net.IP) (n
 		return ip, nil
 	}
 
+	b, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+	}
+
 	err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
 	var parsedJSON struct {
 		Message string `json:"message"`
 	}
-	decoder := json.NewDecoder(response.Body)
-	jsonErr := decoder.Decode(&parsedJSON)
+	jsonErr := json.Unmarshal(b, &parsedJSON)
 	if jsonErr != nil || len(parsedJSON.Message) == 0 {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", err, bodyDataToSingleLine(string(b)))
 	}
 	return nil, fmt.Errorf("%w: %s", err, parsedJSON.Message)
 }

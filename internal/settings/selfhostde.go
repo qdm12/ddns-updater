@@ -138,7 +138,8 @@ func (sd *selfhostde) Update(ctx context.Context, client *http.Client, ip net.IP
 	case http.StatusServiceUnavailable:
 		return nil, ErrDNSServerSide
 	default:
-		return nil, fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		return nil, fmt.Errorf("%w: %d: %s",
+			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
 	}
 
 	b, err := ioutil.ReadAll(response.Body)

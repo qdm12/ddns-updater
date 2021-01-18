@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -14,7 +16,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
-	netlib "github.com/qdm12/golibs/network"
 )
 
 type linode struct {
@@ -85,7 +86,7 @@ func (l *linode) HTML() models.HTMLRow {
 }
 
 // Using https://www.linode.com/docs/api/domains/
-func (l *linode) Update(ctx context.Context, client netlib.Client, ip net.IP) (newIP net.IP, err error) {
+func (l *linode) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	domainID, err := l.getDomainID(ctx, client)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrGetDomainID, err)
@@ -119,44 +120,46 @@ type linodeError struct {
 	Reason string `json:"reason"`
 }
 
-func (l *linode) getDomainID(ctx context.Context, client netlib.Client) (domainID int, err error) {
+func (l *linode) setHeaders(request *http.Request) {
+	setUserAgent(request)
+	setContentType(request, "application/json")
+	setAuthBearer(request, l.token)
+}
+
+func (l *linode) getDomainID(ctx context.Context, client *http.Client) (domainID int, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.linode.com",
 		Path:   "/v4/domains",
 	}
 
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return 0, err
 	}
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Authorization", "Bearer "+l.token)
-	r.Header.Set("oauth", "domains:read_only")
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
-	r.Header.Set("X-Filter", `{"domain": "`+l.domain+`"}`)
+	l.setHeaders(request)
+	setOauth(request, "domains:read_only")
+	setXFilter(request, `{"domain": "`+l.domain+`"}`)
 
-	content, status, err := client.Do(r)
+	response, err := client.Do(request)
 	if err != nil {
 		return 0, err
 	}
+	defer response.Body.Close()
 
-	if status != http.StatusOK {
-		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
-		var errorObj linodeError
-		if jsonErr := json.Unmarshal(content, &errorObj); jsonErr != nil {
-			return 0, fmt.Errorf("%w: %s", err, string(content))
-		}
-		return 0, fmt.Errorf("%w: %s: %s", err, errorObj.Field, errorObj.Reason)
+	if response.StatusCode != http.StatusOK {
+		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		return 0, fmt.Errorf("%w: %s", err, l.getError(response.Body))
 	}
 
+	decoder := json.NewDecoder(response.Body)
 	var domains []struct {
 		ID     *int   `json:"id,omitempty"`
 		Type   string `json:"type"`
 		Status string `json:"status"`
 	}
-	if err := json.Unmarshal(content, &domains); err != nil {
-		return 0, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+	if err := decoder.Decode(&domains); err != nil {
+		return 0, err
 	}
 
 	switch len(domains) {
@@ -179,7 +182,7 @@ func (l *linode) getDomainID(ctx context.Context, client netlib.Client) (domainI
 	return *domains[0].ID, nil
 }
 
-func (l *linode) getRecordID(ctx context.Context, client netlib.Client,
+func (l *linode) getRecordID(ctx context.Context, client *http.Client,
 	domainID int, recordType string) (recordID int, err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -187,34 +190,30 @@ func (l *linode) getRecordID(ctx context.Context, client netlib.Client,
 		Path:   "/v4/domains/" + strconv.Itoa(domainID) + "/records",
 	}
 
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return 0, err
 	}
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Authorization", "Bearer "+l.token)
-	r.Header.Set("oauth", "domains:read_only")
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	l.setHeaders(request)
+	setOauth(request, "domains:read_only")
 
-	content, status, err := client.Do(r)
+	response, err := client.Do(request)
 	if err != nil {
 		return 0, err
 	}
+	defer response.Body.Close()
 
-	if status != http.StatusOK {
-		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
-		var errorObj linodeError
-		if jsonErr := json.Unmarshal(content, &errorObj); jsonErr != nil {
-			return 0, fmt.Errorf("%w: %s", err, string(content))
-		}
-		return 0, fmt.Errorf("%w: %s: %s", err, errorObj.Field, errorObj.Reason)
+	if response.StatusCode != http.StatusOK {
+		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		return 0, fmt.Errorf("%w: %s", err, l.getError(response.Body))
 	}
 
+	decoder := json.NewDecoder(response.Body)
 	var domainRecords []struct {
 		ID   int    `json:"id"`
 		Type string `json:"type"`
 	}
-	if err := json.Unmarshal(content, &domainRecords); err != nil {
+	if err := decoder.Decode(&domainRecords); err != nil {
 		return 0, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 
@@ -227,7 +226,7 @@ func (l *linode) getRecordID(ctx context.Context, client netlib.Client,
 	return 0, ErrNotFound
 }
 
-func (l *linode) createRecord(ctx context.Context, client netlib.Client,
+func (l *linode) createRecord(ctx context.Context, client *http.Client,
 	domainID int, recordType string, ip net.IP) (err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -250,33 +249,28 @@ func (l *linode) createRecord(ctx context.Context, client netlib.Client,
 		return fmt.Errorf("%w: %s", ErrRequestMarshal, err)
 	}
 
-	r, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), buffer)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), buffer)
 	if err != nil {
 		return err
 	}
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Authorization", "Bearer "+l.token)
-	r.Header.Set("oauth", "domains:read_write")
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	l.setHeaders(request)
+	setOauth(request, "domains:read_write")
 
-	content, status, err := client.Do(r)
+	response, err := client.Do(request)
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
 
-	if status == http.StatusOK {
-		return nil
+	if response.StatusCode != http.StatusOK {
+		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		return fmt.Errorf("%w: %s", err, l.getError(response.Body))
 	}
 
-	err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
-	var errorObj linodeError
-	if jsonErr := json.Unmarshal(content, &errorObj); jsonErr != nil {
-		return fmt.Errorf("%w: %s", err, string(content))
-	}
-	return fmt.Errorf("%w: %s: %s", err, errorObj.Field, errorObj.Reason)
+	return nil
 }
 
-func (l *linode) updateRecord(ctx context.Context, client netlib.Client,
+func (l *linode) updateRecord(ctx context.Context, client *http.Client,
 	domainID, recordID int, ip net.IP) (err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -295,27 +289,35 @@ func (l *linode) updateRecord(ctx context.Context, client netlib.Client,
 		return fmt.Errorf("%w: %s", ErrRequestMarshal, err)
 	}
 
-	r, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
+	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {
 		return err
 	}
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Authorization", "Bearer "+l.token)
-	r.Header.Set("oauth", "domains:read_write")
-	r.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	l.setHeaders(request)
+	setOauth(request, "domains:read_write")
 
-	b, status, err := client.Do(r)
+	response, err := client.Do(request)
 	if err != nil {
 		return err
 	}
-	if status == http.StatusOK {
-		return nil
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		return fmt.Errorf("%w: %s", err, l.getError(response.Body))
 	}
 
-	err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, status)
+	return nil
+}
+
+func (l *linode) getError(body io.Reader) (err error) {
 	var errorObj linodeError
-	if err := json.Unmarshal(b, &errorObj); err != nil {
-		return fmt.Errorf("%w: %s", err, string(b))
+	b, err := ioutil.ReadAll(body)
+	if err != nil {
+		return err
 	}
-	return fmt.Errorf("%w: %s: %s", err, errorObj.Field, errorObj.Reason)
+	if err := json.Unmarshal(b, &errorObj); err != nil {
+		return fmt.Errorf("%s", bodyDataToSingleLine(string(b)))
+	}
+	return fmt.Errorf("%s: %s", errorObj.Field, errorObj.Reason)
 }

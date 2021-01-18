@@ -21,3 +21,11 @@ func setAuthBearer(request *http.Request, token string) {
 func setAuthSSOKey(request *http.Request, key, secret string) {
 	request.Header.Set("Authorization", "sso-key "+key+":"+secret)
 }
+
+func setOauth(request *http.Request, value string) {
+	request.Header.Set("oauth", value)
+}
+
+func setXFilter(request *http.Request, value string) {
+	request.Header.Set("X-Filter", value)
+}

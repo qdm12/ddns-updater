@@ -312,6 +312,19 @@ func (l *linode) updateRecord(ctx context.Context, client *http.Client,
 		return fmt.Errorf("%w: %s", err, l.getError(response.Body))
 	}
 
+	data.IP = ""
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&data); err != nil {
+		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+	}
+
+	newIP := net.ParseIP(data.IP)
+	if newIP == nil {
+		return fmt.Errorf("%w: %s", ErrIPReceivedMalformed, data.IP)
+	} else if !newIP.Equal(ip) {
+		return fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
+	}
+
 	return nil
 }
 

@@ -87,6 +87,7 @@ func (l *linode) HTML() models.HTMLRow {
 
 // Using https://www.linode.com/docs/api/domains/
 func (l *linode) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+	fmt.Println("DEBUG: Getting domain ID...")
 	domainID, err := l.getDomainID(ctx, client)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrGetDomainID, err)
@@ -97,8 +98,10 @@ func (l *linode) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 		recordType = AAAA
 	}
 
+	fmt.Println("DEBUG: Getting record ID for domain ID", domainID)
 	recordID, err := l.getRecordID(ctx, client, domainID, recordType)
 	if errors.Is(err, ErrNotFound) {
+		fmt.Println("DEBUG: Record ID not found, creating it...")
 		err := l.createRecord(ctx, client, domainID, recordType, ip)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %s", ErrCreateRecord, err)
@@ -108,6 +111,7 @@ func (l *linode) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 		return nil, fmt.Errorf("%w: %s", ErrGetRecordID, err)
 	}
 
+	fmt.Println("DEBUG: Updating record ID", recordID)
 	if err := l.updateRecord(ctx, client, domainID, recordID, ip); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrUpdateRecord, err)
 	}

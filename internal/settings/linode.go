@@ -153,15 +153,18 @@ func (l *linode) getDomainID(ctx context.Context, client *http.Client) (domainID
 	}
 
 	decoder := json.NewDecoder(response.Body)
-	var domains []struct {
-		ID     *int   `json:"id,omitempty"`
-		Type   string `json:"type"`
-		Status string `json:"status"`
+	var obj struct {
+		Data []struct {
+			ID     *int   `json:"id,omitempty"`
+			Type   string `json:"type"`
+			Status string `json:"status"`
+		} `json:"data"`
 	}
-	if err := decoder.Decode(&domains); err != nil {
+	if err := decoder.Decode(&obj); err != nil {
 		return 0, err
 	}
 
+	domains := obj.Data
 	switch len(domains) {
 	case 0:
 		return 0, ErrNotFound
@@ -209,15 +212,17 @@ func (l *linode) getRecordID(ctx context.Context, client *http.Client,
 	}
 
 	decoder := json.NewDecoder(response.Body)
-	var domainRecords []struct {
-		ID   int    `json:"id"`
-		Type string `json:"type"`
+	var obj struct {
+		Data []struct {
+			ID   int    `json:"id"`
+			Type string `json:"type"`
+		} `json:"data"`
 	}
-	if err := decoder.Decode(&domainRecords); err != nil {
+	if err := decoder.Decode(&obj); err != nil {
 		return 0, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 
-	for _, domainRecord := range domainRecords {
+	for _, domainRecord := range obj.Data {
 		if domainRecord.Type == recordType {
 			return domainRecord.ID, nil
 		}

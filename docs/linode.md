@@ -30,5 +30,5 @@
 
 ## Domain setup
 
-1. Create a personal access token with the [Linode's guide](https://www.linode.com/docs/products/tools/cloud-manager/guides/cloud-api-keys) and use it as `token`.
+1. Create a personal access token with `domains` set, with read and write privileges, ideally that never expires. You can refer to [@AnujRNair's comment](https://github.com/qdm12/ddns-updater/pull/144#discussion_r559292678) and to [Linode's guide](https://www.linode.com/docs/products/tools/cloud-manager/guides/cloud-api-keys).
 1. The program will create the A or AAAA record for you if it doesn't exist already.

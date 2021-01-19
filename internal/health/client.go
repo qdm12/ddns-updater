@@ -37,14 +37,17 @@ func (c *client) Query(ctx context.Context) error {
 	resp, err := c.Do(req)
 	if err != nil {
 		return err
-	} else if resp.StatusCode == http.StatusOK {
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
 		return nil
 	}
 
 	b, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
 	if err != nil {
 		return fmt.Errorf("%s: %s", resp.Status, err)
 	}
-	return fmt.Errorf("%s (%s)", string(b), err)
+
+	return fmt.Errorf(string(b))
 }

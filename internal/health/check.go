@@ -14,11 +14,7 @@ type lookupIPFunc func(host string) ([]net.IP, error)
 
 func MakeIsHealthy(db data.Database, lookupIP lookupIPFunc, logger logging.Logger) func() error {
 	return func() (err error) {
-		err = isHealthy(db, lookupIP)
-		if err != nil {
-			logger.Warn("unhealthy: %s", err)
-		}
-		return err
+		return isHealthy(db, lookupIP)
 	}
 }
 

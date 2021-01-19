@@ -219,6 +219,7 @@ func (l *linode) getRecordID(ctx context.Context, client *http.Client,
 	var obj struct {
 		Data []struct {
 			ID   int    `json:"id"`
+			Host string `json:"name"`
 			Type string `json:"type"`
 		} `json:"data"`
 	}
@@ -227,7 +228,7 @@ func (l *linode) getRecordID(ctx context.Context, client *http.Client,
 	}
 
 	for _, domainRecord := range obj.Data {
-		if domainRecord.Type == recordType {
+		if domainRecord.Type == recordType && domainRecord.Host == l.host {
 			return domainRecord.ID, nil
 		}
 	}

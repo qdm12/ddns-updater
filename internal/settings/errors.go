@@ -29,6 +29,7 @@ var (
 // Intermediary steps errors.
 var (
 	ErrCreateRecord    = errors.New("cannot create record")
+	ErrGetDomainID     = errors.New("cannot get domain ID")
 	ErrGetRecordID     = errors.New("cannot get record ID")
 	ErrGetRecordInZone = errors.New("cannot get record in zone") // LuaDNS
 	ErrGetZoneID       = errors.New("cannot get zone ID")        // LuaDNS
@@ -48,6 +49,7 @@ var (
 	ErrBannedUserAgent         = errors.New("user agend is banned")
 	ErrConflictingRecord       = errors.New("conflicting record")
 	ErrDNSServerSide           = errors.New("server side DNS error")
+	ErrDomainDisabled          = errors.New("record disabled")
 	ErrDomainIDNotFound        = errors.New("ID not found in domain record")
 	ErrFeatureUnavailable      = errors.New("feature is not available to the user")
 	ErrHostnameNotExists       = errors.New("hostname does not exist")
@@ -61,6 +63,7 @@ var (
 	ErrPrivateIPSent           = errors.New("private IP cannot be routed")
 	ErrRecordNotEditable       = errors.New("record is not editable") // Dreamhost
 	ErrRecordNotFound          = errors.New("record not found")
+	ErrRequestMarshal          = errors.New("cannot marshal request body")
 	ErrUnknownResponse         = errors.New("unknown response received")
 	ErrUnmarshalResponse       = errors.New("cannot unmarshal update response")
 	ErrUnsuccessfulResponse    = errors.New("unsuccessful response")

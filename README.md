@@ -31,6 +31,7 @@
     - Google
     - He.net
     - Infomaniak
+    - Linode
     - LuaDNS
     - Namecheap
     - NoIP
@@ -138,6 +139,7 @@ Check the documentation for your DNS provider:
 - [Google](docs/google.md)
 - [He.net](docs/he.net.md)
 - [Infomaniak](docs/infomaniak.md)
+- [Linode](docs/linode.md)
 - [LuaDNS](docs/luadns.md)
 - [Namecheap](docs/namecheap.md)
 - [NoIP](docs/noip.md)

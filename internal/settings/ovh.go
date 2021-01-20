@@ -24,7 +24,7 @@ type ovh struct {
 	useProviderIP bool
 }
 
-func NewOVH(data json.RawMessage, _, host string, ipVersion models.IPVersion,
+func NewOVH(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
 	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
@@ -35,7 +35,7 @@ func NewOVH(data json.RawMessage, _, host string, ipVersion models.IPVersion,
 		return nil, err
 	}
 	o := &ovh{
-		domain:        "mypersonaldomain.ovh",
+		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
 		dnsLookup:     !noDNSLookup,

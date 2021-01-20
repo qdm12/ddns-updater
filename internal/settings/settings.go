@@ -43,7 +43,7 @@ func toString(domain, host string, provider models.Provider, ipVersion models.IP
 	return fmt.Sprintf("[domain: %s | host: %s | provider: %s | ip: %s]", domain, host, provider, ipVersion)
 }
 
-func bodyToSingleLine(body io.ReadCloser) (s string) {
+func bodyToSingleLine(body io.Reader) (s string) {
 	b, err := ioutil.ReadAll(body)
 	if err != nil {
 		return ""

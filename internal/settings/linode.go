@@ -279,8 +279,13 @@ func (l *linode) createRecord(ctx context.Context, client *http.Client,
 		return fmt.Errorf("%w: %s", err, l.getError(response.Body))
 	}
 
+	buf := bytes.NewBuffer(nil)
+	tee := io.TeeReader(response.Body, buf)
+
+	fmt.Println("DEBUG: Response received: ", bodyToSingleLine(tee))
+
 	var responseData domainRecord
-	decoder := json.NewDecoder(response.Body)
+	decoder := json.NewDecoder(buf)
 	if err := decoder.Decode(&responseData); err != nil {
 		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}

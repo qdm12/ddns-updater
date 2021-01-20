@@ -291,6 +291,7 @@ func (l *linode) createRecord(ctx context.Context, client *http.Client,
 	} else if !newIP.Equal(ip) {
 		return fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
 	}
+	fmt.Println("DEBUG: Record created: ", responseData)
 
 	return nil
 }

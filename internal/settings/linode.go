@@ -244,18 +244,20 @@ func (l *linode) createRecord(ctx context.Context, client *http.Client,
 		Path:   "/v4/domains/" + strconv.Itoa(domainID) + "/records",
 	}
 
-	data := struct {
+	type domainRecord struct {
 		Type string `json:"type"`
 		Host string `json:"name"`
 		IP   string `json:"target"`
-	}{
+	}
+
+	requestData := domainRecord{
 		Type: recordType,
 		Host: l.host,
 		IP:   ip.String(),
 	}
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
-	if err := encoder.Encode(data); err != nil {
+	if err := encoder.Encode(requestData); err != nil {
 		return fmt.Errorf("%w: %s", ErrRequestMarshal, err)
 	}
 
@@ -275,6 +277,19 @@ func (l *linode) createRecord(ctx context.Context, client *http.Client,
 	if response.StatusCode != http.StatusOK {
 		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
 		return fmt.Errorf("%w: %s", err, l.getError(response.Body))
+	}
+
+	var responseData domainRecord
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&responseData); err != nil {
+		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+	}
+
+	newIP := net.ParseIP(responseData.IP)
+	if newIP == nil {
+		return fmt.Errorf("%w: %s", ErrIPReceivedMalformed, responseData.IP)
+	} else if !newIP.Equal(ip) {
+		return fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
 	}
 
 	return nil

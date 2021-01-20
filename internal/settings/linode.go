@@ -261,7 +261,7 @@ func (l *linode) createRecord(ctx context.Context, client *http.Client,
 		return fmt.Errorf("%w: %s", ErrRequestMarshal, err)
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), buffer)
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
 		return err
 	}

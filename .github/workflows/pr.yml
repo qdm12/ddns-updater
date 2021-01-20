@@ -54,7 +54,7 @@ jobs:
         with:
           platforms: linux/amd64
           build-args: |
-            BUILD_DATE={{ steps.vars.outputs.build_date }}
+            BUILD_DATE=${{ steps.vars.outputs.build_date }}
             COMMIT=${{ steps.vars.outputs.commit }}
             VERSION=${{ steps.vars.outputs.version }}
           tags: qmcgaw/ddns-updater:${{ steps.vars.outputs.version }}

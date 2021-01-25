@@ -34,8 +34,7 @@ You might want to use an editor such as [Visual Studio Code](https://code.visual
 ## Build and Run
 
 ```sh
-go build -o app cmd/updater/main.go
-LISTENING_PORT=8000 ./app
+LISTENING_PORT=8000 go run cmd/updater/main.go
 ```
 
 ## Commands available

@@ -10,6 +10,7 @@ var (
 var (
 	ErrEmptyName               = errors.New("empty name")
 	ErrEmptyPassword           = errors.New("empty password")
+	ErrEmptyKey                = errors.New("empty key")
 	ErrEmptyToken              = errors.New("empty token")
 	ErrEmptyTTL                = errors.New("TTL is not set")
 	ErrEmptyUsername           = errors.New("empty username")
@@ -31,6 +32,7 @@ var (
 	ErrCreateRecord    = errors.New("cannot create record")
 	ErrGetDomainID     = errors.New("cannot get domain ID")
 	ErrGetRecordID     = errors.New("cannot get record ID")
+	ErrGetRecordIP     = errors.New("cannot get record IP")
 	ErrGetRecordInZone = errors.New("cannot get record in zone") // LuaDNS
 	ErrGetZoneID       = errors.New("cannot get zone ID")        // LuaDNS
 	ErrListRecords     = errors.New("cannot list records")       // Dreamhost

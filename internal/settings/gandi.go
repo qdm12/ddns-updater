@@ -14,7 +14,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/regex"
 )
 
-const DEFAULT_TTL = 3600
+const DefaultTTL = 3600
 
 type gandi struct {
 	domain    string
@@ -170,11 +170,11 @@ func (d *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	}{
 		Values: [1]string{ip.To4().String()},
 		TTL: func() int {
-			if d.ttl == 0 {
-				return DEFAULT_TTL
-			} else {
-				return d.ttl
+			ttl := DefaultTTL
+			if d.ttl != 0 {
+				ttl = d.ttl
 			}
+			return ttl
 		}(),
 	}
 	if err := encoder.Encode(requestData); err != nil {

@@ -19,7 +19,6 @@ const DefaultTTL = 3600
 type gandi struct {
 	domain    string
 	host      string
-	name      string
 	ttl       int
 	ipVersion models.IPVersion
 	dnsLookup bool
@@ -29,9 +28,8 @@ type gandi struct {
 func NewGandi(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
 	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
-		Name string `json:"name"`
-		Key  string `json:"key"`
-		TTL  int    `json:"ttl"`
+		Key string `json:"key"`
+		TTL int    `json:"ttl"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
@@ -41,7 +39,6 @@ func NewGandi(data json.RawMessage, domain, host string, ipVersion models.IPVers
 		host:      host,
 		ipVersion: ipVersion,
 		dnsLookup: !noDNSLookup,
-		name:      extraSettings.Name,
 		key:       extraSettings.Key,
 		ttl:       extraSettings.TTL,
 	}
@@ -103,7 +100,7 @@ func (d *gandi) getRecordIP(ctx context.Context, recordType string, client *http
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dns.api.gandi.net",
-		Path:   fmt.Sprintf("/api/v5/domains/%s/records/%s/%s", d.domain, d.name, recordType),
+		Path:   fmt.Sprintf("/api/v5/domains/%s/records/%s/%s", d.domain, d.host, recordType),
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
@@ -159,7 +156,7 @@ func (d *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dns.api.gandi.net",
-		Path:   fmt.Sprintf("/api/v5/domains/%s/records/%s/%s", d.domain, d.name, recordType),
+		Path:   fmt.Sprintf("/api/v5/domains/%s/records/%s/%s", d.domain, d.host, recordType),
 	}
 
 	buffer := bytes.NewBuffer(nil)

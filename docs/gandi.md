@@ -12,7 +12,7 @@ This provider uses Gandi v5 API
     {
       "provider": "gandi",
       "domain": "domain.com",
-      "name": "@",
+      "host": "@",
       "key": "key",
       "ttl": 3600,
       "ip_version": "ipv4",
@@ -21,12 +21,16 @@ This provider uses Gandi v5 API
 }
 ```
 
-If no ttl is defined, default is 3600
-
 ### Compulsory parameters
 
 - `"domain"` is your fqdn, for example `subdomain.duckdns.org`
+- `"host"`
 - `"key"`
+
+### Optional parameters
+
+- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
+- `"ttl"` default is `3600`
 
 ## Domain setup
 

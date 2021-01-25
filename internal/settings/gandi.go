@@ -42,72 +42,72 @@ func NewGandi(data json.RawMessage, domain, host string, ipVersion models.IPVers
 		key:       extraSettings.Key,
 		ttl:       extraSettings.TTL,
 	}
-	if err := d.isValid(); err != nil {
+	if err := g.isValid(); err != nil {
 		return nil, err
 	}
 	return d, nil
 }
 
-func (d *gandi) isValid() error {
-	if len(d.key) == 0 {
+func (g *gandi) isValid() error {
+	if len(g.key) == 0 {
 		return ErrEmptyKey
 	}
 	return nil
 }
 
-func (d *gandi) String() string {
-	return toString(d.domain, d.host, constants.GANDI, d.ipVersion)
+func (g *gandi) String() string {
+	return toString(g.domain, g.host, constants.GANDI, g.ipVersion)
 }
 
-func (d *gandi) Domain() string {
-	return d.domain
+func (g *gandi) Domain() string {
+	return g.domain
 }
 
-func (d *gandi) Host() string {
-	return d.host
+func (g *gandi) Host() string {
+	return g.host
 }
 
-func (d *gandi) DNSLookup() bool {
-	return d.dnsLookup
+func (g *gandi) DNSLookup() bool {
+	return g.dnsLookup
 }
 
-func (d *gandi) IPVersion() models.IPVersion {
-	return d.ipVersion
+func (g *gandi) IPVersion() models.IPVersion {
+	return g.ipVersion
 }
 
-func (d *gandi) BuildDomainName() string {
-	return buildDomainName(d.host, d.domain)
+func (g *gandi) BuildDomainName() string {
+	return buildDomainName(g.host, g.domain)
 }
 
-func (d *gandi) HTML() models.HTMLRow {
+func (g *gandi) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", g.BuildDomainName(), g.BuildDomainName())),
+		Host:      models.HTML(g.Host()),
 		Provider:  "<a href=\"https://www.gandi.net/\">gandi</a>",
-		IPVersion: models.HTML(d.ipVersion),
+		IPVersion: models.HTML(g.ipVersion),
 	}
 }
 
-func (d *gandi) setHeaders(request *http.Request) {
+func (g *gandi) setHeaders(request *http.Request) {
 	setUserAgent(request)
 	setContentType(request, "application/json")
 	setAccept(request, "application/json")
-	request.Header.Set("X-Api-Key", d.key)
+	request.Header.Set("X-Api-Key", g.key)
 }
 
-func (d *gandi) getRecordIP(ctx context.Context, recordType string, client *http.Client) (
+func (g *gandi) getRecordIP(ctx context.Context, recordType string, client *http.Client) (
 	recordIP string, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dns.api.gandi.net",
-		Path:   fmt.Sprintf("/api/v5/domains/%s/records/%s/%s", d.domain, d.host, recordType),
+		Path:   fmt.Sprintf("/api/v5/domains/%s/records/%s/%s", g.domain, g.host, recordType),
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return "", err
 	}
-	d.setHeaders(request)
+	g.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -137,13 +137,13 @@ func (d *gandi) getRecordIP(ctx context.Context, recordType string, client *http
 	return result.Values[0], nil
 }
 
-func (d *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (g *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
 	if ip.To4() == nil { // IPv6
 		recordType = AAAA
 	}
 
-	recordIP, err := d.getRecordIP(ctx, recordType, client)
+	recordIP, err := g.getRecordIP(ctx, recordType, client)
 	if err != nil && err != ErrNoResultReceived { // if no ip was defined before, let's proceed with the update
 		return nil, fmt.Errorf("%s: %w", ErrGetRecordIP, err)
 	}
@@ -156,7 +156,7 @@ func (d *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dns.api.gandi.net",
-		Path:   fmt.Sprintf("/api/v5/domains/%s/records/%s/%s", d.domain, d.host, recordType),
+		Path:   fmt.Sprintf("/api/v5/domains/%s/records/%s/%s", g.domain, g.host, recordType),
 	}
 
 	buffer := bytes.NewBuffer(nil)
@@ -168,8 +168,8 @@ func (d *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 		Values: [1]string{ip.To4().String()},
 		TTL: func() int {
 			ttl := DefaultTTL
-			if d.ttl != 0 {
-				ttl = d.ttl
+			if g.ttl != 0 {
+				ttl = g.ttl
 			}
 			return ttl
 		}(),
@@ -182,7 +182,7 @@ func (d *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	if err != nil {
 		return nil, err
 	}
-	d.setHeaders(request)
+	g.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

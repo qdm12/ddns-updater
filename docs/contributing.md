@@ -35,7 +35,7 @@ You might want to use an editor such as [Visual Studio Code](https://code.visual
 
 ```sh
 go build -o app cmd/updater/main.go
-LISTENING_PORT=8000 ./app
+./app
 ```
 
 ## Commands available

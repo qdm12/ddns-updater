@@ -64,7 +64,7 @@ func (g *gandi) Host() string {
 }
 
 func (g *gandi) DNSLookup() bool {
-	return true
+	return false
 }
 
 func (g *gandi) IPVersion() models.IPVersion {
@@ -119,7 +119,7 @@ func (g *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 		TTL    int       `json:"rrset_ttl"`
 	}{
 		Values: [1]string{ipStr},
-		TTL: ttl,
+		TTL:    ttl,
 	}
 	if err := encoder.Encode(requestData); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrRequestEncode, err)

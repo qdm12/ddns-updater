@@ -14,7 +14,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/regex"
 )
 
-
 type gandi struct {
 	domain    string
 	host      string
@@ -32,18 +31,17 @@ func NewGandi(data json.RawMessage, domain, host string, ipVersion models.IPVers
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	d := &gandi{
+	g := &gandi{
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
-		dnsLookup: !noDNSLookup,
 		key:       extraSettings.Key,
 		ttl:       extraSettings.TTL,
 	}
 	if err := g.isValid(); err != nil {
 		return nil, err
 	}
-	return d, nil
+	return g, nil
 }
 
 func (g *gandi) isValid() error {
@@ -93,54 +91,15 @@ func (g *gandi) setHeaders(request *http.Request) {
 	request.Header.Set("X-Api-Key", g.key)
 }
 
-func (g *gandi) getRecordIP(ctx context.Context, recordType string, client *http.Client) (
-	recordIP string, err error) {
-	u := url.URL{
-		Scheme: "https",
-		Host:   "dns.api.gandi.net",
-		Path:   fmt.Sprintf("/api/v5/domains/%s/records/%s/%s", g.domain, g.host, recordType),
-	}
-
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
-	if err != nil {
-		return "", err
-	}
-	g.setHeaders(request)
-
-	response, err := client.Do(request)
-	if err != nil {
-		return "", err
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
-	}
-
-	decoder := json.NewDecoder(response.Body)
-	var result struct {
-		Type   string   `json:"rrset_type"`
-		TTL    int      `json:"rrset_ttl"`
-		Name   string   `json:"rrset_name"`
-		Href   string   `json:"rrset_href"`
-		Values []string `json:"rrset_values"`
-	}
-	if err = decoder.Decode(&result); err != nil {
-		return "", fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
-	}
-	if len(result.Values) == 0 {
-		return "", ErrNoResultReceived
-	}
-	return result.Values[0], nil
-}
-
 func (g *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
+	var ipStr string
 	if ip.To4() == nil { // IPv6
 		recordType = AAAA
+		ipStr = ip.To16().String()
+	} else {
+		ipStr = ip.To4().String()
 	}
-
 
 	u := url.URL{
 		Scheme: "https",
@@ -154,9 +113,9 @@ func (g *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 		Values [1]string `json:"rrset_values"`
 		TTL    int       `json:"rrset_ttl"`
 	}{
-		Values: [1]string{ip.To4().String()},
+		Values: [1]string{ipStr},
 		TTL: func() int {
-			ttl := DefaultTTL
+			ttl := 3600
 			if g.ttl != 0 {
 				ttl = g.ttl
 			}

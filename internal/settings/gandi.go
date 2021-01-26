@@ -143,15 +143,6 @@ func (g *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 		recordType = AAAA
 	}
 
-	recordIP, err := g.getRecordIP(ctx, recordType, client)
-	if err != nil && err != ErrNoResultReceived { // if no ip was defined before, let's proceed with the update
-		return nil, fmt.Errorf("%s: %w", ErrGetRecordIP, err)
-	}
-
-	oldIP := net.ParseIP(recordIP)
-	if ip.Equal(oldIP) { // success, nothing to change
-		return ip, nil
-	}
 
 	u := url.URL{
 		Scheme: "https",

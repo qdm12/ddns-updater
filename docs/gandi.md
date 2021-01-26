@@ -23,7 +23,7 @@ This provider uses Gandi v5 API
 
 ### Compulsory parameters
 
-- `"domain"` is your fqdn, for example `subdomain.duckdns.org`
+- `"domain"`
 - `"host"`
 - `"key"`
 

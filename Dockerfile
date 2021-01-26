@@ -10,19 +10,23 @@ RUN mkdir /tmp/data && \
 
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
 ENV CGO_ENABLED=0
-# g++ is installed for the -race detector in go test
-RUN apk --update add git g++
+RUN apk --update add git
 WORKDIR /tmp/gobuild
-ARG GOLANGCI_LINT_VERSION=v1.33.0
-RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
-    sh -s -- -b /usr/local/bin ${GOLANGCI_LINT_VERSION}
 # Copy repository code and install Go dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 
+FROM --platform=$BUILDPLATFORM base AS test
+ENV CGO_ENABLED=1
+# g++ is installed for the -race detector in go test
+RUN apk --update add g++
+
 FROM --platform=$BUILDPLATFORM base AS lint
+ARG GOLANGCI_LINT_VERSION=v1.33.0
+RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
+    sh -s -- -b /usr/local/bin ${GOLANGCI_LINT_VERSION}
 COPY .golangci.yml ./
 RUN golangci-lint run --timeout=10m
 

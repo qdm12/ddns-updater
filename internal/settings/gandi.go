@@ -14,7 +14,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/regex"
 )
 
-const DefaultTTL = 3600
 
 type gandi struct {
 	domain    string

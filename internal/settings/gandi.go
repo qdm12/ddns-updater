@@ -25,7 +25,7 @@ type gandi struct {
 }
 
 func NewGandi(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	_ bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key string `json:"key"`
 		TTL int    `json:"ttl"`

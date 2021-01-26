@@ -16,8 +16,8 @@ type Matcher interface {
 }
 
 type matcher struct {
-	gandiKey, goDaddyKey, goDaddySecret, duckDNSToken, namecheapPassword, dreamhostKey, cloudflareKey,
-	cloudflareUserServiceKey, dnsOMaticUsername, dnsOMaticPassword *regexp.Regexp
+	goDaddyKey, goDaddySecret, duckDNSToken, namecheapPassword, dreamhostKey, cloudflareKey,
+	cloudflareUserServiceKey, dnsOMaticUsername, dnsOMaticPassword, gandiKey *regexp.Regexp
 }
 
 func NewMatcher() (m Matcher, err error) {

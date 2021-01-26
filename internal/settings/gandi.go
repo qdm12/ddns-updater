@@ -21,7 +21,6 @@ type gandi struct {
 	host      string
 	ttl       int
 	ipVersion models.IPVersion
-	dnsLookup bool
 	key       string
 }
 

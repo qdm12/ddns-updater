@@ -32,7 +32,6 @@ var (
 	ErrCreateRecord    = errors.New("cannot create record")
 	ErrGetDomainID     = errors.New("cannot get domain ID")
 	ErrGetRecordID     = errors.New("cannot get record ID")
-	ErrGetRecordIP     = errors.New("cannot get record IP")
 	ErrGetRecordInZone = errors.New("cannot get record in zone") // LuaDNS
 	ErrGetZoneID       = errors.New("cannot get zone ID")        // LuaDNS
 	ErrListRecords     = errors.New("cannot list records")       // Dreamhost

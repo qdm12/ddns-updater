@@ -66,7 +66,7 @@ func (r *reader) DataDir(currentDir string) (string, error) {
 }
 
 func (r *reader) ListeningPort() (listeningPort uint16, warning string, err error) {
-	return r.env.ListeningPort("LISTENING_PORT")
+	return r.env.ListeningPort("LISTENING_PORT", params.Default("8000"))
 }
 
 func (r *reader) LoggerConfig() (encoding logging.Encoding, level logging.Level, err error) {

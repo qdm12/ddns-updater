@@ -24,7 +24,7 @@ This provider uses Gandi v5 API
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"`
+- `"host"` which can be a subdomain, `@` or a wildcard `*`
 - `"key"`
 
 ### Optional parameters

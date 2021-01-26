@@ -67,7 +67,7 @@ func (g *gandi) Host() string {
 }
 
 func (g *gandi) DNSLookup() bool {
-	return g.dnsLookup
+	return true
 }
 
 func (g *gandi) IPVersion() models.IPVersion {

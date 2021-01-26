@@ -109,18 +109,17 @@ func (g *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
+	const defaultTTL = 3600
+	ttl := defaultTTL
+	if g.ttl != 0 {
+		ttl = g.ttl
+	}
 	requestData := struct {
 		Values [1]string `json:"rrset_values"`
 		TTL    int       `json:"rrset_ttl"`
 	}{
 		Values: [1]string{ipStr},
-		TTL: func() int {
-			ttl := 3600
-			if g.ttl != 0 {
-				ttl = g.ttl
-			}
-			return ttl
-		}(),
+		TTL: ttl,
 	}
 	if err := encoder.Encode(requestData); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrRequestEncode, err)

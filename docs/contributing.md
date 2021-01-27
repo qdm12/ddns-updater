@@ -31,6 +31,13 @@ And finally install [golangci-lint](https://github.com/golangci/golangci-lint#in
 
 You might want to use an editor such as [Visual Studio Code](https://code.visualstudio.com/download) with the [Go extension](https://code.visualstudio.com/docs/languages/go). Working settings are already in [.vscode/settings.json](../.vscode/settings.json).
 
+## Build and Run
+
+```sh
+go build -o app cmd/updater/main.go
+./app
+```
+
 ## Commands available
 
 - Test the code: `go test ./...`

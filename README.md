@@ -27,6 +27,7 @@
     - Dreamhost
     - DuckDNS
     - DynDNS
+    - Gandi
     - GoDaddy
     - Google
     - He.net
@@ -135,6 +136,7 @@ Check the documentation for your DNS provider:
 - [DuckDNS](docs/duckdns.md)
 - [DynDNS](docs/dyndns.md)
 - [DynV6](docs/dynv6.md)
+- [Gandi](docs/gandi.md)
 - [GoDaddy](docs/godaddy.md)
 - [Google](docs/google.md)
 - [He.net](docs/he.net.md)

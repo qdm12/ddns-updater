@@ -14,6 +14,7 @@ const (
 	DYN          models.Provider = "dyn"
 	DYNV6        models.Provider = "dynv6"
 	DREAMHOST    models.Provider = "dreamhost"
+	GANDI        models.Provider = "gandi"
 	GODADDY      models.Provider = "godaddy"
 	GOOGLE       models.Provider = "google"
 	HE           models.Provider = "he"
@@ -40,6 +41,7 @@ func ProviderChoices() []models.Provider {
 		DYN,
 		DYNV6,
 		DREAMHOST,
+		GANDI,
 		GODADDY,
 		GOOGLE,
 		HE,

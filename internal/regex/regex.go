@@ -3,6 +3,7 @@ package regex
 import "regexp"
 
 type Matcher interface {
+	GandiKey(s string) bool
 	GodaddyKey(s string) bool
 	GodaddySecret(s string) bool
 	DuckDNSToken(s string) bool
@@ -15,12 +16,16 @@ type Matcher interface {
 }
 
 type matcher struct {
-	goDaddyKey, goDaddySecret, duckDNSToken, namecheapPassword, dreamhostKey, cloudflareKey, cloudflareUserServiceKey,
-	dnsOMaticUsername, dnsOMaticPassword *regexp.Regexp
+	goDaddyKey, goDaddySecret, duckDNSToken, namecheapPassword, dreamhostKey, cloudflareKey,
+	cloudflareUserServiceKey, dnsOMaticUsername, dnsOMaticPassword, gandiKey *regexp.Regexp
 }
 
 func NewMatcher() (m Matcher, err error) {
 	matcher := &matcher{}
+	matcher.gandiKey, err = regexp.Compile(`^[A-Za-z0-9]{24}$`)
+	if err != nil {
+		return nil, err
+	}
 	matcher.goDaddyKey, err = regexp.Compile(`^[A-Za-z0-9]{8,14}\_[A-Za-z0-9]{22}$`)
 	if err != nil {
 		return nil, err
@@ -60,6 +65,7 @@ func NewMatcher() (m Matcher, err error) {
 	return matcher, nil
 }
 
+func (m *matcher) GandiKey(s string) bool          { return m.gandiKey.MatchString(s) }
 func (m *matcher) GodaddyKey(s string) bool        { return m.goDaddyKey.MatchString(s) }
 func (m *matcher) GodaddySecret(s string) bool     { return m.goDaddySecret.MatchString(s) }
 func (m *matcher) DuckDNSToken(s string) bool      { return m.duckDNSToken.MatchString(s) }

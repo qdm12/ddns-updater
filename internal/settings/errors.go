@@ -10,6 +10,7 @@ var (
 var (
 	ErrEmptyName               = errors.New("empty name")
 	ErrEmptyPassword           = errors.New("empty password")
+	ErrEmptyKey                = errors.New("empty key")
 	ErrEmptyToken              = errors.New("empty token")
 	ErrEmptyTTL                = errors.New("TTL is not set")
 	ErrEmptyUsername           = errors.New("empty username")

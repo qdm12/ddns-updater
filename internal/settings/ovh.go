@@ -201,7 +201,8 @@ func (o *ovh) updateWithZoneDNS(ctx context.Context, client *ovhClient.Client, i
 			SubDomain: subDomain,
 			Target:    ipStr,
 		}
-		if err := client.PostWithContext(ctx, fmt.Sprintf("/domain/zone/%s/record", o.domain), &postRecordsParams, nil); err != nil {
+		if err := client.PostWithContext(ctx, fmt.Sprintf("/domain/zone/%s/record", o.domain),
+			&postRecordsParams, nil); err != nil {
 			return nil, err
 		}
 	} else {

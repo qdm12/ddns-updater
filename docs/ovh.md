@@ -32,7 +32,7 @@
 
 #### OR Using ZoneDNS
 
-- `"api_endpoint"` default is `"ovh-eu"`
+- `"api_endpoint"` default value is `"ovh-eu"`
 - `"app_key"`
 - `"app_secret"`
 - `"consumer_key"`

@@ -2,7 +2,7 @@
 
 *Light container updating DNS A and/or AAAA records periodically for multiple DNS providers*
 
-<a href="https://hub.docker.com/r/qmcgaw/ddns-updater"><img src="https://github.com/qdm12/ddns-updater/raw/master/readme/ddnsgopher.svg" width="200" /></a>
+<img height="200" alt="DDNS Updater logo" src="https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/ddnsgopher.svg?sanitize=true">
 
 [![Build status](https://github.com/qdm12/ddns-updater/workflows/Buildx%20latest/badge.svg)](https://github.com/qdm12/ddns-updater/actions?query=workflow%3A%22Buildx+latest%22)
 [![Docker Pulls](https://img.shields.io/docker/pulls/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)

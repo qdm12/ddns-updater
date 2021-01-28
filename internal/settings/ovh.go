@@ -227,19 +227,17 @@ func (o *ovh) updateWithZoneDNS(client *ovhClient.Client, ip net.IP) (newIP net.
 }
 
 func (o *ovh) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
-	if o.zoneDNS {
-		if len(o.apiEndpoint) == 0 {
-			o.apiEndpoint = "ovh-eu"
-		}
-		ovhClientInstance, _ := ovhClient.NewClient(
-			o.apiEndpoint,
-			o.appKey,
-			o.appSecret,
-			o.consumerKey,
-		)
-		newIP, err = o.updateWithZoneDNS(ovhClientInstance, ip)
-	} else {
-		newIP, err = o.updateWithDynHost(ctx, client, ip)
+	if !o.zoneDNS {
+		return  o.updateWithDynHost(ctx, client, ip)
 	}
-	return newIP, err
+	if len(o.apiEndpoint) == 0 {	
+		o.apiEndpoint = "ovh-eu"
+	}
+	ovhClientInstance, _ := ovhClient.NewClient(
+		o.apiEndpoint,
+		o.appKey,
+		o.appSecret,
+		o.consumerKey,
+	)
+	return o.updateWithZoneDNS(ovhClientInstance, ip)
 }

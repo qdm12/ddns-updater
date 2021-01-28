@@ -213,8 +213,8 @@ func (o *ovh) updateWithZoneDNS(ctx context.Context, client *ovhClient.Client, i
 			Target: ipStr,
 		}
 		for _, recordID := range recordIDs {
-			if err := client.PutWithContext(ctx, fmt.Sprintf("/domain/zone/%s/record/%d", o.domain, recordID),
-				&putRecordsParams, nil); err != nil {
+			url := fmt.Sprintf("/domain/zone/%s/record/%d", o.domain, recordID)
+			if err := client.PutWithContext(ctx, url, &putRecordsParams, nil); err != nil {
 				return nil, err
 			}
 		}

@@ -188,7 +188,7 @@ func (o *ovh) updateWithZoneDNS(client *ovhClient.Client, ip net.IP) (newIP net.
 	var recordIDs []uint64
 	if err := client.Get(fmt.Sprintf("/domain/zone/%s/record?fieldType=%s&subDomain=%s", o.domain,
 		recordType, subDomain), &recordIDs); err != nil {
-		return ip, err
+		return nil, err
 	}
 	if len(recordIDs) == 0 {
 		// create a new record

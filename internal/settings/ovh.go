@@ -220,7 +220,7 @@ func (o *ovh) updateWithZoneDNS(ctx context.Context, client *ovhClient.Client, i
 		}
 	}
 
-	url := fmt.Sprintf("/domain/zone/%s/refresh", o.domain)
+	url = fmt.Sprintf("/domain/zone/%s/refresh", o.domain)
 	if err := client.PostWithContext(ctx, url, nil, nil); err != nil {
 		return nil, err
 	}

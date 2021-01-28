@@ -186,8 +186,8 @@ func (o *ovh) updateWithZoneDNS(ctx context.Context, client *ovhClient.Client, i
 	}
 	// get existing records
 	var recordIDs []uint64
-	if err := client.GetWithContext(ctx, fmt.Sprintf("/domain/zone/%s/record?fieldType=%s&subDomain=%s", o.domain,
-		recordType, subDomain), &recordIDs); err != nil {
+	url := fmt.Sprintf("/domain/zone/%s/record?fieldType=%s&subDomain=%s", o.domain, recordType, subDomain)
+	if err := client.GetWithContext(ctx, url, &recordIDs); err != nil {
 		return nil, err
 	}
 	if len(recordIDs) == 0 {

@@ -47,10 +47,5 @@ The ZoneDNS implementation allows you to update any record name including *.your
 
 ## Domain setup
 
-If you are using DynHost:
-
-https://docs.ovh.com/ie/en/domains/hosting_dynhost/
-
-If you are using the ZoneDNS api:
-
-https://docs.ovh.com/gb/en/customer/first-steps-with-ovh-api/
+- If you use DynHost: [docs.ovh.com/ie/en/domains/hosting_dynhost](https://docs.ovh.com/ie/en/domains/hosting_dynhost/)
+- If you use the ZoneDNS API: [docs.ovh.com/gb/en/customer/first-steps-with-ovh-api](https://docs.ovh.com/gb/en/customer/first-steps-with-ovh-api/)

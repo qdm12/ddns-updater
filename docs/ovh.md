@@ -43,7 +43,7 @@ The ZoneDNS implementation allows you to update any record name including *.your
 
 - `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 - `"provider_ip"` can be set to `true` to let your DNS provider determine your IPv4 address (and/or IPv6 address) automatically when you send an update request, without sending the new IP address detected by the program in the request.
-- `"zone_dns"` select between two modes, OVH's dynamic hosting service (`false`) or OVH's API (`true`). Default is `false`
+- `"mode"` select between two modes, OVH's dynamic hosting service (`"dynamic"`) or OVH's API (`"api"`). Default is `"dynamic"`
 
 ## Domain setup
 

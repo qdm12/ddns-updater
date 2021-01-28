@@ -23,7 +23,7 @@ type ovh struct {
 	username      string
 	password      string
 	useProviderIP bool
-	zoneDNS       bool
+	mode          string
 	apiEndpoint   string
 	appKey        string
 	appSecret     string
@@ -36,7 +36,7 @@ func NewOVH(data json.RawMessage, domain, host string, ipVersion models.IPVersio
 		Username      string `json:"username"`
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`
-		ZoneDNS       bool   `json:"zone_dns"`
+		Mode          string `json:"mode"`
 		APIEndpoint   string `json:"api_endpoint"`
 		AppKey        string `json:"app_key"`
 		AppSecret     string `json:"app_secret"`
@@ -53,7 +53,7 @@ func NewOVH(data json.RawMessage, domain, host string, ipVersion models.IPVersio
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
-		zoneDNS:       extraSettings.ZoneDNS,
+		mode:          extraSettings.Mode,
 		apiEndpoint:   extraSettings.APIEndpoint,
 		appKey:        extraSettings.AppKey,
 		appSecret:     extraSettings.AppSecret,
@@ -66,7 +66,7 @@ func NewOVH(data json.RawMessage, domain, host string, ipVersion models.IPVersio
 }
 
 func (o *ovh) isValid() error {
-	if o.zoneDNS {
+	if o.mode == "api" {
 		switch {
 		case len(o.appKey) == 0:
 			return ErrEmptyAppKey
@@ -170,7 +170,7 @@ func (o *ovh) updateWithDynHost(ctx context.Context, client *http.Client, ip net
 	}
 }
 
-func (o *ovh) updateWithZoneDNS(client *ovhClient.Client, ip net.IP) (newIP net.IP, err error) {
+func (o *ovh) updateWithZoneDNS(ctx context.Context, client *ovhClient.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := A
 	var ipStr string
 	if ip.To4() == nil { // IPv6
@@ -186,7 +186,7 @@ func (o *ovh) updateWithZoneDNS(client *ovhClient.Client, ip net.IP) (newIP net.
 	}
 	// get existing records
 	var recordIDs []uint64
-	if err := client.Get(fmt.Sprintf("/domain/zone/%s/record?fieldType=%s&subDomain=%s", o.domain,
+	if err := client.GetWithContext(ctx, fmt.Sprintf("/domain/zone/%s/record?fieldType=%s&subDomain=%s", o.domain,
 		recordType, subDomain), &recordIDs); err != nil {
 		return nil, err
 	}
@@ -201,8 +201,8 @@ func (o *ovh) updateWithZoneDNS(client *ovhClient.Client, ip net.IP) (newIP net.
 			SubDomain: subDomain,
 			Target:    ipStr,
 		}
-		if err := client.Post(fmt.Sprintf("/domain/zone/%s/record", o.domain), &postRecordsParams, nil); err != nil {
-			return ip, err
+		if err := client.PostWithContext(ctx, fmt.Sprintf("/domain/zone/%s/record", o.domain), &postRecordsParams, nil); err != nil {
+			return nil, err
 		}
 	} else {
 		// update existing record
@@ -212,32 +212,37 @@ func (o *ovh) updateWithZoneDNS(client *ovhClient.Client, ip net.IP) (newIP net.
 			Target: ipStr,
 		}
 		for _, recordID := range recordIDs {
-			if err := client.Put(fmt.Sprintf("/domain/zone/%s/record/%d", o.domain, recordID),
+			if err := client.PutWithContext(ctx, fmt.Sprintf("/domain/zone/%s/record/%d", o.domain, recordID),
 				&putRecordsParams, nil); err != nil {
-				return ip, err
+				return nil, err
 			}
 		}
 	}
 
-	if err := client.Post(fmt.Sprintf("/domain/zone/%s/refresh", o.domain), nil, nil); err != nil {
-		return ip, err
+	if err := client.PostWithContext(ctx, fmt.Sprintf("/domain/zone/%s/refresh", o.domain), nil, nil); err != nil {
+		return nil, err
 	}
 
 	return ip, nil
 }
 
 func (o *ovh) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
-	if !o.zoneDNS {
-		return  o.updateWithDynHost(ctx, client, ip)
+	if o.mode != "api" {
+		return o.updateWithDynHost(ctx, client, ip)
 	}
-	if len(o.apiEndpoint) == 0 {	
-		o.apiEndpoint = "ovh-eu"
+	const defaultEndpoint = "ovh-eu"
+	apiEndpoint := defaultEndpoint
+	if len(o.apiEndpoint) > 0 {
+		apiEndpoint = o.apiEndpoint
 	}
-	ovhClientInstance, _ := ovhClient.NewClient(
-		o.apiEndpoint,
+	ovhClientInstance, err := ovhClient.NewClient(
+		apiEndpoint,
 		o.appKey,
 		o.appSecret,
 		o.consumerKey,
 	)
-	return o.updateWithZoneDNS(ovhClientInstance, ip)
+	if err != nil {
+		return nil, err
+	}
+	return o.updateWithZoneDNS(ctx, ovhClientInstance, ip)
 }

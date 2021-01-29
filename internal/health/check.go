@@ -24,7 +24,7 @@ func isHealthy(db data.Database, lookupIP lookupIPFunc) (err error) {
 	for _, record := range records {
 		if record.Status == constants.FAIL {
 			return fmt.Errorf("%s", record.String())
-		} else if !record.Settings.DNSLookup() {
+		} else if record.Settings.Proxied() {
 			continue
 		}
 		hostname := record.Settings.BuildDomainName()

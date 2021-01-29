@@ -18,14 +18,13 @@ type donDominio struct {
 	domain    string
 	host      string
 	ipVersion models.IPVersion
-	dnsLookup bool
 	username  string
 	password  string
 	name      string
 }
 
 func NewDonDominio(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -41,7 +40,6 @@ func NewDonDominio(data json.RawMessage, domain, host string, ipVersion models.I
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
-		dnsLookup: !noDNSLookup,
 		username:  extraSettings.Username,
 		password:  extraSettings.Password,
 		name:      extraSettings.Name,
@@ -78,12 +76,12 @@ func (d *donDominio) Host() string {
 	return d.host
 }
 
-func (d *donDominio) DNSLookup() bool {
-	return d.dnsLookup
-}
-
 func (d *donDominio) IPVersion() models.IPVersion {
 	return d.ipVersion
+}
+
+func (d *donDominio) Proxied() bool {
+	return false
 }
 
 func (d *donDominio) BuildDomainName() string {

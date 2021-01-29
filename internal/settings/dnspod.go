@@ -18,12 +18,11 @@ type dnspod struct {
 	domain    string
 	host      string
 	ipVersion models.IPVersion
-	dnsLookup bool
 	token     string
 }
 
 func NewDNSPod(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
@@ -34,7 +33,6 @@ func NewDNSPod(data json.RawMessage, domain, host string, ipVersion models.IPVer
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
-		dnsLookup: !noDNSLookup,
 		token:     extraSettings.Token,
 	}
 	if err := d.isValid(); err != nil {
@@ -66,8 +64,8 @@ func (d *dnspod) IPVersion() models.IPVersion {
 	return d.ipVersion
 }
 
-func (d *dnspod) DNSLookup() bool {
-	return d.dnsLookup
+func (d *dnspod) Proxied() bool {
+	return false
 }
 
 func (d *dnspod) BuildDomainName() string {

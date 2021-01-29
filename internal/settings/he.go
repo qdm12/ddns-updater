@@ -20,13 +20,12 @@ type he struct {
 	domain        string
 	host          string
 	ipVersion     models.IPVersion
-	dnsLookup     bool
 	password      string
 	useProviderIP bool
 }
 
 func NewHe(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -38,7 +37,6 @@ func NewHe(data json.RawMessage, domain, host string, ipVersion models.IPVersion
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
-		dnsLookup:     !noDNSLookup,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
@@ -67,12 +65,12 @@ func (h *he) Host() string {
 	return h.host
 }
 
-func (h *he) DNSLookup() bool {
-	return h.dnsLookup
-}
-
 func (h *he) IPVersion() models.IPVersion {
 	return h.ipVersion
+}
+
+func (h *he) Proxied() bool {
+	return false
 }
 
 func (h *he) BuildDomainName() string {

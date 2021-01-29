@@ -18,14 +18,13 @@ import (
 type duckdns struct {
 	host          string
 	ipVersion     models.IPVersion
-	dnsLookup     bool
 	token         string
 	useProviderIP bool
 	matcher       regex.Matcher
 }
 
 func NewDuckdns(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Token         string `json:"token"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -36,7 +35,6 @@ func NewDuckdns(data json.RawMessage, domain, host string, ipVersion models.IPVe
 	d := &duckdns{
 		host:          host,
 		ipVersion:     ipVersion,
-		dnsLookup:     !noDNSLookup,
 		token:         extraSettings.Token,
 		useProviderIP: extraSettings.UseProviderIP,
 		matcher:       matcher,
@@ -74,8 +72,8 @@ func (d *duckdns) IPVersion() models.IPVersion {
 	return d.ipVersion
 }
 
-func (d *duckdns) DNSLookup() bool {
-	return d.dnsLookup
+func (d *duckdns) Proxied() bool {
+	return false
 }
 
 func (d *duckdns) BuildDomainName() string {

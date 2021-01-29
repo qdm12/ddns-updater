@@ -19,14 +19,13 @@ type ddnss struct {
 	domain        string
 	host          string
 	ipVersion     models.IPVersion
-	dnsLookup     bool
 	username      string
 	password      string
 	useProviderIP bool
 }
 
 func NewDdnss(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -39,7 +38,6 @@ func NewDdnss(data json.RawMessage, domain, host string, ipVersion models.IPVers
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
-		dnsLookup:     !noDNSLookup,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
@@ -78,8 +76,8 @@ func (d *ddnss) IPVersion() models.IPVersion {
 	return d.ipVersion
 }
 
-func (d *ddnss) DNSLookup() bool {
-	return d.dnsLookup
+func (d *ddnss) Proxied() bool {
+	return false
 }
 
 func (d *ddnss) BuildDomainName() string {

@@ -20,14 +20,13 @@ type google struct {
 	domain        string
 	host          string
 	ipVersion     models.IPVersion
-	dnsLookup     bool
 	username      string
 	password      string
 	useProviderIP bool
 }
 
 func NewGoogle(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -40,7 +39,6 @@ func NewGoogle(data json.RawMessage, domain, host string, ipVersion models.IPVer
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
-		dnsLookup:     !noDNSLookup,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
@@ -73,12 +71,12 @@ func (g *google) Host() string {
 	return g.host
 }
 
-func (g *google) DNSLookup() bool {
-	return g.dnsLookup
-}
-
 func (g *google) IPVersion() models.IPVersion {
 	return g.ipVersion
+}
+
+func (g *google) Proxied() bool {
+	return false
 }
 
 func (g *google) BuildDomainName() string {

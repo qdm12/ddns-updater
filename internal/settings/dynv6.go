@@ -16,13 +16,12 @@ type dynV6 struct {
 	domain        string
 	host          string
 	ipVersion     models.IPVersion
-	dnsLookup     bool
 	token         string
 	useProviderIP bool
 }
 
 func NewDynV6(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Token         string `json:"token"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -34,7 +33,6 @@ func NewDynV6(data json.RawMessage, domain, host string, ipVersion models.IPVers
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
-		dnsLookup:     !noDNSLookup,
 		token:         extraSettings.Token,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
@@ -70,8 +68,8 @@ func (d *dynV6) IPVersion() models.IPVersion {
 	return d.ipVersion
 }
 
-func (d *dynV6) DNSLookup() bool {
-	return d.dnsLookup
+func (d *dynV6) Proxied() bool {
+	return false
 }
 
 func (d *dynV6) BuildDomainName() string {

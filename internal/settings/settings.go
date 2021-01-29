@@ -20,13 +20,13 @@ type Settings interface {
 	Host() string
 	BuildDomainName() string
 	HTML() models.HTMLRow
-	DNSLookup() bool
+	Proxied() bool
 	IPVersion() models.IPVersion
 	Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error)
 }
 
 type Constructor func(data json.RawMessage, domain string, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error)
+	matcher regex.Matcher) (s Settings, err error)
 
 func buildDomainName(host, domain string) string {
 	switch host {

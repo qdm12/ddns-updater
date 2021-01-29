@@ -19,14 +19,13 @@ type infomaniak struct {
 	domain        string
 	host          string
 	ipVersion     models.IPVersion
-	dnsLookup     bool
 	username      string
 	password      string
 	useProviderIP bool
 }
 
 func NewInfomaniak(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -39,7 +38,6 @@ func NewInfomaniak(data json.RawMessage, domain, host string, ipVersion models.I
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
-		dnsLookup:     !noDNSLookup,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
@@ -78,8 +76,8 @@ func (i *infomaniak) IPVersion() models.IPVersion {
 	return i.ipVersion
 }
 
-func (i *infomaniak) DNSLookup() bool {
-	return i.dnsLookup
+func (i *infomaniak) Proxied() bool {
+	return false
 }
 
 func (i *infomaniak) BuildDomainName() string {

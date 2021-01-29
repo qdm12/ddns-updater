@@ -20,7 +20,6 @@ type cloudflare struct {
 	domain         string
 	host           string
 	ipVersion      models.IPVersion
-	dnsLookup      bool
 	key            string
 	token          string
 	email          string
@@ -32,7 +31,7 @@ type cloudflare struct {
 }
 
 func NewCloudflare(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key            string `json:"key"`
 		Token          string `json:"token"`
@@ -49,7 +48,6 @@ func NewCloudflare(data json.RawMessage, domain, host string, ipVersion models.I
 		domain:         domain,
 		host:           host,
 		ipVersion:      ipVersion,
-		dnsLookup:      !noDNSLookup,
 		key:            extraSettings.Key,
 		token:          extraSettings.Token,
 		email:          extraSettings.Email,
@@ -105,8 +103,8 @@ func (c *cloudflare) IPVersion() models.IPVersion {
 	return c.ipVersion
 }
 
-func (c *cloudflare) DNSLookup() bool {
-	return c.dnsLookup
+func (c *cloudflare) Proxied() bool {
+	return c.proxied
 }
 
 func (c *cloudflare) BuildDomainName() string {

@@ -45,6 +45,7 @@ func NewDNSOMatic(data json.RawMessage, domain, host string, ipVersion models.IP
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
+		matcher:       matcher,
 	}
 	if err := d.isValid(); err != nil {
 		return nil, err

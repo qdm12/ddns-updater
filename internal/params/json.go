@@ -112,6 +112,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, 
 	}
 	var settingsConstructor settings.Constructor
 	switch provider {
+	case constants.AZURE:
+		settingsConstructor = settings.NewAzure
 	case constants.CLOUDFLARE:
 		settingsConstructor = settings.NewCloudflare
 	case constants.DIGITALOCEAN:

@@ -18,6 +18,7 @@
 ## Features
 
 - Updates periodically A records for different DNS providers:
+    - Azure
     - Cloudflare
     - DDNSS.de
     - DigitalOcean
@@ -126,6 +127,7 @@ Start by having the following content in *config.json*, or in your `CONFIG` envi
 For each setting, you need to fill in parameters.
 Check the documentation for your DNS provider:
 
+- [Azure](docs/azure.md)
 - [Cloudflare](docs/cloudflare.md)
 - [DDNSS.de](docs/ddnss.de.md)
 - [DigitalOcean](docs/digitalocean.md)

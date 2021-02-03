@@ -5,11 +5,14 @@ import (
 )
 
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
-	// TODO make RESTful = blocking and not fire and forget
-	// By using two channels or abstracting it in a function call
-	// which waits for an update cycle to finish and returns an error or nil.
-	// Then we can return the result of the update to the user via HTTP.
-	h.forceUpdate <- struct{}{}
+	start := h.timeNow()
+	errors := h.runner.ForceUpdate()
+	duration := h.timeNow().Sub(start)
+	if len(errors) > 0 {
+		httpErrors(w, http.StatusInternalServerError, errors)
+		return
+	}
 	w.WriteHeader(http.StatusAccepted)
-	_, _ = w.Write([]byte(`<b>Update launched</b>`))
+	message := "All records updated successfully in " + duration.String()
+	_, _ = w.Write([]byte(message))
 }

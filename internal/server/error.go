@@ -17,3 +17,19 @@ func httpError(w http.ResponseWriter, status int, errString string) {
 	body := errJSONWrapper{Error: errString}
 	_ = json.NewEncoder(w).Encode(body)
 }
+
+type errorsJSONWrapper struct {
+	Errors []string `json:"errors"`
+}
+
+func httpErrors(w http.ResponseWriter, status int, errors []error) {
+	w.WriteHeader(status)
+
+	errs := make([]string, len(errors))
+	for i := range errors {
+		errs[i] = errors[i].Error()
+	}
+
+	body := errorsJSONWrapper{Errors: errs}
+	_ = json.NewEncoder(w).Encode(body)
+}

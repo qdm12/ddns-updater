@@ -8,26 +8,27 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/qdm12/ddns-updater/internal/data"
+	"github.com/qdm12/ddns-updater/internal/update"
 )
 
 type handlers struct {
 	// Objects
-	forceUpdate   chan<- struct{}
 	db            data.Database
+	runner        update.Runner
 	indexTemplate *template.Template
 	// Mockable functions
 	timeNow func() time.Time
 }
 
-func newHandler(rootURL, uiDir string, db data.Database, forceUpdate chan<- struct{}) http.Handler {
+func newHandler(rootURL, uiDir string, db data.Database, runner update.Runner) http.Handler {
 	indexTemplate := template.Must(template.ParseFiles(uiDir + "/index.html"))
 
 	handlers := &handlers{
 		db:            db,
 		indexTemplate: indexTemplate,
 		// TODO build information
-		timeNow:     time.Now,
-		forceUpdate: forceUpdate,
+		timeNow: time.Now,
+		runner:  runner,
 	}
 
 	router := chi.NewRouter()

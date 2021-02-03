@@ -22,7 +22,7 @@ type server struct {
 
 func New(address, rootURL, uiDir string, db data.Database, logger logging.Logger,
 	forceUpdate chan<- struct{}) Server {
-	handler := newHandler(rootURL, uiDir, db, logger, forceUpdate)
+	handler := newHandler(rootURL, uiDir, db, forceUpdate)
 	return &server{
 		address: address,
 		logger:  logger,

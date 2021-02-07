@@ -23,7 +23,7 @@
 
 - `"domain"`
 - `"host"` is your host and can be a subdomain or `"@"`
-- `"user"`
+- `"username"`
 - `"password"`
 
 ### Optional parameters

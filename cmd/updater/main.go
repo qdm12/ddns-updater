@@ -152,7 +152,10 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	defer cancel()
 
 	go runner.Run(ctx, p.period)
-	runner.ForceUpdate(ctx)
+
+	// note: errors are logged within the goroutine,
+	// no need to collect the resulting errors.
+	go runner.ForceUpdate(ctx)
 
 	const healthServerAddr = "127.0.0.1:9999"
 	isHealthy := health.MakeIsHealthy(db, net.LookupIP, logger)

@@ -152,7 +152,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	defer cancel()
 
 	go runner.Run(ctx, p.period)
-	runner.ForceUpdate()
+	runner.ForceUpdate(ctx)
 
 	const healthServerAddr = "127.0.0.1:9999"
 	isHealthy := health.MakeIsHealthy(db, net.LookupIP, logger)
@@ -164,7 +164,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 
 	address := fmt.Sprintf("0.0.0.0:%d", p.listeningPort)
 	uiDir := p.dir + "/ui"
-	server := server.New(address, p.rootURL, uiDir, db, logger.WithPrefix("http server: "), runner)
+	server := server.New(ctx, address, p.rootURL, uiDir, db, logger.WithPrefix("http server: "), runner)
 	wg.Add(1)
 	go server.Run(ctx, wg)
 	notify(1, fmt.Sprintf("Launched with %d records to watch", len(records)))

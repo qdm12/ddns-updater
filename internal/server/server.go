@@ -21,9 +21,9 @@ type server struct {
 	handler http.Handler
 }
 
-func New(address, rootURL, uiDir string, db data.Database, logger logging.Logger,
+func New(ctx context.Context, address, rootURL, uiDir string, db data.Database, logger logging.Logger,
 	runner update.Runner) Server {
-	handler := newHandler(rootURL, uiDir, db, runner)
+	handler := newHandler(ctx, rootURL, uiDir, db, runner)
 	return &server{
 		address: address,
 		logger:  logger,

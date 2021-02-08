@@ -14,7 +14,7 @@ import (
 
 type Runner interface {
 	Run(ctx context.Context, period time.Duration)
-	ForceUpdate() []error
+	ForceUpdate(ctx context.Context) []error
 }
 
 type runner struct {
@@ -256,7 +256,13 @@ func (r *runner) Run(ctx context.Context, period time.Duration) {
 	}
 }
 
-func (r *runner) ForceUpdate() []error {
+func (r *runner) ForceUpdate(ctx context.Context) (errs []error) {
 	r.force <- struct{}{}
-	return <-r.forceResult
+
+	select {
+	case errs = <-r.forceResult:
+	case <-ctx.Done():
+		errs = []error{ctx.Err()}
+	}
+	return errs
 }

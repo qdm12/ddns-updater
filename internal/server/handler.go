@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"text/template"
 	"time"
@@ -12,6 +13,7 @@ import (
 )
 
 type handlers struct {
+	ctx context.Context
 	// Objects
 	db            data.Database
 	runner        update.Runner
@@ -20,10 +22,12 @@ type handlers struct {
 	timeNow func() time.Time
 }
 
-func newHandler(rootURL, uiDir string, db data.Database, runner update.Runner) http.Handler {
+func newHandler(ctx context.Context, rootURL, uiDir string,
+	db data.Database, runner update.Runner) http.Handler {
 	indexTemplate := template.Must(template.ParseFiles(uiDir + "/index.html"))
 
 	handlers := &handlers{
+		ctx:           ctx,
 		db:            db,
 		indexTemplate: indexTemplate,
 		// TODO build information

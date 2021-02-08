@@ -6,7 +6,7 @@ import (
 
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	start := h.timeNow()
-	errors := h.runner.ForceUpdate()
+	errors := h.runner.ForceUpdate(h.ctx)
 	duration := h.timeNow().Sub(start)
 	if len(errors) > 0 {
 		httpErrors(w, http.StatusInternalServerError, errors)

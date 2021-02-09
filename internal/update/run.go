@@ -13,12 +13,15 @@ import (
 )
 
 type Runner interface {
-	Run(ctx context.Context, period time.Duration, force <-chan struct{})
+	Run(ctx context.Context, period time.Duration)
+	ForceUpdate(ctx context.Context) []error
 }
 
 type runner struct {
 	db          data.Database
 	updater     Updater
+	force       chan struct{}
+	forceResult chan []error
 	cooldown    time.Duration
 	netLookupIP func(hostname string) ([]net.IP, error)
 	ipGetter    IPGetter
@@ -31,6 +34,8 @@ func NewRunner(db data.Database, updater Updater, ipGetter IPGetter,
 	return &runner{
 		db:          db,
 		updater:     updater,
+		force:       make(chan struct{}),
+		forceResult: make(chan []error),
 		cooldown:    cooldown,
 		netLookupIP: net.LookupIP,
 		ipGetter:    ipGetter,
@@ -201,7 +206,7 @@ func setInitialUpToDateStatus(db data.Database, id int, updateIP net.IP, now tim
 	return db.Update(id, record)
 }
 
-func (r *runner) updateNecessary(ctx context.Context) {
+func (r *runner) updateNecessary(ctx context.Context) (errors []error) {
 	records := r.db.SelectAll()
 	doIP, doIPv4, doIPv6 := doIPVersion(records)
 	ip, ipv4, ipv6, errors := r.getNewIPs(ctx, doIP, doIPv4, doIPv6)
@@ -219,6 +224,7 @@ func (r *runner) updateNecessary(ctx context.Context) {
 		}
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
 		if err := setInitialUpToDateStatus(r.db, id, updateIP, now); err != nil {
+			errors = append(errors, err)
 			r.logger.Error(err)
 		}
 	}
@@ -227,22 +233,36 @@ func (r *runner) updateNecessary(ctx context.Context) {
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
 		r.logger.Info("Updating record %s to use %s", record.Settings, updateIP)
 		if err := r.updater.Update(ctx, id, updateIP, r.timeNow()); err != nil {
+			errors = append(errors, err)
 			r.logger.Error(err)
 		}
 	}
+
+	return errors
 }
 
-func (r *runner) Run(ctx context.Context, period time.Duration, force <-chan struct{}) {
+func (r *runner) Run(ctx context.Context, period time.Duration) {
 	ticker := time.NewTicker(period)
 	for {
 		select {
 		case <-ticker.C:
 			r.updateNecessary(ctx)
-		case <-force:
-			r.updateNecessary(ctx)
+		case <-r.force:
+			r.forceResult <- r.updateNecessary(ctx)
 		case <-ctx.Done():
 			ticker.Stop()
 			return
 		}
 	}
+}
+
+func (r *runner) ForceUpdate(ctx context.Context) (errs []error) {
+	r.force <- struct{}{}
+
+	select {
+	case errs = <-r.forceResult:
+	case <-ctx.Done():
+		errs = []error{ctx.Err()}
+	}
+	return errs
 }

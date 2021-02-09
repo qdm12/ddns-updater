@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/data"
+	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/golibs/logging"
 )
 
@@ -20,9 +21,9 @@ type server struct {
 	handler http.Handler
 }
 
-func New(address, rootURL, uiDir string, db data.Database, logger logging.Logger,
-	forceUpdate chan<- struct{}) Server {
-	handler := newHandler(rootURL, uiDir, db, logger, forceUpdate)
+func New(ctx context.Context, address, rootURL, uiDir string, db data.Database, logger logging.Logger,
+	runner update.Runner) Server {
+	handler := newHandler(ctx, rootURL, uiDir, db, runner)
 	return &server{
 		address: address,
 		logger:  logger,

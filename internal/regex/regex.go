@@ -26,7 +26,7 @@ func NewMatcher() (m Matcher, err error) {
 	if err != nil {
 		return nil, err
 	}
-	matcher.goDaddyKey, err = regexp.Compile(`^[A-Za-z0-9]{8,14}\_[A-Za-z0-9]{22}$`)
+	matcher.goDaddyKey, err = regexp.Compile(`^[A-Za-z0-9]{8,14}\_[A-Za-z0-9]{21,22}$`)
 	if err != nil {
 		return nil, err
 	}

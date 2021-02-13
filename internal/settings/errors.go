@@ -24,7 +24,6 @@ var (
 	ErrMalformedEmail          = errors.New("malformed email address")
 	ErrMalformedKey            = errors.New("malformed key")
 	ErrMalformedPassword       = errors.New("malformed password")
-	ErrMalformedSecret         = errors.New("malformed secret")
 	ErrMalformedToken          = errors.New("malformed token")
 	ErrMalformedUsername       = errors.New("malformed username")
 	ErrMalformedUserServiceKey = errors.New("malformed user service key")

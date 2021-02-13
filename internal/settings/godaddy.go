@@ -53,8 +53,8 @@ func (g *godaddy) isValid() error {
 	switch {
 	case !g.matcher.GodaddyKey(g.key):
 		return ErrMalformedKey
-	case !g.matcher.GodaddySecret(g.secret):
-		return ErrMalformedSecret
+	case len(g.secret) == 0:
+		return ErrEmptySecret
 	}
 	return nil
 }

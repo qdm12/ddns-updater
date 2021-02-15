@@ -170,9 +170,9 @@ Note that:
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
 | `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file |
-| `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`.
-| `LOG_ENCODING` | `console` | Format of logging, `json` or `console` |
+| `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`. |
 | `LOG_LEVEL` | `info` | Level of logging, `info`, `warning` or `error` |
+| `LOG_CALLER` | `hidden` | Show caller per log line, `hidden` or `short` |
 | `GOTIFY_URL` |  | (optional) HTTP(s) URL to your Gotify server |
 | `GOTIFY_TOKEN` |  | (optional) Token to access your Gotify server |
 | `TZ` | | Timezone to have accurate times, i.e. `America/Montreal` |

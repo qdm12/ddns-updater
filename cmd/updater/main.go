@@ -70,12 +70,15 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 
 	fmt.Println(splash.Splash(buildInfo))
 
-	logger, err := setupLogger()
+	// Setup logger
+	paramsReader := params.NewReader(logging.New(logging.StdLog)) // use a temporary logger
+	logLevel, logCaller, err := paramsReader.LoggerConfig()
 	if err != nil {
 		fmt.Println(err)
 		return 1
 	}
-	paramsReader := params.NewReader(logger)
+	logger := logging.New(logging.StdLog, logging.SetLevel(logLevel), logging.SetCaller(logCaller))
+	paramsReader = params.NewReader(logger)
 
 	notify, err := setupGotify(paramsReader, logger)
 	if err != nil {
@@ -160,19 +163,20 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	const healthServerAddr = "127.0.0.1:9999"
 	isHealthy := health.MakeIsHealthy(db, net.LookupIP, logger)
 	healthServer := health.NewServer(healthServerAddr,
-		logger.WithPrefix("healthcheck server: "),
+		logger.NewChild(logging.SetPrefix("healthcheck server: ")),
 		isHealthy)
 	wg.Add(1)
 	go healthServer.Run(ctx, wg)
 
 	address := fmt.Sprintf("0.0.0.0:%d", p.listeningPort)
 	uiDir := p.dir + "/ui"
-	server := server.New(ctx, address, p.rootURL, uiDir, db, logger.WithPrefix("http server: "), runner)
+	server := server.New(ctx, address, p.rootURL, uiDir, db, logger.NewChild(logging.SetPrefix("http server: ")), runner)
 	wg.Add(1)
 	go server.Run(ctx, wg)
 	notify(1, fmt.Sprintf("Launched with %d records to watch", len(records)))
 
-	go backupRunLoop(ctx, p.backupPeriod, p.dir, p.backupDirectory, logger, timeNow)
+	go backupRunLoop(ctx, p.backupPeriod, p.dir, p.backupDirectory,
+		logger.NewChild(logging.SetPrefix("backup: ")), timeNow)
 
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals,
@@ -191,15 +195,6 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		logger.Warn(message)
 		return 1
 	}
-}
-
-func setupLogger() (logging.Logger, error) {
-	paramsReader := params.NewReader(nil)
-	encoding, level, err := paramsReader.LoggerConfig()
-	if err != nil {
-		return nil, err
-	}
-	return logging.NewLogger(encoding, level)
 }
 
 func setupGotify(paramsReader params.Reader, logger logging.Logger) (
@@ -276,7 +271,6 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 
 func backupRunLoop(ctx context.Context, backupPeriod time.Duration, exeDir, outputDir string,
 	logger logging.Logger, timeNow func() time.Time) {
-	logger = logger.WithPrefix("backup: ")
 	if backupPeriod == 0 {
 		logger.Info("disabled")
 		return

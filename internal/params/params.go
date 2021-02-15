@@ -40,7 +40,7 @@ type Reader interface {
 	BackupDirectory() (directory string, err error)
 
 	// Other
-	LoggerConfig() (encoding logging.Encoding, level logging.Level, err error)
+	LoggerConfig() (level logging.Level, caller logging.Caller, err error)
 	GotifyURL() (URL *url.URL, err error)
 	GotifyToken() (token string, err error)
 }
@@ -69,18 +69,18 @@ func (r *reader) ListeningPort() (listeningPort uint16, warning string, err erro
 	return r.env.ListeningPort("LISTENING_PORT", params.Default("8000"))
 }
 
-func (r *reader) LoggerConfig() (encoding logging.Encoding, level logging.Level, err error) {
-	encoding, err = r.env.LogEncoding("LOG_ENCODING", params.Default("console"))
+func (r *reader) LoggerConfig() (level logging.Level, caller logging.Caller, err error) {
+	caller, err = r.env.LogCaller("LOG_CALLER", params.Default("hidden"))
 	if err != nil {
-		return encoding, level, err
+		return level, caller, err
 	}
 
 	level, err = r.env.LogLevel("LOG_LEVEL", params.Default("info"))
 	if err != nil {
-		return encoding, level, err
+		return level, caller, err
 	}
 
-	return encoding, level, nil
+	return level, caller, nil
 }
 
 func (r *reader) GotifyURL() (url *url.URL, err error) {

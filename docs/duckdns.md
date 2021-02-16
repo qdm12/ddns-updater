@@ -8,9 +8,9 @@
 {
   "settings": [
     {
-      "provider": "dreamhost",
-      "domain": "domain.com",
-      "key": "key",
+      "provider": "duckdns",
+      "host": "host",
+      "token": "token",
       "ip_version": "ipv4",
       "provider_ip": true
     }
@@ -20,7 +20,7 @@
 
 ### Compulsory parameters
 
-- `"domain"` is your fqdn, for example `subdomain.duckdns.org`
+- `"host"` is your host, for example `subdomain` for `subdomain.duckdns.org`
 - `"token"`
 
 ### Optional parameters

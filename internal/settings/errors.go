@@ -13,6 +13,7 @@ var (
 	ErrEmptyKey                = errors.New("empty key")
 	ErrEmptyAppKey             = errors.New("empty app key")
 	ErrEmptyConsumerKey        = errors.New("empty consumer key")
+	ErrEmptyID                 = errors.New("empty ID")
 	ErrEmptySecret             = errors.New("empty secret")
 	ErrEmptyToken              = errors.New("empty token")
 	ErrEmptyTTL                = errors.New("TTL is not set")

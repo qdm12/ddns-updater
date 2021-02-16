@@ -27,6 +27,7 @@
     - Dreamhost
     - DuckDNS
     - DynDNS
+    - FreeDNS
     - Gandi
     - GoDaddy
     - Google
@@ -136,6 +137,7 @@ Check the documentation for your DNS provider:
 - [DuckDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/duckdns.md)
 - [DynDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/dyndns.md)
 - [DynV6](https://github.com/qdm12/ddns-updater/blob/master/docs/dynv6.md)
+- [FreeDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/freedns.md)
 - [Gandi](https://github.com/qdm12/ddns-updater/blob/master/docs/gandi.md)
 - [GoDaddy](https://github.com/qdm12/ddns-updater/blob/master/docs/godaddy.md)
 - [Google](https://github.com/qdm12/ddns-updater/blob/master/docs/google.md)

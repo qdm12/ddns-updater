@@ -20,13 +20,13 @@ type freedns struct {
 	host      string
 	ipVersion models.IPVersion
 	dnsLookup bool
-	id        string
+	token     string
 }
 
 func NewFreedns(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
 	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
-		ID string `json:"id"`
+		Token string `json:"token"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func NewFreedns(data json.RawMessage, domain, host string, ipVersion models.IPVe
 		host:      host,
 		ipVersion: ipVersion,
 		dnsLookup: !noDNSLookup,
-		id:        extraSettings.ID,
+		token:     extraSettings.Token,
 	}
 	if err := f.isValid(); err != nil {
 		return nil, err
@@ -45,8 +45,8 @@ func NewFreedns(data json.RawMessage, domain, host string, ipVersion models.IPVe
 }
 
 func (f *freedns) isValid() error {
-	if len(f.id) == 0 {
-		return ErrEmptyID
+	if len(f.token) == 0 {
+		return ErrEmptyToken
 	}
 	return nil
 }
@@ -93,7 +93,7 @@ func (f *freedns) Update(ctx context.Context, client *http.Client, ip net.IP) (n
 	u := url.URL{
 		Scheme: "https",
 		Host:   hostPrefix + "sync.afraid.org",
-		Path:   "/u/" + f.id + "/",
+		Path:   "/u/" + f.token + "/",
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)

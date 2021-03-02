@@ -114,6 +114,8 @@ func (r *runner) shouldUpdateRecord(record librecords.Record, ip, ipv4, ipv6 net
 	isWithinBanPeriod := record.LastBan != nil && now.Sub(*record.LastBan) < time.Hour
 	isWithinCooldown := now.Sub(record.History.GetSuccessTime()) < r.cooldown
 	if isWithinBanPeriod || isWithinCooldown {
+		r.logger.Debug("record %s is within ban period or cooldown period, skipping update",
+			record.Settings.BuildDomainName())
 		return false
 	}
 
@@ -134,16 +136,21 @@ func (r *runner) shouldUpdateRecordNoLookup(hostname string, ipVersion models.IP
 			r.logger.Info("Last IP address stored for %s is %s and your IP address is %s", hostname, lastIP, ip)
 			return true
 		}
+		r.logger.Debug("Last IP address stored for %s is %s and your IP address is %s, skipping update", hostname, lastIP, ip)
 	case constants.IPv4:
 		if ipv4 != nil && !ipv4.Equal(lastIP) {
 			r.logger.Info("Last IPv4 address stored for %s is %s and your IPv4 address is %s", hostname, lastIP, ip)
 			return true
 		}
+		r.logger.Debug("Last IPv4 address stored for %s is %s and your IP address is %s, skipping update",
+			hostname, lastIP, ip)
 	case constants.IPv6:
 		if ipv6 != nil && !ipv6.Equal(lastIP) {
 			r.logger.Info("Last IPv6 address stored for %s is %s and your IPv6 address is %s", hostname, lastIP, ip)
 			return true
 		}
+		r.logger.Debug("Last IPv6 address stored for %s is %s and your IP address is %s, skipping update",
+			hostname, lastIP, ip)
 	}
 	return false
 }
@@ -156,24 +163,27 @@ func (r *runner) shouldUpdateRecordWithLookup(hostname string, ipVersion models.
 	}
 	switch ipVersion {
 	case constants.IPv4OrIPv6:
+		recordIP := recordIPv4
+		if ip.To4() == nil {
+			recordIP = recordIPv6
+		}
 		if ip != nil && !ip.Equal(recordIPv4) && !ip.Equal(recordIPv6) {
-			recordIP := recordIPv4
-			if ip.To4() == nil {
-				recordIP = recordIPv6
-			}
 			r.logger.Info("IP address of %s is %s and your IP address is %s", hostname, recordIP, ip)
 			return true
 		}
+		r.logger.Debug("IP address of %s is %s and your IP address is %s, skipping update", hostname, recordIP, ip)
 	case constants.IPv4:
 		if ipv4 != nil && !ipv4.Equal(recordIPv4) {
 			r.logger.Info("IPv4 address of %s is %s and your IPv4 address is %s", hostname, recordIPv4, ipv4)
 			return true
 		}
+		r.logger.Debug("IPv4 address of %s is %s and your IPv4 address is %s, skipping update", hostname, recordIPv4, ipv4)
 	case constants.IPv6:
 		if ipv6 != nil && !ipv6.Equal(recordIPv6) {
 			r.logger.Info("IPv6 address of %s is %s and your IPv6 address is %s", hostname, recordIPv6, ipv6)
 			return true
 		}
+		r.logger.Debug("IPv6 address of %s is %s and your IPv6 address is %s, skipping update", hostname, recordIPv6, ipv6)
 	}
 	return false
 }
@@ -209,7 +219,9 @@ func setInitialUpToDateStatus(db data.Database, id int, updateIP net.IP, now tim
 func (r *runner) updateNecessary(ctx context.Context) (errors []error) {
 	records := r.db.SelectAll()
 	doIP, doIPv4, doIPv6 := doIPVersion(records)
+	r.logger.Debug("configured to fetch IP: v4 or v6: %t, v4: %t, v6: %t", doIP, doIPv4, doIPv6)
 	ip, ipv4, ipv6, errors := r.getNewIPs(ctx, doIP, doIPv4, doIPv6)
+	r.logger.Debug("your public IP address are: v4 or v6: %s, v4: %s, v6: %s", ip, ipv4, ipv6)
 	for _, err := range errors {
 		r.logger.Error(err)
 	}

@@ -18,13 +18,12 @@ type strato struct {
 	domain        string
 	host          string
 	ipVersion     models.IPVersion
-	dnsLookup     bool
 	password      string
 	useProviderIP bool
 }
 
 func NewStrato(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -36,7 +35,6 @@ func NewStrato(data json.RawMessage, domain, host string, ipVersion models.IPVer
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
-		dnsLookup:     !noDNSLookup,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
@@ -72,8 +70,8 @@ func (s *strato) IPVersion() models.IPVersion {
 	return s.ipVersion
 }
 
-func (s *strato) DNSLookup() bool {
-	return s.dnsLookup
+func (s *strato) Proxied() bool {
+	return false
 }
 
 func (s *strato) BuildDomainName() string {

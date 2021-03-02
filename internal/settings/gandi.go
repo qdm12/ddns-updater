@@ -23,7 +23,7 @@ type gandi struct {
 }
 
 func NewGandi(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	_ bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key string `json:"key"`
 		TTL int    `json:"ttl"`
@@ -63,12 +63,12 @@ func (g *gandi) Host() string {
 	return g.host
 }
 
-func (g *gandi) DNSLookup() bool {
-	return false
-}
-
 func (g *gandi) IPVersion() models.IPVersion {
 	return g.ipVersion
+}
+
+func (g *gandi) Proxied() bool {
+	return false
 }
 
 func (g *gandi) BuildDomainName() string {

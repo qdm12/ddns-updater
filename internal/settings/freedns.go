@@ -19,12 +19,11 @@ type freedns struct {
 	domain    string
 	host      string
 	ipVersion models.IPVersion
-	dnsLookup bool
 	token     string
 }
 
 func NewFreedns(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
@@ -35,7 +34,6 @@ func NewFreedns(data json.RawMessage, domain, host string, ipVersion models.IPVe
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
-		dnsLookup: !noDNSLookup,
 		token:     extraSettings.Token,
 	}
 	if err := f.isValid(); err != nil {
@@ -63,8 +61,8 @@ func (f *freedns) Host() string {
 	return f.host
 }
 
-func (f *freedns) DNSLookup() bool {
-	return f.dnsLookup
+func (f *freedns) Proxied() bool {
+	return false
 }
 
 func (f *freedns) IPVersion() models.IPVersion {

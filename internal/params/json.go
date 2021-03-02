@@ -12,11 +12,10 @@ import (
 )
 
 type commonSettings struct {
-	Provider    string `json:"provider"`
-	Domain      string `json:"domain"`
-	Host        string `json:"host"`
-	IPVersion   string `json:"ip_version"`
-	NoDNSLookup bool   `json:"no_dns_lookup"`
+	Provider  string `json:"provider"`
+	Domain    string `json:"domain"`
+	Host      string `json:"host"`
+	IPVersion string `json:"ip_version"`
 	// Retro values for warnings
 	IPMethod *string `json:"ip_method,omitempty"`
 	Delay    *uint64 `json:"delay,omitempty"`
@@ -165,7 +164,7 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, 
 	}
 	settingsSlice = make([]settings.Settings, len(hosts))
 	for i, host := range hosts {
-		settingsSlice[i], err = settingsConstructor(rawSettings, common.Domain, host, ipVersion, common.NoDNSLookup, matcher)
+		settingsSlice[i], err = settingsConstructor(rawSettings, common.Domain, host, ipVersion, matcher)
 		if err != nil {
 			return nil, warnings, err
 		}

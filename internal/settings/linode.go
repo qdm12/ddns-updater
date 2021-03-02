@@ -26,7 +26,7 @@ type linode struct {
 }
 
 func NewLinode(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	_ bool, _ regex.Matcher) (s Settings, err error) {
+	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
@@ -64,12 +64,12 @@ func (l *linode) Host() string {
 	return l.host
 }
 
-func (l *linode) DNSLookup() bool {
-	return true
-}
-
 func (l *linode) IPVersion() models.IPVersion {
 	return l.ipVersion
+}
+
+func (l *linode) Proxied() bool {
+	return false
 }
 
 func (l *linode) BuildDomainName() string {

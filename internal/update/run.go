@@ -119,7 +119,7 @@ func (r *runner) shouldUpdateRecord(record librecords.Record, ip, ipv4, ipv6 net
 
 	hostname := record.Settings.BuildDomainName()
 	ipVersion := record.Settings.IPVersion()
-	if !record.Settings.DNSLookup() {
+	if record.Settings.Proxied() {
 		lastIP := record.History.GetCurrentIP() // can be nil
 		return r.shouldUpdateRecordNoLookup(hostname, ipVersion, lastIP, ip, ipv4, ipv6)
 	}

@@ -20,7 +20,6 @@ type dnsomatic struct {
 	domain        string
 	host          string
 	ipVersion     models.IPVersion
-	dnsLookup     bool
 	username      string
 	password      string
 	useProviderIP bool
@@ -28,7 +27,7 @@ type dnsomatic struct {
 }
 
 func NewDNSOMatic(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -41,7 +40,6 @@ func NewDNSOMatic(data json.RawMessage, domain, host string, ipVersion models.IP
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
-		dnsLookup:     !noDNSLookup,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
@@ -79,12 +77,12 @@ func (d *dnsomatic) Host() string {
 	return d.host
 }
 
-func (d *dnsomatic) DNSLookup() bool {
-	return d.dnsLookup
-}
-
 func (d *dnsomatic) IPVersion() models.IPVersion {
 	return d.ipVersion
+}
+
+func (d *dnsomatic) Proxied() bool {
+	return false
 }
 
 func (d *dnsomatic) BuildDomainName() string {

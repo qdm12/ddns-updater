@@ -25,7 +25,7 @@ type luaDNS struct {
 }
 
 func NewLuaDNS(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	_ bool, _ regex.Matcher) (s Settings, err error) {
+	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Email string `json:"email"`
 		Token string `json:"token"`
@@ -68,12 +68,12 @@ func (l *luaDNS) Host() string {
 	return l.host
 }
 
-func (l *luaDNS) DNSLookup() bool {
-	return true
-}
-
 func (l *luaDNS) IPVersion() models.IPVersion {
 	return l.ipVersion
+}
+
+func (l *luaDNS) Proxied() bool {
+	return false
 }
 
 func (l *luaDNS) BuildDomainName() string {

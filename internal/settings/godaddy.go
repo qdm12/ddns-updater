@@ -19,14 +19,13 @@ type godaddy struct {
 	domain    string
 	host      string
 	ipVersion models.IPVersion
-	dnsLookup bool
 	key       string
 	secret    string
 	matcher   regex.Matcher
 }
 
 func NewGodaddy(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key    string `json:"key"`
 		Secret string `json:"secret"`
@@ -38,7 +37,6 @@ func NewGodaddy(data json.RawMessage, domain, host string, ipVersion models.IPVe
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
-		dnsLookup: !noDNSLookup,
 		key:       extraSettings.Key,
 		secret:    extraSettings.Secret,
 		matcher:   matcher,
@@ -75,8 +73,8 @@ func (g *godaddy) IPVersion() models.IPVersion {
 	return g.ipVersion
 }
 
-func (g *godaddy) DNSLookup() bool {
-	return g.dnsLookup
+func (g *godaddy) Proxied() bool {
+	return false
 }
 
 func (g *godaddy) BuildDomainName() string {

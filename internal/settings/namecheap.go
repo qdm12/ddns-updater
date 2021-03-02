@@ -18,14 +18,13 @@ type namecheap struct {
 	domain        string
 	host          string
 	ipVersion     models.IPVersion
-	dnsLookup     bool
 	password      string
 	useProviderIP bool
 	matcher       regex.Matcher
 }
 
 func NewNamecheap(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	if ipVersion == constants.IPv6 {
 		return s, ErrIPv6NotSupported
 	}
@@ -40,7 +39,6 @@ func NewNamecheap(data json.RawMessage, domain, host string, ipVersion models.IP
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
-		dnsLookup:     !noDNSLookup,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 		matcher:       matcher,
@@ -74,8 +72,8 @@ func (n *namecheap) IPVersion() models.IPVersion {
 	return n.ipVersion
 }
 
-func (n *namecheap) DNSLookup() bool {
-	return n.dnsLookup
+func (n *namecheap) Proxied() bool {
+	return false
 }
 
 func (n *namecheap) BuildDomainName() string {

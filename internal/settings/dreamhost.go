@@ -19,13 +19,12 @@ type dreamhost struct {
 	domain    string
 	host      string
 	ipVersion models.IPVersion
-	dnsLookup bool
 	key       string
 	matcher   regex.Matcher
 }
 
 func NewDreamhost(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key string `json:"key"`
 	}{}
@@ -39,7 +38,6 @@ func NewDreamhost(data json.RawMessage, domain, host string, ipVersion models.IP
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
-		dnsLookup: !noDNSLookup,
 		key:       extraSettings.Key,
 		matcher:   matcher,
 	}
@@ -75,8 +73,8 @@ func (d *dreamhost) IPVersion() models.IPVersion {
 	return d.ipVersion
 }
 
-func (d *dreamhost) DNSLookup() bool {
-	return d.dnsLookup
+func (d *dreamhost) Proxied() bool {
+	return false
 }
 
 func (d *dreamhost) BuildDomainName() string {

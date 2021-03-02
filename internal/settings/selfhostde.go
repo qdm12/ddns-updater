@@ -18,14 +18,13 @@ type selfhostde struct {
 	domain        string
 	host          string
 	ipVersion     models.IPVersion
-	dnsLookup     bool
 	username      string
 	password      string
 	useProviderIP bool
 }
 
 func NewSelfhostde(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	noDNSLookup bool, matcher regex.Matcher) (s Settings, err error) {
+	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -38,7 +37,6 @@ func NewSelfhostde(data json.RawMessage, domain, host string, ipVersion models.I
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
-		dnsLookup:     !noDNSLookup,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
@@ -77,8 +75,8 @@ func (sd *selfhostde) IPVersion() models.IPVersion {
 	return sd.ipVersion
 }
 
-func (sd *selfhostde) DNSLookup() bool {
-	return sd.dnsLookup
+func (sd *selfhostde) Proxied() bool {
+	return false
 }
 
 func (sd *selfhostde) BuildDomainName() string {

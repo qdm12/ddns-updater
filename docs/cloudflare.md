@@ -35,7 +35,6 @@
 
 - `"proxied"` can be set to `true` to use the proxy services of Cloudflare
 - `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), and defaults to `ipv4 or ipv6`
-- `"no_dns_lookup"` can be set to `true` to prevent the program from doing assumptions from DNS lookups returning an IP address not matching your public IP address. This is especially useful if you set `"proxied": true`.
 
 ## Domain setup
 

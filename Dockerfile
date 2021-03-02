@@ -92,8 +92,8 @@ ENV \
     BACKUP_DIRECTORY=/updater/data \
 
     # Other
-    LOG_ENCODING=console \
     LOG_LEVEL=info \
+    LOG_CALLER=hidden \
     GOTIFY_URL= \
     GOTIFY_TOKEN= \
     TZ=

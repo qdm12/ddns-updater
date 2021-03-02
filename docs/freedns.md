@@ -11,7 +11,7 @@
       "provider": "freedns",
       "domain": "domain.com",
       "host": "host",
-      "id": "password",
+      "token": "token",
       "ip_version": "ipv4"
     }
   ]
@@ -22,7 +22,7 @@
 
 - `"domain"`
 - `"host"` is your host (subdomain)
-- `"id"` is the ID you use to update your record
+- `"token"` is the randomized update token you use to update your record
 
 ### Optional parameters
 

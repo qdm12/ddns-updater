@@ -44,6 +44,16 @@ func NewRunner(db data.Database, updater Updater, ipGetter IPGetter,
 	}
 }
 
+func (r *runner) lookupIPsResilient(hostname string, tries int) (ipv4 net.IP, ipv6 net.IP, err error) {
+	for i := 0; i < tries; i++ {
+		ipv4, ipv6, err = r.lookupIPs(hostname)
+		if err == nil {
+			return ipv4, ipv6, nil
+		}
+	}
+	return nil, nil, err
+}
+
 func (r *runner) lookupIPs(hostname string) (ipv4 net.IP, ipv6 net.IP, err error) {
 	ips, err := r.netLookupIP(hostname)
 	if err != nil {
@@ -157,9 +167,10 @@ func (r *runner) shouldUpdateRecordNoLookup(hostname string, ipVersion models.IP
 
 func (r *runner) shouldUpdateRecordWithLookup(hostname string, ipVersion models.IPVersion,
 	ip, ipv4, ipv6 net.IP) (update bool) {
-	recordIPv4, recordIPv6, err := r.lookupIPs(hostname)
+	const tries = 5
+	recordIPv4, recordIPv6, err := r.lookupIPsResilient(hostname, tries)
 	if err != nil {
-		r.logger.Warn(err) // update anyway
+		r.logger.Warn("cannot DNS resolve %s after %d tries: %s", hostname, tries, err) // update anyway
 	}
 	switch ipVersion {
 	case constants.IPv4OrIPv6:

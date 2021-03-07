@@ -208,6 +208,40 @@ If you have a host firewall in place, this container needs the following ports:
 - UDP 53 outbound for outbound DNS resolution
 - TCP 8000 inbound (or other) for the WebUI
 
+## Architecture
+
+At program start and every period (5 minutes by default):
+
+1. Fetch your public IP address
+1. For each record:
+    1. DNS resolve it to obtain its current IP address(es)
+        - If the resolution fails, update the record with your public IP address by calling the DNS provider API and finish
+    1. Check if your public IP address is within the resolved IP addresses
+        - Yes: skip the update
+        - No: update the record with your public IP address by calling the DNS provider API
+
+💡 We do DNS resolution every period so it detects a change made to the record manually, for example on the DNS provider web UI
+💡 As DNS resolutions are essentially free and without rate limiting, these are great to avoid getting banned for too many requests.
+
+### Special case: Cloudflare
+
+For Cloudflare records with the `proxied` option, the following is done.
+
+At program start and every period (5 minutes by default), for each record:
+
+1. Fetch your public IP address
+1. For each record:
+    1. Check the last IP address (persisted in `updates.json`) for that record
+        - If it doesn't exist, update the record with your public IP address by calling the DNS provider API and finish
+    1. Check if your public IP address matches the last IP address you updated the record with
+        - Yes: skip the update
+        - No: update the record with your public IP address by calling the DNS provider API
+
+This is the only way as doing a DNS resolution on the record will give the IP address of a Cloudflare server instead of your server.
+
+⚠️ This has the disadvantage that if the record is changed manually, the program will not detect it.
+We could do an API call to get the record IP address every period, but that would get you banned especially with a low period duration.
+
 ## Gotify
 
 [![Gotify](https://github.com/qdm12/ddns-updater/blob/master/readme/gotify.png?raw=true)](https://gotify.net)

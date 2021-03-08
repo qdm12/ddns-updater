@@ -12,6 +12,7 @@ const (
 	DNSPOD       models.Provider = "dnspod"
 	DUCKDNS      models.Provider = "duckdns"
 	DYN          models.Provider = "dyn"
+	VARIOMEDIA   models.Provider = "variomedia"
 	DYNV6        models.Provider = "dynv6"
 	DREAMHOST    models.Provider = "dreamhost"
 	FREEDNS      models.Provider = "freedns"
@@ -40,6 +41,7 @@ func ProviderChoices() []models.Provider {
 		DNSPOD,
 		DUCKDNS,
 		DYN,
+		VARIOMEDIA,
 		DYNV6,
 		DREAMHOST,
 		FREEDNS,

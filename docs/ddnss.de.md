@@ -12,7 +12,7 @@
       "provider_ip": true,
       "domain": "domain.com",
       "host": "@",
-      "user": "user",
+      "username": "user",
       "password": "password",
       "ip_version": "ipv4"
     }
@@ -24,7 +24,7 @@
 
 - `"domain"`
 - `"host"` is your host and can be a subdomain or `"@"`
-- `"user"`
+- `"username"`
 - `"password"`
 
 ### Optional parameters

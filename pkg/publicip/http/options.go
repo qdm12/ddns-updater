@@ -14,11 +14,12 @@ type settings struct {
 }
 
 func newDefaultSettings() settings {
+	const defaultTimeout = 5 * time.Second
 	return settings{
 		providersIP:  []Provider{Google},
 		providersIP4: []Provider{Noip},
 		providersIP6: []Provider{Noip},
-		timeout:      time.Second,
+		timeout:      defaultTimeout,
 	}
 }
 

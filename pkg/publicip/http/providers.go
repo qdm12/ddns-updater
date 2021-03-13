@@ -3,6 +3,8 @@ package http
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -89,6 +91,11 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 		}
 	}
 
+	// Custom URL?
+	if s := string(provider); strings.HasPrefix(s, "url:") {
+		url = strings.TrimPrefix(s, "url:")
+	}
+
 	if len(url) == 0 {
 		return "", false
 	}
@@ -99,4 +106,12 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 func (provider Provider) SupportsVersion(version ipversion.IPVersion) bool {
 	_, ok := provider.url(version)
 	return ok
+}
+
+// CustomProvider creates a provider with a custom HTTP(s) URL.
+// It is the responsibility of the caller to make sure it is a valid URL
+// and that it supports the desired IP version(s) as no further check is
+// done on it.
+func CustomProvider(httpsURL *url.URL) Provider { //nolint:interfacer
+	return Provider("url:" + httpsURL.String())
 }

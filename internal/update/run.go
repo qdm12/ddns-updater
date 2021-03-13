@@ -9,6 +9,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/models"
 	librecords "github.com/qdm12/ddns-updater/internal/records"
+	"github.com/qdm12/ddns-updater/pkg/publicip"
 	"github.com/qdm12/golibs/logging"
 )
 
@@ -24,12 +25,12 @@ type runner struct {
 	forceResult chan []error
 	cooldown    time.Duration
 	netLookupIP func(hostname string) ([]net.IP, error)
-	ipGetter    IPGetter
+	ipGetter    publicip.Fetcher
 	logger      logging.Logger
 	timeNow     func() time.Time
 }
 
-func NewRunner(db data.Database, updater Updater, ipGetter IPGetter,
+func NewRunner(db data.Database, updater Updater, ipGetter publicip.Fetcher,
 	cooldown time.Duration, logger logging.Logger, timeNow func() time.Time) Runner {
 	return &runner{
 		db:          db,
@@ -95,13 +96,13 @@ func (r *runner) getNewIPs(ctx context.Context, doIP, doIPv4, doIPv6 bool) (ip, 
 		}
 	}
 	if doIPv4 {
-		ipv4, err = r.ipGetter.IPv4(ctx)
+		ipv4, err = r.ipGetter.IP4(ctx)
 		if err != nil {
 			errors = append(errors, err)
 		}
 	}
 	if doIPv6 {
-		ipv6, err = r.ipGetter.IPv6(ctx)
+		ipv6, err = r.ipGetter.IP6(ctx)
 		if err != nil {
 			errors = append(errors, err)
 		}

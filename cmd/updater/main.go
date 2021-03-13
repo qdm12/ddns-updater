@@ -22,6 +22,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/server"
 	"github.com/qdm12/ddns-updater/internal/splash"
 	"github.com/qdm12/ddns-updater/internal/update"
+	pubiphttp "github.com/qdm12/ddns-updater/pkg/publicip/http"
 	"github.com/qdm12/golibs/admin"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network/connectivity"
@@ -44,9 +45,7 @@ func main() {
 type allParams struct {
 	period          time.Duration
 	cooldown        time.Duration
-	ipMethod        models.IPMethod
-	ipv4Method      models.IPMethod
-	ipv6Method      models.IPMethod
+	httpIPOptions   []pubiphttp.Option
 	dir             string
 	dataDir         string
 	listeningPort   uint16
@@ -148,8 +147,13 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
+	ipGetter, err := pubiphttp.New(client, p.httpIPOptions...)
+	if err != nil {
+		logger.Error(err)
+		return 1
+	}
+
 	updater := update.NewUpdater(db, client, notify, logger)
-	ipGetter := update.NewIPGetter(client, p.ipMethod, p.ipv4Method, p.ipv6Method)
 	runner := update.NewRunner(db, updater, ipGetter, p.cooldown, logger, timeNow)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -230,18 +234,25 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 	if err != nil {
 		return p, err
 	}
-	p.ipMethod, err = paramsReader.IPMethod()
+
+	httpIPProviders, err := paramsReader.IPMethod()
 	if err != nil {
 		return p, err
 	}
-	p.ipv4Method, err = paramsReader.IPv4Method()
+	httpIP4Providers, err := paramsReader.IPv4Method()
 	if err != nil {
 		return p, err
 	}
-	p.ipv6Method, err = paramsReader.IPv6Method()
+	httpIP6Providers, err := paramsReader.IPv6Method()
 	if err != nil {
 		return p, err
 	}
+	p.httpIPOptions = []pubiphttp.Option{
+		pubiphttp.SetProvidersIP(httpIPProviders),
+		pubiphttp.SetProvidersIP4(httpIP4Providers),
+		pubiphttp.SetProvidersIP6(httpIP6Providers),
+	}
+
 	p.dir, err = paramsReader.ExeDir()
 	if err != nil {
 		return p, err

@@ -6,10 +6,3 @@ const (
 	dnsFetch fetchType = iota
 	httpFetch
 )
-
-func listFetchTypes() []fetchType {
-	return []fetchType{
-		dnsFetch,
-		httpFetch,
-	}
-}

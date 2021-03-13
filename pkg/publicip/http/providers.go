@@ -29,6 +29,16 @@ func ListProviders() []Provider {
 	}
 }
 
+func ListProvidersForVersion(version ipversion.IPVersion) (providers []Provider) {
+	allProviders := ListProviders()
+	for _, provider := range allProviders {
+		if provider.SupportsVersion(version) {
+			providers = append(providers, provider)
+		}
+	}
+	return providers
+}
+
 var (
 	ErrUnknownProvider   = errors.New("unknown provider")
 	ErrProviderIPVersion = errors.New("provider does not support IP version")
@@ -50,9 +60,8 @@ func ValidateProvider(provider Provider, version ipversion.IPVersion) error {
 
 func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) {
 	switch version {
-
 	case ipversion.IP4:
-		switch provider {
+		switch provider { //nolint:exhaustive
 		case Ipify:
 			url = "https://api.ipify.org"
 		case Noip:
@@ -60,7 +69,7 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 		}
 
 	case ipversion.IP6:
-		switch provider {
+		switch provider { //nolint:exhaustive
 		case Ipify:
 			url = "https://api6.ipify.org"
 		case Noip:
@@ -68,7 +77,7 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 		}
 
 	case ipversion.IP4or6:
-		switch provider {
+		switch provider { //nolint:exhaustive
 		case Google:
 			url = "https://domains.google.com/checkip"
 		case Ifconfig:
@@ -85,4 +94,9 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 	}
 
 	return url, true
+}
+
+func (provider Provider) SupportsVersion(version ipversion.IPVersion) bool {
+	_, ok := provider.url(version)
+	return ok
 }

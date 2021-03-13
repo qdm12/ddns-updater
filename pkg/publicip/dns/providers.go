@@ -32,6 +32,7 @@ func ValidateProvider(provider Provider) error {
 	return fmt.Errorf("%w: %s", ErrUnknownProvider, provider)
 }
 
+//nolint:goconst
 func getProviderData(provider Provider, v ipversion.IPVersion) (nameserver, txtRecord string) {
 	switch provider {
 	case Google:

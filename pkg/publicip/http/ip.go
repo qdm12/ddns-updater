@@ -20,19 +20,13 @@ func (f *fetcher) IP6(ctx context.Context) (publicIP net.IP, err error) {
 func (f *fetcher) ip(ctx context.Context, ring *urlsRing) (
 	publicIP net.IP, err error) {
 	var url string
-	if f.cycle {
-		ring.mutex.Lock()
-		url = ring.urls[ring.index]
-		ring.index++
-		if ring.index == len(ring.urls) {
-			ring.index = 0
-		}
-		ring.mutex.Unlock()
-	} else {
-		ring.mutex.RLock()
-		url = ring.urls[ring.index]
-		ring.mutex.RUnlock()
+	ring.mutex.Lock()
+	url = ring.urls[ring.index]
+	ring.index++
+	if ring.index == len(ring.urls) {
+		ring.index = 0
 	}
+	ring.mutex.Unlock()
 
 	ctx, cancel := context.WithTimeout(ctx, f.timeout)
 	defer cancel()

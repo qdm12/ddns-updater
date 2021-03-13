@@ -19,7 +19,6 @@ type Fetcher interface {
 type fetcher struct {
 	client  *http.Client
 	timeout time.Duration
-	cycle   bool
 	ip4or6  urlsRing // URLs to get ipv4 or ipv6
 	ip4     urlsRing // URLs to get ipv4 only
 	ip6     urlsRing // URLs to get ipv6 only
@@ -28,7 +27,7 @@ type fetcher struct {
 type urlsRing struct {
 	index int
 	urls  []string
-	mutex sync.RWMutex
+	mutex sync.Mutex
 }
 
 func New(client *http.Client, options ...Option) (f Fetcher, err error) {

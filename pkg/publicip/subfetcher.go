@@ -16,9 +16,9 @@ func (f *fetcher) getSubFetcher() (subFetcher Fetcher, err error) {
 	}
 
 	switch fetcherType {
-	case dnsFetch:
+	case DNS:
 		return f.dns, nil
-	case httpFetch:
+	case HTTP:
 		return f.http, nil
 	default:
 		return nil, fmt.Errorf("%w: %d", ErrFetcherUndefined, fetcherType)

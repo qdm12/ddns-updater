@@ -22,7 +22,7 @@ type fetcher struct {
 	http     Fetcher
 	// Cycling effect if both are enabled, without a mutex
 	randSource rand.Source
-	fetchTypes []fetchType
+	fetchTypes []FetchType
 }
 
 var ErrNoFetchTypeSpecified = errors.New("at least one fetcher type must be specified")
@@ -45,7 +45,7 @@ func NewFetcher(options ...Option) (f Fetcher, err error) {
 		if err != nil {
 			return nil, err
 		}
-		fetcher.fetchTypes = append(fetcher.fetchTypes, dnsFetch)
+		fetcher.fetchTypes = append(fetcher.fetchTypes, DNS)
 	}
 
 	if settings.http.enabled {
@@ -53,7 +53,7 @@ func NewFetcher(options ...Option) (f Fetcher, err error) {
 		if err != nil {
 			return nil, err
 		}
-		fetcher.fetchTypes = append(fetcher.fetchTypes, httpFetch)
+		fetcher.fetchTypes = append(fetcher.fetchTypes, HTTP)
 	}
 
 	if len(fetcher.fetchTypes) == 0 {

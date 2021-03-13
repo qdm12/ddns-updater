@@ -1,8 +1,8 @@
 package publicip
 
-type fetchType uint8
+type FetchType uint8
 
 const (
-	dnsFetch fetchType = iota
-	httpFetch
+	DNS FetchType = iota
+	HTTP
 )

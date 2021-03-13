@@ -15,6 +15,7 @@ WORKDIR /tmp/gobuild
 # Copy repository code and install Go dependencies
 COPY go.mod go.sum ./
 RUN go mod download
+COPY pkg/ ./pkg/
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 

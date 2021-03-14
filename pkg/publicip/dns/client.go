@@ -8,7 +8,6 @@ import (
 )
 
 //go:generate mockgen -destination=mock_$GOPACKAGE/$GOFILE . Client
-// go:generate mockgen -destination=mock_$GOPACKAGE/dns.go github.com/miekg/dns RR
 
 // DNSClient is an interface for the DNS client used in the implementation in this package.
 // You SHOULD NOT use this interface anywhere as it is implementation specific.

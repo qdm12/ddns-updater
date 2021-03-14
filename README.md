@@ -190,12 +190,10 @@ By default, all ip methods are cycled through between all ip methods available f
   - `google` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
 - IPv4 only (useful for updating both ipv4 and ipv6)
   - `ipify` using [https://api.ipify.org](https://api.ipify.org)
-  - `noip4` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
-  - `noip8245_4` using [http://ip1.dynupdate.no-ip.com:8245](http://ip1.dynupdate.no-ip.com:8245)
+  - `noip` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
 - IPv6 only
-  - `ipify6` using [https://api6.ipify.org](https://api6.ipify.org)
-  - `noip6` using [http://ip1.dynupdate6.no-ip.com](http://ip1.dynupdate6.no-ip.com)
-  - `noip8245_6` using [http://ip1.dynupdate6.no-ip.com:8245](http://ip1.dynupdate6.no-ip.com:8245)
+  - `ipify` using [https://api6.ipify.org](https://api6.ipify.org)
+  - `noip` using [http://ip1.dynupdate6.no-ip.com](http://ip1.dynupdate6.no-ip.com)
 
 You can also specify an HTTPS URL to obtain your public IP address (i.e. `-e IPV6_METHOD=https://ipinfo.io/ip`)
 

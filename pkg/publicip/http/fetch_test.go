@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,60 +25,120 @@ func Test_fetch(t *testing.T) {
 	tests := map[string]struct {
 		ctx         context.Context
 		url         string
+		version     ipversion.IPVersion
 		httpContent []byte
 		httpErr     error
 		publicIP    net.IP
 		err         error
 	}{
 		"canceled context": {
-			ctx: canceledCtx,
-			url: "https://opendns.com/ip",
-			err: errors.New(`Get "https://opendns.com/ip": context canceled`),
+			ctx:     canceledCtx,
+			url:     "https://opendns.com/ip",
+			version: ipversion.IP4or6,
+			err:     errors.New(`Get "https://opendns.com/ip": context canceled`),
 		},
 		"http error": {
 			ctx:     context.Background(),
 			url:     "https://opendns.com/ip",
+			version: ipversion.IP4or6,
 			httpErr: errDummy,
 			err:     errors.New(`Get "https://opendns.com/ip": dummy`),
 		},
 		"empty response": {
-			ctx: context.Background(),
-			url: "https://opendns.com/ip",
-			err: errors.New(`no IP address found`),
+			ctx:     context.Background(),
+			url:     "https://opendns.com/ip",
+			version: ipversion.IP4or6,
+			err:     errors.New(`no IP address found: from "https://opendns.com/ip"`),
 		},
-		"no IP in response": {
+		"no IP for IP4or6": {
 			ctx:         context.Background(),
 			url:         "https://opendns.com/ip",
+			version:     ipversion.IP4or6,
 			httpContent: []byte(`abc def`),
-			err:         errors.New(`no IP address found`),
+			err:         errors.New(`no IP address found: from "https://opendns.com/ip"`),
 		},
-		"ipv4 and ipv6": {
+		"single IPv4 for IP4or6": {
 			ctx:         context.Background(),
 			url:         "https://opendns.com/ip",
-			httpContent: []byte(`1.67.201.251 ::0`),
-			err:         errors.New(`too many IP addresses: found 1 IPv4 addresses and 1 IPv6 addresses, instead of a single one`), //nolint:lll
-		},
-		"too many ipv4": {
-			ctx:         context.Background(),
-			url:         "https://opendns.com/ip",
-			httpContent: []byte(`1.67.201.251 1.67.201.251`),
-			err:         errors.New(`too many IP addresses: found 2 IP addresses instead of a single one`),
-		},
-		"too many ipv6": {
-			ctx:         context.Background(),
-			url:         "https://opendns.com/ip",
-			httpContent: []byte(`::0 ::0`),
-			err:         errors.New(`too many IP addresses: found 2 IP addresses instead of a single one`),
-		},
-		"ipv4": {
-			ctx:         context.Background(),
-			httpContent: []byte("blabla 1.67.201.251 25.35.55 sds"),
+			version:     ipversion.IP4or6,
+			httpContent: []byte(`1.67.201.251`),
 			publicIP:    net.IP{1, 67, 201, 251},
 		},
-		"ipv6": {
+		"single IPv6 for IP4or6": {
 			ctx:         context.Background(),
-			httpContent: []byte("blabla ad07:e846:51ac:6cd0:0000:0000:0000:0000 sds"),
-			publicIP:    net.IP{0xad, 0x7, 0xe8, 0x46, 0x51, 0xac, 0x6c, 0xd0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0},
+			url:         "https://opendns.com/ip",
+			version:     ipversion.IP4or6,
+			httpContent: []byte(`::1`),
+			publicIP: net.IP{
+				0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+				0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1,
+			},
+		},
+		"IPv4 and IPv6 for IP4or6": {
+			ctx:         context.Background(),
+			url:         "https://opendns.com/ip",
+			version:     ipversion.IP4or6,
+			httpContent: []byte(`1.67.201.251 ::1`),
+			publicIP:    net.IP{1, 67, 201, 251},
+		},
+		"too many IPv4s for IP4or6": {
+			ctx:         context.Background(),
+			url:         "https://opendns.com/ip",
+			version:     ipversion.IP4or6,
+			httpContent: []byte(`1.67.201.251 1.67.201.251`),
+			err:         errors.New("too many IP addresses: found 2 IPv4 addresses instead of 1"),
+		},
+		"too many IPv6s for IP4or6": {
+			ctx:         context.Background(),
+			url:         "https://opendns.com/ip",
+			version:     ipversion.IP4or6,
+			httpContent: []byte(`::1 ::1`),
+			err:         errors.New("too many IP addresses: found 2 IPv6 addresses instead of 1"),
+		},
+		"no IP for IP4": {
+			ctx:         context.Background(),
+			url:         "https://opendns.com/ip",
+			version:     ipversion.IP4,
+			httpContent: []byte(`abc def`),
+			err:         errors.New(`no IP address found: from "https://opendns.com/ip" for version ip4`),
+		},
+		"single IPv4 for IP4": {
+			ctx:         context.Background(),
+			url:         "https://opendns.com/ip",
+			version:     ipversion.IP4,
+			httpContent: []byte(`1.67.201.251`),
+			publicIP:    net.IP{1, 67, 201, 251},
+		},
+		"too many IPv4s for IP4": {
+			ctx:         context.Background(),
+			url:         "https://opendns.com/ip",
+			version:     ipversion.IP4,
+			httpContent: []byte(`1.67.201.251 1.67.201.251`),
+			err:         errors.New("too many IP addresses: found 2 IPv4 addresses instead of 1"),
+		},
+		"no IP for IP6": {
+			ctx:         context.Background(),
+			url:         "https://opendns.com/ip",
+			version:     ipversion.IP6,
+			httpContent: []byte(`abc def`),
+			err:         errors.New(`no IP address found: from "https://opendns.com/ip" for version ip6`),
+		},
+		"single IPv6 for IP6": {
+			ctx:         context.Background(),
+			url:         "https://opendns.com/ip",
+			version:     ipversion.IP6,
+			httpContent: []byte(`::1`),
+			publicIP: net.IP{
+				0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+				0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1,
+			},
+		},
+		"too many IPv6s for IP6": {
+			ctx:         context.Background(),
+			url:         "https://opendns.com/ip",
+			version:     ipversion.IP6,
+			httpContent: []byte(`::1 ::1`),
+			err:         errors.New("too many IP addresses: found 2 IPv6 addresses instead of 1"),
 		},
 	}
 	for name, tc := range tests {
@@ -100,7 +161,7 @@ func Test_fetch(t *testing.T) {
 				}),
 			}
 
-			publicIP, err := fetch(tc.ctx, client, tc.url)
+			publicIP, err := fetch(tc.ctx, client, tc.url, tc.version)
 
 			if tc.err != nil {
 				require.Error(t, err)

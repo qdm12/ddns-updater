@@ -9,11 +9,8 @@ type settings struct {
 
 func newDefaultSettings() settings {
 	return settings{
-		providers: []Provider{
-			Google,
-			Cloudflare,
-		},
-		timeout: time.Second,
+		providers: ListProviders(),
+		timeout:   time.Second,
 	}
 }
 

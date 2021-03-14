@@ -32,6 +32,12 @@ func ValidateProvider(provider Provider) error {
 	return fmt.Errorf("%w: %s", ErrUnknownProvider, provider)
 }
 
+type providerData struct {
+	nameserver string
+	fqdn       string
+	class      dns.Class
+}
+
 func (provider Provider) data() providerData {
 	switch provider {
 	case Google:

@@ -19,15 +19,13 @@ func (f *fetcher) IP6(ctx context.Context) (publicIP net.IP, err error) {
 
 func (f *fetcher) ip(ctx context.Context, client Client) (
 	publicIP net.IP, err error) {
-	f.mutex.Lock()
-	provider := f.providers[f.index]
-	f.index++
-	if f.index == len(f.providers) {
-		f.index = 0
+	f.ring.mutex.Lock()
+	provider := f.ring.providers[f.ring.index]
+	f.ring.index++
+	if f.ring.index == len(f.ring.providers) {
+		f.ring.index = 0
 	}
-	f.mutex.Unlock()
+	f.ring.mutex.Unlock()
 
-	providerData := f.data[provider]
-
-	return fetch(ctx, client, providerData)
+	return fetch(ctx, client, provider.data())
 }

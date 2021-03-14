@@ -15,19 +15,16 @@ type Fetcher interface {
 }
 
 type fetcher struct {
-	mutex     sync.RWMutex
-	index     int // index in providers slice if cycle is true
-	providers []Provider
-	client    Client
-	client4   Client
-	client6   Client
-	data      map[Provider]providerData
+	ring    ring
+	client  Client
+	client4 Client
+	client6 Client
 }
 
-type providerData struct {
-	nameserver string
-	fqdn       string
-	class      dns.Class
+type ring struct {
+	mutex     sync.RWMutex
+	index     int // index in the providers slice
+	providers []Provider
 }
 
 func New(options ...Option) (f Fetcher, err error) {
@@ -42,8 +39,10 @@ func New(options ...Option) (f Fetcher, err error) {
 		Timeout: settings.timeout,
 	}
 
-	fetcher := &fetcher{
-		providers: settings.providers,
+	return &fetcher{
+		ring: ring{
+			providers: settings.providers,
+		},
 		client: &dns.Client{
 			Net:    "udp",
 			Dialer: dialer,
@@ -56,12 +55,5 @@ func New(options ...Option) (f Fetcher, err error) {
 			Net:    "udp6",
 			Dialer: dialer,
 		},
-		data: make(map[Provider]providerData, len(settings.providers)),
-	}
-
-	for _, provider := range settings.providers {
-		fetcher.data[provider] = provider.data()
-	}
-
-	return fetcher, nil
+	}, nil
 }

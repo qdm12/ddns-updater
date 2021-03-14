@@ -150,45 +150,39 @@ func (r *reader) httpIPMethod(envKey string, version ipversion.IPVersion) (
 		return nil, err
 	}
 
-	fields := strings.Split(s, ",")
-
-	// Retro-compatibility.
-	for i := range fields {
-		switch fields[i] {
-		case "ipify6":
-			fields[i] = "ipify"
-		case "noip4", "noip6", "noip8245_4", "noip8245_6":
-			fields[i] = "noip"
-		}
-	}
-
-	// Custom URL check
-	for _, field := range fields {
-		url, err := url.Parse(field)
-		if err == nil && url != nil && url.Scheme == "https" {
-			providers = append(providers, http.CustomProvider(url))
-		}
-	}
-
 	availableProviders := http.ListProvidersForVersion(version)
-	if s == "cycle" {
-		return availableProviders, nil
-	}
-
 	choices := make(map[http.Provider]struct{}, len(availableProviders))
 	for _, provider := range availableProviders {
 		choices[provider] = struct{}{}
 	}
 
+	fields := strings.Split(s, ",")
+
 	for _, field := range fields {
+		// Retro-compatibility.
+		switch field {
+		case "ipify6":
+			field = "ipify"
+		case "noip4", "noip6", "noip8245_4", "noip8245_6":
+			field = "noip"
+		}
+
+		if field == "cycle" {
+			return availableProviders, nil
+		}
+
+		// Custom URL check
+		url, err := url.Parse(field)
+		if err == nil && url != nil && url.Scheme == "https" {
+			providers = append(providers, http.CustomProvider(url))
+			continue
+		}
+
 		provider := http.Provider(field)
 		if _, ok := choices[provider]; !ok {
 			return nil, fmt.Errorf("%w: %s", ErrIPMethodInvalid, provider)
 		}
-
-		if provider.SupportsVersion(version) {
-			providers = append(providers, provider)
-		}
+		providers = append(providers, provider)
 	}
 
 	if len(providers) == 0 {

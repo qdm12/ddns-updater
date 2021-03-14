@@ -18,9 +18,9 @@ type fetcher struct {
 	mutex     sync.RWMutex
 	index     int // index in providers slice if cycle is true
 	providers []Provider
-	client    *dns.Client
-	client4   *dns.Client
-	client6   *dns.Client
+	client    Client
+	client4   Client
+	client6   Client
 	data      map[Provider]providerData
 }
 

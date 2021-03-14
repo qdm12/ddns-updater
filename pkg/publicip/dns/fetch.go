@@ -17,7 +17,7 @@ var (
 	ErrIPMalformed       = errors.New("IP address malformed")
 )
 
-func fetch(ctx context.Context, client *dns.Client, providerData providerData) (
+func fetch(ctx context.Context, client Client, providerData providerData) (
 	publicIP net.IP, err error) {
 	message := &dns.Msg{
 		MsgHdr: dns.MsgHdr{
@@ -47,7 +47,7 @@ func fetch(ctx context.Context, client *dns.Client, providerData providerData) (
 	answer := r.Answer[0]
 	txt, ok := answer.(*dns.TXT)
 	if !ok {
-		return nil, fmt.Errorf("%w: answer is of type %T instead of TXT",
+		return nil, fmt.Errorf("%w: %T instead of *dns.TXT",
 			ErrInvalidAnswerType, answer)
 	}
 
@@ -61,7 +61,7 @@ func fetch(ctx context.Context, client *dns.Client, providerData providerData) (
 
 	publicIP = net.ParseIP(ipString)
 	if publicIP == nil {
-		return nil, fmt.Errorf("%w: %s", ErrIPMalformed, ipString)
+		return nil, fmt.Errorf("%w: %q", ErrIPMalformed, ipString)
 	}
 
 	return publicIP, nil

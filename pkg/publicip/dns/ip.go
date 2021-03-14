@@ -3,8 +3,6 @@ package dns
 import (
 	"context"
 	"net"
-
-	"github.com/miekg/dns"
 )
 
 func (f *fetcher) IP(ctx context.Context) (publicIP net.IP, err error) {
@@ -19,7 +17,7 @@ func (f *fetcher) IP6(ctx context.Context) (publicIP net.IP, err error) {
 	return f.ip(ctx, f.client6)
 }
 
-func (f *fetcher) ip(ctx context.Context, client *dns.Client) (
+func (f *fetcher) ip(ctx context.Context, client Client) (
 	publicIP net.IP, err error) {
 	f.mutex.Lock()
 	provider := f.providers[f.index]

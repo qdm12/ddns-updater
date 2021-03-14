@@ -4,8 +4,6 @@ import (
 	"context"
 	"net"
 	"sync"
-
-	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type Fetcher interface {
@@ -48,23 +46,21 @@ func New(options ...Option) (f Fetcher, err error) {
 	}
 
 	for _, provider := range settings.providers {
-		nameserver, txtRecord4or6 := getProviderData(provider, ipversion.IP4or6)
-		nameserver4, txtRecord4 := getProviderData(provider, ipversion.IP4)
-		nameserver6, txtRecord6 := getProviderData(provider, ipversion.IP6)
+		nameserver, txtRecord := provider.data()
 
 		fetcher.ip4or6[provider] = providerObj{
 			resolver:  newResolver(dialer, "udp", nameserver),
-			txtRecord: txtRecord4or6,
+			txtRecord: txtRecord,
 		}
 
 		fetcher.ip4[provider] = providerObj{
-			resolver:  newResolver(dialer, "udp4", nameserver4),
-			txtRecord: txtRecord4,
+			resolver:  newResolver(dialer, "udp4", nameserver),
+			txtRecord: txtRecord,
 		}
 
 		fetcher.ip6[provider] = providerObj{
-			resolver:  newResolver(dialer, "udp6", nameserver6),
-			txtRecord: txtRecord6,
+			resolver:  newResolver(dialer, "udp6", nameserver),
+			txtRecord: txtRecord,
 		}
 	}
 

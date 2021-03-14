@@ -3,6 +3,8 @@ package dns
 import (
 	"errors"
 	"fmt"
+
+	"github.com/miekg/dns"
 )
 
 type Provider string
@@ -30,12 +32,20 @@ func ValidateProvider(provider Provider) error {
 	return fmt.Errorf("%w: %s", ErrUnknownProvider, provider)
 }
 
-func (provider Provider) data() (nameserver, txtRecord string) {
+func (provider Provider) data() providerData {
 	switch provider {
 	case Google:
-		return "ns1.google.com:53", "o-o.myaddr.l.google.com"
+		return providerData{
+			nameserver: "ns1.google.com:53",
+			fqdn:       "o-o.myaddr.l.google.com.",
+			class:      dns.ClassINET,
+		}
 	case Cloudflare:
-		return "one.one.one.one:53", "whoami.cloudflare"
+		return providerData{
+			nameserver: "one.one.one.one:53",
+			fqdn:       "whoami.cloudflare.",
+			class:      dns.ClassCHAOS,
+		}
 	}
 	panic(`provider unknown: "` + string(provider) + `"`)
 }

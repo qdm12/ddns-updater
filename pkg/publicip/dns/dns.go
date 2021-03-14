@@ -4,6 +4,8 @@ import (
 	"context"
 	"net"
 	"sync"
+
+	"github.com/miekg/dns"
 )
 
 type Fetcher interface {
@@ -16,14 +18,16 @@ type fetcher struct {
 	mutex     sync.RWMutex
 	index     int // index in providers slice if cycle is true
 	providers []Provider
-	ip4or6    map[Provider]providerObj
-	ip4       map[Provider]providerObj
-	ip6       map[Provider]providerObj
+	client    *dns.Client
+	client4   *dns.Client
+	client6   *dns.Client
+	data      map[Provider]providerData
 }
 
-type providerObj struct {
-	resolver  *net.Resolver
-	txtRecord string
+type providerData struct {
+	nameserver string
+	fqdn       string
+	class      dns.Class
 }
 
 func New(options ...Option) (f Fetcher, err error) {
@@ -34,34 +38,29 @@ func New(options ...Option) (f Fetcher, err error) {
 		}
 	}
 
-	fetcher := &fetcher{
-		providers: settings.providers,
-		ip4or6:    make(map[Provider]providerObj, len(settings.providers)),
-		ip4:       make(map[Provider]providerObj, len(settings.providers)),
-		ip6:       make(map[Provider]providerObj, len(settings.providers)),
-	}
-
 	dialer := &net.Dialer{
 		Timeout: settings.timeout,
 	}
 
+	fetcher := &fetcher{
+		providers: settings.providers,
+		client: &dns.Client{
+			Net:    "udp",
+			Dialer: dialer,
+		},
+		client4: &dns.Client{
+			Net:    "udp4",
+			Dialer: dialer,
+		},
+		client6: &dns.Client{
+			Net:    "udp6",
+			Dialer: dialer,
+		},
+		data: make(map[Provider]providerData, len(settings.providers)),
+	}
+
 	for _, provider := range settings.providers {
-		nameserver, txtRecord := provider.data()
-
-		fetcher.ip4or6[provider] = providerObj{
-			resolver:  newResolver(dialer, "udp", nameserver),
-			txtRecord: txtRecord,
-		}
-
-		fetcher.ip4[provider] = providerObj{
-			resolver:  newResolver(dialer, "udp4", nameserver),
-			txtRecord: txtRecord,
-		}
-
-		fetcher.ip6[provider] = providerObj{
-			resolver:  newResolver(dialer, "udp6", nameserver),
-			txtRecord: txtRecord,
-		}
+		fetcher.data[provider] = provider.data()
 	}
 
 	return fetcher, nil

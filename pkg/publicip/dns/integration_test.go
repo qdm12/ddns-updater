@@ -11,7 +11,7 @@ import (
 func Test_integration(t *testing.T) {
 	t.Parallel()
 
-	fetcher, err := New(SetProviders(Google))
+	fetcher, err := New(SetProviders(Google, Cloudflare))
 	require.NoError(t, err)
 
 	ctx := context.Background()

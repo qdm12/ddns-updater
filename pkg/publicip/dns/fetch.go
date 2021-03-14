@@ -5,13 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strings"
 
 	"github.com/miekg/dns"
 )
 
 var (
 	ErrNoTXTRecordFound  = errors.New("no TXT record found")
+	ErrTooManyAnswers    = errors.New("too many answers")
+	ErrInvalidAnswerType = errors.New("invalid answer type")
 	ErrTooManyTXTRecords = errors.New("too many TXT records")
 	ErrIPMalformed       = errors.New("IP address malformed")
 )
@@ -40,14 +41,23 @@ func fetch(ctx context.Context, client *dns.Client, providerData providerData) (
 	if L == 0 {
 		return nil, ErrNoTXTRecordFound
 	} else if L > 1 {
-		return nil, fmt.Errorf("%w: %d instead of 1", ErrTooManyTXTRecords, L)
+		return nil, fmt.Errorf("%w: %d instead of 1", ErrTooManyAnswers, L)
 	}
 
 	answer := r.Answer[0]
-	fields := strings.Fields(answer.String())
-	ipString := fields[len(fields)-1]
-	ipString = strings.TrimPrefix(ipString, `"`)
-	ipString = strings.TrimSuffix(ipString, `"`)
+	txt, ok := answer.(*dns.TXT)
+	if !ok {
+		return nil, fmt.Errorf("%w: answer is of type %T instead of TXT",
+			ErrInvalidAnswerType, answer)
+	}
+
+	L = len(txt.Txt)
+	if L == 0 {
+		return nil, ErrNoTXTRecordFound
+	} else if L > 1 {
+		return nil, fmt.Errorf("%w: %d instead of 1", ErrTooManyTXTRecords, L)
+	}
+	ipString := txt.Txt[0]
 
 	publicIP = net.ParseIP(ipString)
 	if publicIP == nil {

@@ -124,10 +124,6 @@ var (
 	ErrIPMethodVersion = errors.New("ip method not valid for IP version")
 )
 
-func (r *reader) PublicIPFetcher() {
-
-}
-
 // IPMethod obtains the HTTP method for IP v4 or v6 to obtain your public IP address.
 func (r *reader) IPMethod() (providers []http.Provider, err error) {
 	return r.httpIPMethod("IP_METHOD", ipversion.IP4or6)
@@ -165,9 +161,11 @@ func (r *reader) httpIPMethod(envKey string, version ipversion.IPVersion) (
 			field = "ipify"
 		case "noip4", "noip6", "noip8245_4", "noip8245_6":
 			field = "noip"
+		case "cycle":
+			field = "all"
 		}
 
-		if field == "cycle" {
+		if field == "all" {
 			return availableProviders, nil
 		}
 

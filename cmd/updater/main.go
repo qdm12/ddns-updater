@@ -248,9 +248,9 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 		return p, err
 	}
 	p.httpIPOptions = []pubiphttp.Option{
-		pubiphttp.SetProvidersIP(httpIPProviders),
-		pubiphttp.SetProvidersIP4(httpIP4Providers),
-		pubiphttp.SetProvidersIP6(httpIP6Providers),
+		pubiphttp.SetProvidersIP(httpIPProviders...),
+		pubiphttp.SetProvidersIP4(httpIP4Providers...),
+		pubiphttp.SetProvidersIP6(httpIP6Providers...),
 	}
 
 	p.dir, err = paramsReader.ExeDir()

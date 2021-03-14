@@ -37,9 +37,9 @@ func Test_New(t *testing.T) {
 		},
 		"with options": {
 			options: []Option{
-				SetProvidersIP([]Provider{Opendns}),
-				SetProvidersIP4([]Provider{Ipify}),
-				SetProvidersIP6([]Provider{Ipify}),
+				SetProvidersIP(Opendns),
+				SetProvidersIP4(Ipify),
+				SetProvidersIP6(Ipify),
 				SetTimeout(time.Second),
 			},
 			fetcher: &fetcher{
@@ -58,7 +58,7 @@ func Test_New(t *testing.T) {
 		},
 		"bad option": {
 			options: []Option{
-				SetProvidersIP([]Provider{Provider("invalid")}),
+				SetProvidersIP(Provider("invalid")),
 			},
 			err: errors.New("unknown provider: invalid"),
 		},

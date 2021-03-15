@@ -81,6 +81,10 @@ func (l *luaDNS) BuildDomainName() string {
 	return buildDomainName(l.host, l.domain)
 }
 
+func (l *luaDNS) MarshalJSON() (b []byte, err error) {
+	return json.Marshal(l)
+}
+
 func (l *luaDNS) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", l.BuildDomainName(), l.BuildDomainName())),

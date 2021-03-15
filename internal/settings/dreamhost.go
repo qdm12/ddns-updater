@@ -21,7 +21,7 @@ type dreamhost struct {
 	host      string
 	ipVersion ipversion.IPVersion
 	key       string
-	matcher   regex.Matcher
+	matcher   regex.Matcher `json:"-"`
 }
 
 func NewDreamhost(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
@@ -80,6 +80,10 @@ func (d *dreamhost) Proxied() bool {
 
 func (d *dreamhost) BuildDomainName() string {
 	return buildDomainName(d.host, d.domain)
+}
+
+func (d *dreamhost) MarshalJSON() (b []byte, err error) {
+	return json.Marshal(d)
 }
 
 func (d *dreamhost) HTML() models.HTMLRow {

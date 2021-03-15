@@ -21,7 +21,7 @@ type duckdns struct {
 	ipVersion     ipversion.IPVersion
 	token         string
 	useProviderIP bool
-	matcher       regex.Matcher
+	matcher       regex.Matcher `json:"-"`
 }
 
 func NewDuckdns(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
@@ -79,6 +79,10 @@ func (d *duckdns) Proxied() bool {
 
 func (d *duckdns) BuildDomainName() string {
 	return buildDomainName(d.host, "duckdns.org")
+}
+
+func (d *duckdns) MarshalJSON() (b []byte, err error) {
+	return json.Marshal(d)
 }
 
 func (d *duckdns) HTML() models.HTMLRow {

@@ -22,7 +22,7 @@ type godaddy struct {
 	ipVersion ipversion.IPVersion
 	key       string
 	secret    string
-	matcher   regex.Matcher
+	matcher   regex.Matcher `json:"-"`
 }
 
 func NewGodaddy(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
@@ -80,6 +80,10 @@ func (g *godaddy) Proxied() bool {
 
 func (g *godaddy) BuildDomainName() string {
 	return buildDomainName(g.host, g.domain)
+}
+
+func (g *godaddy) MarshalJSON() (b []byte, err error) {
+	return json.Marshal(g)
 }
 
 func (g *godaddy) HTML() models.HTMLRow {

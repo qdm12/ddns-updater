@@ -78,6 +78,10 @@ func (h *he) BuildDomainName() string {
 	return buildDomainName(h.host, h.domain)
 }
 
+func (h *he) MarshalJSON() (b []byte, err error) {
+	return json.Marshal(h)
+}
+
 func (h *he) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", h.BuildDomainName(), h.BuildDomainName())),

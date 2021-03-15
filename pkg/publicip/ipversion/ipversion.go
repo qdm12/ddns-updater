@@ -11,11 +11,11 @@ const (
 func (v IPVersion) String() string {
 	switch v {
 	case IP4or6:
-		return "ip4or6"
+		return "ipv4 or ipv6"
 	case IP4:
-		return "ip4"
+		return "ipv4"
 	case IP6:
-		return "ip6"
+		return "ipv6"
 	default:
 		return "ip?"
 	}

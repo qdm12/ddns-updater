@@ -13,17 +13,18 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type dreamhost struct {
 	domain    string
 	host      string
-	ipVersion models.IPVersion
+	ipVersion ipversion.IPVersion
 	key       string
 	matcher   regex.Matcher
 }
 
-func NewDreamhost(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewDreamhost(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key string `json:"key"`
@@ -69,7 +70,7 @@ func (d *dreamhost) Host() string {
 	return d.host
 }
 
-func (d *dreamhost) IPVersion() models.IPVersion {
+func (d *dreamhost) IPVersion() ipversion.IPVersion {
 	return d.ipVersion
 }
 

@@ -13,18 +13,19 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/verification"
 )
 
 type luaDNS struct {
 	domain    string
 	host      string
-	ipVersion models.IPVersion
+	ipVersion ipversion.IPVersion
 	email     string
 	token     string
 }
 
-func NewLuaDNS(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewLuaDNS(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Email string `json:"email"`
@@ -68,7 +69,7 @@ func (l *luaDNS) Host() string {
 	return l.host
 }
 
-func (l *luaDNS) IPVersion() models.IPVersion {
+func (l *luaDNS) IPVersion() ipversion.IPVersion {
 	return l.ipVersion
 }
 

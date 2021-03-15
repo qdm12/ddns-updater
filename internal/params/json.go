@@ -9,6 +9,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/ddns-updater/internal/settings"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type commonSettings struct {
@@ -102,13 +103,15 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, 
 		}
 	}
 	hosts := strings.Split(common.Host, ",")
-	ipVersion := models.IPVersion(common.IPVersion)
-	if len(ipVersion) == 0 {
-		ipVersion = constants.IPv4OrIPv6 // default
+
+	if len(common.IPVersion) == 0 {
+		common.IPVersion = ipversion.IP4or6.String()
 	}
-	if ipVersion != constants.IPv4OrIPv6 && ipVersion != constants.IPv4 && ipVersion != constants.IPv6 {
-		return nil, warnings, fmt.Errorf("ip version %q is not valid", ipVersion)
+	ipVersion, err := ipversion.Parse(common.IPVersion)
+	if err != nil {
+		return nil, nil, err
 	}
+
 	var settingsConstructor settings.Constructor
 	switch provider {
 	case constants.CLOUDFLARE:

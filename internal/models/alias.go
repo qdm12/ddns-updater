@@ -7,6 +7,4 @@ type (
 	Status string
 	// HTML is for constants HTML strings.
 	HTML string
-	// IPVersion is ipv4 or ipv6.
-	IPVersion string
 )

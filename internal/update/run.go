@@ -10,6 +10,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 	librecords "github.com/qdm12/ddns-updater/internal/records"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/logging"
 )
 
@@ -73,11 +74,11 @@ func (r *runner) lookupIPs(hostname string) (ipv4 net.IP, ipv6 net.IP, err error
 func doIPVersion(records []librecords.Record) (doIP, doIPv4, doIPv6 bool) {
 	for _, record := range records {
 		switch record.Settings.IPVersion() {
-		case constants.IPv4OrIPv6:
+		case ipversion.IP4or6:
 			doIP = true
-		case constants.IPv4:
+		case ipversion.IP4:
 			doIPv4 = true
-		case constants.IPv6:
+		case ipversion.IP6:
 			doIPv6 = true
 		}
 		if doIP && doIPv4 && doIPv6 {
@@ -139,23 +140,23 @@ func (r *runner) shouldUpdateRecord(record librecords.Record, ip, ipv4, ipv6 net
 	return r.shouldUpdateRecordWithLookup(hostname, ipVersion, ip, ipv4, ipv6)
 }
 
-func (r *runner) shouldUpdateRecordNoLookup(hostname string, ipVersion models.IPVersion,
+func (r *runner) shouldUpdateRecordNoLookup(hostname string, ipVersion ipversion.IPVersion,
 	lastIP, ip, ipv4, ipv6 net.IP) (update bool) {
 	switch ipVersion {
-	case constants.IPv4OrIPv6:
+	case ipversion.IP4or6:
 		if ip != nil && !ip.Equal(lastIP) {
 			r.logger.Info("Last IP address stored for %s is %s and your IP address is %s", hostname, lastIP, ip)
 			return true
 		}
 		r.logger.Debug("Last IP address stored for %s is %s and your IP address is %s, skipping update", hostname, lastIP, ip)
-	case constants.IPv4:
+	case ipversion.IP4:
 		if ipv4 != nil && !ipv4.Equal(lastIP) {
 			r.logger.Info("Last IPv4 address stored for %s is %s and your IPv4 address is %s", hostname, lastIP, ip)
 			return true
 		}
 		r.logger.Debug("Last IPv4 address stored for %s is %s and your IP address is %s, skipping update",
 			hostname, lastIP, ip)
-	case constants.IPv6:
+	case ipversion.IP6:
 		if ipv6 != nil && !ipv6.Equal(lastIP) {
 			r.logger.Info("Last IPv6 address stored for %s is %s and your IPv6 address is %s", hostname, lastIP, ip)
 			return true
@@ -166,7 +167,7 @@ func (r *runner) shouldUpdateRecordNoLookup(hostname string, ipVersion models.IP
 	return false
 }
 
-func (r *runner) shouldUpdateRecordWithLookup(hostname string, ipVersion models.IPVersion,
+func (r *runner) shouldUpdateRecordWithLookup(hostname string, ipVersion ipversion.IPVersion,
 	ip, ipv4, ipv6 net.IP) (update bool) {
 	const tries = 5
 	recordIPv4, recordIPv6, err := r.lookupIPsResilient(hostname, tries)
@@ -174,7 +175,7 @@ func (r *runner) shouldUpdateRecordWithLookup(hostname string, ipVersion models.
 		r.logger.Warn("cannot DNS resolve %s after %d tries: %s", hostname, tries, err) // update anyway
 	}
 	switch ipVersion {
-	case constants.IPv4OrIPv6:
+	case ipversion.IP4or6:
 		recordIP := recordIPv4
 		if ip.To4() == nil {
 			recordIP = recordIPv6
@@ -184,13 +185,13 @@ func (r *runner) shouldUpdateRecordWithLookup(hostname string, ipVersion models.
 			return true
 		}
 		r.logger.Debug("IP address of %s is %s and your IP address is %s, skipping update", hostname, recordIP, ip)
-	case constants.IPv4:
+	case ipversion.IP4:
 		if ipv4 != nil && !ipv4.Equal(recordIPv4) {
 			r.logger.Info("IPv4 address of %s is %s and your IPv4 address is %s", hostname, recordIPv4, ipv4)
 			return true
 		}
 		r.logger.Debug("IPv4 address of %s is %s and your IPv4 address is %s, skipping update", hostname, recordIPv4, ipv4)
-	case constants.IPv6:
+	case ipversion.IP6:
 		if ipv6 != nil && !ipv6.Equal(recordIPv6) {
 			r.logger.Info("IPv6 address of %s is %s and your IPv6 address is %s", hostname, recordIPv6, ipv6)
 			return true
@@ -200,13 +201,13 @@ func (r *runner) shouldUpdateRecordWithLookup(hostname string, ipVersion models.
 	return false
 }
 
-func getIPMatchingVersion(ip, ipv4, ipv6 net.IP, ipVersion models.IPVersion) net.IP {
+func getIPMatchingVersion(ip, ipv4, ipv6 net.IP, ipVersion ipversion.IPVersion) net.IP {
 	switch ipVersion {
-	case constants.IPv4OrIPv6:
+	case ipversion.IP4or6:
 		return ip
-	case constants.IPv4:
+	case ipversion.IP4:
 		return ipv4
-	case constants.IPv6:
+	case ipversion.IP6:
 		return ipv6
 	}
 	return nil

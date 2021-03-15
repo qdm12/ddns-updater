@@ -12,17 +12,18 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type gandi struct {
 	domain    string
 	host      string
 	ttl       int
-	ipVersion models.IPVersion
+	ipVersion ipversion.IPVersion
 	key       string
 }
 
-func NewGandi(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewGandi(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key string `json:"key"`
@@ -63,7 +64,7 @@ func (g *gandi) Host() string {
 	return g.host
 }
 
-func (g *gandi) IPVersion() models.IPVersion {
+func (g *gandi) IPVersion() ipversion.IPVersion {
 	return g.ipVersion
 }
 

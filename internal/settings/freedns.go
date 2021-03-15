@@ -13,16 +13,17 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type freedns struct {
 	domain    string
 	host      string
-	ipVersion models.IPVersion
+	ipVersion ipversion.IPVersion
 	token     string
 }
 
-func NewFreedns(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewFreedns(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
@@ -65,7 +66,7 @@ func (f *freedns) Proxied() bool {
 	return false
 }
 
-func (f *freedns) IPVersion() models.IPVersion {
+func (f *freedns) IPVersion() ipversion.IPVersion {
 	return f.ipVersion
 }
 

@@ -3,7 +3,7 @@ package ipversion
 type IPVersion uint8
 
 const (
-	IP4or6 = iota
+	IP4or6 IPVersion = iota
 	IP4
 	IP6
 )

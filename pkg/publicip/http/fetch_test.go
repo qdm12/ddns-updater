@@ -100,7 +100,7 @@ func Test_fetch(t *testing.T) {
 			url:         "https://opendns.com/ip",
 			version:     ipversion.IP4,
 			httpContent: []byte(`abc def`),
-			err:         errors.New(`no IP address found: from "https://opendns.com/ip" for version ip4`),
+			err:         errors.New(`no IP address found: from "https://opendns.com/ip" for version ipv4`),
 		},
 		"single IPv4 for IP4": {
 			ctx:         context.Background(),
@@ -121,7 +121,7 @@ func Test_fetch(t *testing.T) {
 			url:         "https://opendns.com/ip",
 			version:     ipversion.IP6,
 			httpContent: []byte(`abc def`),
-			err:         errors.New(`no IP address found: from "https://opendns.com/ip" for version ip6`),
+			err:         errors.New(`no IP address found: from "https://opendns.com/ip" for version ipv6`),
 		},
 		"single IPv6 for IP6": {
 			ctx:         context.Background(),

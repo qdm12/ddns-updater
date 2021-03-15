@@ -56,7 +56,7 @@ func Test_ValidateProvider(t *testing.T) {
 		"invalid for ip version": {
 			provider: Google,
 			version:  ipversion.IP4,
-			err:      errors.New(`provider does not support IP version: "google" for version ip4`),
+			err:      errors.New(`provider does not support IP version: "google" for version ipv4`),
 		},
 		"unknown": {
 			provider: Provider("unknown"),

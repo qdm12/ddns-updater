@@ -27,6 +27,8 @@ func (f *fetcher) ip(ctx context.Context, version ipversion.IPVersion) (
 		ring = &f.ip4
 	case ipversion.IP6:
 		ring = &f.ip6
+	case ipversion.IP4or6:
+		ring = &f.ip4or6
 	default:
 		ring = &f.ip4or6
 	}

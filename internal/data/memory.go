@@ -6,13 +6,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
-func (db *database) Insert(record records.Record) (id int) {
-	db.Lock()
-	defer db.Unlock()
-	db.data = append(db.data, record)
-	return len(db.data) - 1
-}
-
 func (db *database) Select(id int) (record records.Record, err error) {
 	db.RLock()
 	defer db.RUnlock()

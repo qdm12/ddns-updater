@@ -10,11 +10,10 @@ import (
 
 type Database interface {
 	Close() error
-	Insert(record records.Record) (id int)
 	Select(id int) (record records.Record, err error)
 	SelectAll() (records []records.Record)
+	// Using persistence database
 	Update(id int, record records.Record) error
-	// From persistence database
 	GetEvents(domain, host string) (events []models.HistoryEvent, err error)
 }
 

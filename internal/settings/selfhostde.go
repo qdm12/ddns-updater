@@ -24,7 +24,7 @@ type selfhostde struct {
 }
 
 func NewSelfhostde(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	matcher regex.Matcher) (s Settings, err error) {
+	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`

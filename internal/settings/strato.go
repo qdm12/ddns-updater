@@ -23,7 +23,7 @@ type strato struct {
 }
 
 func NewStrato(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
-	matcher regex.Matcher) (s Settings, err error) {
+	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`

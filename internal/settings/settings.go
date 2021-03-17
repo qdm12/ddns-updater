@@ -13,6 +13,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/cloudflare"
+	"github.com/qdm12/ddns-updater/internal/settings/providers/dd24"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/ddnss"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/digitalocean"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/dnsomatic"
@@ -61,6 +62,8 @@ func New(provider models.Provider, data json.RawMessage, domain, host string,
 	switch provider {
 	case constants.Cloudflare:
 		return cloudflare.New(data, domain, host, ipVersion, matcher, logger)
+	case constants.Dd24:
+		return dd24.New(data, domain, host, ipVersion, logger)
 	case constants.DdnssDe:
 		return ddnss.New(data, domain, host, ipVersion, logger)
 	case constants.DigitalOcean:

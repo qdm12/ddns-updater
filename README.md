@@ -41,6 +41,7 @@
     - OpenDNS
     - OVH
     - Selfhost.de
+    - [Spdyn](spdyn.de)
     - Strato.de
     - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
 - Web User interface
@@ -152,6 +153,7 @@ Check the documentation for your DNS provider:
 - [OpenDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/opendns.md)
 - [OVH](https://github.com/qdm12/ddns-updater/blob/master/docs/ovh.md)
 - [Selfhost.de](https://github.com/qdm12/ddns-updater/blob/master/docs/selfhost.de.md)
+- [Spdyn](https://github.com/qdm12/ddns-updater/blob/master/docs/spdyn.md)
 - [Strato.de](https://github.com/qdm12/ddns-updater/blob/master/docs/strato.md)
 
 Note that:

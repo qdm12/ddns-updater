@@ -28,6 +28,7 @@ const (
 	OPENDNS      models.Provider = "opendns"
 	OVH          models.Provider = "ovh"
 	SELFHOSTDE   models.Provider = "selfhost.de"
+	SPDYN        models.Provider = "spdyn"
 	STRATO       models.Provider = "strato"
 )
 
@@ -57,6 +58,7 @@ func ProviderChoices() []models.Provider {
 		OVH,
 		OPENDNS,
 		SELFHOSTDE,
+		SPDYN,
 		STRATO,
 	}
 }

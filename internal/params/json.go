@@ -156,6 +156,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, 
 		settingsConstructor = settings.NewDyn
 	case constants.SELFHOSTDE:
 		settingsConstructor = settings.NewSelfhostde
+	case constants.SPDYN:
+		settingsConstructor = settings.NewSpdyn
 	case constants.STRATO:
 		settingsConstructor = settings.NewStrato
 	case constants.OVH:

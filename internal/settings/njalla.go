@@ -95,10 +95,11 @@ func (n *njalla) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 	values := url.Values{}
 	values.Set("h", n.BuildDomainName())
 	values.Set("key", n.key)
+	updatingIP6 := ip.To4() == nil
 	if n.useProviderIP {
 		values.Set("auto", "")
 	} else {
-		if ip.To4() == nil {
+		if updatingIP6 {
 			values.Set("aaaa", ip.String())
 		} else {
 			values.Set("a", ip.String())
@@ -121,6 +122,10 @@ func (n *njalla) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 	decoder := json.NewDecoder(response.Body)
 	var respBody struct {
 		Message string `json:"message"`
+		Value   struct {
+			A    string `json:"A"`
+			AAAA string `json:"AAAA"`
+		} `json:"value"`
 	}
 	if err := decoder.Decode(&respBody); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
@@ -128,9 +133,24 @@ func (n *njalla) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 
 	switch response.StatusCode {
 	case http.StatusOK:
-		return ip, nil
+		if respBody.Message != "record updated" {
+			return nil, fmt.Errorf("%w: message received: %s", ErrUnknownResponse, respBody.Message)
+		}
+		ipString := respBody.Value.A
+		if updatingIP6 {
+			ipString = respBody.Value.AAAA
+		}
+		newIP = net.ParseIP(ipString)
+		if newIP == nil {
+			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ipString)
+		} else if !ip.Equal(newIP) {
+			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
+		}
+		return newIP, nil
 	case http.StatusUnauthorized:
 		return nil, fmt.Errorf("%w: %s", ErrAuth, respBody.Message)
+	case http.StatusInternalServerError:
+		return nil, fmt.Errorf("%w: %s", ErrBadRequest, respBody.Message)
 	}
 
 	return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, respBody.Message)

@@ -37,6 +37,7 @@
     - LuaDNS
     - Namecheap
     - NoIP
+    - Njalla
     - OpenDNS
     - OVH
     - Selfhost.de
@@ -147,6 +148,7 @@ Check the documentation for your DNS provider:
 - [LuaDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/luadns.md)
 - [Namecheap](https://github.com/qdm12/ddns-updater/blob/master/docs/namecheap.md)
 - [NoIP](https://github.com/qdm12/ddns-updater/blob/master/docs/noip.md)
+- [Njalla](https://github.com/qdm12/ddns-updater/blob/master/docs/njalla.md)
 - [OpenDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/opendns.md)
 - [OVH](https://github.com/qdm12/ddns-updater/blob/master/docs/ovh.md)
 - [Selfhost.de](https://github.com/qdm12/ddns-updater/blob/master/docs/selfhost.de.md)

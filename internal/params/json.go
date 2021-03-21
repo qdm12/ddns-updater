@@ -148,6 +148,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, 
 		settingsConstructor = settings.NewLuaDNS
 	case constants.NAMECHEAP:
 		settingsConstructor = settings.NewNamecheap
+	case constants.NJALLA:
+		settingsConstructor = settings.NewNjalla
 	case constants.NOIP:
 		settingsConstructor = settings.NewNoip
 	case constants.DYN:

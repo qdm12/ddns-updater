@@ -23,6 +23,7 @@ const (
 	LINODE       models.Provider = "linode"
 	LUADNS       models.Provider = "luadns"
 	NAMECHEAP    models.Provider = "namecheap"
+	NJALLA       models.Provider = "njalla"
 	NOIP         models.Provider = "noip"
 	OPENDNS      models.Provider = "opendns"
 	OVH          models.Provider = "ovh"
@@ -51,6 +52,7 @@ func ProviderChoices() []models.Provider {
 		LINODE,
 		LUADNS,
 		NAMECHEAP,
+		NJALLA,
 		NOIP,
 		OVH,
 		OPENDNS,

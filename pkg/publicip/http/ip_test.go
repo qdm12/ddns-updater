@@ -17,7 +17,7 @@ import (
 
 func uint32Ptr(n uint32) *uint32 { return &n }
 
-func Test_fetcher_IP(t *testing.T) { //nolint:dupl
+func Test_fetcher_IP(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
@@ -61,7 +61,7 @@ func Test_fetcher_IP(t *testing.T) { //nolint:dupl
 	assert.Equal(t, expectedFetcher, initialFetcher)
 }
 
-func Test_fetcher_IP4(t *testing.T) { //nolint:dupl
+func Test_fetcher_IP4(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()

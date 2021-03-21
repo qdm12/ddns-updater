@@ -3,7 +3,6 @@ package publicip
 import (
 	"context"
 	"errors"
-	"math/rand"
 	"net"
 
 	"github.com/qdm12/ddns-updater/pkg/publicip/dns"
@@ -20,8 +19,8 @@ type fetcher struct {
 	settings settings
 	dns      Fetcher
 	http     Fetcher
-	// Cycling effect if both are enabled, without a mutex
-	randSource rand.Source
+	// Cycling effect if both are enabled
+	counter    *uint32 // 32 bit for 32 bit systems
 	fetchTypes []FetchType
 }
 
@@ -36,8 +35,8 @@ func NewFetcher(options ...Option) (f Fetcher, err error) {
 	}
 
 	fetcher := &fetcher{
-		settings:   settings,
-		randSource: rand.NewSource(0),
+		settings: settings,
+		counter:  new(uint32),
 	}
 
 	if settings.dns.enabled {

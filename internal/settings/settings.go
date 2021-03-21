@@ -12,6 +12,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type Settings interface {
@@ -21,11 +22,11 @@ type Settings interface {
 	BuildDomainName() string
 	HTML() models.HTMLRow
 	Proxied() bool
-	IPVersion() models.IPVersion
+	IPVersion() ipversion.IPVersion
 	Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error)
 }
 
-type Constructor func(data json.RawMessage, domain string, host string, ipVersion models.IPVersion,
+type Constructor func(data json.RawMessage, domain string, host string, ipVersion ipversion.IPVersion,
 	matcher regex.Matcher) (s Settings, err error)
 
 func buildDomainName(host, domain string) string {
@@ -39,7 +40,7 @@ func buildDomainName(host, domain string) string {
 	}
 }
 
-func toString(domain, host string, provider models.Provider, ipVersion models.IPVersion) string {
+func toString(domain, host string, provider models.Provider, ipVersion ipversion.IPVersion) string {
 	return fmt.Sprintf("[domain: %s | host: %s | provider: %s | ip: %s]", domain, host, provider, ipVersion)
 }
 

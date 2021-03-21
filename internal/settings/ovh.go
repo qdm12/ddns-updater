@@ -13,12 +13,13 @@ import (
 	ovhClient "github.com/ovh/go-ovh/ovh"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type ovh struct {
 	domain        string
 	host          string
-	ipVersion     models.IPVersion
+	ipVersion     ipversion.IPVersion
 	username      string
 	password      string
 	useProviderIP bool
@@ -29,7 +30,7 @@ type ovh struct {
 	consumerKey   string
 }
 
-func NewOVH(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewOVH(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
@@ -98,7 +99,7 @@ func (o *ovh) Host() string {
 	return o.host
 }
 
-func (o *ovh) IPVersion() models.IPVersion {
+func (o *ovh) IPVersion() ipversion.IPVersion {
 	return o.ipVersion
 }
 

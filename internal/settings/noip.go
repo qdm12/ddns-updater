@@ -13,19 +13,20 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/verification"
 )
 
 type noip struct {
 	domain        string
 	host          string
-	ipVersion     models.IPVersion
+	ipVersion     ipversion.IPVersion
 	username      string
 	password      string
 	useProviderIP bool
 }
 
-func NewNoip(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewNoip(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
@@ -76,7 +77,7 @@ func (n *noip) Host() string {
 	return n.host
 }
 
-func (n *noip) IPVersion() models.IPVersion {
+func (n *noip) IPVersion() ipversion.IPVersion {
 	return n.ipVersion
 }
 

@@ -1,19 +1,19 @@
 package params
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/url"
+	"strings"
 	"time"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
-	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/settings"
+	"github.com/qdm12/ddns-updater/pkg/publicip/http"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/params"
 )
-
-const https = "https"
 
 type Reader interface {
 	// JSON
@@ -21,9 +21,9 @@ type Reader interface {
 
 	// Core
 	Period() (period time.Duration, warnings []string, err error)
-	IPMethod() (method models.IPMethod, err error)
-	IPv4Method() (method models.IPMethod, err error)
-	IPv6Method() (method models.IPMethod, err error)
+	IPMethod() (providers []http.Provider, err error)
+	IPv4Method() (providers []http.Provider, err error)
+	IPv6Method() (providers []http.Provider, err error)
 	HTTPTimeout() (duration time.Duration, err error)
 	CooldownPeriod() (duration time.Duration, err error)
 
@@ -119,74 +119,75 @@ func (r *reader) Period() (period time.Duration, warnings []string, err error) {
 	return period, nil, err
 }
 
-func (r *reader) IPMethod() (method models.IPMethod, err error) {
-	s, err := r.env.Get("IP_METHOD", params.Default("cycle"))
-	if err != nil {
-		return method, err
-	}
-	for _, choice := range constants.IPMethods() {
-		if choice.Name == s {
-			return choice, nil
-		}
-	}
-	url, err := url.Parse(s)
-	if err != nil || url == nil || url.Scheme != https {
-		return method, fmt.Errorf("ip method %q is not valid", s)
-	}
-	return models.IPMethod{
-		Name: s,
-		URL:  s,
-		IPv4: true,
-		IPv6: true,
-	}, nil
+var (
+	ErrIPMethodInvalid = errors.New("ip method is not valid")
+	ErrIPMethodVersion = errors.New("ip method not valid for IP version")
+)
+
+// IPMethod obtains the HTTP method for IP v4 or v6 to obtain your public IP address.
+func (r *reader) IPMethod() (providers []http.Provider, err error) {
+	return r.httpIPMethod("IP_METHOD", ipversion.IP4or6)
 }
 
-func (r *reader) IPv4Method() (method models.IPMethod, err error) {
-	s, err := r.env.Get("IPV4_METHOD", params.Default("cycle"))
-	if err != nil {
-		return method, err
-	}
-	for _, choice := range constants.IPMethods() {
-		if choice.Name == s {
-			if s != "cycle" && !choice.IPv4 {
-				return method, fmt.Errorf("ip method %s does not support IPv4", s)
-			}
-			return choice, nil
-		}
-	}
-	url, err := url.Parse(s)
-	if err != nil || url == nil || url.Scheme != https {
-		return method, fmt.Errorf("ipv4 method %q is not valid", s)
-	}
-	return models.IPMethod{
-		Name: s,
-		URL:  s,
-		IPv4: true,
-	}, nil
+// IPMethod obtains the HTTP method for IP v4 to obtain your public IP address.
+func (r *reader) IPv4Method() (providers []http.Provider, err error) {
+	return r.httpIPMethod("IPV4_METHOD", ipversion.IP4)
 }
 
-func (r *reader) IPv6Method() (method models.IPMethod, err error) {
-	s, err := r.env.Get("IPV6_METHOD", params.Default("cycle"))
+// IPMethod obtains the HTTP method for IP v6 to obtain your public IP address.
+func (r *reader) IPv6Method() (providers []http.Provider, err error) {
+	return r.httpIPMethod("IPV6_METHOD", ipversion.IP6)
+}
+
+func (r *reader) httpIPMethod(envKey string, version ipversion.IPVersion) (
+	providers []http.Provider, err error) {
+	s, err := r.env.Get(envKey, params.Default("cycle"))
 	if err != nil {
-		return method, err
+		return nil, err
 	}
-	for _, choice := range constants.IPMethods() {
-		if choice.Name == s {
-			if s != "cycle" && !choice.IPv6 {
-				return method, fmt.Errorf("ip method %s does not support IPv6", s)
-			}
-			return choice, nil
+
+	availableProviders := http.ListProvidersForVersion(version)
+	choices := make(map[http.Provider]struct{}, len(availableProviders))
+	for _, provider := range availableProviders {
+		choices[provider] = struct{}{}
+	}
+
+	fields := strings.Split(s, ",")
+
+	for _, field := range fields {
+		// Retro-compatibility.
+		switch field {
+		case "ipify6":
+			field = "ipify"
+		case "noip4", "noip6", "noip8245_4", "noip8245_6":
+			field = "noip"
+		case "cycle":
+			field = "all"
 		}
+
+		if field == "all" {
+			return availableProviders, nil
+		}
+
+		// Custom URL check
+		url, err := url.Parse(field)
+		if err == nil && url != nil && url.Scheme == "https" {
+			providers = append(providers, http.CustomProvider(url))
+			continue
+		}
+
+		provider := http.Provider(field)
+		if _, ok := choices[provider]; !ok {
+			return nil, fmt.Errorf("%w: %s", ErrIPMethodInvalid, provider)
+		}
+		providers = append(providers, provider)
 	}
-	url, err := url.Parse(s)
-	if err != nil || url == nil || url.Scheme != https {
-		return method, fmt.Errorf("ipv6 method %q is not valid", s)
+
+	if len(providers) == 0 {
+		return nil, fmt.Errorf("%w: %s", ErrIPMethodVersion, version)
 	}
-	return models.IPMethod{
-		Name: s,
-		URL:  s,
-		IPv6: true,
-	}, nil
+
+	return providers, nil
 }
 
 func (r *reader) ExeDir() (dir string, err error) {

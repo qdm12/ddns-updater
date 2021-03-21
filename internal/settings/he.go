@@ -13,18 +13,19 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/verification"
 )
 
 type he struct {
 	domain        string
 	host          string
-	ipVersion     models.IPVersion
+	ipVersion     ipversion.IPVersion
 	password      string
 	useProviderIP bool
 }
 
-func NewHe(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewHe(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Password      string `json:"password"`
@@ -65,7 +66,7 @@ func (h *he) Host() string {
 	return h.host
 }
 
-func (h *he) IPVersion() models.IPVersion {
+func (h *he) IPVersion() ipversion.IPVersion {
 	return h.ipVersion
 }
 

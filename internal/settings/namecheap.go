@@ -12,20 +12,21 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type namecheap struct {
 	domain        string
 	host          string
-	ipVersion     models.IPVersion
+	ipVersion     ipversion.IPVersion
 	password      string
 	useProviderIP bool
 	matcher       regex.Matcher
 }
 
-func NewNamecheap(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewNamecheap(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	matcher regex.Matcher) (s Settings, err error) {
-	if ipVersion == constants.IPv6 {
+	if ipVersion == ipversion.IP6 {
 		return s, ErrIPv6NotSupported
 	}
 	extraSettings := struct {
@@ -68,7 +69,7 @@ func (n *namecheap) Host() string {
 	return n.host
 }
 
-func (n *namecheap) IPVersion() models.IPVersion {
+func (n *namecheap) IPVersion() ipversion.IPVersion {
 	return n.ipVersion
 }
 

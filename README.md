@@ -162,9 +162,9 @@ Note that:
 | --- | --- | --- |
 | `CONFIG` | | One line JSON object containing the entire config (takes precendence over config.json file) if specified |
 | `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
-| `IP_METHOD` | `cycle` | Method to obtain the public IP address (ipv4 or ipv6). See the [IP Methods section](#IP-methods) |
-| `IPV4_METHOD` | `cycle` | Method to obtain the public IPv4 address only. See the [IP Methods section](#IP-methods) |
-| `IPV6_METHOD` | `cycle` | Method to obtain the public IPv6 address only. See the [IP Methods section](#IP-methods) |
+| `IP_METHOD` | `all` | Comma separated methods to obtain the public IP address (ipv4 or ipv6). See the [IP Methods section](#IP-methods) |
+| `IPV4_METHOD` | `all` | Comma separated methods to obtain the public IPv4 address only. See the [IP Methods section](#IP-methods) |
+| `IPV6_METHOD` | `all` | Comma separated methods to obtain the public IPv6 address only. See the [IP Methods section](#IP-methods) |
 | `UPDATE_COOLDOWN_PERIOD` | `5m` | Duration to cooldown between updates for each record. This is useful to avoid being rate limited or banned. |
 | `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
@@ -179,7 +179,7 @@ Note that:
 
 #### IP methods
 
-By default, all ip methods are cycled through between all ip methods available for the specified ip version, if any. This allows you not to be blocked for making too many requests. You can otherwise pick one of the following.
+By default, all ip methods are specified. The program will cycle between each. This allows you not to be blocked for making too many requests. You can otherwise pick one or more of the following, for each ip version:
 
 - IPv4 or IPv6 (for most cases)
   - `opendns` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
@@ -190,14 +190,12 @@ By default, all ip methods are cycled through between all ip methods available f
   - `google` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
 - IPv4 only (useful for updating both ipv4 and ipv6)
   - `ipify` using [https://api.ipify.org](https://api.ipify.org)
-  - `noip4` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
-  - `noip8245_4` using [http://ip1.dynupdate.no-ip.com:8245](http://ip1.dynupdate.no-ip.com:8245)
+  - `noip` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
 - IPv6 only
-  - `ipify6` using [https://api6.ipify.org](https://api6.ipify.org)
-  - `noip6` using [http://ip1.dynupdate6.no-ip.com](http://ip1.dynupdate6.no-ip.com)
-  - `noip8245_6` using [http://ip1.dynupdate6.no-ip.com:8245](http://ip1.dynupdate6.no-ip.com:8245)
+  - `ipify` using [https://api6.ipify.org](https://api6.ipify.org)
+  - `noip` using [http://ip1.dynupdate6.no-ip.com](http://ip1.dynupdate6.no-ip.com)
 
-You can also specify an HTTPS URL to obtain your public IP address (i.e. `-e IPV6_METHOD=https://ipinfo.io/ip`)
+You can also specify one or more HTTPS URL to obtain your public IP address (i.e. `-e IPV6_METHOD=https://ipinfo.io/ip`).
 
 ### Host firewall
 

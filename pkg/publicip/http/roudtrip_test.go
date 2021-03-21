@@ -1,8 +1,6 @@
-package network
+package http
 
-import (
-	"net/http"
-)
+import "net/http"
 
 type roundTripFunc func(r *http.Request) (*http.Response, error)
 

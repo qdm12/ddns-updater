@@ -13,18 +13,19 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type godaddy struct {
 	domain    string
 	host      string
-	ipVersion models.IPVersion
+	ipVersion ipversion.IPVersion
 	key       string
 	secret    string
 	matcher   regex.Matcher
 }
 
-func NewGodaddy(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewGodaddy(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key    string `json:"key"`
@@ -69,7 +70,7 @@ func (g *godaddy) Host() string {
 	return g.host
 }
 
-func (g *godaddy) IPVersion() models.IPVersion {
+func (g *godaddy) IPVersion() ipversion.IPVersion {
 	return g.ipVersion
 }
 

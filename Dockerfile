@@ -15,6 +15,7 @@ WORKDIR /tmp/gobuild
 # Copy repository code and install Go dependencies
 COPY go.mod go.sum ./
 RUN go mod download
+COPY pkg/ ./pkg/
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 
@@ -78,9 +79,9 @@ ENV \
     CONFIG= \
     PERIOD=5m \
     UPDATE_COOLDOWN_PERIOD=5m \
-    IP_METHOD=cycle \
-    IPV4_METHOD=cycle \
-    IPV6_METHOD=cycle \
+    IP_METHOD=all \
+    IPV4_METHOD=all \
+    IPV6_METHOD=all \
     HTTP_TIMEOUT=10s \
 
     # Web UI

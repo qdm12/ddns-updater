@@ -13,13 +13,14 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/verification"
 )
 
 type cloudflare struct {
 	domain         string
 	host           string
-	ipVersion      models.IPVersion
+	ipVersion      ipversion.IPVersion
 	key            string
 	token          string
 	email          string
@@ -30,7 +31,7 @@ type cloudflare struct {
 	matcher        regex.Matcher
 }
 
-func NewCloudflare(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewCloudflare(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	matcher regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key            string `json:"key"`
@@ -99,7 +100,7 @@ func (c *cloudflare) Host() string {
 	return c.host
 }
 
-func (c *cloudflare) IPVersion() models.IPVersion {
+func (c *cloudflare) IPVersion() ipversion.IPVersion {
 	return c.ipVersion
 }
 

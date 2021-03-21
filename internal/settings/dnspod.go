@@ -12,16 +12,17 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type dnspod struct {
 	domain    string
 	host      string
-	ipVersion models.IPVersion
+	ipVersion ipversion.IPVersion
 	token     string
 }
 
-func NewDNSPod(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewDNSPod(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
@@ -60,7 +61,7 @@ func (d *dnspod) Host() string {
 	return d.host
 }
 
-func (d *dnspod) IPVersion() models.IPVersion {
+func (d *dnspod) IPVersion() ipversion.IPVersion {
 	return d.ipVersion
 }
 

@@ -3,7 +3,6 @@ package dns
 import (
 	"context"
 	"net"
-	"sync"
 
 	"github.com/miekg/dns"
 )
@@ -22,8 +21,8 @@ type fetcher struct {
 }
 
 type ring struct {
-	mutex     sync.RWMutex
-	index     int // index in the providers slice
+	// counter is used to get an index in the providers slice
+	counter   *uint32 // uint32 for 32 bit systems atomic operations
 	providers []Provider
 }
 
@@ -41,6 +40,7 @@ func New(options ...Option) (f Fetcher, err error) {
 
 	return &fetcher{
 		ring: ring{
+			counter:   new(uint32),
 			providers: settings.providers,
 		},
 		client: &dns.Client{

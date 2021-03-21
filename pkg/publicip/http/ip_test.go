@@ -15,11 +15,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func uint32Ptr(n uint32) *uint32 { return &n }
+
 func Test_fetcher_IP(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
 	ctx := context.Background()
-	const url = "b"
+	const url = "c"
 	httpBytes := []byte(`55.55.55.55`)
 	expectedPublicIP := net.IP{55, 55, 55, 55}
 
@@ -37,16 +39,16 @@ func Test_fetcher_IP(t *testing.T) { //nolint:dupl
 		client:  client,
 		timeout: time.Hour,
 		ip4or6: urlsRing{
-			index: 1,
-			urls:  []string{"a", "b", "c"},
+			counter: uint32Ptr(1),
+			urls:    []string{"a", "b", "c"},
 		},
 	}
 	expectedFetcher := &fetcher{
 		client:  client,
 		timeout: time.Hour,
 		ip4or6: urlsRing{
-			index: 2,
-			urls:  []string{"a", "b", "c"},
+			counter: uint32Ptr(2),
+			urls:    []string{"a", "b", "c"},
 		},
 	}
 
@@ -63,7 +65,7 @@ func Test_fetcher_IP4(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
 	ctx := context.Background()
-	const url = "b"
+	const url = "c"
 	httpBytes := []byte(`55.55.55.55`)
 	expectedPublicIP := net.IP{55, 55, 55, 55}
 
@@ -81,16 +83,16 @@ func Test_fetcher_IP4(t *testing.T) { //nolint:dupl
 		client:  client,
 		timeout: time.Hour,
 		ip4: urlsRing{
-			index: 1,
-			urls:  []string{"a", "b", "c"},
+			counter: uint32Ptr(1),
+			urls:    []string{"a", "b", "c"},
 		},
 	}
 	expectedFetcher := &fetcher{
 		client:  client,
 		timeout: time.Hour,
 		ip4: urlsRing{
-			index: 2,
-			urls:  []string{"a", "b", "c"},
+			counter: uint32Ptr(2),
+			urls:    []string{"a", "b", "c"},
 		},
 	}
 
@@ -107,7 +109,7 @@ func Test_fetcher_IP6(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	const url = "b"
+	const url = "c"
 	httpBytes := []byte(`::1`)
 	expectedPublicIP := net.IP{
 		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
@@ -128,16 +130,16 @@ func Test_fetcher_IP6(t *testing.T) {
 		client:  client,
 		timeout: time.Hour,
 		ip6: urlsRing{
-			index: 1,
-			urls:  []string{"a", "b", "c"},
+			counter: uint32Ptr(1),
+			urls:    []string{"a", "b", "c"},
 		},
 	}
 	expectedFetcher := &fetcher{
 		client:  client,
 		timeout: time.Hour,
 		ip6: urlsRing{
-			index: 2,
-			urls:  []string{"a", "b", "c"},
+			counter: uint32Ptr(2),
+			urls:    []string{"a", "b", "c"},
 		},
 	}
 
@@ -185,18 +187,18 @@ func Test_fetcher_ip(t *testing.T) {
 			ctx: context.Background(),
 			initialFetcher: &fetcher{
 				timeout: time.Hour,
-				client:  newTestClient("a", []byte(`55.55.55.55`), nil),
+				client:  newTestClient("b", []byte(`55.55.55.55`), nil),
 				ip4or6: urlsRing{
-					index: 0,
-					urls:  []string{"a", "b"},
+					counter: uint32Ptr(0),
+					urls:    []string{"a", "b"},
 				},
 			},
 			publicIP: net.IP{55, 55, 55, 55},
 			finalFetcher: &fetcher{
 				timeout: time.Hour,
 				ip4or6: urlsRing{
-					index: 1,
-					urls:  []string{"a", "b"},
+					counter: uint32Ptr(1),
+					urls:    []string{"a", "b"},
 				},
 			},
 		},
@@ -204,18 +206,37 @@ func Test_fetcher_ip(t *testing.T) {
 			ctx: context.Background(),
 			initialFetcher: &fetcher{
 				timeout: time.Hour,
-				client:  newTestClient("b", []byte(`55.55.55.55`), nil),
+				client:  newTestClient("a", []byte(`55.55.55.55`), nil),
 				ip4or6: urlsRing{
-					index: 1,
-					urls:  []string{"a", "b"},
+					counter: uint32Ptr(1),
+					urls:    []string{"a", "b"},
 				},
 			},
 			publicIP: net.IP{55, 55, 55, 55},
 			finalFetcher: &fetcher{
 				timeout: time.Hour,
 				ip4or6: urlsRing{
-					index: 0,
-					urls:  []string{"a", "b"},
+					counter: uint32Ptr(2),
+					urls:    []string{"a", "b"},
+				},
+			},
+		},
+		"max uint32": {
+			ctx: context.Background(),
+			initialFetcher: &fetcher{
+				timeout: time.Hour,
+				client:  newTestClient("a", []byte(`55.55.55.55`), nil),
+				ip4or6: urlsRing{
+					counter: uint32Ptr(^uint32(0)),
+					urls:    []string{"a", "b"},
+				},
+			},
+			publicIP: net.IP{55, 55, 55, 55},
+			finalFetcher: &fetcher{
+				timeout: time.Hour,
+				ip4or6: urlsRing{
+					counter: uint32Ptr(0),
+					urls:    []string{"a", "b"},
 				},
 			},
 		},
@@ -224,14 +245,14 @@ func Test_fetcher_ip(t *testing.T) {
 			initialFetcher: &fetcher{
 				client: newTestClient("a", nil, nil),
 				ip4or6: urlsRing{
-					index: 0,
-					urls:  []string{"a", "b"},
+					counter: uint32Ptr(1),
+					urls:    []string{"a", "b"},
 				},
 			},
 			finalFetcher: &fetcher{
 				ip4or6: urlsRing{
-					index: 1,
-					urls:  []string{"a", "b"},
+					counter: uint32Ptr(2),
+					urls:    []string{"a", "b"},
 				},
 			},
 			err: errors.New(`Get "a": context deadline exceeded`),
@@ -242,15 +263,15 @@ func Test_fetcher_ip(t *testing.T) {
 				timeout: time.Hour,
 				client:  newTestClient("a", nil, nil),
 				ip4or6: urlsRing{
-					index: 0,
-					urls:  []string{"a", "b"},
+					counter: uint32Ptr(1),
+					urls:    []string{"a", "b"},
 				},
 			},
 			finalFetcher: &fetcher{
 				timeout: time.Hour,
 				ip4or6: urlsRing{
-					index: 1,
-					urls:  []string{"a", "b"},
+					counter: uint32Ptr(2),
+					urls:    []string{"a", "b"},
 				},
 			},
 			err: errors.New(`Get "a": context canceled`),
@@ -262,7 +283,9 @@ func Test_fetcher_ip(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			publicIP, err := testCase.initialFetcher.ip(testCase.ctx, ipversion.IP4or6)
+			urlRing := testCase.initialFetcher.ip4or6
+
+			publicIP, err := testCase.initialFetcher.ip(testCase.ctx, urlRing, ipversion.IP4or6)
 
 			if testCase.err != nil {
 				require.Error(t, err)

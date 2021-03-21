@@ -4,7 +4,6 @@ import (
 	"context"
 	"net"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -25,9 +24,8 @@ type fetcher struct {
 }
 
 type urlsRing struct {
-	index int
-	urls  []string
-	mutex sync.Mutex
+	counter *uint32
+	urls    []string
 }
 
 func New(client *http.Client, options ...Option) (f Fetcher, err error) {
@@ -43,16 +41,19 @@ func New(client *http.Client, options ...Option) (f Fetcher, err error) {
 		timeout: settings.timeout,
 	}
 
+	fetcher.ip4or6.counter = new(uint32)
 	for _, provider := range settings.providersIP {
 		url, _ := provider.url(ipversion.IP4or6)
 		fetcher.ip4or6.urls = append(fetcher.ip4or6.urls, url)
 	}
 
+	fetcher.ip4.counter = new(uint32)
 	for _, provider := range settings.providersIP4 {
 		url, _ := provider.url(ipversion.IP4)
 		fetcher.ip4.urls = append(fetcher.ip4.urls, url)
 	}
 
+	fetcher.ip6.counter = new(uint32)
 	for _, provider := range settings.providersIP6 {
 		url, _ := provider.url(ipversion.IP6)
 		fetcher.ip6.urls = append(fetcher.ip6.urls, url)

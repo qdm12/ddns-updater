@@ -25,13 +25,16 @@ func Test_New(t *testing.T) {
 				client:  client,
 				timeout: 5 * time.Second,
 				ip4or6: urlsRing{
-					urls: []string{"https://domains.google.com/checkip"},
+					counter: new(uint32),
+					urls:    []string{"https://domains.google.com/checkip"},
 				},
 				ip4: urlsRing{
-					urls: []string{"http://ip1.dynupdate.no-ip.com"},
+					counter: new(uint32),
+					urls:    []string{"http://ip1.dynupdate.no-ip.com"},
 				},
 				ip6: urlsRing{
-					urls: []string{"http://ip1.dynupdate6.no-ip.com"},
+					counter: new(uint32),
+					urls:    []string{"http://ip1.dynupdate6.no-ip.com"},
 				},
 			},
 		},
@@ -46,13 +49,16 @@ func Test_New(t *testing.T) {
 				client:  client,
 				timeout: time.Second,
 				ip4or6: urlsRing{
-					urls: []string{"https://diagnostic.opendns.com/myip"},
+					counter: new(uint32),
+					urls:    []string{"https://diagnostic.opendns.com/myip"},
 				},
 				ip4: urlsRing{
-					urls: []string{"https://api.ipify.org"},
+					counter: new(uint32),
+					urls:    []string{"https://api.ipify.org"},
 				},
 				ip6: urlsRing{
-					urls: []string{"https://api6.ipify.org"},
+					counter: new(uint32),
+					urls:    []string{"https://api6.ipify.org"},
 				},
 			},
 		},

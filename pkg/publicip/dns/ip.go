@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"net"
+	"sync/atomic"
 )
 
 func (f *fetcher) IP(ctx context.Context) (publicIP net.IP, err error) {
@@ -19,13 +20,7 @@ func (f *fetcher) IP6(ctx context.Context) (publicIP net.IP, err error) {
 
 func (f *fetcher) ip(ctx context.Context, client Client) (
 	publicIP net.IP, err error) {
-	f.ring.mutex.Lock()
-	provider := f.ring.providers[f.ring.index]
-	f.ring.index++
-	if f.ring.index == len(f.ring.providers) {
-		f.ring.index = 0
-	}
-	f.ring.mutex.Unlock()
-
+	index := int(atomic.AddUint32(f.ring.counter, 1)) % len(f.ring.providers)
+	provider := f.ring.providers[index]
 	return fetch(ctx, client, provider.data())
 }

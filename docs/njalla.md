@@ -22,7 +22,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
+- `"host"` is your host and can be a subdomain or `"@"` or `"*"`
 - `"key"` is the key for your record
 
 ### Optional parameters

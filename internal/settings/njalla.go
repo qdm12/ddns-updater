@@ -44,11 +44,8 @@ func NewNjalla(data json.RawMessage, domain, host string, ipVersion models.IPVer
 }
 
 func (n *njalla) isValid() error {
-	switch {
-	case len(n.key) == 0:
+	if len(n.key) == 0 {
 		return ErrEmptyKey
-	case n.host == "*":
-		return ErrHostWildcard
 	}
 	return nil
 }
@@ -94,6 +91,9 @@ func (n *njalla) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 	}
 	values := url.Values{}
 	values.Set("h", n.BuildDomainName())
+	if n.host == "*" {
+		values.Set("h", "*."+n.domain)
+	}
 	values.Set("key", n.key)
 	updatingIP6 := ip.To4() == nil
 	if n.useProviderIP {

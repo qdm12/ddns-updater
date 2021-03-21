@@ -26,12 +26,10 @@ type fetcher struct {
 
 var ErrNoFetchTypeSpecified = errors.New("at least one fetcher type must be specified")
 
-func NewFetcher(options ...Option) (f Fetcher, err error) {
-	settings := defaultSettings()
-	for _, option := range options {
-		if err := option(&settings); err != nil {
-			return nil, err
-		}
+func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f Fetcher, err error) {
+	settings := settings{
+		dns:  dnsSettings,
+		http: httpSettings,
 	}
 
 	fetcher := &fetcher{
@@ -39,16 +37,16 @@ func NewFetcher(options ...Option) (f Fetcher, err error) {
 		counter:  new(uint32),
 	}
 
-	if settings.dns.enabled {
-		fetcher.dns, err = dns.New(settings.dns.options...)
+	if settings.dns.Enabled {
+		fetcher.dns, err = dns.New(settings.dns.Options...)
 		if err != nil {
 			return nil, err
 		}
 		fetcher.fetchTypes = append(fetcher.fetchTypes, DNS)
 	}
 
-	if settings.http.enabled {
-		fetcher.http, err = http.New(settings.http.client, settings.http.options...)
+	if settings.http.Enabled {
+		fetcher.http, err = http.New(settings.http.Client, settings.http.Options...)
 		if err != nil {
 			return nil, err
 		}

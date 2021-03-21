@@ -7,7 +7,7 @@ import (
 
 var ErrFetcherUndefined = errors.New("fetcher type undefined")
 
-func (f *fetcher) getSubFetcher() (subFetcher Fetcher, err error) {
+func (f *fetcher) getSubFetcher() Fetcher {
 	fetcherType := f.fetchTypes[0]
 	if len(f.fetchTypes) > 1 { // cycling effect
 		randInt := int(f.randSource.Int63())
@@ -17,10 +17,10 @@ func (f *fetcher) getSubFetcher() (subFetcher Fetcher, err error) {
 
 	switch fetcherType {
 	case DNS:
-		return f.dns, nil
+		return f.dns
 	case HTTP:
-		return f.http, nil
+		return f.http
 	default:
-		return nil, fmt.Errorf("%w: %d", ErrFetcherUndefined, fetcherType)
+		panic(fmt.Sprintf("fetcher type undefined: %d", fetcherType))
 	}
 }

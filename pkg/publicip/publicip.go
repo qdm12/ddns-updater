@@ -64,25 +64,13 @@ func NewFetcher(options ...Option) (f Fetcher, err error) {
 }
 
 func (f *fetcher) IP(ctx context.Context) (ip net.IP, err error) {
-	subFetcher, err := f.getSubFetcher()
-	if err != nil {
-		return nil, err
-	}
-	return subFetcher.IP(ctx)
+	return f.getSubFetcher().IP(ctx)
 }
 
 func (f *fetcher) IP4(ctx context.Context) (ipv4 net.IP, err error) {
-	subFetcher, err := f.getSubFetcher()
-	if err != nil {
-		return nil, err
-	}
-	return subFetcher.IP4(ctx)
+	return f.getSubFetcher().IP4(ctx)
 }
 
 func (f *fetcher) IP6(ctx context.Context) (ipv6 net.IP, err error) {
-	subFetcher, err := f.getSubFetcher()
-	if err != nil {
-		return nil, err
-	}
-	return subFetcher.IP6(ctx)
+	return f.getSubFetcher().IP6(ctx)
 }

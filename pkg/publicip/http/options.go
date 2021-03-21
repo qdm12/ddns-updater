@@ -25,7 +25,8 @@ func newDefaultSettings() settings {
 
 type Option func(s *settings) error
 
-func SetProvidersIP(providers ...Provider) Option {
+func SetProvidersIP(first Provider, providers ...Provider) Option {
+	providers = append(providers, first)
 	return func(s *settings) error {
 		for _, provider := range providers {
 			if err := ValidateProvider(provider, ipversion.IP4or6); err != nil {
@@ -37,7 +38,8 @@ func SetProvidersIP(providers ...Provider) Option {
 	}
 }
 
-func SetProvidersIP4(providers ...Provider) Option {
+func SetProvidersIP4(first Provider, providers ...Provider) Option {
+	providers = append(providers, first)
 	return func(s *settings) error {
 		for _, provider := range providers {
 			if err := ValidateProvider(provider, ipversion.IP4); err != nil {
@@ -49,7 +51,8 @@ func SetProvidersIP4(providers ...Provider) Option {
 	}
 }
 
-func SetProvidersIP6(providers ...Provider) Option {
+func SetProvidersIP6(first Provider, providers ...Provider) Option {
+	providers = append(providers, first)
 	return func(s *settings) error {
 		for _, provider := range providers {
 			if err := ValidateProvider(provider, ipversion.IP6); err != nil {

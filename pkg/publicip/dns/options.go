@@ -16,8 +16,9 @@ func newDefaultSettings() settings {
 
 type Option func(s *settings) error
 
-func SetProviders(providers ...Provider) Option {
+func SetProviders(first Provider, providers ...Provider) Option {
 	return func(s *settings) error {
+		providers = append(providers, first)
 		for _, provider := range providers {
 			if err := ValidateProvider(provider); err != nil {
 				return err

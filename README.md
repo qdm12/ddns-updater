@@ -181,23 +181,32 @@ Note that:
 
 #### Public IP
 
-By default, all ip methods are specified. The program will cycle between each. This allows you not to be blocked for making too many requests. You can otherwise pick one or more of the following, for each ip version:
+By default, all public IP fetching types are used and cycled (over DNS and over HTTPs).
 
-- IPv4 or IPv6 (for most cases)
+On top of that, for each fetching method, all echo services available are cycled on each request.
+
+This allows you not to be blocked for making too many requests.
+
+You can otherwise customize it with the following:
+
+- `PUBLICIP_HTTP_PROVIDERS` gets your public IPv4 or IPv6 address. It can be one or more of the following:
   - `opendns` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
   - `ifconfig` using [https://ifconfig.io/ip](https://ifconfig.io/ip)
   - `ipinfo` using [https://ipinfo.io/ip](https://ipinfo.io/ip)
-  - `ipify` using [https://api.ipify.org](https://api.ipify.org)
   - `ddnss` using [https://ddnss.de/meineip.php](https://ddnss.de/meineip.php)
   - `google` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
-- IPv4 only (useful for updating both ipv4 and ipv6)
+  - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
+- `PUBLICIPV4_HTTP_PROVIDERS` gets your public IPv4 address only. It can be one or more of the following:
   - `ipify` using [https://api.ipify.org](https://api.ipify.org)
   - `noip` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
-- IPv6 only
+  - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
+- `PUBLICIPV6_HTTP_PROVIDERS` gets your public IPv6 address only. It can be one or more of the following:
   - `ipify` using [https://api6.ipify.org](https://api6.ipify.org)
   - `noip` using [http://ip1.dynupdate6.no-ip.com](http://ip1.dynupdate6.no-ip.com)
-
-You can also specify one or more HTTPS URL to obtain your public IP address (i.e. `-e IPV6_METHOD=https://ipinfo.io/ip`).
+  - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
+- `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see #136). It can be one or more of the following:
+  - `google`
+  - `cloudflare`
 
 ### Host firewall
 

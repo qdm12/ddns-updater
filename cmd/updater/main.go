@@ -22,6 +22,8 @@ import (
 	"github.com/qdm12/ddns-updater/internal/server"
 	"github.com/qdm12/ddns-updater/internal/splash"
 	"github.com/qdm12/ddns-updater/internal/update"
+	"github.com/qdm12/ddns-updater/pkg/publicip"
+	"github.com/qdm12/ddns-updater/pkg/publicip/dns"
 	pubiphttp "github.com/qdm12/ddns-updater/pkg/publicip/http"
 	"github.com/qdm12/golibs/admin"
 	"github.com/qdm12/golibs/logging"
@@ -45,7 +47,8 @@ func main() {
 type allParams struct {
 	period          time.Duration
 	cooldown        time.Duration
-	httpIPOptions   []pubiphttp.Option
+	httpSettings    publicip.HTTPSettings
+	dnsSettings     publicip.DNSSettings
 	dir             string
 	dataDir         string
 	listeningPort   uint16
@@ -147,7 +150,9 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
-	ipGetter, err := pubiphttp.New(client, p.httpIPOptions...)
+	p.httpSettings.Client = client
+
+	ipGetter, err := publicip.NewFetcher(p.dnsSettings, p.httpSettings)
 	if err != nil {
 		logger.Error(err)
 		return 1
@@ -235,22 +240,35 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 		return p, err
 	}
 
-	httpIPProviders, err := paramsReader.IPMethod()
+	p.httpSettings.Enabled, p.dnsSettings.Enabled, err = paramsReader.PublicIPFetchers()
 	if err != nil {
 		return p, err
 	}
-	httpIP4Providers, err := paramsReader.IPv4Method()
+
+	httpIPProviders, err := paramsReader.PublicIPHTTPProviders()
 	if err != nil {
 		return p, err
 	}
-	httpIP6Providers, err := paramsReader.IPv6Method()
+	httpIP4Providers, err := paramsReader.PublicIPv4HTTPProviders()
 	if err != nil {
 		return p, err
 	}
-	p.httpIPOptions = []pubiphttp.Option{
+	httpIP6Providers, err := paramsReader.PublicIPv6HTTPProviders()
+	if err != nil {
+		return p, err
+	}
+	p.httpSettings.Options = []pubiphttp.Option{
 		pubiphttp.SetProvidersIP(httpIPProviders[0], httpIPProviders[1:]...),
 		pubiphttp.SetProvidersIP4(httpIP4Providers[0], httpIP4Providers[1:]...),
 		pubiphttp.SetProvidersIP6(httpIP6Providers[0], httpIP6Providers[1:]...),
+	}
+
+	dnsIPProviders, err := paramsReader.PublicIPDNSProviders()
+	if err != nil {
+		return p, err
+	}
+	p.dnsSettings.Options = []dns.Option{
+		dns.SetProviders(dnsIPProviders[0], dnsIPProviders[1:]...),
 	}
 
 	p.dir, err = paramsReader.ExeDir()

@@ -9,10 +9,15 @@ import (
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/settings"
+	"github.com/qdm12/ddns-updater/pkg/publicip/dns"
 	"github.com/qdm12/ddns-updater/pkg/publicip/http"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/params"
+)
+
+const (
+	all = "all"
 )
 
 type Reader interface {
@@ -21,9 +26,11 @@ type Reader interface {
 
 	// Core
 	Period() (period time.Duration, warnings []string, err error)
-	IPMethod() (providers []http.Provider, err error)
-	IPv4Method() (providers []http.Provider, err error)
-	IPv6Method() (providers []http.Provider, err error)
+	PublicIPFetchers() (http, dns bool, err error)
+	PublicIPHTTPProviders() (providers []http.Provider, err error)
+	PublicIPv4HTTPProviders() (providers []http.Provider, err error)
+	PublicIPv6HTTPProviders() (providers []http.Provider, err error)
+	PublicIPDNSProviders() (providers []dns.Provider, err error)
 	HTTPTimeout() (duration time.Duration, err error)
 	CooldownPeriod() (duration time.Duration, err error)
 
@@ -49,6 +56,7 @@ type reader struct {
 	env      params.Env
 	os       params.OS
 	readFile func(filename string) ([]byte, error)
+	retroFn  func(oldKey, newKey string)
 }
 
 func NewReader(logger logging.Logger) Reader {
@@ -56,6 +64,9 @@ func NewReader(logger logging.Logger) Reader {
 		env:      params.NewEnv(),
 		os:       params.NewOS(),
 		readFile: ioutil.ReadFile,
+		retroFn: func(oldKey, newKey string) {
+			logger.Warn("You are using the old environment variable %s, please consider switching to %s instead", oldKey, newKey)
+		},
 	}
 }
 
@@ -119,29 +130,81 @@ func (r *reader) Period() (period time.Duration, warnings []string, err error) {
 	return period, nil, err
 }
 
+var ErrInvalidFetcher = errors.New("invalid fetcher specified")
+
+func (r *reader) PublicIPFetchers() (http, dns bool, err error) {
+	s, err := r.env.Get("PUBLICIP_FETCHERS", params.Default(all))
+	if err != nil {
+		return false, false, err
+	}
+
+	fields := strings.Split(s, ",")
+	for i, field := range fields {
+		switch strings.ToLower(field) {
+		case all:
+			return true, true, nil
+		case "http":
+			http = true
+		case "dns":
+			dns = true
+		default:
+			return false, false, fmt.Errorf(
+				"%w: %q at position %d of %d",
+				ErrInvalidFetcher, field, i+1, len(fields))
+		}
+	}
+
+	return http, dns, nil
+}
+
+// PublicIPHTTPProviders obtains the HTTP providers to obtain your public IPv4 and/or IPv6 address.
+func (r *reader) PublicIPDNSProviders() (providers []dns.Provider, err error) {
+	s, err := r.env.Get("PUBLICIP_DNS_PROVIDERS", params.Default(all))
+	if err != nil {
+		return nil, err
+	}
+
+	availableProviders := dns.ListProviders()
+
+	fields := strings.Split(s, ",")
+	providers = make([]dns.Provider, len(fields))
+	for i, field := range fields {
+		if field == all {
+			return availableProviders, nil
+		}
+
+		providers[i] = dns.Provider(field)
+		if err := dns.ValidateProvider(providers[i]); err != nil {
+			return nil, err
+		}
+	}
+
+	return providers, nil
+}
+
+// PublicIPHTTPProviders obtains the HTTP providers to obtain your public IPv4 or IPv6 address.
+func (r *reader) PublicIPHTTPProviders() (providers []http.Provider, err error) {
+	return r.httpIPMethod("PUBLICIP_HTTP_PROVIDERS", "IP_METHOD", ipversion.IP4or6)
+}
+
+// PublicIPv4HTTPProviders obtains the HTTP providers to obtain your public IPv4 address.
+func (r *reader) PublicIPv4HTTPProviders() (providers []http.Provider, err error) {
+	return r.httpIPMethod("PUBLICIPV4_HTTP_PROVIDERS", "IPV4_METHOD", ipversion.IP4)
+}
+
+// PublicIPv6HTTPProviders obtains the HTTP providers to obtain your public IPv6 address.
+func (r *reader) PublicIPv6HTTPProviders() (providers []http.Provider, err error) {
+	return r.httpIPMethod("PUBLICIPV6_HTTP_PROVIDERS", "IPV6_METHOD", ipversion.IP6)
+}
+
 var (
-	ErrIPMethodInvalid = errors.New("ip method is not valid")
-	ErrIPMethodVersion = errors.New("ip method not valid for IP version")
+	ErrInvalidPublicIPHTTPProvider = errors.New("invalid public IP HTTP provider")
 )
 
-// IPMethod obtains the HTTP method for IP v4 or v6 to obtain your public IP address.
-func (r *reader) IPMethod() (providers []http.Provider, err error) {
-	return r.httpIPMethod("IP_METHOD", ipversion.IP4or6)
-}
-
-// IPMethod obtains the HTTP method for IP v4 to obtain your public IP address.
-func (r *reader) IPv4Method() (providers []http.Provider, err error) {
-	return r.httpIPMethod("IPV4_METHOD", ipversion.IP4)
-}
-
-// IPMethod obtains the HTTP method for IP v6 to obtain your public IP address.
-func (r *reader) IPv6Method() (providers []http.Provider, err error) {
-	return r.httpIPMethod("IPV6_METHOD", ipversion.IP6)
-}
-
-func (r *reader) httpIPMethod(envKey string, version ipversion.IPVersion) (
+func (r *reader) httpIPMethod(envKey, retroKey string, version ipversion.IPVersion) (
 	providers []http.Provider, err error) {
-	s, err := r.env.Get(envKey, params.Default("cycle"))
+	retroKeyOption := params.RetroKeys([]string{retroKey}, r.retroFn)
+	s, err := r.env.Get(envKey, params.Default("cycle"), retroKeyOption)
 	if err != nil {
 		return nil, err
 	}
@@ -162,10 +225,10 @@ func (r *reader) httpIPMethod(envKey string, version ipversion.IPVersion) (
 		case "noip4", "noip6", "noip8245_4", "noip8245_6":
 			field = "noip"
 		case "cycle":
-			field = "all"
+			field = all
 		}
 
-		if field == "all" {
+		if field == all {
 			return availableProviders, nil
 		}
 
@@ -178,13 +241,13 @@ func (r *reader) httpIPMethod(envKey string, version ipversion.IPVersion) (
 
 		provider := http.Provider(field)
 		if _, ok := choices[provider]; !ok {
-			return nil, fmt.Errorf("%w: %s", ErrIPMethodInvalid, provider)
+			return nil, fmt.Errorf("%w: %s", ErrInvalidPublicIPHTTPProvider, provider)
 		}
 		providers = append(providers, provider)
 	}
 
 	if len(providers) == 0 {
-		return nil, fmt.Errorf("%w: %s", ErrIPMethodVersion, version)
+		return nil, fmt.Errorf("%w: for IP version %s", ErrInvalidPublicIPHTTPProvider, version)
 	}
 
 	return providers, nil

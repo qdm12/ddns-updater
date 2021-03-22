@@ -161,10 +161,12 @@ Note that:
 | Environment variable | Default | Description |
 | --- | --- | --- |
 | `CONFIG` | | One line JSON object containing the entire config (takes precendence over config.json file) if specified |
-| `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
-| `IP_METHOD` | `all` | Comma separated methods to obtain the public IP address (ipv4 or ipv6). See the [IP Methods section](#IP-methods) |
-| `IPV4_METHOD` | `all` | Comma separated methods to obtain the public IPv4 address only. See the [IP Methods section](#IP-methods) |
-| `IPV6_METHOD` | `all` | Comma separated methods to obtain the public IPv6 address only. See the [IP Methods section](#IP-methods) |
+| `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |\
+| `PUBLICIP_FETCHERS` | `all` | Comma separated fetcher types to obtain the public IP address from `http` and `dns` |
+| `PUBLICIP_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IP address (ipv4 or ipv6). See the [Public IP section](#Public-IP) |
+| `PUBLICIPV4_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IPv4 address only. See the [Public IP section](#Public-IP) |
+| `PUBLICIPV6_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IPv6 address only. See the [Public IP section](#Public-IP) |
+| `PUBLICIP_DNS_PROVIDERS` | `all` | Comma separated providers to obtain the public IP address (IPv4 and/or IPv6). See the [Public IP section](#Public-IP) |
 | `UPDATE_COOLDOWN_PERIOD` | `5m` | Duration to cooldown between updates for each record. This is useful to avoid being rate limited or banned. |
 | `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
@@ -177,25 +179,34 @@ Note that:
 | `GOTIFY_TOKEN` |  | (optional) Token to access your Gotify server |
 | `TZ` | | Timezone to have accurate times, i.e. `America/Montreal` |
 
-#### IP methods
+#### Public IP
 
-By default, all ip methods are specified. The program will cycle between each. This allows you not to be blocked for making too many requests. You can otherwise pick one or more of the following, for each ip version:
+By default, all public IP fetching types are used and cycled (over DNS and over HTTPs).
 
-- IPv4 or IPv6 (for most cases)
+On top of that, for each fetching method, all echo services available are cycled on each request.
+
+This allows you not to be blocked for making too many requests.
+
+You can otherwise customize it with the following:
+
+- `PUBLICIP_HTTP_PROVIDERS` gets your public IPv4 or IPv6 address. It can be one or more of the following:
   - `opendns` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
   - `ifconfig` using [https://ifconfig.io/ip](https://ifconfig.io/ip)
   - `ipinfo` using [https://ipinfo.io/ip](https://ipinfo.io/ip)
-  - `ipify` using [https://api.ipify.org](https://api.ipify.org)
   - `ddnss` using [https://ddnss.de/meineip.php](https://ddnss.de/meineip.php)
   - `google` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
-- IPv4 only (useful for updating both ipv4 and ipv6)
+  - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
+- `PUBLICIPV4_HTTP_PROVIDERS` gets your public IPv4 address only. It can be one or more of the following:
   - `ipify` using [https://api.ipify.org](https://api.ipify.org)
   - `noip` using [http://ip1.dynupdate.no-ip.com](http://ip1.dynupdate.no-ip.com)
-- IPv6 only
+  - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
+- `PUBLICIPV6_HTTP_PROVIDERS` gets your public IPv6 address only. It can be one or more of the following:
   - `ipify` using [https://api6.ipify.org](https://api6.ipify.org)
   - `noip` using [http://ip1.dynupdate6.no-ip.com](http://ip1.dynupdate6.no-ip.com)
-
-You can also specify one or more HTTPS URL to obtain your public IP address (i.e. `-e IPV6_METHOD=https://ipinfo.io/ip`).
+  - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
+- `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see #136). It can be one or more of the following:
+  - `google`
+  - `cloudflare`
 
 ### Host firewall
 

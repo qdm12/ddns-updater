@@ -165,6 +165,7 @@ Note that:
 | `PUBLICIP_HTTP_PROVIDERS` | `all` | Comma separated methods to obtain the public IP address (ipv4 or ipv6). See the [Public IP section](#Public-IP) |
 | `PUBLICIPV4_HTTP_PROVIDERS` | `all` | Comma separated methods to obtain the public IPv4 address only. See the [Public IP section](#Public-IP) |
 | `PUBLICIPV6_HTTP_PROVIDERS` | `all` | Comma separated methods to obtain the public IPv6 address only. See the [Public IP section](#Public-IP) |
+| `PUBLICIP_DNS_PROVIDERS` | `all` | Comma separated providers to obtain the public IP address (IPv4 and/or IPv6). See the [Public IP section](#Public-IP) |
 | `UPDATE_COOLDOWN_PERIOD` | `5m` | Duration to cooldown between updates for each record. This is useful to avoid being rate limited or banned. |
 | `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |

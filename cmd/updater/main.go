@@ -22,6 +22,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/server"
 	"github.com/qdm12/ddns-updater/internal/splash"
 	"github.com/qdm12/ddns-updater/internal/update"
+	"github.com/qdm12/ddns-updater/pkg/publicip/dns"
 	pubiphttp "github.com/qdm12/ddns-updater/pkg/publicip/http"
 	"github.com/qdm12/golibs/admin"
 	"github.com/qdm12/golibs/logging"
@@ -46,6 +47,7 @@ type allParams struct {
 	period          time.Duration
 	cooldown        time.Duration
 	httpIPOptions   []pubiphttp.Option
+	dnsIPOptions    []dns.Option
 	dir             string
 	dataDir         string
 	listeningPort   uint16
@@ -251,6 +253,14 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 		pubiphttp.SetProvidersIP(httpIPProviders[0], httpIPProviders[1:]...),
 		pubiphttp.SetProvidersIP4(httpIP4Providers[0], httpIP4Providers[1:]...),
 		pubiphttp.SetProvidersIP6(httpIP6Providers[0], httpIP6Providers[1:]...),
+	}
+
+	dnsIPProviders, err := paramsReader.PublicIPDNSProviders()
+	if err != nil {
+		return p, err
+	}
+	p.dnsIPOptions = []dns.Option{
+		dns.SetProviders(dnsIPProviders[0], dnsIPProviders[1:]...),
 	}
 
 	p.dir, err = paramsReader.ExeDir()

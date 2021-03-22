@@ -9,10 +9,15 @@ import (
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/settings"
+	"github.com/qdm12/ddns-updater/pkg/publicip/dns"
 	"github.com/qdm12/ddns-updater/pkg/publicip/http"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/params"
+)
+
+const (
+	all = "all"
 )
 
 type Reader interface {
@@ -24,6 +29,7 @@ type Reader interface {
 	PublicIPHTTPProviders() (providers []http.Provider, err error)
 	PublicIPv4HTTPProviders() (providers []http.Provider, err error)
 	PublicIPv6HTTPProviders() (providers []http.Provider, err error)
+	PublicIPDNSProviders() (providers []dns.Provider, err error)
 	HTTPTimeout() (duration time.Duration, err error)
 	CooldownPeriod() (duration time.Duration, err error)
 
@@ -123,6 +129,31 @@ func (r *reader) Period() (period time.Duration, warnings []string, err error) {
 	return period, nil, err
 }
 
+// PublicIPHTTPProviders obtains the HTTP providers to obtain your public IPv4 and/or IPv6 address.
+func (r *reader) PublicIPDNSProviders() (providers []dns.Provider, err error) {
+	s, err := r.env.Get("PUBLICIP_DNS_PROVIDERS", params.Default(all))
+	if err != nil {
+		return nil, err
+	}
+
+	availableProviders := dns.ListProviders()
+
+	fields := strings.Split(s, ",")
+	providers = make([]dns.Provider, len(fields))
+	for i, field := range fields {
+		if field == all {
+			return availableProviders, nil
+		}
+
+		providers[i] = dns.Provider(field)
+		if err := dns.ValidateProvider(providers[i]); err != nil {
+			return nil, err
+		}
+	}
+
+	return providers, nil
+}
+
 // PublicIPHTTPProviders obtains the HTTP providers to obtain your public IPv4 or IPv6 address.
 func (r *reader) PublicIPHTTPProviders() (providers []http.Provider, err error) {
 	return r.httpIPMethod("PUBLICIP_HTTP_PROVIDERS", "IP_METHOD", ipversion.IP4or6)
@@ -166,10 +197,10 @@ func (r *reader) httpIPMethod(envKey, retroKey string, version ipversion.IPVersi
 		case "noip4", "noip6", "noip8245_4", "noip8245_6":
 			field = "noip"
 		case "cycle":
-			field = "all"
+			field = all
 		}
 
-		if field == "all" {
+		if field == all {
 			return availableProviders, nil
 		}
 

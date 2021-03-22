@@ -94,7 +94,7 @@ func (n *njalla) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 	if n.host == "*" {
 		values.Set("h", "*."+n.domain)
 	}
-	values.Set("key", n.key)
+	values.Set("k", n.key)
 	updatingIP6 := ip.To4() == nil
 	if n.useProviderIP {
 		values.Set("auto", "")

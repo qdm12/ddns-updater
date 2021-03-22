@@ -51,7 +51,7 @@ func (n *njalla) isValid() error {
 }
 
 func (n *njalla) String() string {
-	return toString(n.domain, n.host, constants.NOIP, n.ipVersion)
+	return toString(n.domain, n.host, constants.NJALLA, n.ipVersion)
 }
 
 func (n *njalla) Domain() string {

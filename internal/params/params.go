@@ -21,9 +21,9 @@ type Reader interface {
 
 	// Core
 	Period() (period time.Duration, warnings []string, err error)
-	IPMethod() (providers []http.Provider, err error)
-	IPv4Method() (providers []http.Provider, err error)
-	IPv6Method() (providers []http.Provider, err error)
+	PublicIPHTTPProviders() (providers []http.Provider, err error)
+	PublicIPv4HTTPProviders() (providers []http.Provider, err error)
+	PublicIPv6HTTPProviders() (providers []http.Provider, err error)
 	HTTPTimeout() (duration time.Duration, err error)
 	CooldownPeriod() (duration time.Duration, err error)
 
@@ -128,18 +128,18 @@ var (
 	ErrIPMethodVersion = errors.New("ip method not valid for IP version")
 )
 
-// IPMethod obtains the HTTP method for IP v4 or v6 to obtain your public IP address.
-func (r *reader) IPMethod() (providers []http.Provider, err error) {
+// PublicIPHTTPProviders obtains the HTTP providers to obtain your public IPv4 or IPv6 address.
+func (r *reader) PublicIPHTTPProviders() (providers []http.Provider, err error) {
 	return r.httpIPMethod("PUBLICIP_HTTP_IP_PROVIDER", "IP_METHOD", ipversion.IP4or6)
 }
 
-// IPMethod obtains the HTTP method for IP v4 to obtain your public IP address.
-func (r *reader) IPv4Method() (providers []http.Provider, err error) {
+// PublicIPv4HTTPProviders obtains the HTTP providers to obtain your public IPv4 address.
+func (r *reader) PublicIPv4HTTPProviders() (providers []http.Provider, err error) {
 	return r.httpIPMethod("PUBLICIP_HTTP_IPV4_PROVIDER", "IPV4_METHOD", ipversion.IP4)
 }
 
-// IPMethod obtains the HTTP method for IP v6 to obtain your public IP address.
-func (r *reader) IPv6Method() (providers []http.Provider, err error) {
+// PublicIPv6HTTPProviders obtains the HTTP providers to obtain your public IPv6 address.
+func (r *reader) PublicIPv6HTTPProviders() (providers []http.Provider, err error) {
 	return r.httpIPMethod("PUBLICIP_HTTP_IPV6_PROVIDER", "IPV6_METHOD", ipversion.IP6)
 }
 

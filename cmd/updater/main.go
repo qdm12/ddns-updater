@@ -235,15 +235,15 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 		return p, err
 	}
 
-	httpIPProviders, err := paramsReader.IPMethod()
+	httpIPProviders, err := paramsReader.PublicIPHTTPProviders()
 	if err != nil {
 		return p, err
 	}
-	httpIP4Providers, err := paramsReader.IPv4Method()
+	httpIP4Providers, err := paramsReader.PublicIPv4HTTPProviders()
 	if err != nil {
 		return p, err
 	}
-	httpIP6Providers, err := paramsReader.IPv6Method()
+	httpIP6Providers, err := paramsReader.PublicIPv6HTTPProviders()
 	if err != nil {
 		return p, err
 	}

@@ -130,17 +130,17 @@ var (
 
 // PublicIPHTTPProviders obtains the HTTP providers to obtain your public IPv4 or IPv6 address.
 func (r *reader) PublicIPHTTPProviders() (providers []http.Provider, err error) {
-	return r.httpIPMethod("PUBLICIP_HTTP_IP_PROVIDER", "IP_METHOD", ipversion.IP4or6)
+	return r.httpIPMethod("PUBLICIP_HTTP_PROVIDERS", "IP_METHOD", ipversion.IP4or6)
 }
 
 // PublicIPv4HTTPProviders obtains the HTTP providers to obtain your public IPv4 address.
 func (r *reader) PublicIPv4HTTPProviders() (providers []http.Provider, err error) {
-	return r.httpIPMethod("PUBLICIP_HTTP_IPV4_PROVIDER", "IPV4_METHOD", ipversion.IP4)
+	return r.httpIPMethod("PUBLICIPV4_HTTP_PROVIDERS", "IPV4_METHOD", ipversion.IP4)
 }
 
 // PublicIPv6HTTPProviders obtains the HTTP providers to obtain your public IPv6 address.
 func (r *reader) PublicIPv6HTTPProviders() (providers []http.Provider, err error) {
-	return r.httpIPMethod("PUBLICIP_HTTP_IPV6_PROVIDER", "IPV6_METHOD", ipversion.IP6)
+	return r.httpIPMethod("PUBLICIPV6_HTTP_PROVIDERS", "IPV6_METHOD", ipversion.IP6)
 }
 
 func (r *reader) httpIPMethod(envKey, retroKey string, version ipversion.IPVersion) (

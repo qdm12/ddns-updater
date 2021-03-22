@@ -17,11 +17,9 @@ type Fetcher interface {
 
 type fetcher struct {
 	settings settings
-	dns      Fetcher
-	http     Fetcher
+	fetchers []Fetcher
 	// Cycling effect if both are enabled
-	counter    *uint32 // 32 bit for 32 bit systems
-	fetchTypes []FetchType
+	counter *uint32 // 32 bit for 32 bit systems
 }
 
 var ErrNoFetchTypeSpecified = errors.New("at least one fetcher type must be specified")
@@ -38,22 +36,22 @@ func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f Fetcher, 
 	}
 
 	if settings.dns.Enabled {
-		fetcher.dns, err = dns.New(settings.dns.Options...)
+		subFetcher, err := dns.New(settings.dns.Options...)
 		if err != nil {
 			return nil, err
 		}
-		fetcher.fetchTypes = append(fetcher.fetchTypes, DNS)
+		fetcher.fetchers = append(fetcher.fetchers, subFetcher)
 	}
 
 	if settings.http.Enabled {
-		fetcher.http, err = http.New(settings.http.Client, settings.http.Options...)
+		subFetcher, err := http.New(settings.http.Client, settings.http.Options...)
 		if err != nil {
 			return nil, err
 		}
-		fetcher.fetchTypes = append(fetcher.fetchTypes, HTTP)
+		fetcher.fetchers = append(fetcher.fetchers, subFetcher)
 	}
 
-	if len(fetcher.fetchTypes) == 0 {
+	if len(fetcher.fetchers) == 0 {
 		return nil, ErrNoFetchTypeSpecified
 	}
 

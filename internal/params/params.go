@@ -26,6 +26,7 @@ type Reader interface {
 
 	// Core
 	Period() (period time.Duration, warnings []string, err error)
+	PublicIPFetchers() (http, dns bool, err error)
 	PublicIPHTTPProviders() (providers []http.Provider, err error)
 	PublicIPv4HTTPProviders() (providers []http.Provider, err error)
 	PublicIPv6HTTPProviders() (providers []http.Provider, err error)
@@ -127,6 +128,33 @@ func (r *reader) Period() (period time.Duration, warnings []string, err error) {
 	}
 	period, err = r.env.Duration("PERIOD", params.Default("10m"))
 	return period, nil, err
+}
+
+var ErrInvalidFetcher = errors.New("invalid fetcher specified")
+
+func (r *reader) PublicIPFetchers() (http, dns bool, err error) {
+	s, err := r.env.Get("PUBLICIP_FETCHERS", params.Default(all))
+	if err != nil {
+		return false, false, err
+	}
+
+	fields := strings.Split(s, ",")
+	for i, field := range fields {
+		switch strings.ToLower(field) {
+		case all:
+			return true, true, nil
+		case "http":
+			http = true
+		case "dns":
+			dns = true
+		default:
+			return false, false, fmt.Errorf(
+				"%w: %q at position %d of %d",
+				ErrInvalidFetcher, field, i+1, len(fields))
+		}
+	}
+
+	return http, dns, nil
 }
 
 // PublicIPHTTPProviders obtains the HTTP providers to obtain your public IPv4 and/or IPv6 address.

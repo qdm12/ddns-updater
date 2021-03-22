@@ -22,6 +22,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/server"
 	"github.com/qdm12/ddns-updater/internal/splash"
 	"github.com/qdm12/ddns-updater/internal/update"
+	"github.com/qdm12/ddns-updater/pkg/publicip"
 	"github.com/qdm12/ddns-updater/pkg/publicip/dns"
 	pubiphttp "github.com/qdm12/ddns-updater/pkg/publicip/http"
 	"github.com/qdm12/golibs/admin"
@@ -46,8 +47,8 @@ func main() {
 type allParams struct {
 	period          time.Duration
 	cooldown        time.Duration
-	httpIPOptions   []pubiphttp.Option
-	dnsIPOptions    []dns.Option
+	httpSettings    publicip.HTTPSettings
+	dnsSettings     publicip.DNSSettings
 	dir             string
 	dataDir         string
 	listeningPort   uint16
@@ -149,7 +150,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
-	ipGetter, err := pubiphttp.New(client, p.httpIPOptions...)
+	ipGetter, err := pubiphttp.New(client, p.httpSettings.Options...)
 	if err != nil {
 		logger.Error(err)
 		return 1
@@ -237,6 +238,11 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 		return p, err
 	}
 
+	p.httpSettings.Enabled, p.dnsSettings.Enabled, err = paramsReader.PublicIPFetchers()
+	if err != nil {
+		return p, err
+	}
+
 	httpIPProviders, err := paramsReader.PublicIPHTTPProviders()
 	if err != nil {
 		return p, err
@@ -249,7 +255,7 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 	if err != nil {
 		return p, err
 	}
-	p.httpIPOptions = []pubiphttp.Option{
+	p.httpSettings.Options = []pubiphttp.Option{
 		pubiphttp.SetProvidersIP(httpIPProviders[0], httpIPProviders[1:]...),
 		pubiphttp.SetProvidersIP4(httpIP4Providers[0], httpIP4Providers[1:]...),
 		pubiphttp.SetProvidersIP6(httpIP6Providers[0], httpIP6Providers[1:]...),
@@ -259,7 +265,7 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 	if err != nil {
 		return p, err
 	}
-	p.dnsIPOptions = []dns.Option{
+	p.dnsSettings.Options = []dns.Option{
 		dns.SetProviders(dnsIPProviders[0], dnsIPProviders[1:]...),
 	}
 

@@ -150,7 +150,9 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
-	ipGetter, err := pubiphttp.New(client, p.httpSettings.Options...)
+	p.httpSettings.Client = client
+
+	ipGetter, err := publicip.NewFetcher(p.dnsSettings, p.httpSettings)
 	if err != nil {
 		logger.Error(err)
 		return 1

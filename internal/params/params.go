@@ -123,11 +123,6 @@ func (r *reader) Period() (period time.Duration, warnings []string, err error) {
 	return period, nil, err
 }
 
-var (
-	ErrIPMethodInvalid = errors.New("ip method is not valid")
-	ErrIPMethodVersion = errors.New("ip method not valid for IP version")
-)
-
 // PublicIPHTTPProviders obtains the HTTP providers to obtain your public IPv4 or IPv6 address.
 func (r *reader) PublicIPHTTPProviders() (providers []http.Provider, err error) {
 	return r.httpIPMethod("PUBLICIP_HTTP_PROVIDERS", "IP_METHOD", ipversion.IP4or6)
@@ -142,6 +137,10 @@ func (r *reader) PublicIPv4HTTPProviders() (providers []http.Provider, err error
 func (r *reader) PublicIPv6HTTPProviders() (providers []http.Provider, err error) {
 	return r.httpIPMethod("PUBLICIPV6_HTTP_PROVIDERS", "IPV6_METHOD", ipversion.IP6)
 }
+
+var (
+	ErrInvalidPublicIPHTTPProvider = errors.New("invalid public IP HTTP provider")
+)
 
 func (r *reader) httpIPMethod(envKey, retroKey string, version ipversion.IPVersion) (
 	providers []http.Provider, err error) {
@@ -183,13 +182,13 @@ func (r *reader) httpIPMethod(envKey, retroKey string, version ipversion.IPVersi
 
 		provider := http.Provider(field)
 		if _, ok := choices[provider]; !ok {
-			return nil, fmt.Errorf("%w: %s", ErrIPMethodInvalid, provider)
+			return nil, fmt.Errorf("%w: %s", ErrInvalidPublicIPHTTPProvider, provider)
 		}
 		providers = append(providers, provider)
 	}
 
 	if len(providers) == 0 {
-		return nil, fmt.Errorf("%w: %s", ErrIPMethodVersion, version)
+		return nil, fmt.Errorf("%w: for IP version %s", ErrInvalidPublicIPHTTPProvider, version)
 	}
 
 	return providers, nil

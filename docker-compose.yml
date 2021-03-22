@@ -12,9 +12,9 @@ services:
       - CONFIG=
       - PERIOD=5m
       - UPDATE_COOLDOWN_PERIOD=5m
-      - IP_METHOD=all
-      - IPV4_METHOD=all
-      - IPV6_METHOD=all
+      - PUBLICIP_HTTP_IP_PROVIDER=all
+      - PUBLICIP_HTTP_IPV4_PROVIDER=all
+      - PUBLICIP_HTTP_IPV6_PROVIDER=all
       - HTTP_TIMEOUT=10s
 
       # Web UI

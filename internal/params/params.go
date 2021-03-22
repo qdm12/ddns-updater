@@ -49,6 +49,7 @@ type reader struct {
 	env      params.Env
 	os       params.OS
 	readFile func(filename string) ([]byte, error)
+	retroFn  func(oldKey, newKey string)
 }
 
 func NewReader(logger logging.Logger) Reader {
@@ -56,6 +57,9 @@ func NewReader(logger logging.Logger) Reader {
 		env:      params.NewEnv(),
 		os:       params.NewOS(),
 		readFile: ioutil.ReadFile,
+		retroFn: func(oldKey, newKey string) {
+			logger.Warn("You are using the old environment variable %s, please consider switching to %s instead", oldKey, newKey)
+		},
 	}
 }
 
@@ -126,22 +130,23 @@ var (
 
 // IPMethod obtains the HTTP method for IP v4 or v6 to obtain your public IP address.
 func (r *reader) IPMethod() (providers []http.Provider, err error) {
-	return r.httpIPMethod("IP_METHOD", ipversion.IP4or6)
+	return r.httpIPMethod("PUBLICIP_HTTP_IP_PROVIDER", "IP_METHOD", ipversion.IP4or6)
 }
 
 // IPMethod obtains the HTTP method for IP v4 to obtain your public IP address.
 func (r *reader) IPv4Method() (providers []http.Provider, err error) {
-	return r.httpIPMethod("IPV4_METHOD", ipversion.IP4)
+	return r.httpIPMethod("PUBLICIP_HTTP_IPV4_PROVIDER", "IPV4_METHOD", ipversion.IP4)
 }
 
 // IPMethod obtains the HTTP method for IP v6 to obtain your public IP address.
 func (r *reader) IPv6Method() (providers []http.Provider, err error) {
-	return r.httpIPMethod("IPV6_METHOD", ipversion.IP6)
+	return r.httpIPMethod("PUBLICIP_HTTP_IPV6_PROVIDER", "IPV6_METHOD", ipversion.IP6)
 }
 
-func (r *reader) httpIPMethod(envKey string, version ipversion.IPVersion) (
+func (r *reader) httpIPMethod(envKey, retroKey string, version ipversion.IPVersion) (
 	providers []http.Provider, err error) {
-	s, err := r.env.Get(envKey, params.Default("cycle"))
+	retroKeyOption := params.RetroKeys([]string{retroKey}, r.retroFn)
+	s, err := r.env.Get(envKey, params.Default("cycle"), retroKeyOption)
 	if err != nil {
 		return nil, err
 	}

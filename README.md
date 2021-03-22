@@ -162,9 +162,9 @@ Note that:
 | --- | --- | --- |
 | `CONFIG` | | One line JSON object containing the entire config (takes precendence over config.json file) if specified |
 | `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
-| `PUBLICIP_HTTP_IP_PROVIDER` | `all` | Comma separated methods to obtain the public IP address (ipv4 or ipv6). See the [IP Methods section](#IP-methods) |
-| `PUBLICIP_HTTP_IPV4_PROVIDER` | `all` | Comma separated methods to obtain the public IPv4 address only. See the [IP Methods section](#IP-methods) |
-| `PUBLICIP_HTTP_IPV6_PROVIDER` | `all` | Comma separated methods to obtain the public IPv6 address only. See the [IP Methods section](#IP-methods) |
+| `PUBLICIP_HTTP_IP_PROVIDER` | `all` | Comma separated methods to obtain the public IP address (ipv4 or ipv6). See the [Public IP section](#Public-IP) |
+| `PUBLICIP_HTTP_IPV4_PROVIDER` | `all` | Comma separated methods to obtain the public IPv4 address only. See the [Public IP section](#Public-IP) |
+| `PUBLICIP_HTTP_IPV6_PROVIDER` | `all` | Comma separated methods to obtain the public IPv6 address only. See the [Public IP section](#Public-IP) |
 | `UPDATE_COOLDOWN_PERIOD` | `5m` | Duration to cooldown between updates for each record. This is useful to avoid being rate limited or banned. |
 | `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
@@ -177,7 +177,7 @@ Note that:
 | `GOTIFY_TOKEN` |  | (optional) Token to access your Gotify server |
 | `TZ` | | Timezone to have accurate times, i.e. `America/Montreal` |
 
-#### IP methods
+#### Public IP
 
 By default, all ip methods are specified. The program will cycle between each. This allows you not to be blocked for making too many requests. You can otherwise pick one or more of the following, for each ip version:
 

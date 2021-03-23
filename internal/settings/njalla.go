@@ -11,17 +11,18 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type njalla struct {
 	domain        string
 	host          string
-	ipVersion     models.IPVersion
+	ipVersion     ipversion.IPVersion
 	key           string
 	useProviderIP bool
 }
 
-func NewNjalla(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewNjalla(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		Key           string `json:"key"`
@@ -62,7 +63,7 @@ func (n *njalla) Host() string {
 	return n.host
 }
 
-func (n *njalla) IPVersion() models.IPVersion {
+func (n *njalla) IPVersion() ipversion.IPVersion {
 	return n.ipVersion
 }
 

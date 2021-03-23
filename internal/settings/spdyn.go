@@ -15,34 +15,34 @@ import (
 )
 
 type spdyn struct {
-	domain    string
-	host      string
-	ipVersion ipversion.IPVersion
-	user      string
-	password  string
-	token     string
-	// useProviderIP bool
+	domain        string
+	host          string
+	ipVersion     ipversion.IPVersion
+	user          string
+	password      string
+	token         string
+	useProviderIP bool
 }
 
 func NewSpdyn(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
-		User     string `json:"user"`
-		Password string `json:"password"`
-		Token    string `json:"token"`
-		// UseProviderIP bool   `json:"provider_ip"`
+		User          string `json:"user"`
+		Password      string `json:"password"`
+		Token         string `json:"token"`
+		UseProviderIP bool   `json:"provider_ip"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
 	spdyn := &spdyn{
-		domain:    domain,
-		host:      host,
-		ipVersion: ipVersion,
-		user:      extraSettings.User,
-		password:  extraSettings.Password,
-		token:     extraSettings.Token,
-		// useProviderIP: extraSettings.UseProviderIP,
+		domain:        domain,
+		host:          host,
+		ipVersion:     ipVersion,
+		user:          extraSettings.User,
+		password:      extraSettings.Password,
+		token:         extraSettings.Token,
+		useProviderIP: extraSettings.UseProviderIP,
 	}
 	if err := spdyn.isValid(); err != nil {
 		return nil, err
@@ -107,7 +107,11 @@ func (s *spdyn) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	}
 	values := url.Values{}
 	values.Set("hostname", s.BuildDomainName())
-	values.Set("myip", ip.String())
+	if s.useProviderIP {
+		values.Set("myip", "10.0.0.1")
+	} else {
+		values.Set("myip", ip.String())
+	}
 	if len(s.token) > 0 {
 		values.Set("user", s.BuildDomainName())
 		values.Set("passport", s.token)

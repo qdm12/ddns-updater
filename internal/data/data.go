@@ -8,6 +8,8 @@ import (
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
+//go:generate mockgen -destination=mock_$GOPACKAGE/$GOFILE . Database
+
 type Database interface {
 	Close() error
 	Select(id int) (record records.Record, err error)

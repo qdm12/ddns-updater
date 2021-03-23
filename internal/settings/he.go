@@ -83,7 +83,7 @@ func (h *he) HTML() models.HTMLRow {
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", h.BuildDomainName(), h.BuildDomainName())),
 		Host:      models.HTML(h.Host()),
 		Provider:  "<a href=\"https://dns.he.net/\">he.net</a>",
-		IPVersion: models.HTML(h.ipVersion),
+		IPVersion: models.HTML(h.ipVersion.String()),
 	}
 }
 

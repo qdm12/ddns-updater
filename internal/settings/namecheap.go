@@ -86,7 +86,7 @@ func (n *namecheap) HTML() models.HTMLRow {
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", n.BuildDomainName(), n.BuildDomainName())),
 		Host:      models.HTML(n.Host()),
 		Provider:  "<a href=\"https://namecheap.com\">Namecheap</a>",
-		IPVersion: models.HTML(n.ipVersion),
+		IPVersion: models.HTML(n.ipVersion.String()),
 	}
 }
 

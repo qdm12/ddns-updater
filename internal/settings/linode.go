@@ -82,7 +82,7 @@ func (l *linode) HTML() models.HTMLRow {
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", l.BuildDomainName(), l.BuildDomainName())),
 		Host:      models.HTML(l.Host()),
 		Provider:  "<a href=\"https://cloud.linode.com/\">Linode</a>",
-		IPVersion: models.HTML(l.ipVersion),
+		IPVersion: models.HTML(l.ipVersion.String()),
 	}
 }
 

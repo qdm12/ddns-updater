@@ -87,7 +87,7 @@ func (d *dreamhost) HTML() models.HTMLRow {
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
 		Host:      models.HTML(d.Host()),
 		Provider:  "<a href=\"https://www.dreamhost.com/\">Dreamhost</a>",
-		IPVersion: models.HTML(d.ipVersion),
+		IPVersion: models.HTML(d.ipVersion.String()),
 	}
 }
 

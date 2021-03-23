@@ -79,7 +79,7 @@ func (f *freedns) HTML() models.HTMLRow {
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", f.BuildDomainName(), f.BuildDomainName())),
 		Host:      models.HTML(f.Host()),
 		Provider:  "<a href=\"https://freedns.afraid.org/\">FreeDNS</a>",
-		IPVersion: models.HTML(f.ipVersion),
+		IPVersion: models.HTML(f.ipVersion.String()),
 	}
 }
 

@@ -90,7 +90,7 @@ func (i *infomaniak) HTML() models.HTMLRow {
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", i.BuildDomainName(), i.BuildDomainName())),
 		Host:      models.HTML(i.Host()),
 		Provider:  "<a href=\"https://www.infomaniak.com/\">Infomaniak</a>",
-		IPVersion: models.HTML(i.ipVersion),
+		IPVersion: models.HTML(i.ipVersion.String()),
 	}
 }
 

@@ -89,7 +89,7 @@ func (o *opendns) HTML() models.HTMLRow {
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", o.BuildDomainName(), o.BuildDomainName())),
 		Host:      models.HTML(o.Host()),
 		Provider:  "<a href=\"https://opendns.com/\">Opendns DNS</a>",
-		IPVersion: models.HTML(o.ipVersion),
+		IPVersion: models.HTML(o.ipVersion.String()),
 	}
 }
 

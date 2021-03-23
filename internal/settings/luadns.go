@@ -86,7 +86,7 @@ func (l *luaDNS) HTML() models.HTMLRow {
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", l.BuildDomainName(), l.BuildDomainName())),
 		Host:      models.HTML(l.Host()),
 		Provider:  "<a href=\"https://www.luadns.com/\">LuaDNS</a>",
-		IPVersion: models.HTML(l.ipVersion),
+		IPVersion: models.HTML(l.ipVersion.String()),
 	}
 }
 

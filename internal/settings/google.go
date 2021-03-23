@@ -89,7 +89,7 @@ func (g *google) HTML() models.HTMLRow {
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", g.BuildDomainName(), g.BuildDomainName())),
 		Host:      models.HTML(g.Host()),
 		Provider:  "<a href=\"https://domains.google.com/m/registrar\">Google</a>",
-		IPVersion: models.HTML(g.ipVersion),
+		IPVersion: models.HTML(g.ipVersion.String()),
 	}
 }
 

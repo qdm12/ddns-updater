@@ -117,7 +117,7 @@ func (c *cloudflare) HTML() models.HTMLRow {
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", c.BuildDomainName(), c.BuildDomainName())),
 		Host:      models.HTML(c.Host()),
 		Provider:  "<a href=\"https://www.cloudflare.com\">Cloudflare</a>",
-		IPVersion: models.HTML(c.ipVersion),
+		IPVersion: models.HTML(c.ipVersion.String()),
 	}
 }
 

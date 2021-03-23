@@ -84,7 +84,7 @@ func (s *strato) HTML() models.HTMLRow {
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", s.BuildDomainName(), s.BuildDomainName())),
 		Host:      models.HTML(s.Host()),
 		Provider:  "<a href=\"https://strato.com/\">Strato DNS</a>",
-		IPVersion: models.HTML(s.ipVersion),
+		IPVersion: models.HTML(s.ipVersion.String()),
 	}
 }
 

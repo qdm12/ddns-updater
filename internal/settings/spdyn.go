@@ -11,19 +11,20 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type spdyn struct {
 	domain    string
 	host      string
-	ipVersion models.IPVersion
+	ipVersion ipversion.IPVersion
 	user      string
 	password  string
 	token     string
 	// useProviderIP bool
 }
 
-func NewSpdyn(data json.RawMessage, domain, host string, ipVersion models.IPVersion,
+func NewSpdyn(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	_ regex.Matcher) (s Settings, err error) {
 	extraSettings := struct {
 		User     string `json:"user"`
@@ -76,7 +77,7 @@ func (s *spdyn) Host() string {
 	return s.host
 }
 
-func (s *spdyn) IPVersion() models.IPVersion {
+func (s *spdyn) IPVersion() ipversion.IPVersion {
 	return s.ipVersion
 }
 

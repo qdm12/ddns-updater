@@ -107,8 +107,6 @@ func (n *njalla) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 	}
 	u.RawQuery = values.Encode()
 
-	fmt.Println("=== DEBUG: ", u.String())
-
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err

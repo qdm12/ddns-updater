@@ -35,6 +35,7 @@ func Test_handlers_getRecords(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
+		acceptHeader string
 		records      []records.Record
 		responseBody string
 	}{
@@ -72,8 +73,13 @@ func Test_handlers_getRecords(t *testing.T) {
 			}
 
 			w := httptest.NewRecorder()
+			r := &http.Request{
+				Header: http.Header{
+					"Accept": []string{testCase.acceptHeader},
+				},
+			}
 
-			handlers.getRecords(w, nil)
+			handlers.getRecords(w, r)
 
 			response := w.Result()
 			assert.Equal(t, http.StatusOK, response.StatusCode)

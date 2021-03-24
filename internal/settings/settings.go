@@ -15,6 +15,8 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
+//go:generate mockgen -destination=mock_$GOPACKAGE/$GOFILE . Settings
+
 type Settings interface {
 	String() string
 	Domain() string

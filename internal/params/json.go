@@ -10,6 +10,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/ddns-updater/internal/settings"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
+	"github.com/qdm12/golibs/params"
 )
 
 type commonSettings struct {
@@ -43,7 +44,7 @@ func (r *reader) getSettingsFromFile(filePath string) (allSettings []settings.Se
 
 // getSettingsFromEnv obtain the update settings from the environment variable CONFIG.
 func (r *reader) getSettingsFromEnv() (allSettings []settings.Settings, warnings []string, err error) {
-	s, err := r.env.Get("CONFIG")
+	s, err := r.env.Get("CONFIG", params.CaseSensitiveValue())
 	if err != nil {
 		return nil, nil, err
 	} else if len(s) == 0 {

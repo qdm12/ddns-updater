@@ -114,10 +114,10 @@ func (s *spdyn) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	}
 	if len(s.token) > 0 {
 		values.Set("user", s.BuildDomainName())
-		values.Set("passport", s.token)
+		values.Set("pass", s.token)
 	} else {
 		values.Set("user", s.user)
-		values.Set("passport", s.password)
+		values.Set("pass", s.password)
 	}
 	u.RawQuery = values.Encode()
 

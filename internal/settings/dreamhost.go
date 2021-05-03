@@ -115,13 +115,16 @@ func (d *dreamhost) Update(ctx context.Context, client *http.Client, ip net.IP) 
 			break
 		}
 	}
+
+	// Create the record with the new IP before removing the old one if it exists.
+	if err := d.createRecord(ctx, client, ip); err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrCreateRecord, err)
+	}
+
 	if oldIP != nil { // Found editable record with a different IP address, so remove it
 		if err := d.removeRecord(ctx, client, oldIP); err != nil {
 			return nil, fmt.Errorf("%w: %s", ErrRemoveRecord, err)
 		}
-	}
-	if err := d.createRecord(ctx, client, ip); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrCreateRecord, err)
 	}
 
 	return ip, nil

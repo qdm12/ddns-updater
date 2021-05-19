@@ -167,6 +167,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, 
 		settingsConstructor = settings.NewDynV6
 	case constants.OPENDNS:
 		settingsConstructor = settings.NewOpendns
+	case constants.VARIOMEDIA:
+		settingsConstructor = settings.NewVariomedia
 	default:
 		return nil, warnings, fmt.Errorf("provider %q is not supported", provider)
 	}

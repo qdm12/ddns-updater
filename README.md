@@ -43,6 +43,7 @@
     - Selfhost.de
     - [Spdyn](spdyn.de)
     - Strato.de
+    - Variomedia.de
     - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
 - Web User interface
 
@@ -155,6 +156,7 @@ Check the documentation for your DNS provider:
 - [Selfhost.de](https://github.com/qdm12/ddns-updater/blob/master/docs/selfhost.de.md)
 - [Spdyn](https://github.com/qdm12/ddns-updater/blob/master/docs/spdyn.md)
 - [Strato.de](https://github.com/qdm12/ddns-updater/blob/master/docs/strato.md)
+- [Variomedia.de](https://github.com/qdm12/ddns-updater/blob/master/docs/variomedia.md)
 
 Note that:
 

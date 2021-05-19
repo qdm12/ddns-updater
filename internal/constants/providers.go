@@ -30,6 +30,7 @@ const (
 	SELFHOSTDE   models.Provider = "selfhost.de"
 	SPDYN        models.Provider = "spdyn"
 	STRATO       models.Provider = "strato"
+	VARIOMEDIA   models.Provider = "variomedia"
 )
 
 func ProviderChoices() []models.Provider {
@@ -42,6 +43,7 @@ func ProviderChoices() []models.Provider {
 		DNSPOD,
 		DUCKDNS,
 		DYN,
+		VARIOMEDIA,
 		DYNV6,
 		DREAMHOST,
 		FREEDNS,

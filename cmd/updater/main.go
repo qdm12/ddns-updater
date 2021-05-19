@@ -47,6 +47,7 @@ func main() {
 type allParams struct {
 	period          time.Duration
 	cooldown        time.Duration
+	httpTimeout     time.Duration
 	httpSettings    publicip.HTTPSettings
 	dnsSettings     publicip.DNSSettings
 	dir             string
@@ -116,11 +117,14 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	} else if len(settings) == 1 {
 		logger.Info("Found single setting to update record")
 	}
-	const connectivyCheckTimeout = 5 * time.Second
-	for _, err := range connectivity.NewConnectivity(connectivyCheckTimeout).
-		Checks(ctx, "google.com") {
+
+	client := &http.Client{Timeout: p.httpTimeout}
+
+	connectivity := connectivity.NewConnectivity(net.DefaultResolver, client)
+	for _, err := range connectivity.Checks(ctx, "github.com") {
 		logger.Warn(err)
 	}
+
 	records := make([]recordslib.Record, len(settings))
 	for i, s := range settings {
 		logger.Info("Reading history from database: domain %s host %s", s.Domain(), s.Host())
@@ -132,13 +136,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		}
 		records[i] = recordslib.New(s, events)
 	}
-	HTTPTimeout, err := paramsReader.HTTPTimeout()
-	if err != nil {
-		logger.Error(err)
-		notify(4, err)
-		return 1
-	}
-	client := &http.Client{Timeout: HTTPTimeout}
+
 	defer client.CloseIdleConnections()
 	db := data.NewDatabase(records, persistentDB)
 	defer func() {
@@ -242,6 +240,11 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 	}
 
 	p.httpSettings.Enabled, p.dnsSettings.Enabled, err = paramsReader.PublicIPFetchers()
+	if err != nil {
+		return p, err
+	}
+
+	p.httpTimeout, err = paramsReader.HTTPTimeout()
 	if err != nil {
 		return p, err
 	}

@@ -8,6 +8,7 @@ var (
 
 // Validation errors.
 var (
+	ErrEmptyEmail              = errors.New("empty email")
 	ErrEmptyName               = errors.New("empty name")
 	ErrEmptyPassword           = errors.New("empty password")
 	ErrEmptyKey                = errors.New("empty key")

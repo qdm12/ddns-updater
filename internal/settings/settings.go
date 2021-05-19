@@ -15,6 +15,8 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
+//go:generate mockgen -destination=mock_$GOPACKAGE/$GOFILE . Settings
+
 type Settings interface {
 	String() string
 	Domain() string
@@ -24,6 +26,7 @@ type Settings interface {
 	Proxied() bool
 	IPVersion() ipversion.IPVersion
 	Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error)
+	MarshalJSON() (b []byte, err error)
 }
 
 type Constructor func(data json.RawMessage, domain string, host string, ipVersion ipversion.IPVersion,

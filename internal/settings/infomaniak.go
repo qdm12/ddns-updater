@@ -85,6 +85,10 @@ func (i *infomaniak) BuildDomainName() string {
 	return buildDomainName(i.host, i.domain)
 }
 
+func (i *infomaniak) MarshalJSON() (b []byte, err error) {
+	return json.Marshal(i)
+}
+
 func (i *infomaniak) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", i.BuildDomainName(), i.BuildDomainName())),

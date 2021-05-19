@@ -18,8 +18,11 @@ func (db *database) Select(id int) (record records.Record, err error) {
 	return db.data[id], nil
 }
 
-func (db *database) SelectAll() (records []records.Record) {
+func (db *database) SelectAll() []records.Record {
 	db.RLock()
 	defer db.RUnlock()
+	if db.data == nil {
+		db.data = make([]records.Record, 0)
+	}
 	return db.data
 }

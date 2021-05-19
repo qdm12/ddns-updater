@@ -111,6 +111,10 @@ func (o *ovh) BuildDomainName() string {
 	return buildDomainName(o.host, o.domain)
 }
 
+func (o *ovh) MarshalJSON() (b []byte, err error) {
+	return json.Marshal(o)
+}
+
 func (o *ovh) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", o.BuildDomainName(), o.BuildDomainName())),

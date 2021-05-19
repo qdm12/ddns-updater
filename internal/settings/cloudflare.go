@@ -28,7 +28,7 @@ type cloudflare struct {
 	zoneIdentifier string
 	proxied        bool
 	ttl            uint
-	matcher        regex.Matcher
+	matcher        regex.Matcher `json:"-"`
 }
 
 func NewCloudflare(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
@@ -110,6 +110,10 @@ func (c *cloudflare) Proxied() bool {
 
 func (c *cloudflare) BuildDomainName() string {
 	return buildDomainName(c.host, c.domain)
+}
+
+func (c *cloudflare) MarshalJSON() (b []byte, err error) {
+	return json.Marshal(c)
 }
 
 func (c *cloudflare) HTML() models.HTMLRow {

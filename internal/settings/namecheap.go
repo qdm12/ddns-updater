@@ -21,7 +21,7 @@ type namecheap struct {
 	ipVersion     ipversion.IPVersion
 	password      string
 	useProviderIP bool
-	matcher       regex.Matcher
+	matcher       regex.Matcher `json:"-"`
 }
 
 func NewNamecheap(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
@@ -79,6 +79,10 @@ func (n *namecheap) Proxied() bool {
 
 func (n *namecheap) BuildDomainName() string {
 	return buildDomainName(n.host, n.domain)
+}
+
+func (n *namecheap) MarshalJSON() (b []byte, err error) {
+	return json.Marshal(n)
 }
 
 func (n *namecheap) HTML() models.HTMLRow {

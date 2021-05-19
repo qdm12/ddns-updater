@@ -24,7 +24,7 @@ type dnsomatic struct {
 	username      string
 	password      string
 	useProviderIP bool
-	matcher       regex.Matcher
+	matcher       regex.Matcher `json:"-"`
 }
 
 func NewDNSOMatic(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
@@ -88,6 +88,10 @@ func (d *dnsomatic) Proxied() bool {
 
 func (d *dnsomatic) BuildDomainName() string {
 	return buildDomainName(d.host, d.domain)
+}
+
+func (d *dnsomatic) MarshalJSON() (b []byte, err error) {
+	return json.Marshal(d)
 }
 
 func (d *dnsomatic) HTML() models.HTMLRow {

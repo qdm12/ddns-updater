@@ -73,6 +73,10 @@ func (d *dnspod) BuildDomainName() string {
 	return buildDomainName(d.host, d.domain)
 }
 
+func (d *dnspod) MarshalJSON() (b []byte, err error) {
+	return json.Marshal(d)
+}
+
 func (d *dnspod) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),

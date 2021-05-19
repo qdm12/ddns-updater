@@ -19,45 +19,30 @@ type matcher struct {
 	cloudflareUserServiceKey, dnsOMaticUsername, dnsOMaticPassword, gandiKey *regexp.Regexp
 }
 
-func NewMatcher() (m Matcher, err error) {
-	matcher := &matcher{}
-	matcher.gandiKey, err = regexp.Compile(`^[A-Za-z0-9]{24}$`)
-	if err != nil {
-		return nil, err
+var (
+	gandiKey                 = regexp.MustCompile(`^[A-Za-z0-9]{24}$`)
+	goDaddyKey               = regexp.MustCompile(`^[A-Za-z0-9]{8,14}\_[A-Za-z0-9]{21,22}$`)
+	duckDNSToken             = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$`)
+	namecheapPassword        = regexp.MustCompile(`^[a-f0-9]{32}$`)
+	dreamhostKey             = regexp.MustCompile(`^[a-zA-Z0-9]{16}$`)
+	cloudflareKey            = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
+	cloudflareUserServiceKey = regexp.MustCompile(`^v1\.0.+$`)
+	dnsOMaticUsername        = regexp.MustCompile(`^[a-zA-Z0-9._-]{3,25}$`)
+	dnsOMaticPassword        = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{5,19}$`)
+)
+
+func NewMatcher() Matcher {
+	return &matcher{
+		gandiKey:                 gandiKey,
+		goDaddyKey:               goDaddyKey,
+		duckDNSToken:             duckDNSToken,
+		namecheapPassword:        namecheapPassword,
+		dreamhostKey:             dreamhostKey,
+		cloudflareKey:            cloudflareKey,
+		cloudflareUserServiceKey: cloudflareUserServiceKey,
+		dnsOMaticUsername:        dnsOMaticUsername,
+		dnsOMaticPassword:        dnsOMaticPassword,
 	}
-	matcher.goDaddyKey, err = regexp.Compile(`^[A-Za-z0-9]{8,14}\_[A-Za-z0-9]{21,22}$`)
-	if err != nil {
-		return nil, err
-	}
-	matcher.duckDNSToken, err = regexp.Compile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$`)
-	if err != nil {
-		return nil, err
-	}
-	matcher.namecheapPassword, err = regexp.Compile(`^[a-f0-9]{32}$`)
-	if err != nil {
-		return nil, err
-	}
-	matcher.dreamhostKey, err = regexp.Compile(`^[a-zA-Z0-9]{16}$`)
-	if err != nil {
-		return nil, err
-	}
-	matcher.cloudflareKey, err = regexp.Compile(`^[a-zA-Z0-9]+$`)
-	if err != nil {
-		return nil, err
-	}
-	matcher.cloudflareUserServiceKey, err = regexp.Compile(`^v1\.0.+$`)
-	if err != nil {
-		return nil, err
-	}
-	matcher.dnsOMaticUsername, err = regexp.Compile(`^[a-zA-Z0-9._-]{3,25}$`)
-	if err != nil {
-		return nil, err
-	}
-	matcher.dnsOMaticPassword, err = regexp.Compile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{5,19}$`)
-	if err != nil {
-		return nil, err
-	}
-	return matcher, nil
 }
 
 func (m *matcher) GandiKey(s string) bool          { return m.gandiKey.MatchString(s) }

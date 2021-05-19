@@ -66,10 +66,8 @@ func extractAllSettings(jsonBytes []byte) (allSettings []settings.Settings, warn
 	if err := json.Unmarshal(jsonBytes, &rawConfig); err != nil {
 		return nil, nil, err
 	}
-	matcher, err := regex.NewMatcher()
-	if err != nil {
-		return nil, nil, err
-	}
+	matcher := regex.NewMatcher()
+
 	for i, common := range config.CommonSettings {
 		newSettings, newWarnings, err := makeSettingsFromObject(common, rawConfig.Settings[i], matcher)
 		warnings = append(warnings, newWarnings...)

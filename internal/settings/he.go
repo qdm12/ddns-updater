@@ -130,7 +130,7 @@ func (h *he) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP 
 		verifier := verification.NewVerifier()
 		ipsV4 := verifier.SearchIPv4(s)
 		ipsV6 := verifier.SearchIPv6(s)
-		ips := append(ipsV4, ipsV6...)
+		ips := append(ipsV4, ipsV6...) //nolint:gocritic
 		if ips == nil {
 			return nil, ErrNoResultReceived
 		}

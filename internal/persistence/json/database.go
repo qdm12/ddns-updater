@@ -74,7 +74,7 @@ func (db *Database) Check() error {
 			case event.IP == nil:
 				return fmt.Errorf("IP %d of %d is empty for record %s", i+1, len(record.Events), record)
 			case event.Time.IsZero():
-				return fmt.Errorf("Time of IP %d of %d is empty for record %s", i+1, len(record.Events), record)
+				return fmt.Errorf("time of IP %d of %d is empty for record %s", i+1, len(record.Events), record)
 			}
 		}
 	}

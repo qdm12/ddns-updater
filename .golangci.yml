@@ -6,18 +6,6 @@ linters-settings:
 
 issues:
   exclude-rules:
-    - path: cmd/
-      text: buildInfo is a global variable
-      linters:
-        - gochecknoglobals
-    - path: cmd/
-      text: commit is a global variable
-      linters:
-        - gochecknoglobals
-    - path: cmd/
-      text: buildDate is a global variable
-      linters:
-        - gochecknoglobals
     - path: cmd/updater/main.go
       text: "mnd: Magic number: 4, in <argument> detected"
       linters:
@@ -26,17 +14,6 @@ issues:
       text: "mnd: Magic number: 2, in <argument> detected"
       linters:
         - gomnd
-    - path: internal/regex/regex.go
-      text: "regexpMust: for const patterns like "
-      linters:
-        - gocritic
-    - path: internal/settings/
-      linters:
-        - maligned
-        - dupl
-    - path: pkg/publicip/.*_test.go
-      linters:
-        - dupl
 
 linters:
   disable-all: true
@@ -59,32 +36,36 @@ linters:
     - godot
     - goheader
     - goimports
-    - golint
     - gomnd
     - goprintffuncname
     - gosec
+    # - goerr113 # TODO
     - gosimple
     - govet
+    - importas
     - ineffassign
-    - interfacer
     - lll
-    - maligned
     - misspell
     - nakedret
     - nestif
+    - nilerr
     - noctx
     - nolintlint
     - prealloc
+    - predeclared
     - rowserrcheck
-    - scopelint
+    - exportloopref
     - sqlclosecheck
     - staticcheck
     - structcheck
+    - thelper
+    - tparallel
     - typecheck
     - unconvert
     - unparam
     - unused
     - varcheck
+    - wastedassign
     - whitespace
 
 run:

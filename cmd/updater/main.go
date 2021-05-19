@@ -30,6 +30,7 @@ import (
 	"github.com/qdm12/golibs/network/connectivity"
 )
 
+//nolint:gochecknoglobals
 var (
 	buildInfo models.BuildInformation
 	version   = "unknown"

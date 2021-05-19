@@ -198,7 +198,7 @@ func (d *dreamhost) getRecords(ctx context.Context, client *http.Client) (
 	return records, nil
 }
 
-func (d *dreamhost) removeRecord(ctx context.Context, client *http.Client, ip net.IP) error {
+func (d *dreamhost) removeRecord(ctx context.Context, client *http.Client, ip net.IP) error { //nolint:dupl
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA
@@ -245,7 +245,7 @@ func (d *dreamhost) removeRecord(ctx context.Context, client *http.Client, ip ne
 	return nil
 }
 
-func (d *dreamhost) createRecord(ctx context.Context, client *http.Client, ip net.IP) error {
+func (d *dreamhost) createRecord(ctx context.Context, client *http.Client, ip net.IP) error { //nolint:dupl
 	recordType := A
 	if ip.To4() == nil {
 		recordType = AAAA

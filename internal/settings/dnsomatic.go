@@ -158,7 +158,7 @@ func (d *dnsomatic) Update(ctx context.Context, client *http.Client, ip net.IP) 
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
 		ipsV4 := verification.NewVerifier().SearchIPv4(s)
 		ipsV6 := verification.NewVerifier().SearchIPv6(s)
-		ips := append(ipsV4, ipsV6...)
+		ips := append(ipsV4, ipsV6...) //nolint:gocritic
 		if ips == nil {
 			return nil, fmt.Errorf("no IP address in response")
 		}

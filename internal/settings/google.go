@@ -145,7 +145,7 @@ func (g *google) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
 		ipsV4 := verification.NewVerifier().SearchIPv4(s)
 		ipsV6 := verification.NewVerifier().SearchIPv6(s)
-		ips := append(ipsV4, ipsV6...)
+		ips := append(ipsV4, ipsV6...) //nolint:gocritic
 		if len(ips) == 0 {
 			return nil, ErrNoResultReceived
 		}

@@ -17,7 +17,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type opendns struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -26,7 +26,7 @@ type opendns struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (o *opendns, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -35,7 +35,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	o = &opendns{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -43,67 +43,67 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := o.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return o, nil
+	return p, nil
 }
 
-func (o *opendns) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case len(o.username) == 0:
+	case len(p.username) == 0:
 		return errors.ErrEmptyUsername
-	case len(o.password) == 0:
+	case len(p.password) == 0:
 		return errors.ErrEmptyPassword
-	case o.host == "*":
+	case p.host == "*":
 		return errors.ErrHostWildcard
 	}
 	return nil
 }
 
-func (o *opendns) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Opendns]", o.domain, o.host)
+func (p *provider) String() string {
+	return fmt.Sprintf("[domain: %s | host: %s | provider: Opendns]", p.domain, p.host)
 }
 
-func (o *opendns) Domain() string {
-	return o.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (o *opendns) Host() string {
-	return o.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (o *opendns) IPVersion() ipversion.IPVersion {
-	return o.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (o *opendns) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (o *opendns) BuildDomainName() string {
-	return utils.BuildDomainName(o.host, o.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (o *opendns) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", o.BuildDomainName(), o.BuildDomainName())),
-		Host:      models.HTML(o.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://opendns.com/\">Opendns DNS</a>",
-		IPVersion: models.HTML(o.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (o *opendns) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
-		User:   url.UserPassword(o.username, o.password),
+		User:   url.UserPassword(p.username, p.password),
 		Host:   "updates.opendns.com",
 		Path:   "/nic/update",
 	}
 	values := url.Values{}
-	values.Set("hostname", o.BuildDomainName())
-	if !o.useProviderIP {
+	values.Set("hostname", p.BuildDomainName())
+	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()

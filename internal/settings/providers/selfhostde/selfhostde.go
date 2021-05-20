@@ -18,7 +18,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type selfhostde struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -27,7 +27,7 @@ type selfhostde struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (sd *selfhostde, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -36,7 +36,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	sd = &selfhostde{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -44,67 +44,67 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := sd.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return sd, nil
+	return p, nil
 }
 
-func (sd *selfhostde) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case len(sd.username) == 0:
+	case len(p.username) == 0:
 		return errors.ErrEmptyUsername
-	case len(sd.password) == 0:
+	case len(p.password) == 0:
 		return errors.ErrEmptyPassword
-	case sd.host == "*":
+	case p.host == "*":
 		return errors.ErrHostWildcard
 	}
 	return nil
 }
 
-func (sd *selfhostde) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Selfhost.de]", sd.domain, sd.host)
+func (p *provider) String() string {
+	return fmt.Sprintf("[domain: %s | host: %s | provider: Selfhost.de]", p.domain, p.host)
 }
 
-func (sd *selfhostde) Domain() string {
-	return sd.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (sd *selfhostde) Host() string {
-	return sd.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (sd *selfhostde) IPVersion() ipversion.IPVersion {
-	return sd.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (sd *selfhostde) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (sd *selfhostde) BuildDomainName() string {
-	return utils.BuildDomainName(sd.host, sd.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (sd *selfhostde) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", sd.BuildDomainName(), sd.BuildDomainName())),
-		Host:      models.HTML(sd.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://selfhost.de/\">Selfhost.de</a>",
-		IPVersion: models.HTML(sd.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (sd *selfhostde) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
-		User:   url.UserPassword(sd.username, sd.password),
+		User:   url.UserPassword(p.username, p.password),
 		Host:   "carol.selfhost.de",
 		Path:   "/nic/update",
 	}
 	values := url.Values{}
-	values.Set("hostname", sd.BuildDomainName())
-	if !sd.useProviderIP {
+	values.Set("hostname", p.BuildDomainName())
+	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()

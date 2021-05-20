@@ -19,7 +19,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type dreamhost struct {
+type provider struct {
 	domain    string
 	host      string
 	ipVersion ipversion.IPVersion
@@ -28,7 +28,7 @@ type dreamhost struct {
 }
 
 func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher regex.Matcher) (d *dreamhost, err error) {
+	matcher regex.Matcher) (p *provider, err error) {
 	extraSettings := struct {
 		Key string `json:"key"`
 	}{}
@@ -38,76 +38,76 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if len(host) == 0 {
 		host = "@" // default
 	}
-	d = &dreamhost{
+	p = &provider{
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
 		key:       extraSettings.Key,
 		matcher:   matcher,
 	}
-	if err := d.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return d, nil
+	return p, nil
 }
 
-func (d *dreamhost) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case !d.matcher.DreamhostKey(d.key):
+	case !p.matcher.DreamhostKey(p.key):
 		return fmt.Errorf("invalid key format")
-	case d.host != "@":
+	case p.host != "@":
 		return fmt.Errorf(`host can only be "@"`)
 	}
 	return nil
 }
 
-func (d *dreamhost) String() string {
-	return utils.ToString(d.domain, d.host, constants.Dreamhost, d.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.Dreamhost, p.ipVersion)
 }
 
-func (d *dreamhost) Domain() string {
-	return d.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (d *dreamhost) Host() string {
-	return d.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (d *dreamhost) IPVersion() ipversion.IPVersion {
-	return d.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (d *dreamhost) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (d *dreamhost) BuildDomainName() string {
-	return utils.BuildDomainName(d.host, d.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (d *dreamhost) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://www.dreamhost.com/\">Dreamhost</a>",
-		IPVersion: models.HTML(d.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (d *dreamhost) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := constants.A
 	if ip.To4() == nil {
 		recordType = constants.AAAA
 	}
 
-	records, err := d.getRecords(ctx, client)
+	records, err := p.getRecords(ctx, client)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrListRecords, err)
 	}
 
 	var oldIP net.IP
 	for _, data := range records.Data {
-		if data.Type == recordType && data.Record == d.BuildDomainName() {
+		if data.Type == recordType && data.Record == p.BuildDomainName() {
 			if data.Editable == "0" {
 				return nil, errors.ErrRecordNotEditable
 			}
@@ -120,12 +120,12 @@ func (d *dreamhost) Update(ctx context.Context, client *http.Client, ip net.IP) 
 	}
 
 	// Create the record with the new IP before removing the old one if it exists.
-	if err := d.createRecord(ctx, client, ip); err != nil {
+	if err := p.createRecord(ctx, client, ip); err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrCreateRecord, err)
 	}
 
 	if oldIP != nil { // Found editable record with a different IP address, so remove it
-		if err := d.removeRecord(ctx, client, oldIP); err != nil {
+		if err := p.removeRecord(ctx, client, oldIP); err != nil {
 			return nil, fmt.Errorf("%w: %s", errors.ErrRemoveRecord, err)
 		}
 	}
@@ -149,7 +149,7 @@ type (
 	}
 )
 
-func (d *dreamhost) defaultURLValues() (values url.Values) {
+func (p *provider) defaultURLValues() (values url.Values) {
 	uuid := make([]byte, 16)
 	_, _ = io.ReadFull(rand.Reader, uuid)
 	//nolint:gomnd
@@ -157,19 +157,19 @@ func (d *dreamhost) defaultURLValues() (values url.Values) {
 	//nolint:gomnd
 	uuid[8] = (uuid[8] & 0x3f) | 0x80 // Variant is 10
 	values = url.Values{}
-	values.Set("key", d.key)
+	values.Set("key", p.key)
 	values.Set("unique_id", string(uuid))
 	values.Set("format", "json")
 	return values
 }
 
-func (d *dreamhost) getRecords(ctx context.Context, client *http.Client) (
+func (p *provider) getRecords(ctx context.Context, client *http.Client) (
 	records dreamHostRecords, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.dreamhost.com",
 	}
-	values := d.defaultURLValues()
+	values := p.defaultURLValues()
 	values.Set("cmd", "dns-list_records")
 	u.RawQuery = values.Encode()
 
@@ -201,7 +201,7 @@ func (d *dreamhost) getRecords(ctx context.Context, client *http.Client) (
 	return records, nil
 }
 
-func (d *dreamhost) removeRecord(ctx context.Context, client *http.Client, ip net.IP) error { //nolint:dupl
+func (p *provider) removeRecord(ctx context.Context, client *http.Client, ip net.IP) error { //nolint:dupl
 	recordType := constants.A
 	if ip.To4() == nil {
 		recordType = constants.AAAA
@@ -211,9 +211,9 @@ func (d *dreamhost) removeRecord(ctx context.Context, client *http.Client, ip ne
 		Scheme: "https",
 		Host:   "api.dreamhost.com",
 	}
-	values := d.defaultURLValues()
+	values := p.defaultURLValues()
 	values.Set("cmd", "dns-remove_record")
-	values.Set("record", d.domain)
+	values.Set("record", p.domain)
 	values.Set("type", recordType)
 	values.Set("value", ip.String())
 	u.RawQuery = values.Encode()
@@ -248,7 +248,7 @@ func (d *dreamhost) removeRecord(ctx context.Context, client *http.Client, ip ne
 	return nil
 }
 
-func (d *dreamhost) createRecord(ctx context.Context, client *http.Client, ip net.IP) error { //nolint:dupl
+func (p *provider) createRecord(ctx context.Context, client *http.Client, ip net.IP) error { //nolint:dupl
 	recordType := constants.A
 	if ip.To4() == nil {
 		recordType = constants.AAAA
@@ -258,9 +258,9 @@ func (d *dreamhost) createRecord(ctx context.Context, client *http.Client, ip ne
 		Scheme: "https",
 		Host:   "api.dreamhost.com",
 	}
-	values := d.defaultURLValues()
+	values := p.defaultURLValues()
 	values.Set("cmd", "dns-add_record")
-	values.Set("record", d.domain)
+	values.Set("record", p.domain)
 	values.Set("type", recordType)
 	values.Set("value", ip.String())
 	u.RawQuery = values.Encode()

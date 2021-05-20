@@ -18,7 +18,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type dyn struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -27,7 +27,7 @@ type dyn struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (d *dyn, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -36,7 +36,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	d = &dyn{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -44,67 +44,67 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := d.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return d, nil
+	return p, nil
 }
 
-func (d *dyn) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case len(d.username) == 0:
+	case len(p.username) == 0:
 		return errors.ErrEmptyUsername
-	case len(d.password) == 0:
+	case len(p.password) == 0:
 		return errors.ErrEmptyPassword
-	case d.host == "*":
+	case p.host == "*":
 		return errors.ErrHostWildcard
 	}
 	return nil
 }
 
-func (d *dyn) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Dyn]", d.domain, d.host)
+func (p *provider) String() string {
+	return fmt.Sprintf("[domain: %s | host: %s | provider: Dyn]", p.domain, p.host)
 }
 
-func (d *dyn) Domain() string {
-	return d.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (d *dyn) Host() string {
-	return d.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (d *dyn) IPVersion() ipversion.IPVersion {
-	return d.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (d *dyn) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (d *dyn) BuildDomainName() string {
-	return utils.BuildDomainName(d.host, d.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (d *dyn) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://dyn.com/\">Dyn DNS</a>",
-		IPVersion: models.HTML(d.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (d *dyn) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
-		User:   url.UserPassword(d.username, d.password),
+		User:   url.UserPassword(p.username, p.password),
 		Host:   "members.dyndns.org",
 		Path:   "/v3/update",
 	}
 	values := url.Values{}
-	values.Set("hostname", d.BuildDomainName())
-	if !d.useProviderIP {
+	values.Set("hostname", p.BuildDomainName())
+	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()

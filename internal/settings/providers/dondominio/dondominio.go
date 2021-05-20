@@ -17,7 +17,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type donDominio struct {
+type provider struct {
 	domain    string
 	host      string
 	ipVersion ipversion.IPVersion
@@ -26,7 +26,7 @@ type donDominio struct {
 	name      string
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (d *donDominio, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -38,7 +38,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if len(host) == 0 {
 		host = "@" // default
 	}
-	d = &donDominio{
+	p = &provider{
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
@@ -46,75 +46,75 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		password:  extraSettings.Password,
 		name:      extraSettings.Name,
 	}
-	if err := d.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return d, nil
+	return p, nil
 }
 
-func (d *donDominio) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case len(d.username) == 0:
+	case len(p.username) == 0:
 		return errors.ErrEmptyUsername
-	case len(d.password) == 0:
+	case len(p.password) == 0:
 		return errors.ErrEmptyPassword
-	case len(d.name) == 0:
+	case len(p.name) == 0:
 		return errors.ErrEmptyName
-	case d.host != "@":
+	case p.host != "@":
 		return errors.ErrHostOnlyAt
 	}
 	return nil
 }
 
-func (d *donDominio) String() string {
-	return utils.ToString(d.domain, d.host, constants.DonDominio, d.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.DonDominio, p.ipVersion)
 }
 
-func (d *donDominio) Domain() string {
-	return d.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (d *donDominio) Host() string {
-	return d.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (d *donDominio) IPVersion() ipversion.IPVersion {
-	return d.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (d *donDominio) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (d *donDominio) BuildDomainName() string {
-	return utils.BuildDomainName(d.host, d.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (d *donDominio) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://www.dondominio.com/\">DonDominio</a>",
-		IPVersion: models.HTML(d.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (d *donDominio) setHeaders(request *http.Request) {
+func (p *provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/x-www-form-urlencoded")
 	headers.SetAccept(request, "application/json")
 }
 
-func (d *donDominio) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "simple-api.dondominio.net",
 	}
 	values := url.Values{}
-	values.Set("apiuser", d.username)
-	values.Set("apipasswd", d.password)
-	values.Set("domain", d.domain)
-	values.Set("name", d.name)
+	values.Set("apiuser", p.username)
+	values.Set("apipasswd", p.password)
+	values.Set("domain", p.domain)
+	values.Set("name", p.name)
 	isIPv4 := ip.To4() != nil
 	if isIPv4 {
 		values.Set("ipv4", ip.String())
@@ -127,7 +127,7 @@ func (d *donDominio) Update(ctx context.Context, client *http.Client, ip net.IP)
 	if err != nil {
 		return nil, err
 	}
-	d.setHeaders(request)
+	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

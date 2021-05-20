@@ -18,7 +18,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type ddnss struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -27,7 +27,7 @@ type ddnss struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (d *ddnss, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -36,7 +36,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	d = &ddnss{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -44,68 +44,68 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := d.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return d, nil
+	return p, nil
 }
 
-func (d *ddnss) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case len(d.username) == 0:
+	case len(p.username) == 0:
 		return errors.ErrEmptyUsername
-	case len(d.password) == 0:
+	case len(p.password) == 0:
 		return errors.ErrEmptyPassword
-	case d.host == "*":
+	case p.host == "*":
 		return errors.ErrHostWildcard
 	}
 	return nil
 }
 
-func (d *ddnss) String() string {
-	return utils.ToString(d.domain, d.host, constants.DdnssDe, d.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.DdnssDe, p.ipVersion)
 }
 
-func (d *ddnss) Domain() string {
-	return d.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (d *ddnss) Host() string {
-	return d.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (d *ddnss) IPVersion() ipversion.IPVersion {
-	return d.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (d *ddnss) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (d *ddnss) BuildDomainName() string {
-	return utils.BuildDomainName(d.host, d.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (d *ddnss) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://ddnss.de/\">DDNSS.de</a>",
-		IPVersion: models.HTML(d.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (d *ddnss) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "www.ddnss.de",
 		Path:   "/upd.php",
 	}
 	values := url.Values{}
-	values.Set("user", d.username)
-	values.Set("pwd", d.password)
-	values.Set("host", d.BuildDomainName())
-	if !d.useProviderIP {
+	values.Set("user", p.username)
+	values.Set("pwd", p.password)
+	values.Set("host", p.BuildDomainName())
+	if !p.useProviderIP {
 		if ip.To4() == nil { // ipv6
 			values.Set("ip6", ip.String())
 		} else {

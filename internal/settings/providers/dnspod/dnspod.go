@@ -17,79 +17,79 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type dnspod struct {
+type provider struct {
 	domain    string
 	host      string
 	ipVersion ipversion.IPVersion
 	token     string
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (d *dnspod, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	d = &dnspod{
+	p = &provider{
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
 		token:     extraSettings.Token,
 	}
-	if err := d.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return d, nil
+	return p, nil
 }
 
-func (d *dnspod) isValid() error {
-	if len(d.token) == 0 {
+func (p *provider) isValid() error {
+	if len(p.token) == 0 {
 		return errors.ErrEmptyToken
 	}
 	return nil
 }
 
-func (d *dnspod) String() string {
-	return utils.ToString(d.domain, d.host, constants.DNSPod, d.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.DNSPod, p.ipVersion)
 }
 
-func (d *dnspod) Domain() string {
-	return d.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (d *dnspod) Host() string {
-	return d.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (d *dnspod) IPVersion() ipversion.IPVersion {
-	return d.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (d *dnspod) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (d *dnspod) BuildDomainName() string {
-	return utils.BuildDomainName(d.host, d.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (d *dnspod) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://www.dnspod.cn/\">DNSPod</a>",
-		IPVersion: models.HTML(d.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (d *dnspod) setHeaders(request *http.Request) {
+func (p *provider) setHeaders(request *http.Request) {
 	headers.SetContentType(request, "application/x-www-form-urlencoded")
 	headers.SetAccept(request, "application/json")
 	headers.SetUserAgent(request)
 }
 
-func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := constants.A
 	if ip.To4() == nil {
 		recordType = constants.AAAA
@@ -101,11 +101,11 @@ func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 	}
 
 	values := url.Values{}
-	values.Set("login_token", d.token)
+	values.Set("login_token", p.token)
 	values.Set("format", "json")
-	values.Set("domain", d.domain)
+	values.Set("domain", p.domain)
 	values.Set("length", "200")
-	values.Set("sub_domain", d.host)
+	values.Set("sub_domain", p.host)
 	values.Set("record_type", recordType)
 	buffer := bytes.NewBufferString(values.Encode())
 
@@ -113,7 +113,7 @@ func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 	if err != nil {
 		return nil, err
 	}
-	d.setHeaders(request)
+	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -142,7 +142,7 @@ func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 
 	var recordID, recordLine string
 	for _, record := range recordResp.Records {
-		if record.Type == constants.A && record.Name == d.host {
+		if record.Type == constants.A && record.Name == p.host {
 			receivedIP := net.ParseIP(record.Value)
 			if ip.Equal(receivedIP) {
 				return ip, nil
@@ -158,20 +158,20 @@ func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 
 	u.Path = "/Record.Ddns"
 	values = url.Values{}
-	values.Set("login_token", d.token)
+	values.Set("login_token", p.token)
 	values.Set("format", "json")
-	values.Set("domain", d.domain)
+	values.Set("domain", p.domain)
 	values.Set("record_id", recordID)
 	values.Set("value", ip.String())
 	values.Set("record_line", recordLine)
-	values.Set("sub_domain", d.host)
+	values.Set("sub_domain", p.host)
 	buffer = bytes.NewBufferString(values.Encode())
 
 	request, err = http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
 		return nil, err
 	}
-	d.setHeaders(request)
+	p.setHeaders(request)
 
 	response, err = client.Do(request)
 	if err != nil {

@@ -19,7 +19,7 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-type noip struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -28,7 +28,7 @@ type noip struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (n *noip, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -37,7 +37,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	n = &noip{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -45,70 +45,70 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := n.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return n, nil
+	return p, nil
 }
 
-func (n *noip) isValid() error {
+func (p *provider) isValid() error {
 	const maxUsernameLength = 50
 	switch {
-	case len(n.username) == 0:
+	case len(p.username) == 0:
 		return errors.ErrEmptyUsername
-	case len(n.username) > maxUsernameLength:
+	case len(p.username) > maxUsernameLength:
 		return fmt.Errorf("%w: longer than 50 characters", errors.ErrMalformedUsername)
-	case len(n.password) == 0:
+	case len(p.password) == 0:
 		return errors.ErrEmptyPassword
-	case n.host == "*":
+	case p.host == "*":
 		return errors.ErrHostWildcard
 	}
 	return nil
 }
 
-func (n *noip) String() string {
-	return utils.ToString(n.domain, n.host, constants.NoIP, n.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.NoIP, p.ipVersion)
 }
 
-func (n *noip) Domain() string {
-	return n.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (n *noip) Host() string {
-	return n.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (n *noip) IPVersion() ipversion.IPVersion {
-	return n.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (n *noip) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (n *noip) BuildDomainName() string {
-	return utils.BuildDomainName(n.host, n.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (n *noip) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", n.BuildDomainName(), n.BuildDomainName())),
-		Host:      models.HTML(n.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://www.noip.com/\">NoIP</a>",
-		IPVersion: models.HTML(n.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (n *noip) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dynupdate.no-ip.com",
 		Path:   "/nic/update",
-		User:   url.UserPassword(n.username, n.password),
+		User:   url.UserPassword(p.username, p.password),
 	}
 	values := url.Values{}
-	values.Set("hostname", n.BuildDomainName())
-	if !n.useProviderIP {
+	values.Set("hostname", p.BuildDomainName())
+	if !p.useProviderIP {
 		if ip.To4() == nil {
 			values.Set("myipv6", ip.String())
 		} else {
@@ -164,7 +164,7 @@ func (n *noip) Update(ctx context.Context, client *http.Client, ip net.IP) (newI
 		if newIP == nil {
 			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
 		}
-		if !n.useProviderIP && !ip.Equal(newIP) {
+		if !p.useProviderIP && !ip.Equal(newIP) {
 			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil

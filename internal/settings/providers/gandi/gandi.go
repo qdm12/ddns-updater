@@ -17,7 +17,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type gandi struct {
+type provider struct {
 	domain    string
 	host      string
 	ttl       int
@@ -25,7 +25,7 @@ type gandi struct {
 	key       string
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (g *gandi, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Key string `json:"key"`
 		TTL int    `json:"ttl"`
@@ -33,67 +33,67 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	g = &gandi{
+	p = &provider{
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
 		key:       extraSettings.Key,
 		ttl:       extraSettings.TTL,
 	}
-	if err := g.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return g, nil
+	return p, nil
 }
 
-func (g *gandi) isValid() error {
-	if len(g.key) == 0 {
+func (p *provider) isValid() error {
+	if len(p.key) == 0 {
 		return errors.ErrEmptyKey
 	}
 	return nil
 }
 
-func (g *gandi) String() string {
-	return utils.ToString(g.domain, g.host, constants.Gandi, g.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.Gandi, p.ipVersion)
 }
 
-func (g *gandi) Domain() string {
-	return g.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (g *gandi) Host() string {
-	return g.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (g *gandi) IPVersion() ipversion.IPVersion {
-	return g.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (g *gandi) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (g *gandi) BuildDomainName() string {
-	return utils.BuildDomainName(g.host, g.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (g *gandi) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", g.BuildDomainName(), g.BuildDomainName())),
-		Host:      models.HTML(g.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://www.gandi.net/\">gandi</a>",
-		IPVersion: models.HTML(g.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (g *gandi) setHeaders(request *http.Request) {
+func (p *provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
-	request.Header.Set("X-Api-Key", g.key)
+	request.Header.Set("X-Api-Key", p.key)
 }
 
-func (g *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := constants.A
 	var ipStr string
 	if ip.To4() == nil { // IPv6
@@ -106,15 +106,15 @@ func (g *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dns.api.gandi.net",
-		Path:   fmt.Sprintf("/api/v5/domains/%s/records/%s/%s", g.domain, g.host, recordType),
+		Path:   fmt.Sprintf("/api/v5/domains/%s/records/%s/%s", p.domain, p.host, recordType),
 	}
 
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
 	const defaultTTL = 3600
 	ttl := defaultTTL
-	if g.ttl != 0 {
-		ttl = g.ttl
+	if p.ttl != 0 {
+		ttl = p.ttl
 	}
 	requestData := struct {
 		Values [1]string `json:"rrset_values"`
@@ -131,7 +131,7 @@ func (g *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	if err != nil {
 		return nil, err
 	}
-	g.setHeaders(request)
+	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

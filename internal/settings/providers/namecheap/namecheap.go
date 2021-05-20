@@ -18,7 +18,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type namecheap struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -28,9 +28,9 @@ type namecheap struct {
 }
 
 func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher regex.Matcher) (n *namecheap, err error) {
+	matcher regex.Matcher) (p *provider, err error) {
 	if ipVersion == ipversion.IP6 {
-		return n, errors.ErrIPv6NotSupported
+		return p, errors.ErrIPv6NotSupported
 	}
 	extraSettings := struct {
 		Password      string `json:"password"`
@@ -39,7 +39,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	n = &namecheap{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -47,68 +47,68 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		useProviderIP: extraSettings.UseProviderIP,
 		matcher:       matcher,
 	}
-	if err := n.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return n, nil
+	return p, nil
 }
 
-func (n *namecheap) isValid() error {
-	if !n.matcher.NamecheapPassword(n.password) {
+func (p *provider) isValid() error {
+	if !p.matcher.NamecheapPassword(p.password) {
 		return errors.ErrMalformedPassword
 	}
 	return nil
 }
 
-func (n *namecheap) String() string {
-	return utils.ToString(n.domain, n.host, constants.Namecheap, n.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.Namecheap, p.ipVersion)
 }
 
-func (n *namecheap) Domain() string {
-	return n.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (n *namecheap) Host() string {
-	return n.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (n *namecheap) IPVersion() ipversion.IPVersion {
-	return n.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (n *namecheap) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (n *namecheap) BuildDomainName() string {
-	return utils.BuildDomainName(n.host, n.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (n *namecheap) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", n.BuildDomainName(), n.BuildDomainName())),
-		Host:      models.HTML(n.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://namecheap.com\">Namecheap</a>",
-		IPVersion: models.HTML(n.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (n *namecheap) setHeaders(request *http.Request) {
+func (p *provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetAccept(request, "application/xml")
 }
 
-func (n *namecheap) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dynamicdns.park-your-domain.com",
 		Path:   "/update",
 	}
 	values := url.Values{}
-	values.Set("host", n.host)
-	values.Set("domain", n.domain)
-	values.Set("password", n.password)
-	if !n.useProviderIP {
+	values.Set("host", p.host)
+	values.Set("domain", p.domain)
+	values.Set("password", p.password)
+	if !p.useProviderIP {
 		values.Set("ip", ip.String())
 	}
 	u.RawQuery = values.Encode()
@@ -117,7 +117,7 @@ func (n *namecheap) Update(ctx context.Context, client *http.Client, ip net.IP) 
 	if err != nil {
 		return nil, err
 	}
-	n.setHeaders(request)
+	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

@@ -17,7 +17,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type spdyn struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -27,7 +27,7 @@ type spdyn struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (s *spdyn, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		User          string `json:"user"`
 		Password      string `json:"password"`
@@ -37,7 +37,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	s = &spdyn{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -46,61 +46,61 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		token:         extraSettings.Token,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := s.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return s, nil
+	return p, nil
 }
 
-func (s *spdyn) isValid() error {
-	if len(s.token) > 0 {
+func (p *provider) isValid() error {
+	if len(p.token) > 0 {
 		return nil
 	}
 	switch {
-	case len(s.user) == 0:
+	case len(p.user) == 0:
 		return errors.ErrEmptyUsername
-	case len(s.password) == 0:
+	case len(p.password) == 0:
 		return errors.ErrEmptyPassword
-	case s.host == "*":
+	case p.host == "*":
 		return errors.ErrHostWildcard
 	}
 	return nil
 }
 
-func (s *spdyn) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Spdyn]", s.domain, s.host)
+func (p *provider) String() string {
+	return fmt.Sprintf("[domain: %s | host: %s | provider: Spdyn]", p.domain, p.host)
 }
 
-func (s *spdyn) Domain() string {
-	return s.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (s *spdyn) Host() string {
-	return s.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (s *spdyn) IPVersion() ipversion.IPVersion {
-	return s.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (s *spdyn) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (s *spdyn) BuildDomainName() string {
-	return utils.BuildDomainName(s.host, s.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (s *spdyn) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", s.BuildDomainName(), s.BuildDomainName())),
-		Host:      models.HTML(s.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://spdyn.com/\">Spdyn DNS</a>",
-		IPVersion: models.HTML(s.ipVersion),
+		IPVersion: models.HTML(p.ipVersion),
 	}
 }
 
-func (s *spdyn) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	// see https://wiki.securepoint.de/SPDyn/Variablen
 	u := url.URL{
 		Scheme: "https",
@@ -108,18 +108,18 @@ func (s *spdyn) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 		Path:   "/nic/update",
 	}
 	values := url.Values{}
-	values.Set("hostname", s.BuildDomainName())
-	if s.useProviderIP {
+	values.Set("hostname", p.BuildDomainName())
+	if p.useProviderIP {
 		values.Set("myip", "10.0.0.1")
 	} else {
 		values.Set("myip", ip.String())
 	}
-	if len(s.token) > 0 {
-		values.Set("user", s.BuildDomainName())
-		values.Set("pass", s.token)
+	if len(p.token) > 0 {
+		values.Set("user", p.BuildDomainName())
+		values.Set("pass", p.token)
 	} else {
-		values.Set("user", s.user)
-		values.Set("pass", s.password)
+		values.Set("user", p.user)
+		values.Set("pass", p.password)
 	}
 	u.RawQuery = values.Encode()
 
@@ -160,6 +160,6 @@ func (s *spdyn) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	case "nohost", "fatal":
 		return nil, errors.ErrHostnameNotExists
 	default:
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, bodyString)
 	}
 }

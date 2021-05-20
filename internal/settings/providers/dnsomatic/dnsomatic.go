@@ -20,7 +20,7 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-type dnsomatic struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -31,7 +31,7 @@ type dnsomatic struct {
 }
 
 func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher regex.Matcher) (d *dnsomatic, err error) {
+	matcher regex.Matcher) (p *provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -40,7 +40,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	d = &dnsomatic{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -49,74 +49,74 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		useProviderIP: extraSettings.UseProviderIP,
 		matcher:       matcher,
 	}
-	if err := d.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return d, nil
+	return p, nil
 }
 
-func (d *dnsomatic) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case !d.matcher.DNSOMaticUsername(d.username):
-		return fmt.Errorf("%w: %s", errors.ErrMalformedUsername, d.username)
-	case !d.matcher.DNSOMaticPassword(d.password):
+	case !p.matcher.DNSOMaticUsername(p.username):
+		return fmt.Errorf("%w: %s", errors.ErrMalformedUsername, p.username)
+	case !p.matcher.DNSOMaticPassword(p.password):
 		return errors.ErrMalformedPassword
-	case len(d.username) == 0:
+	case len(p.username) == 0:
 		return errors.ErrEmptyUsername
-	case len(d.password) == 0:
+	case len(p.password) == 0:
 		return errors.ErrEmptyPassword
 	}
 	return nil
 }
 
-func (d *dnsomatic) String() string {
-	return utils.ToString(d.domain, d.host, constants.DnsOMatic, d.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.DnsOMatic, p.ipVersion)
 }
 
-func (d *dnsomatic) Domain() string {
-	return d.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (d *dnsomatic) Host() string {
-	return d.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (d *dnsomatic) IPVersion() ipversion.IPVersion {
-	return d.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (d *dnsomatic) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (d *dnsomatic) BuildDomainName() string {
-	return utils.BuildDomainName(d.host, d.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (d *dnsomatic) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://www.dnsomatic.com/\">dnsomatic</a>",
-		IPVersion: models.HTML(d.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (d *dnsomatic) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	// Multiple hosts can be updated in one query, see https://www.dnsomatic.com/docs/api
 	u := url.URL{
 		Scheme: "https",
 		Host:   "updates.dnsomatic.com",
 		Path:   "/nic/update",
-		User:   url.UserPassword(d.username, d.password),
+		User:   url.UserPassword(p.username, p.password),
 	}
 	values := url.Values{}
-	values.Set("hostname", d.BuildDomainName())
-	if !d.useProviderIP {
+	values.Set("hostname", p.BuildDomainName())
+	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	values.Set("wildcard", "NOCHG")
-	if d.host == "*" {
+	if p.host == "*" {
 		values.Set("wildcard", "ON")
 	}
 	values.Set("mx", "NOCHG")
@@ -169,7 +169,7 @@ func (d *dnsomatic) Update(ctx context.Context, client *http.Client, ip net.IP) 
 		if newIP == nil {
 			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
 		}
-		if !d.useProviderIP && !ip.Equal(newIP) {
+		if !p.useProviderIP && !ip.Equal(newIP) {
 			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil

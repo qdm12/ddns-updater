@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -19,7 +19,7 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-type luaDNS struct {
+type provider struct {
 	domain    string
 	host      string
 	ipVersion ipversion.IPVersion
@@ -27,7 +27,7 @@ type luaDNS struct {
 	token     string
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (l *luaDNS, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Email string `json:"email"`
 		Token string `json:"token"`
@@ -35,82 +35,82 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	l = &luaDNS{
+	p = &provider{
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
 		email:     extraSettings.Email,
 		token:     extraSettings.Token,
 	}
-	if err := l.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return l, nil
+	return p, nil
 }
 
-func (l *luaDNS) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case !verification.NewRegex().MatchEmail(l.email):
+	case !verification.NewRegex().MatchEmail(p.email):
 		return errors.ErrMalformedEmail
-	case len(l.token) == 0:
+	case len(p.token) == 0:
 		return errors.ErrEmptyToken
 	}
 	return nil
 }
 
-func (l *luaDNS) String() string {
-	return utils.ToString(l.domain, l.host, constants.LuaDNS, l.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.LuaDNS, p.ipVersion)
 }
 
-func (l *luaDNS) Domain() string {
-	return l.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (l *luaDNS) Host() string {
-	return l.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (l *luaDNS) IPVersion() ipversion.IPVersion {
-	return l.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (l *luaDNS) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (l *luaDNS) BuildDomainName() string {
-	return utils.BuildDomainName(l.host, l.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (l *luaDNS) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", l.BuildDomainName(), l.BuildDomainName())),
-		Host:      models.HTML(l.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://www.luadns.com/\">LuaDNS</a>",
-		IPVersion: models.HTML(l.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (l *luaDNS) setHeaders(request *http.Request) {
+func (p *provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetAccept(request, "application/json")
 }
 
 // Using https://www.luadns.com/api.html
-func (l *luaDNS) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
-	zoneID, err := l.getZoneID(ctx, client)
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+	zoneID, err := p.getZoneID(ctx, client)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrGetZoneID, err)
 	}
 
-	record, err := l.getRecord(ctx, client, zoneID, ip)
+	record, err := p.getRecord(ctx, client, zoneID, ip)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrGetRecordInZone, err)
 	}
 
 	newRecord := record
 	newRecord.Content = ip.String()
-	if err := l.updateRecord(ctx, client, zoneID, newRecord); err != nil {
+	if err := p.updateRecord(ctx, client, zoneID, newRecord); err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrUpdateRecord, err)
 	}
 	return ip, nil
@@ -129,12 +129,12 @@ type luaDNSError struct {
 	Message string `json:"message"`
 }
 
-func (l *luaDNS) getZoneID(ctx context.Context, client *http.Client) (zoneID int, err error) {
+func (p *provider) getZoneID(ctx context.Context, client *http.Client) (zoneID int, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.luadns.com",
 		Path:   "/v1/zones",
-		User:   url.UserPassword(l.email, l.token),
+		User:   url.UserPassword(p.email, p.token),
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
@@ -142,7 +142,7 @@ func (l *luaDNS) getZoneID(ctx context.Context, client *http.Client) (zoneID int
 		return 0, err
 	}
 	request.Header.Set("Accept", "application/json")
-	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmail.com")
+	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmaip.com")
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -150,7 +150,7 @@ func (l *luaDNS) getZoneID(ctx context.Context, client *http.Client) (zoneID int
 	}
 	defer response.Body.Close()
 
-	b, err := ioutil.ReadAll(response.Body)
+	b, err := io.ReadAll(response.Body)
 	if err != nil {
 		return 0, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
@@ -173,27 +173,27 @@ func (l *luaDNS) getZoneID(ctx context.Context, client *http.Client) (zoneID int
 		return 0, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	for _, zone := range zones {
-		if zone.Name == l.domain {
+		if zone.Name == p.domain {
 			return zone.ID, nil
 		}
 	}
 	return 0, errors.ErrZoneNotFound
 }
 
-func (l *luaDNS) getRecord(ctx context.Context, client *http.Client, zoneID int, ip net.IP) (
+func (p *provider) getRecord(ctx context.Context, client *http.Client, zoneID int, ip net.IP) (
 	record luaDNSRecord, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.luadns.com",
 		Path:   fmt.Sprintf("/v1/zones/%d/records", zoneID),
-		User:   url.UserPassword(l.email, l.token),
+		User:   url.UserPassword(p.email, p.token),
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return record, err
 	}
-	l.setHeaders(request)
+	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -201,7 +201,7 @@ func (l *luaDNS) getRecord(ctx context.Context, client *http.Client, zoneID int,
 	}
 	defer response.Body.Close()
 
-	b, err := ioutil.ReadAll(response.Body)
+	b, err := io.ReadAll(response.Body)
 	if err != nil {
 		return record, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
@@ -233,13 +233,13 @@ func (l *luaDNS) getRecord(ctx context.Context, client *http.Client, zoneID int,
 		errors.ErrRecordNotFound, recordType, zoneID)
 }
 
-func (l *luaDNS) updateRecord(ctx context.Context, client *http.Client,
+func (p *provider) updateRecord(ctx context.Context, client *http.Client,
 	zoneID int, newRecord luaDNSRecord) (err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.luadns.com",
 		Path:   fmt.Sprintf("/v1/zones/%d/records/%d", zoneID, newRecord.ID),
-		User:   url.UserPassword(l.email, l.token),
+		User:   url.UserPassword(p.email, p.token),
 	}
 	data, err := json.Marshal(newRecord)
 	if err != nil {
@@ -250,7 +250,7 @@ func (l *luaDNS) updateRecord(ctx context.Context, client *http.Client,
 	if err != nil {
 		return err
 	}
-	l.setHeaders(request)
+	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -258,7 +258,7 @@ func (l *luaDNS) updateRecord(ctx context.Context, client *http.Client,
 	}
 	defer response.Body.Close()
 
-	b, err := ioutil.ReadAll(response.Body)
+	b, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}

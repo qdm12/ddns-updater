@@ -19,7 +19,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type ovh struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -33,7 +33,7 @@ type ovh struct {
 	consumerKey   string
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (o *ovh, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -47,7 +47,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	o = &ovh{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -60,79 +60,79 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		appSecret:     extraSettings.AppSecret,
 		consumerKey:   extraSettings.ConsumerKey,
 	}
-	if err := o.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return o, nil
+	return p, nil
 }
 
-func (o *ovh) isValid() error {
-	if o.mode == "api" {
+func (p *provider) isValid() error {
+	if p.mode == "api" {
 		switch {
-		case len(o.appKey) == 0:
+		case len(p.appKey) == 0:
 			return errors.ErrEmptyAppKey
-		case len(o.consumerKey) == 0:
+		case len(p.consumerKey) == 0:
 			return errors.ErrEmptyConsumerKey
-		case len(o.appSecret) == 0:
+		case len(p.appSecret) == 0:
 			return errors.ErrEmptySecret
 		}
 	} else {
 		switch {
-		case len(o.username) == 0:
+		case len(p.username) == 0:
 			return errors.ErrEmptyUsername
-		case len(o.password) == 0:
+		case len(p.password) == 0:
 			return errors.ErrEmptyPassword
-		case o.host == "*":
+		case p.host == "*":
 			return errors.ErrHostWildcard
 		}
 	}
 	return nil
 }
 
-func (o *ovh) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: OVH]", o.domain, o.host)
+func (p *provider) String() string {
+	return fmt.Sprintf("[domain: %s | host: %s | provider: OVH]", p.domain, p.host)
 }
 
-func (o *ovh) Domain() string {
-	return o.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (o *ovh) Host() string {
-	return o.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (o *ovh) IPVersion() ipversion.IPVersion {
-	return o.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (o *ovh) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (o *ovh) BuildDomainName() string {
-	return utils.BuildDomainName(o.host, o.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (o *ovh) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", o.BuildDomainName(), o.BuildDomainName())),
-		Host:      models.HTML(o.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://www.ovh.com/\">OVH DNS</a>",
-		IPVersion: models.HTML(o.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (o *ovh) updateWithDynHost(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) updateWithDynHost(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
-		User:   url.UserPassword(o.username, o.password),
+		User:   url.UserPassword(p.username, p.password),
 		Host:   "www.ovh.com",
 		Path:   "/nic/update",
 	}
 	values := url.Values{}
 	values.Set("system", "dyndns")
-	values.Set("hostname", o.BuildDomainName())
-	if !o.useProviderIP {
+	values.Set("hostname", p.BuildDomainName())
+	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()
@@ -171,7 +171,8 @@ func (o *ovh) updateWithDynHost(ctx context.Context, client *http.Client, ip net
 	}
 }
 
-func (o *ovh) updateWithZoneDNS(ctx context.Context, client *ovhClient.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) updateWithZoneDNS(ctx context.Context, client *ovhClient.Client, ip net.IP) (
+	newIP net.IP, err error) {
 	recordType := constants.A
 	var ipStr string
 	if ip.To4() == nil { // IPv6
@@ -181,13 +182,13 @@ func (o *ovh) updateWithZoneDNS(ctx context.Context, client *ovhClient.Client, i
 		ipStr = ip.To4().String()
 	}
 	// subDomain filter of the ovh api expect an empty string to get @ record
-	subDomain := o.host
+	subDomain := p.host
 	if subDomain == "@" {
 		subDomain = ""
 	}
 	// get existing records
 	var recordIDs []uint64
-	url := fmt.Sprintf("/domain/zone/%s/record?fieldType=%s&subDomain=%s", o.domain, recordType, subDomain)
+	url := fmt.Sprintf("/domain/zone/%s/record?fieldType=%s&subDomain=%s", p.domain, recordType, subDomain)
 	if err := client.GetWithContext(ctx, url, &recordIDs); err != nil {
 		return nil, err
 	}
@@ -202,7 +203,7 @@ func (o *ovh) updateWithZoneDNS(ctx context.Context, client *ovhClient.Client, i
 			SubDomain: subDomain,
 			Target:    ipStr,
 		}
-		url := fmt.Sprintf("/domain/zone/%s/record", o.domain)
+		url := fmt.Sprintf("/domain/zone/%s/record", p.domain)
 		if err := client.PostWithContext(ctx, url, &postRecordsParams, nil); err != nil {
 			return nil, err
 		}
@@ -214,14 +215,14 @@ func (o *ovh) updateWithZoneDNS(ctx context.Context, client *ovhClient.Client, i
 			Target: ipStr,
 		}
 		for _, recordID := range recordIDs {
-			url := fmt.Sprintf("/domain/zone/%s/record/%d", o.domain, recordID)
+			url := fmt.Sprintf("/domain/zone/%s/record/%d", p.domain, recordID)
 			if err := client.PutWithContext(ctx, url, &putRecordsParams, nil); err != nil {
 				return nil, err
 			}
 		}
 	}
 
-	url = fmt.Sprintf("/domain/zone/%s/refresh", o.domain)
+	url = fmt.Sprintf("/domain/zone/%s/refresh", p.domain)
 	if err := client.PostWithContext(ctx, url, nil, nil); err != nil {
 		return nil, err
 	}
@@ -229,23 +230,23 @@ func (o *ovh) updateWithZoneDNS(ctx context.Context, client *ovhClient.Client, i
 	return ip, nil
 }
 
-func (o *ovh) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
-	if o.mode != "api" {
-		return o.updateWithDynHost(ctx, client, ip)
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+	if p.mode != "api" {
+		return p.updateWithDynHost(ctx, client, ip)
 	}
 	const defaultEndpoint = "ovh-eu"
 	apiEndpoint := defaultEndpoint
-	if len(o.apiEndpoint) > 0 {
-		apiEndpoint = o.apiEndpoint
+	if len(p.apiEndpoint) > 0 {
+		apiEndpoint = p.apiEndpoint
 	}
 	ovhClientInstance, err := ovhClient.NewClient(
 		apiEndpoint,
-		o.appKey,
-		o.appSecret,
-		o.consumerKey,
+		p.appKey,
+		p.appSecret,
+		p.consumerKey,
 	)
 	if err != nil {
 		return nil, err
 	}
-	return o.updateWithZoneDNS(ctx, ovhClientInstance, ip)
+	return p.updateWithZoneDNS(ctx, ovhClientInstance, ip)
 }

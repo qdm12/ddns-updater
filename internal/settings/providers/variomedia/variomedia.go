@@ -19,7 +19,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type variomedia struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -29,7 +29,7 @@ type variomedia struct {
 }
 
 func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher regex.Matcher) (d *variomedia, err error) {
+	matcher regex.Matcher) (p *provider, err error) {
 	extraSettings := struct {
 		Email         string `json:"email"`
 		Password      string `json:"password"`
@@ -38,7 +38,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	d = &variomedia{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -46,60 +46,60 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := d.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return d, nil
+	return p, nil
 }
 
-func (d *variomedia) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case len(d.email) == 0:
+	case len(p.email) == 0:
 		return errors.ErrEmptyEmail
-	case len(d.password) == 0:
+	case len(p.password) == 0:
 		return errors.ErrEmptyPassword
-	case d.host == "*":
+	case p.host == "*":
 		return errors.ErrHostWildcard
 	}
 	return nil
 }
 
-func (d *variomedia) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Variomedia]", d.domain, d.host)
+func (p *provider) String() string {
+	return fmt.Sprintf("[domain: %s | host: %s | provider: Variomedia]", p.domain, p.host)
 }
 
-func (d *variomedia) Domain() string {
-	return d.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (d *variomedia) Host() string {
-	return d.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (d *variomedia) IPVersion() ipversion.IPVersion {
-	return d.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (d *variomedia) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (d *variomedia) BuildDomainName() string {
-	return utils.BuildDomainName(d.host, d.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (d *variomedia) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://variomedia.de/\">Variomedia</a>",
-		IPVersion: models.HTML(d.ipVersion),
+		IPVersion: models.HTML(p.ipVersion),
 	}
 }
 
-func (d *variomedia) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	host := "dyndns.variomedia.de"
-	if d.useProviderIP {
+	if p.useProviderIP {
 		if ip.To4() == nil {
 			host = "dyndns6.variomedia.de"
 		} else {
@@ -109,13 +109,13 @@ func (d *variomedia) Update(ctx context.Context, client *http.Client, ip net.IP)
 
 	u := url.URL{
 		Scheme: "https",
-		User:   url.UserPassword(d.email, d.password),
+		User:   url.UserPassword(p.email, p.password),
 		Host:   host,
 		Path:   "/nic/update",
 	}
 	values := url.Values{}
-	values.Set("hostname", d.BuildDomainName())
-	if !d.useProviderIP {
+	values.Set("hostname", p.BuildDomainName())
+	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()

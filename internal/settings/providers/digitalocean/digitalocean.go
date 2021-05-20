@@ -17,88 +17,88 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type digitalOcean struct {
+type provider struct {
 	domain    string
 	host      string
 	ipVersion ipversion.IPVersion
 	token     string
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (d *digitalOcean, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	d = &digitalOcean{
+	p = &provider{
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
 		token:     extraSettings.Token,
 	}
-	if err := d.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return d, nil
+	return p, nil
 }
 
-func (d *digitalOcean) isValid() error {
-	if len(d.token) == 0 {
+func (p *provider) isValid() error {
+	if len(p.token) == 0 {
 		return errors.ErrEmptyToken
 	}
 	return nil
 }
 
-func (d *digitalOcean) String() string {
-	return utils.ToString(d.domain, d.host, constants.DigitalOcean, d.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.DigitalOcean, p.ipVersion)
 }
 
-func (d *digitalOcean) Domain() string {
-	return d.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (d *digitalOcean) Host() string {
-	return d.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (d *digitalOcean) IPVersion() ipversion.IPVersion {
-	return d.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (d *digitalOcean) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (d *digitalOcean) BuildDomainName() string {
-	return utils.BuildDomainName(d.host, d.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (d *digitalOcean) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://www.digitalocean.com/\">DigitalOcean</a>",
-		IPVersion: models.HTML(d.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (d *digitalOcean) setHeaders(request *http.Request) {
+func (p *provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
-	headers.SetAuthBearer(request, d.token)
+	headers.SetAuthBearer(request, p.token)
 }
 
-func (d *digitalOcean) getRecordID(ctx context.Context, recordType string, client *http.Client) (
+func (p *provider) getRecordID(ctx context.Context, recordType string, client *http.Client) (
 	recordID int, err error) {
 	values := url.Values{}
-	values.Set("name", d.BuildDomainName())
+	values.Set("name", p.BuildDomainName())
 	values.Set("type", recordType)
 	u := url.URL{
 		Scheme:   "https",
 		Host:     "api.digitalocean.com",
-		Path:     "/v2/domains/" + d.domain + "/records",
+		Path:     "/v2/domains/" + p.domain + "/records",
 		RawQuery: values.Encode(),
 	}
 
@@ -106,7 +106,7 @@ func (d *digitalOcean) getRecordID(ctx context.Context, recordType string, clien
 	if err != nil {
 		return 0, err
 	}
-	d.setHeaders(request)
+	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -138,13 +138,13 @@ func (d *digitalOcean) getRecordID(ctx context.Context, recordType string, clien
 	return result.DomainRecords[0].ID, nil
 }
 
-func (d *digitalOcean) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := constants.A
 	if ip.To4() == nil { // IPv6
 		recordType = constants.AAAA
 	}
 
-	recordID, err := d.getRecordID(ctx, recordType, client)
+	recordID, err := p.getRecordID(ctx, recordType, client)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrGetRecordID, err)
 	}
@@ -152,7 +152,7 @@ func (d *digitalOcean) Update(ctx context.Context, client *http.Client, ip net.I
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.digitalocean.com",
-		Path:   fmt.Sprintf("/v2/domains/%s/records/%d", d.domain, recordID),
+		Path:   fmt.Sprintf("/v2/domains/%s/records/%d", p.domain, recordID),
 	}
 
 	buffer := bytes.NewBuffer(nil)
@@ -163,7 +163,7 @@ func (d *digitalOcean) Update(ctx context.Context, client *http.Client, ip net.I
 		Data string `json:"data"`
 	}{
 		Type: recordType,
-		Name: d.host,
+		Name: p.host,
 		Data: ip.String(),
 	}
 	if err := encoder.Encode(requestData); err != nil {
@@ -174,7 +174,7 @@ func (d *digitalOcean) Update(ctx context.Context, client *http.Client, ip net.I
 	if err != nil {
 		return nil, err
 	}
-	d.setHeaders(request)
+	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

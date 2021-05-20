@@ -15,7 +15,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type dynV6 struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -23,7 +23,7 @@ type dynV6 struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (d *dynV6, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Token         string `json:"token"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -31,63 +31,63 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	d = &dynV6{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
 		token:         extraSettings.Token,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := d.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return d, nil
+	return p, nil
 }
 
-func (d *dynV6) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case len(d.token) == 0:
+	case len(p.token) == 0:
 		return errors.ErrEmptyToken
-	case d.host == "*":
+	case p.host == "*":
 		return errors.ErrHostWildcard
 	}
 	return nil
 }
 
-func (d *dynV6) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: DynV6]", d.domain, d.host)
+func (p *provider) String() string {
+	return fmt.Sprintf("[domain: %s | host: %s | provider: DynV6]", p.domain, p.host)
 }
 
-func (d *dynV6) Domain() string {
-	return d.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (d *dynV6) Host() string {
-	return d.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (d *dynV6) IPVersion() ipversion.IPVersion {
-	return d.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (d *dynV6) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (d *dynV6) BuildDomainName() string {
-	return utils.BuildDomainName(d.host, d.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (d *dynV6) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://dynv6.com/\">DynV6 DNS</a>",
-		IPVersion: models.HTML(d.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (d *dynV6) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	isIPv4 := ip.To4() != nil
 	host := "dynv6.com"
 	if isIPv4 {
@@ -101,9 +101,9 @@ func (d *dynV6) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 		Path:   "/api/update",
 	}
 	values := url.Values{}
-	values.Set("token", d.token)
-	values.Set("zone", d.BuildDomainName())
-	if !d.useProviderIP {
+	values.Set("token", p.token)
+	values.Set("zone", p.BuildDomainName())
+	if !p.useProviderIP {
 		if isIPv4 {
 			values.Set("ipv4", ip.String())
 		} else {

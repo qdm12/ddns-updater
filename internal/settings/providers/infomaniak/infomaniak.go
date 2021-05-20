@@ -18,7 +18,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type infomaniak struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -27,7 +27,7 @@ type infomaniak struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (i *infomaniak, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -36,7 +36,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	i = &infomaniak{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -44,70 +44,70 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := i.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return i, nil
+	return p, nil
 }
 
-func (i *infomaniak) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case len(i.username) == 0:
+	case len(p.username) == 0:
 		return errors.ErrEmptyUsername
-	case len(i.password) == 0:
+	case len(p.password) == 0:
 		return errors.ErrEmptyPassword
-	case i.host == "*":
+	case p.host == "*":
 		return errors.ErrHostWildcard
 	}
 	return nil
 }
 
-func (i *infomaniak) String() string {
-	return utils.ToString(i.domain, i.host, constants.Infomaniak, i.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.Infomaniak, p.ipVersion)
 }
 
-func (i *infomaniak) Domain() string {
-	return i.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (i *infomaniak) Host() string {
-	return i.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (i *infomaniak) IPVersion() ipversion.IPVersion {
-	return i.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (i *infomaniak) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (i *infomaniak) BuildDomainName() string {
-	return utils.BuildDomainName(i.host, i.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (i *infomaniak) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", i.BuildDomainName(), i.BuildDomainName())),
-		Host:      models.HTML(i.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://www.infomaniak.com/\">Infomaniak</a>",
-		IPVersion: models.HTML(i.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (i *infomaniak) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "infomaniak.com",
 		Path:   "/nic/update",
-		User:   url.UserPassword(i.username, i.password),
+		User:   url.UserPassword(p.username, p.password),
 	}
 	values := url.Values{}
-	values.Set("hostname", i.domain)
-	if i.host != "@" {
-		values.Set("hostname", i.host+"."+i.domain)
+	values.Set("hostname", p.domain)
+	if p.host != "@" {
+		values.Set("hostname", p.host+"."+p.domain)
 	}
-	if !i.useProviderIP {
+	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()

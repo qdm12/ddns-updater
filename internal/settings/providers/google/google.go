@@ -19,7 +19,7 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-type google struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -28,7 +28,7 @@ type google struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (g *google, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -37,7 +37,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	g = &google{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -45,66 +45,66 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := g.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return g, nil
+	return p, nil
 }
 
-func (g *google) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case len(g.username) == 0:
+	case len(p.username) == 0:
 		return errors.ErrEmptyUsername
-	case len(g.password) == 0:
+	case len(p.password) == 0:
 		return errors.ErrEmptyPassword
 	}
 	return nil
 }
 
-func (g *google) String() string {
-	return utils.ToString(g.domain, g.host, constants.Google, g.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.Google, p.ipVersion)
 }
 
-func (g *google) Domain() string {
-	return g.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (g *google) Host() string {
-	return g.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (g *google) IPVersion() ipversion.IPVersion {
-	return g.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (g *google) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (g *google) BuildDomainName() string {
-	return utils.BuildDomainName(g.host, g.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (g *google) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", g.BuildDomainName(), g.BuildDomainName())),
-		Host:      models.HTML(g.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://domains.google.com/m/registrar\">Google</a>",
-		IPVersion: models.HTML(g.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (g *google) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "domains.google.com",
 		Path:   "/nic/update",
-		User:   url.UserPassword(g.username, g.password),
+		User:   url.UserPassword(p.username, p.password),
 	}
 	values := url.Values{}
-	fqdn := g.BuildDomainName()
+	fqdn := p.BuildDomainName()
 	values.Set("hostname", fqdn)
-	if !g.useProviderIP {
+	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()
@@ -153,7 +153,7 @@ func (g *google) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 		newIP = net.ParseIP(ips[0])
 		if newIP == nil {
 			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
-		} else if !g.useProviderIP && !ip.Equal(newIP) {
+		} else if !p.useProviderIP && !ip.Equal(newIP) {
 			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil

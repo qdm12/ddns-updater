@@ -19,7 +19,7 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-type duckdns struct {
+type provider struct {
 	host          string
 	ipVersion     ipversion.IPVersion
 	token         string
@@ -28,7 +28,7 @@ type duckdns struct {
 }
 
 func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher regex.Matcher) (d *duckdns, err error) {
+	matcher regex.Matcher) (p *provider, err error) {
 	extraSettings := struct {
 		Token         string `json:"token"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -36,64 +36,64 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	d = &duckdns{
+	p = &provider{
 		host:          host,
 		ipVersion:     ipVersion,
 		token:         extraSettings.Token,
 		useProviderIP: extraSettings.UseProviderIP,
 		matcher:       matcher,
 	}
-	if err := d.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return d, nil
+	return p, nil
 }
 
-func (d *duckdns) isValid() error {
-	if !d.matcher.DuckDNSToken(d.token) {
+func (p *provider) isValid() error {
+	if !p.matcher.DuckDNSToken(p.token) {
 		return errors.ErrMalformedToken
 	}
-	switch d.host {
+	switch p.host {
 	case "@", "*":
 		return errors.ErrHostOnlySubdomain
 	}
 	return nil
 }
 
-func (d *duckdns) String() string {
-	return utils.ToString("duckdns.org", d.host, constants.DuckDNS, d.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString("duckdns.org", p.host, constants.DuckDNS, p.ipVersion)
 }
 
-func (d *duckdns) Domain() string {
+func (p *provider) Domain() string {
 	return "duckdns.org"
 }
 
-func (d *duckdns) Host() string {
-	return d.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (d *duckdns) IPVersion() ipversion.IPVersion {
-	return d.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (d *duckdns) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (d *duckdns) BuildDomainName() string {
-	return utils.BuildDomainName(d.host, "duckdns.org")
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, "duckdns.org")
 }
 
-func (d *duckdns) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
-		Host:      models.HTML(d.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://duckdns.org\">DuckDNS</a>",
-		IPVersion: models.HTML(d.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (d *duckdns) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "www.duckdns.org",
@@ -101,10 +101,10 @@ func (d *duckdns) Update(ctx context.Context, client *http.Client, ip net.IP) (n
 	}
 	values := url.Values{}
 	values.Set("verbose", "true")
-	values.Set("domains", d.host)
-	values.Set("token", d.token)
+	values.Set("domains", p.host)
+	values.Set("token", p.token)
 	u.RawQuery = values.Encode()
-	if !d.useProviderIP {
+	if !p.useProviderIP {
 		if ip.To4() == nil {
 			values.Set("ip6", ip.String())
 		} else {

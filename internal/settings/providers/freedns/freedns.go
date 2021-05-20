@@ -18,73 +18,73 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type freedns struct {
+type provider struct {
 	domain    string
 	host      string
 	ipVersion ipversion.IPVersion
 	token     string
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (f *freedns, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	f = &freedns{
+	p = &provider{
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
 		token:     extraSettings.Token,
 	}
-	if err := f.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return f, nil
+	return p, nil
 }
 
-func (f *freedns) isValid() error {
-	if len(f.token) == 0 {
+func (p *provider) isValid() error {
+	if len(p.token) == 0 {
 		return errors.ErrEmptyToken
 	}
 	return nil
 }
 
-func (f *freedns) String() string {
-	return utils.ToString(f.domain, f.host, constants.FreeDNS, f.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.FreeDNS, p.ipVersion)
 }
 
-func (f *freedns) Domain() string {
-	return f.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (f *freedns) Host() string {
-	return f.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (f *freedns) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (f *freedns) IPVersion() ipversion.IPVersion {
-	return f.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (f *freedns) BuildDomainName() string {
-	return utils.BuildDomainName(f.host, f.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (f *freedns) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", f.BuildDomainName(), f.BuildDomainName())),
-		Host:      models.HTML(f.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://freedns.afraid.org/\">FreeDNS</a>",
-		IPVersion: models.HTML(f.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (f *freedns) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	var hostPrefix string
 	if ip.To4() == nil {
 		hostPrefix = "v6."
@@ -93,7 +93,7 @@ func (f *freedns) Update(ctx context.Context, client *http.Client, ip net.IP) (n
 	u := url.URL{
 		Scheme: "https",
 		Host:   hostPrefix + "sync.afraid.org",
-		Path:   "/u/" + f.token + "/",
+		Path:   "/u/" + p.token + "/",
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)

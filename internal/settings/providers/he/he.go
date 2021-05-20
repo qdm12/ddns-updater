@@ -19,7 +19,7 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-type he struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -27,7 +27,7 @@ type he struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (h *he, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -35,70 +35,70 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	h = &he{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := h.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return h, nil
+	return p, nil
 }
 
-func (h *he) isValid() error {
-	if len(h.password) == 0 {
+func (p *provider) isValid() error {
+	if len(p.password) == 0 {
 		return errors.ErrEmptyPassword
 	}
 	return nil
 }
 
-func (h *he) String() string {
-	return utils.ToString(h.domain, h.host, constants.HE, h.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.HE, p.ipVersion)
 }
 
-func (h *he) Domain() string {
-	return h.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (h *he) Host() string {
-	return h.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (h *he) IPVersion() ipversion.IPVersion {
-	return h.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (h *he) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (h *he) BuildDomainName() string {
-	return utils.BuildDomainName(h.host, h.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (h *he) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", h.BuildDomainName(), h.BuildDomainName())),
-		Host:      models.HTML(h.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://dns.he.net/\">he.net</a>",
-		IPVersion: models.HTML(h.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (h *he) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
-	fqdn := h.BuildDomainName()
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+	fqdn := p.BuildDomainName()
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dyn.dns.he.net",
 		Path:   "/nic/update",
-		User:   url.UserPassword(fqdn, h.password),
+		User:   url.UserPassword(fqdn, p.password),
 	}
 	values := url.Values{}
 	values.Set("hostname", fqdn)
-	if !h.useProviderIP {
+	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()
@@ -138,7 +138,7 @@ func (h *he) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP 
 		newIP = net.ParseIP(ips[0])
 		if newIP == nil {
 			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
-		} else if !h.useProviderIP && !ip.Equal(newIP) {
+		} else if !p.useProviderIP && !ip.Equal(newIP) {
 			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil

@@ -17,7 +17,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type strato struct {
+type provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -25,7 +25,7 @@ type strato struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (ss *strato, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -33,72 +33,72 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	ss = &strato{
+	p = &provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := ss.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return ss, nil
+	return p, nil
 }
 
-func (s *strato) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case len(s.password) == 0:
+	case len(p.password) == 0:
 		return errors.ErrEmptyPassword
-	case s.host == "*":
+	case p.host == "*":
 		return errors.ErrHostWildcard
 	}
 	return nil
 }
 
-func (s *strato) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Strato]", s.domain, s.host)
+func (p *provider) String() string {
+	return fmt.Sprintf("[domain: %s | host: %s | provider: Strato]", p.domain, p.host)
 }
 
-func (s *strato) Domain() string {
-	return s.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (s *strato) Host() string {
-	return s.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (s *strato) IPVersion() ipversion.IPVersion {
-	return s.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (s *strato) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (s *strato) BuildDomainName() string {
-	return utils.BuildDomainName(s.host, s.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (s *strato) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", s.BuildDomainName(), s.BuildDomainName())),
-		Host:      models.HTML(s.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://strato.com/\">Strato DNS</a>",
-		IPVersion: models.HTML(s.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (s *strato) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
-		User:   url.UserPassword(s.domain, s.password),
+		User:   url.UserPassword(p.domain, p.password),
 		Host:   "dyndns.strato.com",
 		Path:   "/nic/update",
 	}
 	values := url.Values{}
-	values.Set("hostname", s.BuildDomainName())
-	if !s.useProviderIP {
+	values.Set("hostname", p.BuildDomainName())
+	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()

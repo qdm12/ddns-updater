@@ -20,7 +20,7 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-type cloudflare struct {
+type provider struct {
 	domain         string
 	host           string
 	ipVersion      ipversion.IPVersion
@@ -35,7 +35,7 @@ type cloudflare struct {
 }
 
 func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher regex.Matcher) (c *cloudflare, err error) {
+	matcher regex.Matcher) (p *provider, err error) {
 	extraSettings := struct {
 		Key            string `json:"key"`
 		Token          string `json:"token"`
@@ -48,7 +48,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	c = &cloudflare{
+	p = &provider{
 		domain:         domain,
 		host:           host,
 		ipVersion:      ipVersion,
@@ -61,87 +61,87 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		ttl:            extraSettings.TTL,
 		matcher:        matcher,
 	}
-	if err := c.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return c, nil
+	return p, nil
 }
 
-func (c *cloudflare) isValid() error {
+func (p *provider) isValid() error {
 	switch {
-	case len(c.key) > 0: // email and key must be provided
+	case len(p.key) > 0: // email and key must be provided
 		switch {
-		case !c.matcher.CloudflareKey(c.key):
+		case !p.matcher.CloudflareKey(p.key):
 			return errors.ErrMalformedKey
-		case !verification.NewVerifier().MatchEmail(c.email):
+		case !verification.NewVerifier().MatchEmail(p.email):
 			return errors.ErrMalformedEmail
 		}
-	case len(c.userServiceKey) > 0: // only user service key
-		if !c.matcher.CloudflareKey(c.key) {
+	case len(p.userServiceKey) > 0: // only user service key
+		if !p.matcher.CloudflareKey(p.key) {
 			return errors.ErrMalformedUserServiceKey
 		}
 	default: // constants.API token only
 	}
 	switch {
-	case len(c.zoneIdentifier) == 0:
+	case len(p.zoneIdentifier) == 0:
 		return errors.ErrEmptyZoneIdentifier
-	case c.ttl == 0:
+	case p.ttl == 0:
 		return errors.ErrEmptyTTL
 	}
 	return nil
 }
 
-func (c *cloudflare) String() string {
-	return utils.ToString(c.domain, c.host, constants.Cloudflare, c.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.Cloudflare, p.ipVersion)
 }
 
-func (c *cloudflare) Domain() string {
-	return c.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (c *cloudflare) Host() string {
-	return c.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (c *cloudflare) IPVersion() ipversion.IPVersion {
-	return c.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (c *cloudflare) Proxied() bool {
-	return c.proxied
+func (p *provider) Proxied() bool {
+	return p.proxied
 }
 
-func (c *cloudflare) BuildDomainName() string {
-	return utils.BuildDomainName(c.host, c.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (c *cloudflare) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", c.BuildDomainName(), c.BuildDomainName())),
-		Host:      models.HTML(c.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://www.cloudflare.com\">Cloudflare</a>",
-		IPVersion: models.HTML(c.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
-func (c *cloudflare) setHeaders(request *http.Request) {
+func (p *provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
 	switch {
-	case len(c.token) > 0:
-		headers.SetAuthBearer(request, c.token)
-	case len(c.userServiceKey) > 0:
-		request.Header.Set("X-Auth-User-Service-Key", c.userServiceKey)
-	case len(c.email) > 0 && len(c.key) > 0:
-		request.Header.Set("X-Auth-Email", c.email)
-		request.Header.Set("X-Auth-Key", c.key)
+	case len(p.token) > 0:
+		headers.SetAuthBearer(request, p.token)
+	case len(p.userServiceKey) > 0:
+		request.Header.Set("X-Auth-User-Service-Key", p.userServiceKey)
+	case len(p.email) > 0 && len(p.key) > 0:
+		request.Header.Set("X-Auth-Email", p.email)
+		request.Header.Set("X-Auth-Key", p.key)
 	}
 }
 
 // Obtain domain ID.
 // See https://api.cloudflare.com/#dns-records-for-a-zone-list-dns-records.
-func (c *cloudflare) getRecordID(ctx context.Context, client *http.Client, newIP net.IP) (
+func (p *provider) getRecordID(ctx context.Context, client *http.Client, newIP net.IP) (
 	identifier string, upToDate bool, err error) {
 	recordType := constants.A
 	if newIP.To4() == nil {
@@ -151,11 +151,11 @@ func (c *cloudflare) getRecordID(ctx context.Context, client *http.Client, newIP
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.cloudflare.com",
-		Path:   fmt.Sprintf("/client/v4/zones/%s/dns_records", c.zoneIdentifier),
+		Path:   fmt.Sprintf("/client/v4/zones/%s/dns_records", p.zoneIdentifier),
 	}
 	values := url.Values{}
 	values.Set("type", recordType)
-	values.Set("name", c.BuildDomainName())
+	values.Set("name", p.BuildDomainName())
 	values.Set("page", "1")
 	values.Set("per_page", "1")
 	u.RawQuery = values.Encode()
@@ -164,7 +164,7 @@ func (c *cloudflare) getRecordID(ctx context.Context, client *http.Client, newIP
 	if err != nil {
 		return "", false, err
 	}
-	c.setHeaders(request)
+	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -207,12 +207,12 @@ func (c *cloudflare) getRecordID(ctx context.Context, client *http.Client, newIP
 	return listRecordsResponse.Result[0].ID, false, nil
 }
 
-func (c *cloudflare) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := constants.A
 	if ip.To4() == nil {
 		recordType = constants.AAAA
 	}
-	identifier, upToDate, err := c.getRecordID(ctx, client, ip)
+	identifier, upToDate, err := p.getRecordID(ctx, client, ip)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errors.ErrGetRecordID, err)
 	} else if upToDate {
@@ -222,7 +222,7 @@ func (c *cloudflare) Update(ctx context.Context, client *http.Client, ip net.IP)
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.cloudflare.com",
-		Path:   fmt.Sprintf("/client/v4/zones/%s/dns_records/%s", c.zoneIdentifier, identifier),
+		Path:   fmt.Sprintf("/client/v4/zones/%s/dns_records/%s", p.zoneIdentifier, identifier),
 	}
 
 	requestData := struct {
@@ -233,10 +233,10 @@ func (c *cloudflare) Update(ctx context.Context, client *http.Client, ip net.IP)
 		TTL     uint   `json:"ttl"`
 	}{
 		Type:    recordType,
-		Name:    c.BuildDomainName(),
+		Name:    p.BuildDomainName(),
 		Content: ip.String(),
-		Proxied: c.proxied,
-		TTL:     c.ttl,
+		Proxied: p.proxied,
+		TTL:     p.ttl,
 	}
 
 	buffer := bytes.NewBuffer(nil)
@@ -250,7 +250,7 @@ func (c *cloudflare) Update(ctx context.Context, client *http.Client, ip net.IP)
 		return nil, err
 	}
 
-	c.setHeaders(request)
+	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

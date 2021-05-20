@@ -7,7 +7,6 @@ import (
 	goerrors "errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -21,75 +20,75 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type linode struct {
+type provider struct {
 	domain    string
 	host      string
 	ipVersion ipversion.IPVersion
 	token     string
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (l *linode, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	l = &linode{
+	p = &provider{
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
 		token:     extraSettings.Token,
 	}
-	if err := l.isValid(); err != nil {
+	if err := p.isValid(); err != nil {
 		return nil, err
 	}
-	return l, nil
+	return p, nil
 }
 
-func (l *linode) isValid() error {
-	if len(l.token) == 0 {
+func (p *provider) isValid() error {
+	if len(p.token) == 0 {
 		return errors.ErrEmptyToken
 	}
 	return nil
 }
 
-func (l *linode) String() string {
-	return utils.ToString(l.domain, l.host, constants.Linode, l.ipVersion)
+func (p *provider) String() string {
+	return utils.ToString(p.domain, p.host, constants.Linode, p.ipVersion)
 }
 
-func (l *linode) Domain() string {
-	return l.domain
+func (p *provider) Domain() string {
+	return p.domain
 }
 
-func (l *linode) Host() string {
-	return l.host
+func (p *provider) Host() string {
+	return p.host
 }
 
-func (l *linode) IPVersion() ipversion.IPVersion {
-	return l.ipVersion
+func (p *provider) IPVersion() ipversion.IPVersion {
+	return p.ipVersion
 }
 
-func (l *linode) Proxied() bool {
+func (p *provider) Proxied() bool {
 	return false
 }
 
-func (l *linode) BuildDomainName() string {
-	return utils.BuildDomainName(l.host, l.domain)
+func (p *provider) BuildDomainName() string {
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (l *linode) HTML() models.HTMLRow {
+func (p *provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", l.BuildDomainName(), l.BuildDomainName())),
-		Host:      models.HTML(l.Host()),
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
+		Host:      models.HTML(p.Host()),
 		Provider:  "<a href=\"https://cloud.linode.com/\">Linode</a>",
-		IPVersion: models.HTML(l.ipVersion.String()),
+		IPVersion: models.HTML(p.ipVersion.String()),
 	}
 }
 
 // Using https://www.linode.com/docs/api/domains/
-func (l *linode) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
-	domainID, err := l.getDomainID(ctx, client)
+func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+	domainID, err := p.getDomainID(ctx, client)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrGetDomainID, err)
 	}
@@ -99,9 +98,9 @@ func (l *linode) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 		recordType = constants.AAAA
 	}
 
-	recordID, err := l.getRecordID(ctx, client, domainID, recordType)
+	recordID, err := p.getRecordID(ctx, client, domainID, recordType)
 	if goerrors.Is(err, errors.ErrNotFound) {
-		err := l.createRecord(ctx, client, domainID, recordType, ip)
+		err := p.createRecord(ctx, client, domainID, recordType, ip)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %s", errors.ErrCreateRecord, err)
 		}
@@ -110,7 +109,7 @@ func (l *linode) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 		return nil, fmt.Errorf("%w: %s", errors.ErrGetRecordID, err)
 	}
 
-	if err := l.updateRecord(ctx, client, domainID, recordID, ip); err != nil {
+	if err := p.updateRecord(ctx, client, domainID, recordID, ip); err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrUpdateRecord, err)
 	}
 
@@ -122,13 +121,13 @@ type linodeError struct {
 	Reason string `json:"reason"`
 }
 
-func (l *linode) setHeaders(request *http.Request) {
+func (p *provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
-	headers.SetAuthBearer(request, l.token)
+	headers.SetAuthBearer(request, p.token)
 }
 
-func (l *linode) getDomainID(ctx context.Context, client *http.Client) (domainID int, err error) {
+func (p *provider) getDomainID(ctx context.Context, client *http.Client) (domainID int, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.linode.com",
@@ -139,9 +138,9 @@ func (l *linode) getDomainID(ctx context.Context, client *http.Client) (domainID
 	if err != nil {
 		return 0, err
 	}
-	l.setHeaders(request)
+	p.setHeaders(request)
 	headers.SetOauth(request, "domains:read_only")
-	headers.SetXFilter(request, `{"domain": "`+l.domain+`"}`)
+	headers.SetXFilter(request, `{"domain": "`+p.domain+`"}`)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -151,7 +150,7 @@ func (l *linode) getDomainID(ctx context.Context, client *http.Client) (domainID
 
 	if response.StatusCode != http.StatusOK {
 		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
-		return 0, fmt.Errorf("%w: %s", err, l.getError(response.Body))
+		return 0, fmt.Errorf("%w: %s", err, p.getError(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -187,7 +186,7 @@ func (l *linode) getDomainID(ctx context.Context, client *http.Client) (domainID
 	return *domains[0].ID, nil
 }
 
-func (l *linode) getRecordID(ctx context.Context, client *http.Client,
+func (p *provider) getRecordID(ctx context.Context, client *http.Client,
 	domainID int, recordType string) (recordID int, err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -199,7 +198,7 @@ func (l *linode) getRecordID(ctx context.Context, client *http.Client,
 	if err != nil {
 		return 0, err
 	}
-	l.setHeaders(request)
+	p.setHeaders(request)
 	headers.SetOauth(request, "domains:read_only")
 
 	response, err := client.Do(request)
@@ -210,7 +209,7 @@ func (l *linode) getRecordID(ctx context.Context, client *http.Client,
 
 	if response.StatusCode != http.StatusOK {
 		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
-		return 0, fmt.Errorf("%w: %s", err, l.getError(response.Body))
+		return 0, fmt.Errorf("%w: %s", err, p.getError(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -226,7 +225,7 @@ func (l *linode) getRecordID(ctx context.Context, client *http.Client,
 	}
 
 	for _, domainRecord := range obj.Data {
-		if domainRecord.Type == recordType && domainRecord.Host == l.host {
+		if domainRecord.Type == recordType && domainRecord.Host == p.host {
 			return domainRecord.ID, nil
 		}
 	}
@@ -234,7 +233,7 @@ func (l *linode) getRecordID(ctx context.Context, client *http.Client,
 	return 0, errors.ErrNotFound
 }
 
-func (l *linode) createRecord(ctx context.Context, client *http.Client,
+func (p *provider) createRecord(ctx context.Context, client *http.Client,
 	domainID int, recordType string, ip net.IP) (err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -250,7 +249,7 @@ func (l *linode) createRecord(ctx context.Context, client *http.Client,
 
 	requestData := domainRecord{
 		Type: recordType,
-		Host: l.host,
+		Host: p.host,
 		IP:   ip.String(),
 	}
 	buffer := bytes.NewBuffer(nil)
@@ -263,7 +262,7 @@ func (l *linode) createRecord(ctx context.Context, client *http.Client,
 	if err != nil {
 		return err
 	}
-	l.setHeaders(request)
+	p.setHeaders(request)
 	headers.SetOauth(request, "domains:read_write")
 
 	response, err := client.Do(request)
@@ -274,7 +273,7 @@ func (l *linode) createRecord(ctx context.Context, client *http.Client,
 
 	if response.StatusCode != http.StatusOK {
 		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
-		return fmt.Errorf("%w: %s", err, l.getError(response.Body))
+		return fmt.Errorf("%w: %s", err, p.getError(response.Body))
 	}
 
 	var responseData domainRecord
@@ -293,7 +292,7 @@ func (l *linode) createRecord(ctx context.Context, client *http.Client,
 	return nil
 }
 
-func (l *linode) updateRecord(ctx context.Context, client *http.Client,
+func (p *provider) updateRecord(ctx context.Context, client *http.Client,
 	domainID, recordID int, ip net.IP) (err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -316,7 +315,7 @@ func (l *linode) updateRecord(ctx context.Context, client *http.Client,
 	if err != nil {
 		return err
 	}
-	l.setHeaders(request)
+	p.setHeaders(request)
 	headers.SetOauth(request, "domains:read_write")
 
 	response, err := client.Do(request)
@@ -327,7 +326,7 @@ func (l *linode) updateRecord(ctx context.Context, client *http.Client,
 
 	if response.StatusCode != http.StatusOK {
 		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
-		return fmt.Errorf("%w: %s", err, l.getError(response.Body))
+		return fmt.Errorf("%w: %s", err, p.getError(response.Body))
 	}
 
 	data.IP = ""
@@ -346,9 +345,9 @@ func (l *linode) updateRecord(ctx context.Context, client *http.Client,
 	return nil
 }
 
-func (l *linode) getError(body io.Reader) (err error) {
+func (p *provider) getError(body io.Reader) (err error) {
 	var errorObj linodeError
-	b, err := ioutil.ReadAll(body)
+	b, err := io.ReadAll(body)
 	if err != nil {
 		return err
 	}

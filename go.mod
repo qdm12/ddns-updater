@@ -10,4 +10,5 @@ require (
 	github.com/ovh/go-ovh v1.1.0
 	github.com/qdm12/golibs v0.0.0-20210514224620-c025cb0da211
 	github.com/stretchr/testify v1.7.0
+	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1060
 )

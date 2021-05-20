@@ -28,6 +28,9 @@ var (
 	ErrMalformedToken          = errors.New("malformed token")
 	ErrMalformedUsername       = errors.New("malformed username")
 	ErrMalformedUserServiceKey = errors.New("malformed user service key")
+	ErrEmptyAccessKeyId        = errors.New("empty access key id")
+	ErrEmptyAccessKeySecret    = errors.New("empty access key secret")
+	ErrEmptyRegionId           = errors.New("empty region id")
 )
 
 // Intermediary steps errors.
@@ -67,6 +70,7 @@ var (
 	ErrPrivateIPSent           = errors.New("private IP cannot be routed")
 	ErrRecordNotEditable       = errors.New("record is not editable") // Dreamhost
 	ErrRecordNotFound          = errors.New("record not found")
+	ErrRecordIDNotFound        = errors.New("ID not found in domain record")
 	ErrRequestMarshal          = errors.New("cannot marshal request body")
 	ErrUnknownResponse         = errors.New("unknown response received")
 	ErrUnmarshalResponse       = errors.New("cannot unmarshal update response")

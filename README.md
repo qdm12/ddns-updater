@@ -18,6 +18,7 @@
 ## Features
 
 - Updates periodically A records for different DNS providers:
+    - Aliyun
     - Cloudflare
     - DDNSS.de
     - DigitalOcean
@@ -130,6 +131,7 @@ Start by having the following content in *config.json*, or in your `CONFIG` envi
 For each setting, you need to fill in parameters.
 Check the documentation for your DNS provider:
 
+- [Aliyun](https://github.com/qdm12/ddns-updater/blob/master/docs/aliyun.md)
 - [Cloudflare](https://github.com/qdm12/ddns-updater/blob/master/docs/cloudflare.md)
 - [DDNSS.de](https://github.com/qdm12/ddns-updater/blob/master/docs/ddnss.de.md)
 - [DigitalOcean](https://github.com/qdm12/ddns-updater/blob/master/docs/digitalocean.md)

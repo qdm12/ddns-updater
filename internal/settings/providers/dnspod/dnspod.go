@@ -1,0 +1,207 @@
+package dnspod
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net"
+	"net/http"
+	"net/url"
+
+	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
+)
+
+type dnspod struct {
+	domain    string
+	host      string
+	ipVersion ipversion.IPVersion
+	token     string
+}
+
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (d *dnspod, err error) {
+	extraSettings := struct {
+		Token string `json:"token"`
+	}{}
+	if err := json.Unmarshal(data, &extraSettings); err != nil {
+		return nil, err
+	}
+	d = &dnspod{
+		domain:    domain,
+		host:      host,
+		ipVersion: ipVersion,
+		token:     extraSettings.Token,
+	}
+	if err := d.isValid(); err != nil {
+		return nil, err
+	}
+	return d, nil
+}
+
+func (d *dnspod) isValid() error {
+	if len(d.token) == 0 {
+		return errors.ErrEmptyToken
+	}
+	return nil
+}
+
+func (d *dnspod) String() string {
+	return utils.ToString(d.domain, d.host, constants.DNSPod, d.ipVersion)
+}
+
+func (d *dnspod) Domain() string {
+	return d.domain
+}
+
+func (d *dnspod) Host() string {
+	return d.host
+}
+
+func (d *dnspod) IPVersion() ipversion.IPVersion {
+	return d.ipVersion
+}
+
+func (d *dnspod) Proxied() bool {
+	return false
+}
+
+func (d *dnspod) BuildDomainName() string {
+	return utils.BuildDomainName(d.host, d.domain)
+}
+
+func (d *dnspod) HTML() models.HTMLRow {
+	return models.HTMLRow{
+		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", d.BuildDomainName(), d.BuildDomainName())),
+		Host:      models.HTML(d.Host()),
+		Provider:  "<a href=\"https://www.dnspod.cn/\">DNSPod</a>",
+		IPVersion: models.HTML(d.ipVersion.String()),
+	}
+}
+
+func (d *dnspod) setHeaders(request *http.Request) {
+	headers.SetContentType(request, "application/x-www-form-urlencoded")
+	headers.SetAccept(request, "application/json")
+	headers.SetUserAgent(request)
+}
+
+func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+	recordType := constants.A
+	if ip.To4() == nil {
+		recordType = constants.AAAA
+	}
+	u := url.URL{
+		Scheme: "https",
+		Host:   "dnsapi.cn",
+		Path:   "/Record.List",
+	}
+
+	values := url.Values{}
+	values.Set("login_token", d.token)
+	values.Set("format", "json")
+	values.Set("domain", d.domain)
+	values.Set("length", "200")
+	values.Set("sub_domain", d.host)
+	values.Set("record_type", recordType)
+	buffer := bytes.NewBufferString(values.Encode())
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
+	if err != nil {
+		return nil, err
+	}
+	d.setHeaders(request)
+
+	response, err := client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: %d: %s",
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+	}
+
+	decoder := json.NewDecoder(response.Body)
+	var recordResp struct {
+		Records []struct {
+			ID    string `json:"id"`
+			Value string `json:"value"`
+			Type  string `json:"type"`
+			Name  string `json:"name"`
+			Line  string `json:"line"`
+		} `json:"records"`
+	}
+	if err := decoder.Decode(&recordResp); err != nil {
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+	}
+
+	var recordID, recordLine string
+	for _, record := range recordResp.Records {
+		if record.Type == constants.A && record.Name == d.host {
+			receivedIP := net.ParseIP(record.Value)
+			if ip.Equal(receivedIP) {
+				return ip, nil
+			}
+			recordID = record.ID
+			recordLine = record.Line
+			break
+		}
+	}
+	if len(recordID) == 0 {
+		return nil, errors.ErrNotFound
+	}
+
+	u.Path = "/Record.Ddns"
+	values = url.Values{}
+	values.Set("login_token", d.token)
+	values.Set("format", "json")
+	values.Set("domain", d.domain)
+	values.Set("record_id", recordID)
+	values.Set("value", ip.String())
+	values.Set("record_line", recordLine)
+	values.Set("sub_domain", d.host)
+	buffer = bytes.NewBufferString(values.Encode())
+
+	request, err = http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
+	if err != nil {
+		return nil, err
+	}
+	d.setHeaders(request)
+
+	response, err = client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: %d: %s",
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+	}
+
+	decoder = json.NewDecoder(response.Body)
+	var ddnsResp struct {
+		Record struct {
+			ID    int64  `json:"id"`
+			Value string `json:"value"`
+			Name  string `json:"name"`
+		} `json:"record"`
+	}
+	if err := decoder.Decode(&ddnsResp); err != nil {
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+	}
+
+	ipStr := ddnsResp.Record.Value
+	receivedIP := net.ParseIP(ipStr)
+	if receivedIP == nil {
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ipStr)
+	} else if !ip.Equal(receivedIP) {
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, receivedIP.String())
+	}
+	return ip, nil
+}

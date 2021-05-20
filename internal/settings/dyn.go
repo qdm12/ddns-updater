@@ -12,6 +12,10 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -51,11 +55,11 @@ func NewDyn(data json.RawMessage, domain, host string, ipVersion ipversion.IPVer
 func (d *dyn) isValid() error {
 	switch {
 	case len(d.username) == 0:
-		return ErrEmptyUsername
+		return errors.ErrEmptyUsername
 	case len(d.password) == 0:
-		return ErrEmptyPassword
+		return errors.ErrEmptyPassword
 	case d.host == "*":
-		return ErrHostWildcard
+		return errors.ErrHostWildcard
 	}
 	return nil
 }
@@ -81,7 +85,7 @@ func (d *dyn) Proxied() bool {
 }
 
 func (d *dyn) BuildDomainName() string {
-	return buildDomainName(d.host, d.domain)
+	return utils.BuildDomainName(d.host, d.domain)
 }
 
 func (d *dyn) HTML() models.HTMLRow {
@@ -111,7 +115,7 @@ func (d *dyn) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -121,23 +125,23 @@ func (d *dyn) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyDataToSingleLine(s))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	switch {
-	case strings.HasPrefix(s, notfqdn):
-		return nil, ErrHostnameNotExists
+	case strings.HasPrefix(s, constants.Notfqdn):
+		return nil, errors.ErrHostnameNotExists
 	case strings.HasPrefix(s, "badrequest"):
-		return nil, ErrBadRequest
+		return nil, errors.ErrBadRequest
 	case strings.HasPrefix(s, "good"):
 		return ip, nil
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
 }

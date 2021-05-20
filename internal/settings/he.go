@@ -10,9 +10,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/verification"
 )
@@ -49,13 +52,13 @@ func NewHe(data json.RawMessage, domain, host string, ipVersion ipversion.IPVers
 
 func (h *he) isValid() error {
 	if len(h.password) == 0 {
-		return ErrEmptyPassword
+		return errors.ErrEmptyPassword
 	}
 	return nil
 }
 
 func (h *he) String() string {
-	return toString(h.domain, h.host, constants.HE, h.ipVersion)
+	return utils.ToString(h.domain, h.host, constants.HE, h.ipVersion)
 }
 
 func (h *he) Domain() string {
@@ -75,7 +78,7 @@ func (h *he) Proxied() bool {
 }
 
 func (h *he) BuildDomainName() string {
-	return buildDomainName(h.host, h.domain)
+	return utils.BuildDomainName(h.host, h.domain)
 }
 
 func (h *he) HTML() models.HTMLRow {
@@ -106,7 +109,7 @@ func (h *he) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP 
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -116,15 +119,15 @@ func (h *he) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP 
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
 	switch s {
 	case "":
-		return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, s)
-	case badauth:
-		return nil, ErrAuth
+		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
+	case constants.Badauth:
+		return nil, errors.ErrAuth
 	}
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
 		verifier := verification.NewVerifier()
@@ -132,15 +135,15 @@ func (h *he) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP 
 		ipsV6 := verifier.SearchIPv6(s)
 		ips := append(ipsV4, ipsV6...) //nolint:gocritic
 		if ips == nil {
-			return nil, ErrNoResultReceived
+			return nil, errors.ErrNoResultReceived
 		}
 		newIP = net.ParseIP(ips[0])
 		if newIP == nil {
-			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ips[0])
+			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
 		} else if !h.useProviderIP && !ip.Equal(newIP) {
-			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
+			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil
 	}
-	return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
+	return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 }

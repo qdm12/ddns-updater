@@ -9,9 +9,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -47,13 +50,13 @@ func NewGandi(data json.RawMessage, domain, host string, ipVersion ipversion.IPV
 
 func (g *gandi) isValid() error {
 	if len(g.key) == 0 {
-		return ErrEmptyKey
+		return errors.ErrEmptyKey
 	}
 	return nil
 }
 
 func (g *gandi) String() string {
-	return toString(g.domain, g.host, constants.GANDI, g.ipVersion)
+	return utils.ToString(g.domain, g.host, constants.Gandi, g.ipVersion)
 }
 
 func (g *gandi) Domain() string {
@@ -73,7 +76,7 @@ func (g *gandi) Proxied() bool {
 }
 
 func (g *gandi) BuildDomainName() string {
-	return buildDomainName(g.host, g.domain)
+	return utils.BuildDomainName(g.host, g.domain)
 }
 
 func (g *gandi) HTML() models.HTMLRow {
@@ -86,17 +89,17 @@ func (g *gandi) HTML() models.HTMLRow {
 }
 
 func (g *gandi) setHeaders(request *http.Request) {
-	setUserAgent(request)
-	setContentType(request, "application/json")
-	setAccept(request, "application/json")
+	headers.SetUserAgent(request)
+	headers.SetContentType(request, "application/json")
+	headers.SetAccept(request, "application/json")
 	request.Header.Set("X-Api-Key", g.key)
 }
 
 func (g *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
-	recordType := A
+	recordType := constants.A
 	var ipStr string
 	if ip.To4() == nil { // IPv6
-		recordType = AAAA
+		recordType = constants.AAAA
 		ipStr = ip.To16().String()
 	} else {
 		ipStr = ip.To4().String()
@@ -123,7 +126,7 @@ func (g *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 		TTL:    ttl,
 	}
 	if err := encoder.Encode(requestData); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrRequestEncode, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrRequestEncode, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
@@ -140,7 +143,7 @@ func (g *gandi) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 
 	if response.StatusCode != http.StatusCreated {
 		return nil, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	return ip, nil

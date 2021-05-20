@@ -10,9 +10,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -51,15 +54,15 @@ func NewGodaddy(data json.RawMessage, domain, host string, ipVersion ipversion.I
 func (g *godaddy) isValid() error {
 	switch {
 	case !g.matcher.GodaddyKey(g.key):
-		return ErrMalformedKey
+		return errors.ErrMalformedKey
 	case len(g.secret) == 0:
-		return ErrEmptySecret
+		return errors.ErrEmptySecret
 	}
 	return nil
 }
 
 func (g *godaddy) String() string {
-	return toString(g.domain, g.host, constants.GODADDY, g.ipVersion)
+	return utils.ToString(g.domain, g.host, constants.GoDaddy, g.ipVersion)
 }
 
 func (g *godaddy) Domain() string {
@@ -79,7 +82,7 @@ func (g *godaddy) Proxied() bool {
 }
 
 func (g *godaddy) BuildDomainName() string {
-	return buildDomainName(g.host, g.domain)
+	return utils.BuildDomainName(g.host, g.domain)
 }
 
 func (g *godaddy) HTML() models.HTMLRow {
@@ -92,16 +95,16 @@ func (g *godaddy) HTML() models.HTMLRow {
 }
 
 func (g *godaddy) setHeaders(request *http.Request) {
-	setUserAgent(request)
-	setAuthSSOKey(request, g.key, g.secret)
-	setContentType(request, "application/json")
-	setAccept(request, "application/json")
+	headers.SetUserAgent(request)
+	headers.SetAuthSSOKey(request, g.key, g.secret)
+	headers.SetContentType(request, "application/json")
+	headers.SetAccept(request, "application/json")
 }
 
 func (g *godaddy) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
-	recordType := A
+	recordType := constants.A
 	if ip.To4() == nil {
-		recordType = AAAA
+		recordType = constants.AAAA
 	}
 	type goDaddyPutBody struct {
 		Data string `json:"data"` // IP address to update to
@@ -118,7 +121,7 @@ func (g *godaddy) Update(ctx context.Context, client *http.Client, ip net.IP) (n
 		{Data: ip.String()},
 	}
 	if err := encoder.Encode(requestData); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrRequestEncode, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrRequestEncode, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
@@ -139,16 +142,16 @@ func (g *godaddy) Update(ctx context.Context, client *http.Client, ip net.IP) (n
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
-	err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+	err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
 	var parsedJSON struct {
 		Message string `json:"message"`
 	}
 	jsonErr := json.Unmarshal(b, &parsedJSON)
 	if jsonErr != nil || len(parsedJSON.Message) == 0 {
-		return nil, fmt.Errorf("%w: %s", err, bodyDataToSingleLine(string(b)))
+		return nil, fmt.Errorf("%w: %s", err, utils.ToSingleLine(string(b)))
 	}
 	return nil, fmt.Errorf("%w: %s", err, parsedJSON.Message)
 }

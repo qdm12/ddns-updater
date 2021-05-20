@@ -12,6 +12,9 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -51,11 +54,11 @@ func NewOpendns(data json.RawMessage, domain, host string, ipVersion ipversion.I
 func (o *opendns) isValid() error {
 	switch {
 	case len(o.username) == 0:
-		return ErrEmptyUsername
+		return errors.ErrEmptyUsername
 	case len(o.password) == 0:
-		return ErrEmptyPassword
+		return errors.ErrEmptyPassword
 	case o.host == "*":
-		return ErrHostWildcard
+		return errors.ErrHostWildcard
 	}
 	return nil
 }
@@ -81,7 +84,7 @@ func (o *opendns) Proxied() bool {
 }
 
 func (o *opendns) BuildDomainName() string {
-	return buildDomainName(o.host, o.domain)
+	return utils.BuildDomainName(o.host, o.domain)
 }
 
 func (o *opendns) HTML() models.HTMLRow {
@@ -111,7 +114,7 @@ func (o *opendns) Update(ctx context.Context, client *http.Client, ip net.IP) (n
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -121,23 +124,23 @@ func (o *opendns) Update(ctx context.Context, client *http.Client, ip net.IP) (n
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, s)
+		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
 	}
 
 	if !strings.HasPrefix(s, "good ") {
-		return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
 	responseIPString := strings.TrimPrefix(s, "good ")
 	responseIP := net.ParseIP(responseIPString)
 	if responseIP == nil {
-		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, responseIPString)
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, responseIPString)
 	} else if !newIP.Equal(ip) {
-		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, responseIP)
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, responseIP)
 	}
 	return ip, nil
 }

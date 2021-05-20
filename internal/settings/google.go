@@ -10,9 +10,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/verification"
 )
@@ -53,15 +56,15 @@ func NewGoogle(data json.RawMessage, domain, host string, ipVersion ipversion.IP
 func (g *google) isValid() error {
 	switch {
 	case len(g.username) == 0:
-		return ErrEmptyUsername
+		return errors.ErrEmptyUsername
 	case len(g.password) == 0:
-		return ErrEmptyPassword
+		return errors.ErrEmptyPassword
 	}
 	return nil
 }
 
 func (g *google) String() string {
-	return toString(g.domain, g.host, constants.GOOGLE, g.ipVersion)
+	return utils.ToString(g.domain, g.host, constants.Google, g.ipVersion)
 }
 
 func (g *google) Domain() string {
@@ -81,7 +84,7 @@ func (g *google) Proxied() bool {
 }
 
 func (g *google) BuildDomainName() string {
-	return buildDomainName(g.host, g.domain)
+	return utils.BuildDomainName(g.host, g.domain)
 }
 
 func (g *google) HTML() models.HTMLRow {
@@ -112,7 +115,7 @@ func (g *google) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -122,40 +125,40 @@ func (g *google) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
 	switch s {
 	case "":
-		return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, s)
-	case nohost, notfqdn:
-		return nil, ErrHostnameNotExists
-	case badauth:
-		return nil, ErrAuth
-	case badagent:
-		return nil, ErrBannedUserAgent
-	case abuse:
-		return nil, ErrAbuse
-	case nineoneone:
-		return nil, ErrDNSServerSide
-	case "conflict A", "conflict AAAA":
-		return nil, ErrConflictingRecord
+		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
+	case constants.Nohost, constants.Notfqdn:
+		return nil, errors.ErrHostnameNotExists
+	case constants.Badauth:
+		return nil, errors.ErrAuth
+	case constants.Badagent:
+		return nil, errors.ErrBannedUserAgent
+	case constants.Abuse:
+		return nil, errors.ErrAbuse
+	case constants.Nineoneone:
+		return nil, errors.ErrDNSServerSide
+	case "conflict constants.A", "conflict constants.AAAA":
+		return nil, errors.ErrConflictingRecord
 	}
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
 		ipsV4 := verification.NewVerifier().SearchIPv4(s)
 		ipsV6 := verification.NewVerifier().SearchIPv6(s)
 		ips := append(ipsV4, ipsV6...) //nolint:gocritic
 		if len(ips) == 0 {
-			return nil, ErrNoResultReceived
+			return nil, errors.ErrNoResultReceived
 		}
 		newIP = net.ParseIP(ips[0])
 		if newIP == nil {
-			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ips[0])
+			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
 		} else if !g.useProviderIP && !ip.Equal(newIP) {
-			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
+			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil
 	}
-	return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
+	return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 }

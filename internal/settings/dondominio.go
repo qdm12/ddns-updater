@@ -9,9 +9,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -54,19 +57,19 @@ func NewDonDominio(data json.RawMessage, domain, host string, ipVersion ipversio
 func (d *donDominio) isValid() error {
 	switch {
 	case len(d.username) == 0:
-		return ErrEmptyUsername
+		return errors.ErrEmptyUsername
 	case len(d.password) == 0:
-		return ErrEmptyPassword
+		return errors.ErrEmptyPassword
 	case len(d.name) == 0:
-		return ErrEmptyName
+		return errors.ErrEmptyName
 	case d.host != "@":
-		return ErrHostOnlyAt
+		return errors.ErrHostOnlyAt
 	}
 	return nil
 }
 
 func (d *donDominio) String() string {
-	return toString(d.domain, d.host, constants.DONDOMINIO, d.ipVersion)
+	return utils.ToString(d.domain, d.host, constants.DonDominio, d.ipVersion)
 }
 
 func (d *donDominio) Domain() string {
@@ -86,7 +89,7 @@ func (d *donDominio) Proxied() bool {
 }
 
 func (d *donDominio) BuildDomainName() string {
-	return buildDomainName(d.host, d.domain)
+	return utils.BuildDomainName(d.host, d.domain)
 }
 
 func (d *donDominio) HTML() models.HTMLRow {
@@ -99,9 +102,9 @@ func (d *donDominio) HTML() models.HTMLRow {
 }
 
 func (d *donDominio) setHeaders(request *http.Request) {
-	setUserAgent(request)
-	setContentType(request, "application/x-www-form-urlencoded")
-	setAccept(request, "application/json")
+	headers.SetUserAgent(request)
+	headers.SetContentType(request, "application/x-www-form-urlencoded")
+	headers.SetAccept(request, "application/json")
 }
 
 func (d *donDominio) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
@@ -136,7 +139,7 @@ func (d *donDominio) Update(ctx context.Context, client *http.Client, ip net.IP)
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -152,12 +155,12 @@ func (d *donDominio) Update(ctx context.Context, client *http.Client, ip net.IP)
 		} `json:"responseData"`
 	}
 	if err := decoder.Decode(&responseData); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
 	if !responseData.Success {
 		return nil, fmt.Errorf("%w: %s (error code %d)",
-			ErrUnsuccessfulResponse, responseData.ErrorCodeMessage, responseData.ErrorCode)
+			errors.ErrUnsuccessfulResponse, responseData.ErrorCodeMessage, responseData.ErrorCode)
 	}
 	ipString := responseData.ResponseData.GlueRecords[0].IPv4
 	if !isIPv4 {
@@ -165,9 +168,9 @@ func (d *donDominio) Update(ctx context.Context, client *http.Client, ip net.IP)
 	}
 	newIP = net.ParseIP(ipString)
 	if newIP == nil {
-		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ipString)
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ipString)
 	} else if !ip.Equal(newIP) {
-		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 	}
 	return newIP, nil
 }

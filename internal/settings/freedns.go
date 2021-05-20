@@ -10,9 +10,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -45,13 +48,13 @@ func NewFreedns(data json.RawMessage, domain, host string, ipVersion ipversion.I
 
 func (f *freedns) isValid() error {
 	if len(f.token) == 0 {
-		return ErrEmptyToken
+		return errors.ErrEmptyToken
 	}
 	return nil
 }
 
 func (f *freedns) String() string {
-	return toString(f.domain, f.host, constants.FREEDNS, f.ipVersion)
+	return utils.ToString(f.domain, f.host, constants.FreeDNS, f.ipVersion)
 }
 
 func (f *freedns) Domain() string {
@@ -71,7 +74,7 @@ func (f *freedns) IPVersion() ipversion.IPVersion {
 }
 
 func (f *freedns) BuildDomainName() string {
-	return buildDomainName(f.host, f.domain)
+	return utils.BuildDomainName(f.host, f.domain)
 }
 
 func (f *freedns) HTML() models.HTMLRow {
@@ -99,7 +102,7 @@ func (f *freedns) Update(ctx context.Context, client *http.Client, ip net.IP) (n
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -109,30 +112,30 @@ func (f *freedns) Update(ctx context.Context, client *http.Client, ip net.IP) (n
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, s)
+		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
 	}
 
 	if s == "" {
-		return nil, ErrNoResultReceived
+		return nil, errors.ErrNoResultReceived
 	}
 
 	// Example: Updated demo.freshdns.com from 50.23.197.94 to 2607:f0d0:1102:d5::2
 	words := strings.Fields(s)
 	const expectedWords = 6
 	if len(words) != expectedWords {
-		return nil, fmt.Errorf("%w: not enough fields in response: %s", ErrUnmarshalResponse, s)
+		return nil, fmt.Errorf("%w: not enough fields in response: %s", errors.ErrUnmarshalResponse, s)
 	}
 
 	ipString := words[5]
 
 	newIP = net.ParseIP(ipString)
 	if newIP == nil {
-		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, newIP)
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, newIP)
 	}
 
 	return newIP, nil

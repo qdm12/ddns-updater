@@ -10,9 +10,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/verification"
 )
@@ -54,19 +57,19 @@ func (n *noip) isValid() error {
 	const maxUsernameLength = 50
 	switch {
 	case len(n.username) == 0:
-		return ErrEmptyUsername
+		return errors.ErrEmptyUsername
 	case len(n.username) > maxUsernameLength:
-		return fmt.Errorf("%w: longer than 50 characters", ErrMalformedUsername)
+		return fmt.Errorf("%w: longer than 50 characters", errors.ErrMalformedUsername)
 	case len(n.password) == 0:
-		return ErrEmptyPassword
+		return errors.ErrEmptyPassword
 	case n.host == "*":
-		return ErrHostWildcard
+		return errors.ErrHostWildcard
 	}
 	return nil
 }
 
 func (n *noip) String() string {
-	return toString(n.domain, n.host, constants.NOIP, n.ipVersion)
+	return utils.ToString(n.domain, n.host, constants.NoIP, n.ipVersion)
 }
 
 func (n *noip) Domain() string {
@@ -86,7 +89,7 @@ func (n *noip) Proxied() bool {
 }
 
 func (n *noip) BuildDomainName() string {
-	return buildDomainName(n.host, n.domain)
+	return utils.BuildDomainName(n.host, n.domain)
 }
 
 func (n *noip) HTML() models.HTMLRow {
@@ -120,7 +123,7 @@ func (n *noip) Update(ctx context.Context, client *http.Client, ip net.IP) (newI
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -130,43 +133,43 @@ func (n *noip) Update(ctx context.Context, client *http.Client, ip net.IP) (newI
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, s)
+		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
 	}
 
 	switch s {
 	case "":
-		return nil, ErrNoResultReceived
-	case nineoneone:
-		return nil, ErrDNSServerSide
-	case abuse:
-		return nil, ErrAbuse
+		return nil, errors.ErrNoResultReceived
+	case constants.Nineoneone:
+		return nil, errors.ErrDNSServerSide
+	case constants.Abuse:
+		return nil, errors.ErrAbuse
 	case "!donator":
-		return nil, ErrFeatureUnavailable
-	case badagent:
-		return nil, ErrBannedUserAgent
-	case badauth:
-		return nil, ErrAuth
-	case nohost:
-		return nil, ErrHostnameNotExists
+		return nil, errors.ErrFeatureUnavailable
+	case constants.Badagent:
+		return nil, errors.ErrBannedUserAgent
+	case constants.Badauth:
+		return nil, errors.ErrAuth
+	case constants.Nohost:
+		return nil, errors.ErrHostnameNotExists
 	}
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
 		ips := verification.NewVerifier().SearchIPv4(s)
 		if ips == nil {
-			return nil, ErrNoResultReceived
+			return nil, errors.ErrNoResultReceived
 		}
 		newIP = net.ParseIP(ips[0])
 		if newIP == nil {
-			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ips[0])
+			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
 		}
 		if !n.useProviderIP && !ip.Equal(newIP) {
-			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
+			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil
 	}
-	return nil, ErrUnknownResponse
+	return nil, errors.ErrUnknownResponse
 }

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/ddns-updater/internal/settings"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/params"
 )
@@ -87,7 +87,7 @@ func extractAllSettings(jsonBytes []byte) (allSettings []settings.Settings, warn
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, matcher regex.Matcher) (
 	settingsSlice []settings.Settings, warnings []string, err error) {
 	provider := models.Provider(common.Provider)
-	if provider == constants.DUCKDNS { // only hosts, no domain
+	if provider == constants.DuckDNS { // only hosts, no domain
 		if len(common.Domain) > 0 { // retro compatibility
 			if len(common.Host) == 0 {
 				common.Host = strings.TrimSuffix(common.Domain, ".duckdns.org")
@@ -113,59 +113,59 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, 
 
 	var settingsConstructor settings.Constructor
 	switch provider {
-	case constants.CLOUDFLARE:
+	case constants.Cloudflare:
 		settingsConstructor = settings.NewCloudflare
-	case constants.DIGITALOCEAN:
-		settingsConstructor = settings.NewDigitalOcean
-	case constants.DDNSSDE:
+	case constants.DdnssDe:
 		settingsConstructor = settings.NewDdnss
-	case constants.DONDOMINIO:
-		settingsConstructor = settings.NewDonDominio
-	case constants.DNSOMATIC:
+	case constants.DigitalOcean:
+		settingsConstructor = settings.NewDigitalOcean
+	case constants.DnsOMatic:
 		settingsConstructor = settings.NewDNSOMatic
-	case constants.DNSPOD:
+	case constants.DNSPod:
 		settingsConstructor = settings.NewDNSPod
-	case constants.DREAMHOST:
+	case constants.DonDominio:
+		settingsConstructor = settings.NewDonDominio
+	case constants.Dreamhost:
 		settingsConstructor = settings.NewDreamhost
-	case constants.DUCKDNS:
+	case constants.DuckDNS:
 		settingsConstructor = settings.NewDuckdns
-	case constants.FREEDNS:
+	case constants.Dyn:
+		settingsConstructor = settings.NewDyn
+	case constants.DynV6:
+		settingsConstructor = settings.NewDynV6
+	case constants.FreeDNS:
 		settingsConstructor = settings.NewFreedns
-	case constants.GANDI:
+	case constants.Gandi:
 		settingsConstructor = settings.NewGandi
-	case constants.GODADDY:
+	case constants.GoDaddy:
 		settingsConstructor = settings.NewGodaddy
-	case constants.GOOGLE:
+	case constants.Google:
 		settingsConstructor = settings.NewGoogle
 	case constants.HE:
 		settingsConstructor = settings.NewHe
-	case constants.INFOMANIAK:
+	case constants.Infomaniak:
 		settingsConstructor = settings.NewInfomaniak
-	case constants.LINODE:
+	case constants.Linode:
 		settingsConstructor = settings.NewLinode
-	case constants.LUADNS:
+	case constants.LuaDNS:
 		settingsConstructor = settings.NewLuaDNS
-	case constants.NAMECHEAP:
+	case constants.Namecheap:
 		settingsConstructor = settings.NewNamecheap
-	case constants.NJALLA:
+	case constants.Njalla:
 		settingsConstructor = settings.NewNjalla
-	case constants.NOIP:
+	case constants.NoIP:
 		settingsConstructor = settings.NewNoip
-	case constants.DYN:
-		settingsConstructor = settings.NewDyn
-	case constants.SELFHOSTDE:
-		settingsConstructor = settings.NewSelfhostde
-	case constants.SPDYN:
-		settingsConstructor = settings.NewSpdyn
-	case constants.STRATO:
-		settingsConstructor = settings.NewStrato
+	case constants.OpenDNS:
+		settingsConstructor = settings.NewOpendns
 	case constants.OVH:
 		settingsConstructor = settings.NewOVH
-	case constants.DYNV6:
-		settingsConstructor = settings.NewDynV6
-	case constants.OPENDNS:
-		settingsConstructor = settings.NewOpendns
-	case constants.VARIOMEDIA:
+	case constants.SelfhostDe:
+		settingsConstructor = settings.NewSelfhostde
+	case constants.Spdyn:
+		settingsConstructor = settings.NewSpdyn
+	case constants.Strato:
+		settingsConstructor = settings.NewStrato
+	case constants.Variomedia:
 		settingsConstructor = settings.NewVariomedia
 	default:
 		return nil, warnings, fmt.Errorf("provider %q is not supported", provider)

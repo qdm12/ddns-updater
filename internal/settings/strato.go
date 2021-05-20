@@ -12,6 +12,9 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -48,9 +51,9 @@ func NewStrato(data json.RawMessage, domain, host string, ipVersion ipversion.IP
 func (s *strato) isValid() error {
 	switch {
 	case len(s.password) == 0:
-		return ErrEmptyPassword
+		return errors.ErrEmptyPassword
 	case s.host == "*":
-		return ErrHostWildcard
+		return errors.ErrHostWildcard
 	}
 	return nil
 }
@@ -76,7 +79,7 @@ func (s *strato) Proxied() bool {
 }
 
 func (s *strato) BuildDomainName() string {
-	return buildDomainName(s.host, s.domain)
+	return utils.BuildDomainName(s.host, s.domain)
 }
 
 func (s *strato) HTML() models.HTMLRow {
@@ -106,7 +109,7 @@ func (s *strato) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 	if err != nil {
 		return nil, err
 	}
-	// setUserAgent(request)
+	// headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -116,26 +119,26 @@ func (s *strato) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	str := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, str)
+		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, str)
 	}
 
 	switch {
-	case strings.HasPrefix(str, notfqdn):
-		return nil, ErrHostnameNotExists
-	case strings.HasPrefix(str, abuse):
-		return nil, ErrAbuse
+	case strings.HasPrefix(str, constants.Notfqdn):
+		return nil, errors.ErrHostnameNotExists
+	case strings.HasPrefix(str, constants.Abuse):
+		return nil, errors.ErrAbuse
 	case strings.HasPrefix(str, "badrequest"):
-		return nil, ErrBadRequest
-	case strings.HasPrefix(str, "badauth"):
-		return nil, ErrAuth
+		return nil, errors.ErrBadRequest
+	case strings.HasPrefix(str, "constants.Badauth"):
+		return nil, errors.ErrAuth
 	case strings.HasPrefix(str, "good"), strings.HasPrefix(str, "nochg"):
 		return ip, nil
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, str)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, str)
 	}
 }

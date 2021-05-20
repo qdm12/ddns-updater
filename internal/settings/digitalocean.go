@@ -9,9 +9,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -44,13 +47,13 @@ func NewDigitalOcean(data json.RawMessage, domain, host string, ipVersion ipvers
 
 func (d *digitalOcean) isValid() error {
 	if len(d.token) == 0 {
-		return ErrEmptyToken
+		return errors.ErrEmptyToken
 	}
 	return nil
 }
 
 func (d *digitalOcean) String() string {
-	return toString(d.domain, d.host, constants.DIGITALOCEAN, d.ipVersion)
+	return utils.ToString(d.domain, d.host, constants.DigitalOcean, d.ipVersion)
 }
 
 func (d *digitalOcean) Domain() string {
@@ -70,7 +73,7 @@ func (d *digitalOcean) Proxied() bool {
 }
 
 func (d *digitalOcean) BuildDomainName() string {
-	return buildDomainName(d.host, d.domain)
+	return utils.BuildDomainName(d.host, d.domain)
 }
 
 func (d *digitalOcean) HTML() models.HTMLRow {
@@ -83,10 +86,10 @@ func (d *digitalOcean) HTML() models.HTMLRow {
 }
 
 func (d *digitalOcean) setHeaders(request *http.Request) {
-	setUserAgent(request)
-	setContentType(request, "application/json")
-	setAccept(request, "application/json")
-	setAuthBearer(request, d.token)
+	headers.SetUserAgent(request)
+	headers.SetContentType(request, "application/json")
+	headers.SetAccept(request, "application/json")
+	headers.SetAuthBearer(request, d.token)
 }
 
 func (d *digitalOcean) getRecordID(ctx context.Context, recordType string, client *http.Client) (
@@ -115,7 +118,7 @@ func (d *digitalOcean) getRecordID(ctx context.Context, recordType string, clien
 
 	if response.StatusCode != http.StatusOK {
 		return 0, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -125,27 +128,27 @@ func (d *digitalOcean) getRecordID(ctx context.Context, recordType string, clien
 		} `json:"domain_records"`
 	}
 	if err = decoder.Decode(&result); err != nil {
-		return 0, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return 0, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
 	if len(result.DomainRecords) == 0 {
-		return 0, ErrNotFound
+		return 0, errors.ErrNotFound
 	} else if result.DomainRecords[0].ID == 0 {
-		return 0, ErrDomainIDNotFound
+		return 0, errors.ErrDomainIDNotFound
 	}
 
 	return result.DomainRecords[0].ID, nil
 }
 
 func (d *digitalOcean) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
-	recordType := A
+	recordType := constants.A
 	if ip.To4() == nil { // IPv6
-		recordType = AAAA
+		recordType = constants.AAAA
 	}
 
 	recordID, err := d.getRecordID(ctx, recordType, client)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", ErrGetRecordID, err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrGetRecordID, err)
 	}
 
 	u := url.URL{
@@ -166,7 +169,7 @@ func (d *digitalOcean) Update(ctx context.Context, client *http.Client, ip net.I
 		Data: ip.String(),
 	}
 	if err := encoder.Encode(requestData); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrRequestEncode, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrRequestEncode, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
@@ -183,7 +186,7 @@ func (d *digitalOcean) Update(ctx context.Context, client *http.Client, ip net.I
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -193,7 +196,7 @@ func (d *digitalOcean) Update(ctx context.Context, client *http.Client, ip net.I
 		} `json:"domain_record"`
 	}
 	if err := decoder.Decode(&responseData); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
 	newIP = net.ParseIP(responseData.DomainRecord.Data)

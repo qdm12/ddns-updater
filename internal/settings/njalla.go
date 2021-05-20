@@ -8,9 +8,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -46,13 +49,13 @@ func NewNjalla(data json.RawMessage, domain, host string, ipVersion ipversion.IP
 
 func (n *njalla) isValid() error {
 	if len(n.key) == 0 {
-		return ErrEmptyKey
+		return errors.ErrEmptyKey
 	}
 	return nil
 }
 
 func (n *njalla) String() string {
-	return toString(n.domain, n.host, constants.NJALLA, n.ipVersion)
+	return utils.ToString(n.domain, n.host, constants.Njalla, n.ipVersion)
 }
 
 func (n *njalla) Domain() string {
@@ -72,7 +75,7 @@ func (n *njalla) Proxied() bool {
 }
 
 func (n *njalla) BuildDomainName() string {
-	return buildDomainName(n.host, n.domain)
+	return utils.BuildDomainName(n.host, n.domain)
 }
 
 func (n *njalla) HTML() models.HTMLRow {
@@ -112,7 +115,7 @@ func (n *njalla) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -129,13 +132,13 @@ func (n *njalla) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 		} `json:"value"`
 	}
 	if err := decoder.Decode(&respBody); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
 	switch response.StatusCode {
 	case http.StatusOK:
 		if respBody.Message != "record updated" {
-			return nil, fmt.Errorf("%w: message received: %s", ErrUnknownResponse, respBody.Message)
+			return nil, fmt.Errorf("%w: message received: %s", errors.ErrUnknownResponse, respBody.Message)
 		}
 		ipString := respBody.Value.A
 		if updatingIP6 {
@@ -143,16 +146,16 @@ func (n *njalla) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 		}
 		newIP = net.ParseIP(ipString)
 		if newIP == nil {
-			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ipString)
+			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ipString)
 		} else if !ip.Equal(newIP) {
-			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
+			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil
 	case http.StatusUnauthorized:
-		return nil, fmt.Errorf("%w: %s", ErrAuth, respBody.Message)
+		return nil, fmt.Errorf("%w: %s", errors.ErrAuth, respBody.Message)
 	case http.StatusInternalServerError:
-		return nil, fmt.Errorf("%w: %s", ErrBadRequest, respBody.Message)
+		return nil, fmt.Errorf("%w: %s", errors.ErrBadRequest, respBody.Message)
 	}
 
-	return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, respBody.Message)
+	return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, respBody.Message)
 }

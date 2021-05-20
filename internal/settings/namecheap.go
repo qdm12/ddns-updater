@@ -9,9 +9,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -27,7 +30,7 @@ type namecheap struct {
 func NewNamecheap(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
 	matcher regex.Matcher) (s Settings, err error) {
 	if ipVersion == ipversion.IP6 {
-		return s, ErrIPv6NotSupported
+		return s, errors.ErrIPv6NotSupported
 	}
 	extraSettings := struct {
 		Password      string `json:"password"`
@@ -52,13 +55,13 @@ func NewNamecheap(data json.RawMessage, domain, host string, ipVersion ipversion
 
 func (n *namecheap) isValid() error {
 	if !n.matcher.NamecheapPassword(n.password) {
-		return ErrMalformedPassword
+		return errors.ErrMalformedPassword
 	}
 	return nil
 }
 
 func (n *namecheap) String() string {
-	return toString(n.domain, n.host, constants.NAMECHEAP, n.ipVersion)
+	return utils.ToString(n.domain, n.host, constants.Namecheap, n.ipVersion)
 }
 
 func (n *namecheap) Domain() string {
@@ -78,7 +81,7 @@ func (n *namecheap) Proxied() bool {
 }
 
 func (n *namecheap) BuildDomainName() string {
-	return buildDomainName(n.host, n.domain)
+	return utils.BuildDomainName(n.host, n.domain)
 }
 
 func (n *namecheap) HTML() models.HTMLRow {
@@ -91,8 +94,8 @@ func (n *namecheap) HTML() models.HTMLRow {
 }
 
 func (n *namecheap) setHeaders(request *http.Request) {
-	setUserAgent(request)
-	setAccept(request, "application/xml")
+	headers.SetUserAgent(request)
+	headers.SetAccept(request, "application/xml")
 }
 
 func (n *namecheap) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
@@ -124,29 +127,29 @@ func (n *namecheap) Update(ctx context.Context, client *http.Client, ip net.IP) 
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := xml.NewDecoder(response.Body)
 	var parsedXML struct {
 		Errors struct {
-			Error string `xml:"Err1"`
+			Error string `xml:"errors.Err1"`
 		} `xml:"errors"`
 		IP string `xml:"IP"`
 	}
 	if err := decoder.Decode(&parsedXML); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
 	if parsedXML.Errors.Error != "" {
-		return nil, fmt.Errorf("%w: %s", ErrUnsuccessfulResponse, parsedXML.Errors.Error)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, parsedXML.Errors.Error)
 	}
 	newIP = net.ParseIP(parsedXML.IP)
 	if newIP == nil {
-		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, parsedXML.IP)
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, parsedXML.IP)
 	}
 	if ip != nil && !ip.Equal(newIP) {
-		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 	}
 	return newIP, nil
 }

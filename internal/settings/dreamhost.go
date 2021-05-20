@@ -10,9 +10,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -59,7 +62,7 @@ func (d *dreamhost) isValid() error {
 }
 
 func (d *dreamhost) String() string {
-	return toString(d.domain, d.host, constants.DREAMHOST, d.ipVersion)
+	return utils.ToString(d.domain, d.host, constants.Dreamhost, d.ipVersion)
 }
 
 func (d *dreamhost) Domain() string {
@@ -79,7 +82,7 @@ func (d *dreamhost) Proxied() bool {
 }
 
 func (d *dreamhost) BuildDomainName() string {
-	return buildDomainName(d.host, d.domain)
+	return utils.BuildDomainName(d.host, d.domain)
 }
 
 func (d *dreamhost) HTML() models.HTMLRow {
@@ -92,24 +95,24 @@ func (d *dreamhost) HTML() models.HTMLRow {
 }
 
 func (d *dreamhost) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
-	recordType := A
+	recordType := constants.A
 	if ip.To4() == nil {
-		recordType = AAAA
+		recordType = constants.AAAA
 	}
 
 	records, err := d.getRecords(ctx, client)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrListRecords, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrListRecords, err)
 	}
 
 	var oldIP net.IP
 	for _, data := range records.Data {
 		if data.Type == recordType && data.Record == d.BuildDomainName() {
 			if data.Editable == "0" {
-				return nil, ErrRecordNotEditable
+				return nil, errors.ErrRecordNotEditable
 			}
 			oldIP = net.ParseIP(data.Value)
-			if ip.Equal(oldIP) { // success, nothing to change
+			if ip.Equal(oldIP) { // constants.Success, nothing to change
 				return ip, nil
 			}
 			break
@@ -118,12 +121,12 @@ func (d *dreamhost) Update(ctx context.Context, client *http.Client, ip net.IP) 
 
 	// Create the record with the new IP before removing the old one if it exists.
 	if err := d.createRecord(ctx, client, ip); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrCreateRecord, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrCreateRecord, err)
 	}
 
 	if oldIP != nil { // Found editable record with a different IP address, so remove it
 		if err := d.removeRecord(ctx, client, oldIP); err != nil {
-			return nil, fmt.Errorf("%w: %s", ErrRemoveRecord, err)
+			return nil, fmt.Errorf("%w: %s", errors.ErrRemoveRecord, err)
 		}
 	}
 
@@ -174,7 +177,7 @@ func (d *dreamhost) getRecords(ctx context.Context, client *http.Client) (
 	if err != nil {
 		return records, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -184,24 +187,24 @@ func (d *dreamhost) getRecords(ctx context.Context, client *http.Client) (
 
 	if response.StatusCode != http.StatusOK {
 		return records, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&records); err != nil {
-		return records, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return records, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
-	if records.Result != success {
-		return records, fmt.Errorf("%w: %s", ErrUnsuccessfulResponse, records.Result)
+	if records.Result != constants.Success {
+		return records, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, records.Result)
 	}
 	return records, nil
 }
 
 func (d *dreamhost) removeRecord(ctx context.Context, client *http.Client, ip net.IP) error { //nolint:dupl
-	recordType := A
+	recordType := constants.A
 	if ip.To4() == nil {
-		recordType = AAAA
+		recordType = constants.AAAA
 	}
 
 	u := url.URL{
@@ -219,7 +222,7 @@ func (d *dreamhost) removeRecord(ctx context.Context, client *http.Client, ip ne
 	if err != nil {
 		return err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -229,26 +232,26 @@ func (d *dreamhost) removeRecord(ctx context.Context, client *http.Client, ip ne
 
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	var dhResponse dreamhostReponse
 	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&dhResponse); err != nil {
-		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
-	if dhResponse.Result != success { // this should not happen
+	if dhResponse.Result != constants.Success { // this should not happen
 		return fmt.Errorf("%w: %s - %s",
-			ErrUnsuccessfulResponse, dhResponse.Result, dhResponse.Data)
+			errors.ErrUnsuccessfulResponse, dhResponse.Result, dhResponse.Data)
 	}
 	return nil
 }
 
 func (d *dreamhost) createRecord(ctx context.Context, client *http.Client, ip net.IP) error { //nolint:dupl
-	recordType := A
+	recordType := constants.A
 	if ip.To4() == nil {
-		recordType = AAAA
+		recordType = constants.AAAA
 	}
 
 	u := url.URL{
@@ -266,7 +269,7 @@ func (d *dreamhost) createRecord(ctx context.Context, client *http.Client, ip ne
 	if err != nil {
 		return err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -276,18 +279,18 @@ func (d *dreamhost) createRecord(ctx context.Context, client *http.Client, ip ne
 
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	var dhResponse dreamhostReponse
 	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&dhResponse); err != nil {
-		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
-	if dhResponse.Result != success {
+	if dhResponse.Result != constants.Success {
 		return fmt.Errorf("%w: %s - %s",
-			ErrUnsuccessfulResponse, dhResponse.Result, dhResponse.Data)
+			errors.ErrUnsuccessfulResponse, dhResponse.Result, dhResponse.Data)
 	}
 	return nil
 }

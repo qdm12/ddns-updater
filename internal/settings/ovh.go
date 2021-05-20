@@ -13,6 +13,10 @@ import (
 	ovhClient "github.com/ovh/go-ovh/ovh"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -68,20 +72,20 @@ func (o *ovh) isValid() error {
 	if o.mode == "api" {
 		switch {
 		case len(o.appKey) == 0:
-			return ErrEmptyAppKey
+			return errors.ErrEmptyAppKey
 		case len(o.consumerKey) == 0:
-			return ErrEmptyConsumerKey
+			return errors.ErrEmptyConsumerKey
 		case len(o.appSecret) == 0:
-			return ErrEmptySecret
+			return errors.ErrEmptySecret
 		}
 	} else {
 		switch {
 		case len(o.username) == 0:
-			return ErrEmptyUsername
+			return errors.ErrEmptyUsername
 		case len(o.password) == 0:
-			return ErrEmptyPassword
+			return errors.ErrEmptyPassword
 		case o.host == "*":
-			return ErrHostWildcard
+			return errors.ErrHostWildcard
 		}
 	}
 	return nil
@@ -108,7 +112,7 @@ func (o *ovh) Proxied() bool {
 }
 
 func (o *ovh) BuildDomainName() string {
-	return buildDomainName(o.host, o.domain)
+	return utils.BuildDomainName(o.host, o.domain)
 }
 
 func (o *ovh) HTML() models.HTMLRow {
@@ -139,7 +143,7 @@ func (o *ovh) updateWithDynHost(ctx context.Context, client *http.Client, ip net
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -149,31 +153,31 @@ func (o *ovh) updateWithDynHost(ctx context.Context, client *http.Client, ip net
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, s)
+		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
 	}
 
 	switch {
-	case strings.HasPrefix(s, notfqdn):
-		return nil, ErrHostnameNotExists
+	case strings.HasPrefix(s, constants.Notfqdn):
+		return nil, errors.ErrHostnameNotExists
 	case strings.HasPrefix(s, "badrequest"):
-		return nil, ErrBadRequest
+		return nil, errors.ErrBadRequest
 	case strings.HasPrefix(s, "good"):
 		return ip, nil
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
 }
 
 func (o *ovh) updateWithZoneDNS(ctx context.Context, client *ovhClient.Client, ip net.IP) (newIP net.IP, err error) {
-	recordType := A
+	recordType := constants.A
 	var ipStr string
 	if ip.To4() == nil { // IPv6
-		recordType = AAAA
+		recordType = constants.AAAA
 		ipStr = ip.To16().String()
 	} else {
 		ipStr = ip.To4().String()

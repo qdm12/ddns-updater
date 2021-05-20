@@ -10,9 +10,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -52,17 +55,17 @@ func NewDdnss(data json.RawMessage, domain, host string, ipVersion ipversion.IPV
 func (d *ddnss) isValid() error {
 	switch {
 	case len(d.username) == 0:
-		return ErrEmptyUsername
+		return errors.ErrEmptyUsername
 	case len(d.password) == 0:
-		return ErrEmptyPassword
+		return errors.ErrEmptyPassword
 	case d.host == "*":
-		return ErrHostWildcard
+		return errors.ErrHostWildcard
 	}
 	return nil
 }
 
 func (d *ddnss) String() string {
-	return toString(d.domain, d.host, constants.DDNSSDE, d.ipVersion)
+	return utils.ToString(d.domain, d.host, constants.DdnssDe, d.ipVersion)
 }
 
 func (d *ddnss) Domain() string {
@@ -82,7 +85,7 @@ func (d *ddnss) Proxied() bool {
 }
 
 func (d *ddnss) BuildDomainName() string {
-	return buildDomainName(d.host, d.domain)
+	return utils.BuildDomainName(d.host, d.domain)
 }
 
 func (d *ddnss) HTML() models.HTMLRow {
@@ -117,7 +120,7 @@ func (d *ddnss) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -127,25 +130,25 @@ func (d *ddnss) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyDataToSingleLine(s))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	switch {
 	case strings.Contains(s, "badysys"):
-		return nil, ErrInvalidSystemParam
-	case strings.Contains(s, badauth):
-		return nil, ErrAuth
-	case strings.Contains(s, notfqdn):
-		return nil, ErrHostnameNotExists
+		return nil, errors.ErrInvalidSystemParam
+	case strings.Contains(s, constants.Badauth):
+		return nil, errors.ErrAuth
+	case strings.Contains(s, constants.Notfqdn):
+		return nil, errors.ErrHostnameNotExists
 	case strings.Contains(s, "Updated 1 hostname"):
 		return ip, nil
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
 }

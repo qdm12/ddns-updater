@@ -10,9 +10,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -52,17 +55,17 @@ func NewInfomaniak(data json.RawMessage, domain, host string, ipVersion ipversio
 func (i *infomaniak) isValid() error {
 	switch {
 	case len(i.username) == 0:
-		return ErrEmptyUsername
+		return errors.ErrEmptyUsername
 	case len(i.password) == 0:
-		return ErrEmptyPassword
+		return errors.ErrEmptyPassword
 	case i.host == "*":
-		return ErrHostWildcard
+		return errors.ErrHostWildcard
 	}
 	return nil
 }
 
 func (i *infomaniak) String() string {
-	return toString(i.domain, i.host, constants.INFOMANIAK, i.ipVersion)
+	return utils.ToString(i.domain, i.host, constants.Infomaniak, i.ipVersion)
 }
 
 func (i *infomaniak) Domain() string {
@@ -82,7 +85,7 @@ func (i *infomaniak) Proxied() bool {
 }
 
 func (i *infomaniak) BuildDomainName() string {
-	return buildDomainName(i.host, i.domain)
+	return utils.BuildDomainName(i.host, i.domain)
 }
 
 func (i *infomaniak) HTML() models.HTMLRow {
@@ -115,7 +118,7 @@ func (i *infomaniak) Update(ctx context.Context, client *http.Client, ip net.IP)
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -125,7 +128,7 @@ func (i *infomaniak) Update(ctx context.Context, client *http.Client, ip net.IP)
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
@@ -135,32 +138,32 @@ func (i *infomaniak) Update(ctx context.Context, client *http.Client, ip net.IP)
 		case strings.HasPrefix(s, "good "):
 			newIP = net.ParseIP(s[5:])
 			if newIP == nil {
-				return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, s)
+				return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, s)
 			} else if ip != nil && !ip.Equal(newIP) {
-				return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP)
+				return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP)
 			}
 			return newIP, nil
 		case strings.HasPrefix(s, "nochg "):
 			newIP = net.ParseIP(s[6:])
 			if newIP == nil {
-				return nil, fmt.Errorf("%w: in response %q", ErrNoResultReceived, s)
+				return nil, fmt.Errorf("%w: in response %q", errors.ErrNoResultReceived, s)
 			} else if ip != nil && !ip.Equal(newIP) {
-				return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP)
+				return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP)
 			}
 			return newIP, nil
 		default:
-			return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
+			return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 		}
 	case http.StatusBadRequest:
 		switch s {
-		case nohost:
-			return nil, ErrHostnameNotExists
-		case badauth:
-			return nil, ErrAuth
+		case constants.Nohost:
+			return nil, errors.ErrHostnameNotExists
+		case constants.Badauth:
+			return nil, errors.ErrAuth
 		default:
-			return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, s)
+			return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
 		}
 	default:
-		return nil, fmt.Errorf("%w: %d: %s", ErrBadHTTPStatus, response.StatusCode, s)
+		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
 	}
 }

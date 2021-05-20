@@ -10,9 +10,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/verification"
 )
@@ -55,19 +58,19 @@ func NewDNSOMatic(data json.RawMessage, domain, host string, ipVersion ipversion
 func (d *dnsomatic) isValid() error {
 	switch {
 	case !d.matcher.DNSOMaticUsername(d.username):
-		return fmt.Errorf("%w: %s", ErrMalformedUsername, d.username)
+		return fmt.Errorf("%w: %s", errors.ErrMalformedUsername, d.username)
 	case !d.matcher.DNSOMaticPassword(d.password):
-		return ErrMalformedPassword
+		return errors.ErrMalformedPassword
 	case len(d.username) == 0:
-		return ErrEmptyUsername
+		return errors.ErrEmptyUsername
 	case len(d.password) == 0:
-		return ErrEmptyPassword
+		return errors.ErrEmptyPassword
 	}
 	return nil
 }
 
 func (d *dnsomatic) String() string {
-	return toString(d.domain, d.host, constants.DNSOMATIC, d.ipVersion)
+	return utils.ToString(d.domain, d.host, constants.DnsOMatic, d.ipVersion)
 }
 
 func (d *dnsomatic) Domain() string {
@@ -87,7 +90,7 @@ func (d *dnsomatic) Proxied() bool {
 }
 
 func (d *dnsomatic) BuildDomainName() string {
-	return buildDomainName(d.host, d.domain)
+	return utils.BuildDomainName(d.host, d.domain)
 }
 
 func (d *dnsomatic) HTML() models.HTMLRow {
@@ -124,7 +127,7 @@ func (d *dnsomatic) Update(ctx context.Context, client *http.Client, ip net.IP) 
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -134,26 +137,26 @@ func (d *dnsomatic) Update(ctx context.Context, client *http.Client, ip net.IP) 
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, s)
+			errors.ErrBadHTTPStatus, response.StatusCode, s)
 	}
 
 	switch s {
-	case nohost, notfqdn:
-		return nil, ErrHostnameNotExists
-	case badauth:
-		return nil, ErrAuth
-	case badagent:
-		return nil, ErrBannedUserAgent
-	case abuse:
-		return nil, ErrAbuse
-	case "dnserr", nineoneone:
-		return nil, fmt.Errorf("%w: %s", ErrDNSServerSide, s)
+	case constants.Nohost, constants.Notfqdn:
+		return nil, errors.ErrHostnameNotExists
+	case constants.Badauth:
+		return nil, errors.ErrAuth
+	case constants.Badagent:
+		return nil, errors.ErrBannedUserAgent
+	case constants.Abuse:
+		return nil, errors.ErrAbuse
+	case "dnserr", constants.Nineoneone:
+		return nil, fmt.Errorf("%w: %s", errors.ErrDNSServerSide, s)
 	}
 	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
 		ipsV4 := verification.NewVerifier().SearchIPv4(s)
@@ -164,12 +167,12 @@ func (d *dnsomatic) Update(ctx context.Context, client *http.Client, ip net.IP) 
 		}
 		newIP = net.ParseIP(ips[0])
 		if newIP == nil {
-			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ips[0])
+			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
 		}
 		if !d.useProviderIP && !ip.Equal(newIP) {
-			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
+			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil
 	}
-	return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
+	return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 }

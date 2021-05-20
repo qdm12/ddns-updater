@@ -10,6 +10,9 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -46,9 +49,9 @@ func NewDynV6(data json.RawMessage, domain, host string, ipVersion ipversion.IPV
 func (d *dynV6) isValid() error {
 	switch {
 	case len(d.token) == 0:
-		return ErrEmptyToken
+		return errors.ErrEmptyToken
 	case d.host == "*":
-		return ErrHostWildcard
+		return errors.ErrHostWildcard
 	}
 	return nil
 }
@@ -74,7 +77,7 @@ func (d *dynV6) Proxied() bool {
 }
 
 func (d *dynV6) BuildDomainName() string {
-	return buildDomainName(d.host, d.domain)
+	return utils.BuildDomainName(d.host, d.domain)
 }
 
 func (d *dynV6) HTML() models.HTMLRow {
@@ -115,7 +118,7 @@ func (d *dynV6) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -127,5 +130,5 @@ func (d *dynV6) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 		return ip, nil
 	}
 	return nil, fmt.Errorf("%w: %d: %s",
-		ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
+		errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 }

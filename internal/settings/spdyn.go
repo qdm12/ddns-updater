@@ -11,6 +11,10 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -56,11 +60,11 @@ func (s *spdyn) isValid() error {
 	}
 	switch {
 	case len(s.user) == 0:
-		return ErrEmptyUsername
+		return errors.ErrEmptyUsername
 	case len(s.password) == 0:
-		return ErrEmptyPassword
+		return errors.ErrEmptyPassword
 	case s.host == "*":
-		return ErrHostWildcard
+		return errors.ErrHostWildcard
 	}
 	return nil
 }
@@ -86,7 +90,7 @@ func (s *spdyn) Proxied() bool {
 }
 
 func (s *spdyn) BuildDomainName() string {
-	return buildDomainName(s.host, s.domain)
+	return utils.BuildDomainName(s.host, s.domain)
 }
 
 func (s *spdyn) HTML() models.HTMLRow {
@@ -125,7 +129,7 @@ func (s *spdyn) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -135,29 +139,29 @@ func (s *spdyn) Update(ctx context.Context, client *http.Client, ip net.IP) (new
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	bodyString := string(b)
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyDataToSingleLine(bodyString))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.ToSingleLine(bodyString))
 	}
 
 	switch bodyString {
-	case abuse, "numhost":
-		return nil, ErrAbuse
-	case badauth, "!yours":
-		return nil, ErrAuth
+	case constants.Abuse, "numhost":
+		return nil, errors.ErrAbuse
+	case constants.Badauth, "!yours":
+		return nil, errors.ErrAuth
 	case "good":
 		return ip, nil
-	case notfqdn:
-		return nil, fmt.Errorf("%w: not fqdn", ErrBadRequest)
+	case constants.Notfqdn:
+		return nil, fmt.Errorf("%w: not fqdn", errors.ErrBadRequest)
 	case "nochg":
 		return ip, nil
 	case "nohost", "fatal":
-		return nil, ErrHostnameNotExists
+		return nil, errors.ErrHostnameNotExists
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
 }

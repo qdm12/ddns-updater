@@ -9,9 +9,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/verification"
 )
@@ -48,17 +51,17 @@ func NewDuckdns(data json.RawMessage, domain, host string, ipVersion ipversion.I
 
 func (d *duckdns) isValid() error {
 	if !d.matcher.DuckDNSToken(d.token) {
-		return ErrMalformedToken
+		return errors.ErrMalformedToken
 	}
 	switch d.host {
 	case "@", "*":
-		return ErrHostOnlySubdomain
+		return errors.ErrHostOnlySubdomain
 	}
 	return nil
 }
 
 func (d *duckdns) String() string {
-	return toString("duckdns.org", d.host, constants.DUCKDNS, d.ipVersion)
+	return utils.ToString("duckdns.org", d.host, constants.DuckDNS, d.ipVersion)
 }
 
 func (d *duckdns) Domain() string {
@@ -78,7 +81,7 @@ func (d *duckdns) Proxied() bool {
 }
 
 func (d *duckdns) BuildDomainName() string {
-	return buildDomainName(d.host, "duckdns.org")
+	return utils.BuildDomainName(d.host, "duckdns.org")
 }
 
 func (d *duckdns) HTML() models.HTMLRow {
@@ -113,7 +116,7 @@ func (d *duckdns) Update(ctx context.Context, client *http.Client, ip net.IP) (n
 	if err != nil {
 		return nil, err
 	}
-	setUserAgent(request)
+	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -123,35 +126,35 @@ func (d *duckdns) Update(ctx context.Context, client *http.Client, ip net.IP) (n
 
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyDataToSingleLine(s))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	const minChars = 2
 	switch {
 	case len(s) < minChars:
-		return nil, fmt.Errorf("%w: response %q is too short", ErrUnmarshalResponse, s)
+		return nil, fmt.Errorf("%w: response %q is too short", errors.ErrUnmarshalResponse, s)
 	case s[0:minChars] == "KO":
-		return nil, ErrAuth
+		return nil, errors.ErrAuth
 	case s[0:minChars] == "OK":
 		ips := verification.NewVerifier().SearchIPv4(s)
 		if ips == nil {
-			return nil, ErrNoResultReceived
+			return nil, errors.ErrNoResultReceived
 		}
 		newIP = net.ParseIP(ips[0])
 		if newIP == nil {
-			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ips[0])
+			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
 		}
 		if ip != nil && !newIP.Equal(ip) {
-			return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
+			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrUnknownResponse, s)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
 }

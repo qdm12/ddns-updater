@@ -10,9 +10,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/verification"
 )
@@ -69,27 +72,27 @@ func (c *cloudflare) isValid() error {
 	case len(c.key) > 0: // email and key must be provided
 		switch {
 		case !c.matcher.CloudflareKey(c.key):
-			return ErrMalformedKey
+			return errors.ErrMalformedKey
 		case !verification.NewVerifier().MatchEmail(c.email):
-			return ErrMalformedEmail
+			return errors.ErrMalformedEmail
 		}
 	case len(c.userServiceKey) > 0: // only user service key
 		if !c.matcher.CloudflareKey(c.key) {
-			return ErrMalformedUserServiceKey
+			return errors.ErrMalformedUserServiceKey
 		}
-	default: // API token only
+	default: // constants.API token only
 	}
 	switch {
 	case len(c.zoneIdentifier) == 0:
-		return ErrEmptyZoneIdentifier
+		return errors.ErrEmptyZoneIdentifier
 	case c.ttl == 0:
-		return ErrEmptyTTL
+		return errors.ErrEmptyTTL
 	}
 	return nil
 }
 
 func (c *cloudflare) String() string {
-	return toString(c.domain, c.host, constants.CLOUDFLARE, c.ipVersion)
+	return utils.ToString(c.domain, c.host, constants.Cloudflare, c.ipVersion)
 }
 
 func (c *cloudflare) Domain() string {
@@ -109,7 +112,7 @@ func (c *cloudflare) Proxied() bool {
 }
 
 func (c *cloudflare) BuildDomainName() string {
-	return buildDomainName(c.host, c.domain)
+	return utils.BuildDomainName(c.host, c.domain)
 }
 
 func (c *cloudflare) HTML() models.HTMLRow {
@@ -122,12 +125,12 @@ func (c *cloudflare) HTML() models.HTMLRow {
 }
 
 func (c *cloudflare) setHeaders(request *http.Request) {
-	setUserAgent(request)
-	setContentType(request, "application/json")
-	setAccept(request, "application/json")
+	headers.SetUserAgent(request)
+	headers.SetContentType(request, "application/json")
+	headers.SetAccept(request, "application/json")
 	switch {
 	case len(c.token) > 0:
-		setAuthBearer(request, c.token)
+		headers.SetAuthBearer(request, c.token)
 	case len(c.userServiceKey) > 0:
 		request.Header.Set("X-Auth-User-Service-Key", c.userServiceKey)
 	case len(c.email) > 0 && len(c.key) > 0:
@@ -140,9 +143,9 @@ func (c *cloudflare) setHeaders(request *http.Request) {
 // See https://api.cloudflare.com/#dns-records-for-a-zone-list-dns-records.
 func (c *cloudflare) getRecordID(ctx context.Context, client *http.Client, newIP net.IP) (
 	identifier string, upToDate bool, err error) {
-	recordType := A
+	recordType := constants.A
 	if newIP.To4() == nil {
-		recordType = AAAA
+		recordType = constants.AAAA
 	}
 
 	u := url.URL{
@@ -171,7 +174,7 @@ func (c *cloudflare) getRecordID(ctx context.Context, client *http.Client, newIP
 
 	if response.StatusCode != http.StatusOK {
 		return "", false, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -184,20 +187,20 @@ func (c *cloudflare) getRecordID(ctx context.Context, client *http.Client, newIP
 		} `json:"result"`
 	}{}
 	if err := decoder.Decode(&listRecordsResponse); err != nil {
-		return "", false, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return "", false, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
 	switch {
 	case len(listRecordsResponse.Errors) > 0:
 		return "", false, fmt.Errorf("%w: %s",
-			ErrUnsuccessfulResponse, strings.Join(listRecordsResponse.Errors, ","))
+			errors.ErrUnsuccessfulResponse, strings.Join(listRecordsResponse.Errors, ","))
 	case !listRecordsResponse.Success:
-		return "", false, ErrUnsuccessfulResponse
+		return "", false, errors.ErrUnsuccessfulResponse
 	case len(listRecordsResponse.Result) == 0:
-		return "", false, ErrNoResultReceived
+		return "", false, errors.ErrNoResultReceived
 	case len(listRecordsResponse.Result) > 1:
 		return "", false, fmt.Errorf("%w: %d instead of 1",
-			ErrNumberOfResultsReceived, len(listRecordsResponse.Result))
+			errors.ErrNumberOfResultsReceived, len(listRecordsResponse.Result))
 	case listRecordsResponse.Result[0].Content == newIP.String(): // up to date
 		return "", true, nil
 	}
@@ -205,13 +208,13 @@ func (c *cloudflare) getRecordID(ctx context.Context, client *http.Client, newIP
 }
 
 func (c *cloudflare) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
-	recordType := A
+	recordType := constants.A
 	if ip.To4() == nil {
-		recordType = AAAA
+		recordType = constants.AAAA
 	}
 	identifier, upToDate, err := c.getRecordID(ctx, client, ip)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", ErrGetRecordID, err)
+		return nil, fmt.Errorf("%s: %w", errors.ErrGetRecordID, err)
 	} else if upToDate {
 		return ip, nil
 	}
@@ -223,7 +226,7 @@ func (c *cloudflare) Update(ctx context.Context, client *http.Client, ip net.IP)
 	}
 
 	requestData := struct {
-		Type    string `json:"type"`    // A or AAAA depending on ip address given
+		Type    string `json:"type"`    // constants.A or constants.AAAA depending on ip address given
 		Name    string `json:"name"`    // DNS record name i.e. example.com
 		Content string `json:"content"` // ip address
 		Proxied bool   `json:"proxied"` // whether the record is receiving the performance and security benefits of Cloudflare
@@ -239,7 +242,7 @@ func (c *cloudflare) Update(ctx context.Context, client *http.Client, ip net.IP)
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
 	if err := encoder.Encode(requestData); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrRequestEncode, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrRequestEncode, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
@@ -257,7 +260,7 @@ func (c *cloudflare) Update(ctx context.Context, client *http.Client, ip net.IP)
 
 	if response.StatusCode > http.StatusUnsupportedMediaType {
 		return nil, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -272,7 +275,7 @@ func (c *cloudflare) Update(ctx context.Context, client *http.Client, ip net.IP)
 		} `json:"result"`
 	}
 	if err := decoder.Decode(&parsedJSON); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
 	if !parsedJSON.Success {
@@ -280,14 +283,14 @@ func (c *cloudflare) Update(ctx context.Context, client *http.Client, ip net.IP)
 		for _, e := range parsedJSON.Errors {
 			errStr += fmt.Sprintf("error %d: %s; ", e.Code, e.Message)
 		}
-		return nil, fmt.Errorf("%w: %s", ErrUnsuccessfulResponse, errStr)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, errStr)
 	}
 
 	newIP = net.ParseIP(parsedJSON.Result.Content)
 	if newIP == nil {
-		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, parsedJSON.Result.Content)
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, parsedJSON.Result.Content)
 	} else if !newIP.Equal(ip) {
-		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 	}
 	return newIP, nil
 }

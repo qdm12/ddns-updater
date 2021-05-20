@@ -9,9 +9,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -44,13 +47,13 @@ func NewDNSPod(data json.RawMessage, domain, host string, ipVersion ipversion.IP
 
 func (d *dnspod) isValid() error {
 	if len(d.token) == 0 {
-		return ErrEmptyToken
+		return errors.ErrEmptyToken
 	}
 	return nil
 }
 
 func (d *dnspod) String() string {
-	return toString(d.domain, d.host, constants.DNSPOD, d.ipVersion)
+	return utils.ToString(d.domain, d.host, constants.DNSPod, d.ipVersion)
 }
 
 func (d *dnspod) Domain() string {
@@ -70,7 +73,7 @@ func (d *dnspod) Proxied() bool {
 }
 
 func (d *dnspod) BuildDomainName() string {
-	return buildDomainName(d.host, d.domain)
+	return utils.BuildDomainName(d.host, d.domain)
 }
 
 func (d *dnspod) HTML() models.HTMLRow {
@@ -83,15 +86,15 @@ func (d *dnspod) HTML() models.HTMLRow {
 }
 
 func (d *dnspod) setHeaders(request *http.Request) {
-	setContentType(request, "application/x-www-form-urlencoded")
-	setAccept(request, "application/json")
-	setUserAgent(request)
+	headers.SetContentType(request, "application/x-www-form-urlencoded")
+	headers.SetAccept(request, "application/json")
+	headers.SetUserAgent(request)
 }
 
 func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
-	recordType := A
+	recordType := constants.A
 	if ip.To4() == nil {
-		recordType = AAAA
+		recordType = constants.AAAA
 	}
 	u := url.URL{
 		Scheme: "https",
@@ -122,7 +125,7 @@ func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -136,12 +139,12 @@ func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 		} `json:"records"`
 	}
 	if err := decoder.Decode(&recordResp); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
 	var recordID, recordLine string
 	for _, record := range recordResp.Records {
-		if record.Type == A && record.Name == d.host {
+		if record.Type == constants.A && record.Name == d.host {
 			receivedIP := net.ParseIP(record.Value)
 			if ip.Equal(receivedIP) {
 				return ip, nil
@@ -152,7 +155,7 @@ func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 		}
 	}
 	if len(recordID) == 0 {
-		return nil, ErrNotFound
+		return nil, errors.ErrNotFound
 	}
 
 	u.Path = "/Record.Ddns"
@@ -180,7 +183,7 @@ func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%w: %d: %s",
-			ErrBadHTTPStatus, response.StatusCode, bodyToSingleLine(response.Body))
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder = json.NewDecoder(response.Body)
@@ -192,15 +195,15 @@ func (d *dnspod) Update(ctx context.Context, client *http.Client, ip net.IP) (ne
 		} `json:"record"`
 	}
 	if err := decoder.Decode(&ddnsResp); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
 	ipStr := ddnsResp.Record.Value
 	receivedIP := net.ParseIP(ipStr)
 	if receivedIP == nil {
-		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMalformed, ipStr)
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ipStr)
 	} else if !ip.Equal(receivedIP) {
-		return nil, fmt.Errorf("%w: %s", ErrIPReceivedMismatch, receivedIP.String())
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, receivedIP.String())
 	}
 	return ip, nil
 }

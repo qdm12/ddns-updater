@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
+	goerrors "errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,9 +13,12 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/errors"
+	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -48,13 +51,13 @@ func NewLinode(data json.RawMessage, domain, host string, ipVersion ipversion.IP
 
 func (l *linode) isValid() error {
 	if len(l.token) == 0 {
-		return ErrEmptyToken
+		return errors.ErrEmptyToken
 	}
 	return nil
 }
 
 func (l *linode) String() string {
-	return toString(l.domain, l.host, constants.LINODE, l.ipVersion)
+	return utils.ToString(l.domain, l.host, constants.Linode, l.ipVersion)
 }
 
 func (l *linode) Domain() string {
@@ -74,7 +77,7 @@ func (l *linode) Proxied() bool {
 }
 
 func (l *linode) BuildDomainName() string {
-	return buildDomainName(l.host, l.domain)
+	return utils.BuildDomainName(l.host, l.domain)
 }
 
 func (l *linode) HTML() models.HTMLRow {
@@ -90,27 +93,27 @@ func (l *linode) HTML() models.HTMLRow {
 func (l *linode) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	domainID, err := l.getDomainID(ctx, client)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrGetDomainID, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrGetDomainID, err)
 	}
 
-	recordType := A
+	recordType := constants.A
 	if ip.To4() == nil {
-		recordType = AAAA
+		recordType = constants.AAAA
 	}
 
 	recordID, err := l.getRecordID(ctx, client, domainID, recordType)
-	if errors.Is(err, ErrNotFound) {
+	if goerrors.Is(err, errors.ErrNotFound) {
 		err := l.createRecord(ctx, client, domainID, recordType, ip)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %s", ErrCreateRecord, err)
+			return nil, fmt.Errorf("%w: %s", errors.ErrCreateRecord, err)
 		}
 		return ip, nil
 	} else if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrGetRecordID, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrGetRecordID, err)
 	}
 
 	if err := l.updateRecord(ctx, client, domainID, recordID, ip); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUpdateRecord, err)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUpdateRecord, err)
 	}
 
 	return ip, nil
@@ -122,9 +125,9 @@ type linodeError struct {
 }
 
 func (l *linode) setHeaders(request *http.Request) {
-	setUserAgent(request)
-	setContentType(request, "application/json")
-	setAuthBearer(request, l.token)
+	headers.SetUserAgent(request)
+	headers.SetContentType(request, "application/json")
+	headers.SetAuthBearer(request, l.token)
 }
 
 func (l *linode) getDomainID(ctx context.Context, client *http.Client) (domainID int, err error) {
@@ -139,8 +142,8 @@ func (l *linode) getDomainID(ctx context.Context, client *http.Client) (domainID
 		return 0, err
 	}
 	l.setHeaders(request)
-	setOauth(request, "domains:read_only")
-	setXFilter(request, `{"domain": "`+l.domain+`"}`)
+	headers.SetOauth(request, "domains:read_only")
+	headers.SetXFilter(request, `{"domain": "`+l.domain+`"}`)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -149,7 +152,7 @@ func (l *linode) getDomainID(ctx context.Context, client *http.Client) (domainID
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
 		return 0, fmt.Errorf("%w: %s", err, l.getError(response.Body))
 	}
 
@@ -168,19 +171,19 @@ func (l *linode) getDomainID(ctx context.Context, client *http.Client) (domainID
 	domains := obj.Data
 	switch len(domains) {
 	case 0:
-		return 0, ErrNotFound
+		return 0, errors.ErrNotFound
 	case 1:
 	default:
 		return 0, fmt.Errorf("%w: %d records instead of 1",
-			ErrNumberOfResultsReceived, len(domains))
+			errors.ErrNumberOfResultsReceived, len(domains))
 	}
 
 	if domains[0].Status == "disabled" {
-		return 0, ErrDomainDisabled
+		return 0, errors.ErrDomainDisabled
 	}
 
 	if domains[0].ID == nil {
-		return 0, ErrDomainIDNotFound
+		return 0, errors.ErrDomainIDNotFound
 	}
 
 	return *domains[0].ID, nil
@@ -199,7 +202,7 @@ func (l *linode) getRecordID(ctx context.Context, client *http.Client,
 		return 0, err
 	}
 	l.setHeaders(request)
-	setOauth(request, "domains:read_only")
+	headers.SetOauth(request, "domains:read_only")
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -208,7 +211,7 @@ func (l *linode) getRecordID(ctx context.Context, client *http.Client,
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
 		return 0, fmt.Errorf("%w: %s", err, l.getError(response.Body))
 	}
 
@@ -221,7 +224,7 @@ func (l *linode) getRecordID(ctx context.Context, client *http.Client,
 		} `json:"data"`
 	}
 	if err := decoder.Decode(&obj); err != nil {
-		return 0, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return 0, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
 	for _, domainRecord := range obj.Data {
@@ -230,7 +233,7 @@ func (l *linode) getRecordID(ctx context.Context, client *http.Client,
 		}
 	}
 
-	return 0, ErrNotFound
+	return 0, errors.ErrNotFound
 }
 
 func (l *linode) createRecord(ctx context.Context, client *http.Client,
@@ -255,7 +258,7 @@ func (l *linode) createRecord(ctx context.Context, client *http.Client,
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
 	if err := encoder.Encode(requestData); err != nil {
-		return fmt.Errorf("%w: %s", ErrRequestMarshal, err)
+		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
@@ -263,7 +266,7 @@ func (l *linode) createRecord(ctx context.Context, client *http.Client,
 		return err
 	}
 	l.setHeaders(request)
-	setOauth(request, "domains:read_write")
+	headers.SetOauth(request, "domains:read_write")
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -272,21 +275,21 @@ func (l *linode) createRecord(ctx context.Context, client *http.Client,
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
 		return fmt.Errorf("%w: %s", err, l.getError(response.Body))
 	}
 
 	var responseData domainRecord
 	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&responseData); err != nil {
-		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
 	newIP := net.ParseIP(responseData.IP)
 	if newIP == nil {
-		return fmt.Errorf("%w: %s", ErrIPReceivedMalformed, responseData.IP)
+		return fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, responseData.IP)
 	} else if !newIP.Equal(ip) {
-		return fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
+		return fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 	}
 
 	return nil
@@ -308,7 +311,7 @@ func (l *linode) updateRecord(ctx context.Context, client *http.Client,
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
 	if err := encoder.Encode(data); err != nil {
-		return fmt.Errorf("%w: %s", ErrRequestMarshal, err)
+		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
@@ -316,7 +319,7 @@ func (l *linode) updateRecord(ctx context.Context, client *http.Client,
 		return err
 	}
 	l.setHeaders(request)
-	setOauth(request, "domains:read_write")
+	headers.SetOauth(request, "domains:read_write")
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -325,21 +328,21 @@ func (l *linode) updateRecord(ctx context.Context, client *http.Client,
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", ErrBadHTTPStatus, response.StatusCode)
+		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
 		return fmt.Errorf("%w: %s", err, l.getError(response.Body))
 	}
 
 	data.IP = ""
 	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&data); err != nil {
-		return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
 	newIP := net.ParseIP(data.IP)
 	if newIP == nil {
-		return fmt.Errorf("%w: %s", ErrIPReceivedMalformed, data.IP)
+		return fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, data.IP)
 	} else if !newIP.Equal(ip) {
-		return fmt.Errorf("%w: %s", ErrIPReceivedMismatch, newIP.String())
+		return fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 	}
 
 	return nil
@@ -352,7 +355,7 @@ func (l *linode) getError(body io.Reader) (err error) {
 		return err
 	}
 	if err := json.Unmarshal(b, &errorObj); err != nil {
-		return fmt.Errorf("%s", bodyDataToSingleLine(string(b)))
+		return fmt.Errorf("%s", utils.ToSingleLine(string(b)))
 	}
 	return fmt.Errorf("%s: %s", errorObj.Field, errorObj.Reason)
 }

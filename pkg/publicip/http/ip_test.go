@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"testing"
@@ -30,7 +30,7 @@ func Test_fetcher_IP(t *testing.T) { //nolint:dupl
 			assert.Equal(t, url, r.URL.String())
 			return &http.Response{
 				StatusCode: http.StatusOK,
-				Body:       ioutil.NopCloser(bytes.NewReader(httpBytes)),
+				Body:       io.NopCloser(bytes.NewReader(httpBytes)),
 			}, nil
 		}),
 	}
@@ -74,7 +74,7 @@ func Test_fetcher_IP4(t *testing.T) { //nolint:dupl
 			assert.Equal(t, url, r.URL.String())
 			return &http.Response{
 				StatusCode: http.StatusOK,
-				Body:       ioutil.NopCloser(bytes.NewReader(httpBytes)),
+				Body:       io.NopCloser(bytes.NewReader(httpBytes)),
 			}, nil
 		}),
 	}
@@ -121,7 +121,7 @@ func Test_fetcher_IP6(t *testing.T) {
 			assert.Equal(t, url, r.URL.String())
 			return &http.Response{
 				StatusCode: http.StatusOK,
-				Body:       ioutil.NopCloser(bytes.NewReader(httpBytes)),
+				Body:       io.NopCloser(bytes.NewReader(httpBytes)),
 			}, nil
 		}),
 	}
@@ -170,7 +170,7 @@ func Test_fetcher_ip(t *testing.T) {
 				}
 				return &http.Response{
 					StatusCode: http.StatusOK,
-					Body:       ioutil.NopCloser(bytes.NewReader(httpBytes)),
+					Body:       io.NopCloser(bytes.NewReader(httpBytes)),
 				}, nil
 			}),
 		}

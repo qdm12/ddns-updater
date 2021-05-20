@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -143,7 +143,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
-	b, err := ioutil.ReadAll(response.Body)
+	b, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}

@@ -3,7 +3,7 @@ package health
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 )
@@ -44,7 +44,7 @@ func (c *client) Query(ctx context.Context) error {
 		return nil
 	}
 
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("%s: %s", resp.Status, err)
 	}

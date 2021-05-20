@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
@@ -28,8 +27,7 @@ type dyn struct {
 	useProviderIP bool
 }
 
-func NewDyn(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	_ regex.Matcher) (s Settings, err error) {
+func NewDyn(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`

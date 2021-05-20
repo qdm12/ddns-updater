@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
@@ -26,8 +25,7 @@ type strato struct {
 	useProviderIP bool
 }
 
-func NewStrato(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	_ regex.Matcher) (s Settings, err error) {
+func NewStrato(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (s Settings, err error) {
 	extraSettings := struct {
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`

@@ -12,7 +12,6 @@ import (
 
 	ovhClient "github.com/ovh/go-ovh/ovh"
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
@@ -34,8 +33,7 @@ type ovh struct {
 	consumerKey   string
 }
 
-func NewOVH(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	_ regex.Matcher) (s Settings, err error) {
+func NewOVH(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (s Settings, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`

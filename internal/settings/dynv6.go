@@ -9,7 +9,6 @@ import (
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
@@ -24,8 +23,7 @@ type dynV6 struct {
 	useProviderIP bool
 }
 
-func NewDynV6(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	_ regex.Matcher) (s Settings, err error) {
+func NewDynV6(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (s Settings, err error) {
 	extraSettings := struct {
 		Token         string `json:"token"`
 		UseProviderIP bool   `json:"provider_ip"`

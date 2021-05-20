@@ -82,8 +82,6 @@ func extractAllSettings(jsonBytes []byte) (allSettings []settings.Settings, warn
 	return allSettings, warnings, nil
 }
 
-// TODO remove gocyclo.
-//nolint:gocyclo
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, matcher regex.Matcher) (
 	settingsSlice []settings.Settings, warnings []string, err error) {
 	provider := models.Provider(common.Provider)
@@ -111,68 +109,9 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, 
 		return nil, nil, err
 	}
 
-	var settingsConstructor settings.Constructor
-	switch provider {
-	case constants.Cloudflare:
-		settingsConstructor = settings.NewCloudflare
-	case constants.DdnssDe:
-		settingsConstructor = settings.NewDdnss
-	case constants.DigitalOcean:
-		settingsConstructor = settings.NewDigitalOcean
-	case constants.DnsOMatic:
-		settingsConstructor = settings.NewDNSOMatic
-	case constants.DNSPod:
-		settingsConstructor = settings.NewDNSPod
-	case constants.DonDominio:
-		settingsConstructor = settings.NewDonDominio
-	case constants.Dreamhost:
-		settingsConstructor = settings.NewDreamhost
-	case constants.DuckDNS:
-		settingsConstructor = settings.NewDuckdns
-	case constants.Dyn:
-		settingsConstructor = settings.NewDyn
-	case constants.DynV6:
-		settingsConstructor = settings.NewDynV6
-	case constants.FreeDNS:
-		settingsConstructor = settings.NewFreedns
-	case constants.Gandi:
-		settingsConstructor = settings.NewGandi
-	case constants.GoDaddy:
-		settingsConstructor = settings.NewGodaddy
-	case constants.Google:
-		settingsConstructor = settings.NewGoogle
-	case constants.HE:
-		settingsConstructor = settings.NewHe
-	case constants.Infomaniak:
-		settingsConstructor = settings.NewInfomaniak
-	case constants.Linode:
-		settingsConstructor = settings.NewLinode
-	case constants.LuaDNS:
-		settingsConstructor = settings.NewLuaDNS
-	case constants.Namecheap:
-		settingsConstructor = settings.NewNamecheap
-	case constants.Njalla:
-		settingsConstructor = settings.NewNjalla
-	case constants.NoIP:
-		settingsConstructor = settings.NewNoip
-	case constants.OpenDNS:
-		settingsConstructor = settings.NewOpendns
-	case constants.OVH:
-		settingsConstructor = settings.NewOVH
-	case constants.SelfhostDe:
-		settingsConstructor = settings.NewSelfhostde
-	case constants.Spdyn:
-		settingsConstructor = settings.NewSpdyn
-	case constants.Strato:
-		settingsConstructor = settings.NewStrato
-	case constants.Variomedia:
-		settingsConstructor = settings.NewVariomedia
-	default:
-		return nil, warnings, fmt.Errorf("provider %q is not supported", provider)
-	}
 	settingsSlice = make([]settings.Settings, len(hosts))
 	for i, host := range hosts {
-		settingsSlice[i], err = settingsConstructor(rawSettings, common.Domain, host, ipVersion, matcher)
+		settingsSlice[i], err = settings.New(provider, rawSettings, common.Domain, host, ipVersion, matcher)
 		if err != nil {
 			return nil, warnings, err
 		}

@@ -47,6 +47,10 @@ var (
 )
 
 func ValidateProvider(provider Provider, version ipversion.IPVersion) error {
+	if strings.HasPrefix(string(provider), "url:https://") { // custom HTTP url
+		return nil
+	}
+
 	for _, possible := range ListProviders() {
 		if provider == possible {
 			_, ok := provider.url(version)

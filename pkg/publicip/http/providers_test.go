@@ -53,6 +53,10 @@ func Test_ValidateProvider(t *testing.T) {
 			provider: Google,
 			version:  ipversion.IP4or6,
 		},
+		"custom url": {
+			provider: Provider("url:https://ip.com"),
+			version:  ipversion.IP4or6,
+		},
 		"invalid for ip version": {
 			provider: Google,
 			version:  ipversion.IP4,

@@ -41,7 +41,7 @@ func newHandler(ctx context.Context, rootURL string,
 
 	router := chi.NewRouter()
 
-	router.Use(middleware.Logger, middleware.CleanPath)
+	router.Use(middleware.Logger)
 
 	router.Get(rootURL+"/", handlers.index)
 

@@ -177,9 +177,8 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	go healthServer.Run(ctx, wg)
 
 	address := fmt.Sprintf("0.0.0.0:%d", p.listeningPort)
-	uiDir := p.dir + "/ui"
 	serverLogger := logger.NewChild(logging.Settings{Prefix: "http server: "})
-	server := server.New(ctx, address, p.rootURL, uiDir, db, serverLogger, runner)
+	server := server.New(ctx, address, p.rootURL, db, serverLogger, runner)
 	wg.Add(1)
 	go server.Run(ctx, wg)
 	notify(1, fmt.Sprintf("Launched with %d records to watch", len(records)))

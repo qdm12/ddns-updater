@@ -102,4 +102,3 @@ ENV \
     TZ=
 COPY --from=alpine --chown=1000 /tmp/data /updater/data/
 COPY --from=build --chown=1000 /tmp/gobuild/app /updater/app
-COPY --chown=1000 ui/* /updater/ui/

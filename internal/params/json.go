@@ -2,7 +2,10 @@ package params
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
+	"os"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -37,7 +40,11 @@ func (r *reader) JSONSettings(filePath string) (allSettings []settings.Settings,
 func (r *reader) getSettingsFromFile(filePath string) (allSettings []settings.Settings, warnings []string, err error) {
 	bytes, err := r.readFile(filePath)
 	if err != nil {
-		return nil, nil, err
+		if !errors.Is(err, os.ErrNotExist) {
+			return nil, nil, err
+		}
+		const mode = fs.FileMode(0600)
+		return nil, nil, r.writeFile(filePath, []byte(`{}`), mode)
 	}
 	return extractAllSettings(bytes)
 }
@@ -47,7 +54,7 @@ func (r *reader) getSettingsFromEnv() (allSettings []settings.Settings, warnings
 	s, err := r.env.Get("CONFIG", params.CaseSensitiveValue())
 	if err != nil {
 		return nil, nil, err
-	} else if len(s) == 0 {
+	} else if s == "" {
 		return nil, nil, nil
 	}
 	return extractAllSettings([]byte(s))
@@ -76,9 +83,7 @@ func extractAllSettings(jsonBytes []byte) (allSettings []settings.Settings, warn
 		}
 		allSettings = append(allSettings, newSettings...)
 	}
-	if len(allSettings) == 0 {
-		warnings = append(warnings, "no settings found in JSON data")
-	}
+
 	return allSettings, warnings, nil
 }
 

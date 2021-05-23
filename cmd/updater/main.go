@@ -113,10 +113,15 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		notify(4, err)
 		return 1
 	}
-	if len(settings) > 1 {
-		logger.Info("Found %d settings to update records", len(settings))
-	} else if len(settings) == 1 {
+
+	L := len(settings)
+	switch L {
+	case 0:
+		logger.Warn("Found no setting to update record")
+	case 1:
 		logger.Info("Found single setting to update record")
+	default:
+		logger.Info("Found %d settings to update records", len(settings))
 	}
 
 	client := &http.Client{Timeout: p.httpTimeout}

@@ -3,8 +3,10 @@ package params
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -53,17 +55,19 @@ type Reader interface {
 }
 
 type reader struct {
-	env      params.Env
-	os       params.OS
-	readFile func(filename string) ([]byte, error)
-	retroFn  func(oldKey, newKey string)
+	env       params.Env
+	os        params.OS
+	readFile  func(filename string) ([]byte, error)
+	writeFile func(filename string, data []byte, perm fs.FileMode) (err error)
+	retroFn   func(oldKey, newKey string)
 }
 
 func NewReader(logger logging.Logger) Reader {
 	return &reader{
-		env:      params.NewEnv(),
-		os:       params.NewOS(),
-		readFile: ioutil.ReadFile,
+		env:       params.NewEnv(),
+		os:        params.NewOS(),
+		readFile:  ioutil.ReadFile,
+		writeFile: os.WriteFile,
 		retroFn: func(oldKey, newKey string) {
 			logger.Warn("You are using the old environment variable %s, please consider switching to %s instead", oldKey, newKey)
 		},

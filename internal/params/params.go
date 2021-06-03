@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"io/ioutil"
+	"net"
 	"net/url"
 	"os"
 	"strings"
@@ -35,6 +36,7 @@ type Reader interface {
 	PublicIPDNSProviders() (providers []dns.Provider, err error)
 	HTTPTimeout() (duration time.Duration, err error)
 	CooldownPeriod() (duration time.Duration, err error)
+	IPv6Prefix() (ipv6Mask net.IPMask, err error)
 
 	// File paths
 	ExeDir() (dir string, err error)
@@ -279,4 +281,12 @@ func (r *reader) BackupDirectory() (directory string, err error) {
 
 func (r *reader) CooldownPeriod() (duration time.Duration, err error) {
 	return r.env.Duration("UPDATE_COOLDOWN_PERIOD", params.Default("5m"))
+}
+
+func (r *reader) IPv6Prefix() (ipv6Mask net.IPMask, err error) {
+	s, err := r.env.Get("IPV6_PREFIX", params.Default("/128"))
+	if err != nil {
+		return nil, err
+	}
+	return ipv6DecimalPrefixToMask(s)
 }

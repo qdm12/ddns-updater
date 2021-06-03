@@ -49,6 +49,7 @@ type allParams struct {
 	period          time.Duration
 	cooldown        time.Duration
 	httpTimeout     time.Duration
+	ipv6Mask        net.IPMask
 	httpSettings    publicip.HTTPSettings
 	dnsSettings     publicip.DNSSettings
 	dir             string
@@ -163,7 +164,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	}
 
 	updater := update.NewUpdater(db, client, notify, logger)
-	runner := update.NewRunner(db, updater, ipGetter, p.cooldown, logger, timeNow)
+	runner := update.NewRunner(db, updater, ipGetter, p.ipv6Mask, p.cooldown, logger, timeNow)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -240,6 +241,11 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 		return p, err
 	}
 	p.cooldown, err = paramsReader.CooldownPeriod()
+	if err != nil {
+		return p, err
+	}
+
+	p.ipv6Mask, err = paramsReader.IPv6Prefix()
 	if err != nil {
 		return p, err
 	}

@@ -40,8 +40,7 @@ type Reader interface {
 	IPv6Prefix() (ipv6Mask net.IPMask, err error)
 
 	// File paths
-	ExeDir() (dir string, err error)
-	DataDir(currentDir string) (string, error)
+	DataDir() (path string, err error)
 
 	// Web UI
 	ListeningPort() (listeningPort uint16, warning string, err error)
@@ -82,8 +81,8 @@ func NewReader(logger logging.Logger) Reader {
 
 // GetDataDir obtains the data directory from the environment
 // variable DATADIR.
-func (r *reader) DataDir(currentDir string) (string, error) {
-	return r.env.Get("DATADIR", params.Default(currentDir+"/data"))
+func (r *reader) DataDir() (path string, err error) {
+	return r.env.Path("DATADIR", params.Default("./data"))
 }
 
 func (r *reader) ListeningPort() (listeningPort uint16, warning string, err error) {

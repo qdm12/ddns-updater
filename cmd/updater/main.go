@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -52,7 +53,6 @@ type allParams struct {
 	ipv6Mask        net.IPMask
 	httpSettings    publicip.HTTPSettings
 	dnsSettings     publicip.DNSSettings
-	dir             string
 	dataDir         string
 	listeningPort   uint16
 	rootURL         string
@@ -196,7 +196,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	go server.Run(ctx, wg)
 	notify(1, fmt.Sprintf("Launched with %d records to watch", len(records)))
 
-	go backupRunLoop(ctx, p.backupPeriod, p.dir, p.backupDirectory,
+	go backupRunLoop(ctx, p.backupPeriod, p.dataDir, p.backupDirectory,
 		logger.NewChild(logging.Settings{Prefix: "backup: "}), timeNow)
 
 	osSignals := make(chan os.Signal, 1)
@@ -293,11 +293,7 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 		dns.SetProviders(dnsIPProviders[0], dnsIPProviders[1:]...),
 	}
 
-	p.dir, err = paramsReader.ExeDir()
-	if err != nil {
-		return p, err
-	}
-	p.dataDir, err = paramsReader.DataDir(p.dir)
+	p.dataDir, err = paramsReader.DataDir()
 	if err != nil {
 		return p, err
 	}
@@ -328,7 +324,7 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 	return p, nil
 }
 
-func backupRunLoop(ctx context.Context, backupPeriod time.Duration, exeDir, outputDir string,
+func backupRunLoop(ctx context.Context, backupPeriod time.Duration, dataDir, outputDir string,
 	logger logging.Logger, timeNow func() time.Time) {
 	if backupPeriod == 0 {
 		logger.Info("disabled")
@@ -338,11 +334,13 @@ func backupRunLoop(ctx context.Context, backupPeriod time.Duration, exeDir, outp
 	ziper := backup.NewZiper()
 	timer := time.NewTimer(backupPeriod)
 	for {
-		filepath := fmt.Sprintf("%s/ddns-updater-backup-%d.zip", outputDir, timeNow().UnixNano())
+		fileName := "ddns-updater-backup-" + strconv.Itoa(int(timeNow().UnixNano())) + ".zip"
+		zipFilepath := filepath.Join(outputDir, fileName)
 		if err := ziper.ZipFiles(
-			filepath,
-			fmt.Sprintf("%s/data/updates.json", exeDir),
-			fmt.Sprintf("%s/data/config.json", exeDir)); err != nil {
+			zipFilepath,
+			filepath.Join(dataDir, "updates.json"),
+			filepath.Join(dataDir, "config.json"),
+		); err != nil {
 			logger.Error(err)
 		}
 		select {

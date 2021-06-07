@@ -15,6 +15,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -26,10 +27,11 @@ type provider struct {
 	key       string
 	secret    string
 	matcher   regex.Matcher
+	logger    log.Logger
 }
 
 func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher regex.Matcher) (p *provider, err error) {
+	matcher regex.Matcher, logger log.Logger) (p *provider, err error) {
 	extraSettings := struct {
 		Key    string `json:"key"`
 		Secret string `json:"secret"`
@@ -44,6 +46,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		key:       extraSettings.Key,
 		secret:    extraSettings.Secret,
 		matcher:   matcher,
+		logger:    logger,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -123,6 +126,8 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	if err := encoder.Encode(requestData); err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrRequestEncode, err)
 	}
+
+	p.logger.Debug("HTTP PUT: " + u.String() + ": " + buffer.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/settings"
+	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/pkg/publicip/dns"
 	"github.com/qdm12/ddns-updater/pkg/publicip/http"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -25,7 +26,7 @@ const (
 
 type Reader interface {
 	// JSON
-	JSONSettings(filePath string) (allSettings []settings.Settings, warnings []string, err error)
+	JSONSettings(filePath string, logger log.Logger) (allSettings []settings.Settings, warnings []string, err error)
 
 	// Core
 	Period() (period time.Duration, warnings []string, err error)

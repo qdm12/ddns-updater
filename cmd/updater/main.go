@@ -111,7 +111,8 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		notify(4, err)
 		return 1
 	}
-	settings, warnings, err := paramsReader.JSONSettings(filepath.Join(p.dataDir, "config.json"))
+	configFilepath := filepath.Join(p.dataDir, "config.json")
+	settings, warnings, err := paramsReader.JSONSettings(configFilepath, logger)
 	for _, w := range warnings {
 		logger.Warn(w)
 		notify(2, w)

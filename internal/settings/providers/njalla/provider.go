@@ -12,6 +12,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -22,9 +23,11 @@ type provider struct {
 	ipVersion     ipversion.IPVersion
 	key           string
 	useProviderIP bool
+	logger        log.Logger
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
+func New(data json.RawMessage, domain, host string,
+	ipVersion ipversion.IPVersion, logger log.Logger) (p *provider, err error) {
 	extraSettings := struct {
 		Key           string `json:"key"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -38,6 +41,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		ipVersion:     ipVersion,
 		key:           extraSettings.Key,
 		useProviderIP: extraSettings.UseProviderIP,
+		logger:        logger,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -108,6 +112,8 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		}
 	}
 	u.RawQuery = values.Encode()
+
+	p.logger.Debug("HTTP GET: " + u.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {

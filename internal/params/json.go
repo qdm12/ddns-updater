@@ -12,6 +12,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/ddns-updater/internal/settings"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/params"
 )
@@ -28,16 +29,18 @@ type commonSettings struct {
 
 // JSONSettings obtain the update settings from the JSON content, first trying from the environment variable CONFIG
 // and then from the file config.json.
-func (r *reader) JSONSettings(filePath string) (allSettings []settings.Settings, warnings []string, err error) {
-	allSettings, warnings, err = r.getSettingsFromEnv()
+func (r *reader) JSONSettings(filePath string, logger log.Logger) (
+	allSettings []settings.Settings, warnings []string, err error) {
+	allSettings, warnings, err = r.getSettingsFromEnv(logger)
 	if allSettings != nil || warnings != nil || err != nil {
 		return allSettings, warnings, err
 	}
-	return r.getSettingsFromFile(filePath)
+	return r.getSettingsFromFile(filePath, logger)
 }
 
 // getSettingsFromFile obtain the update settings from config.json.
-func (r *reader) getSettingsFromFile(filePath string) (allSettings []settings.Settings, warnings []string, err error) {
+func (r *reader) getSettingsFromFile(filePath string, logger log.Logger) (
+	allSettings []settings.Settings, warnings []string, err error) {
 	bytes, err := r.readFile(filePath)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
@@ -46,21 +49,22 @@ func (r *reader) getSettingsFromFile(filePath string) (allSettings []settings.Se
 		const mode = fs.FileMode(0600)
 		return nil, nil, r.writeFile(filePath, []byte(`{}`), mode)
 	}
-	return extractAllSettings(bytes)
+	return extractAllSettings(bytes, logger)
 }
 
 // getSettingsFromEnv obtain the update settings from the environment variable CONFIG.
-func (r *reader) getSettingsFromEnv() (allSettings []settings.Settings, warnings []string, err error) {
+func (r *reader) getSettingsFromEnv(logger log.Logger) (allSettings []settings.Settings, warnings []string, err error) {
 	s, err := r.env.Get("CONFIG", params.CaseSensitiveValue())
 	if err != nil {
 		return nil, nil, err
 	} else if s == "" {
 		return nil, nil, nil
 	}
-	return extractAllSettings([]byte(s))
+	return extractAllSettings([]byte(s), logger)
 }
 
-func extractAllSettings(jsonBytes []byte) (allSettings []settings.Settings, warnings []string, err error) {
+func extractAllSettings(jsonBytes []byte, logger log.Logger) (
+	allSettings []settings.Settings, warnings []string, err error) {
 	config := struct {
 		CommonSettings []commonSettings `json:"settings"`
 	}{}
@@ -76,7 +80,7 @@ func extractAllSettings(jsonBytes []byte) (allSettings []settings.Settings, warn
 	matcher := regex.NewMatcher()
 
 	for i, common := range config.CommonSettings {
-		newSettings, newWarnings, err := makeSettingsFromObject(common, rawConfig.Settings[i], matcher)
+		newSettings, newWarnings, err := makeSettingsFromObject(common, rawConfig.Settings[i], matcher, logger)
 		warnings = append(warnings, newWarnings...)
 		if err != nil {
 			return nil, warnings, err
@@ -87,7 +91,8 @@ func extractAllSettings(jsonBytes []byte) (allSettings []settings.Settings, warn
 	return allSettings, warnings, nil
 }
 
-func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, matcher regex.Matcher) (
+func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
+	matcher regex.Matcher, logger log.Logger) (
 	settingsSlice []settings.Settings, warnings []string, err error) {
 	provider := models.Provider(common.Provider)
 	if provider == constants.DuckDNS { // only hosts, no domain
@@ -116,7 +121,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage, 
 
 	settingsSlice = make([]settings.Settings, len(hosts))
 	for i, host := range hosts {
-		settingsSlice[i], err = settings.New(provider, rawSettings, common.Domain, host, ipVersion, matcher)
+		settingsSlice[i], err = settings.New(provider, rawSettings, common.Domain,
+			host, ipVersion, matcher, logger)
 		if err != nil {
 			return nil, warnings, err
 		}

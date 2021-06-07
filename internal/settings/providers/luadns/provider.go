@@ -14,6 +14,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/verification"
@@ -25,9 +26,11 @@ type provider struct {
 	ipVersion ipversion.IPVersion
 	email     string
 	token     string
+	logger    log.Logger
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
+func New(data json.RawMessage, domain, host string,
+	ipVersion ipversion.IPVersion, logger log.Logger) (p *provider, err error) {
 	extraSettings := struct {
 		Email string `json:"email"`
 		Token string `json:"token"`
@@ -41,6 +44,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		ipVersion: ipVersion,
 		email:     extraSettings.Email,
 		token:     extraSettings.Token,
+		logger:    logger,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -137,6 +141,8 @@ func (p *provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 		User:   url.UserPassword(p.email, p.token),
 	}
 
+	p.logger.Debug("HTTP GET: " + u.String())
+
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return 0, err
@@ -188,6 +194,8 @@ func (p *provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 		Path:   fmt.Sprintf("/v1/zones/%d/records", zoneID),
 		User:   url.UserPassword(p.email, p.token),
 	}
+
+	p.logger.Debug("HTTP GET: " + u.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
@@ -241,12 +249,16 @@ func (p *provider) updateRecord(ctx context.Context, client *http.Client,
 		Path:   fmt.Sprintf("/v1/zones/%d/records/%d", zoneID, newRecord.ID),
 		User:   url.UserPassword(p.email, p.token),
 	}
-	data, err := json.Marshal(newRecord)
-	if err != nil {
+
+	buffer := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buffer)
+	if err := encoder.Encode(newRecord); err != nil {
 		return err
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), bytes.NewBuffer(data))
+	p.logger.Debug("HTTP PUT: " + u.String() + ": " + buffer.String())
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {
 		return err
 	}

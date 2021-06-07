@@ -16,6 +16,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -25,9 +26,11 @@ type provider struct {
 	host      string
 	ipVersion ipversion.IPVersion
 	token     string
+	logger    log.Logger
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
+func New(data json.RawMessage, domain, host string,
+	ipVersion ipversion.IPVersion, logger log.Logger) (p *provider, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
@@ -39,6 +42,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		host:      host,
 		ipVersion: ipVersion,
 		token:     extraSettings.Token,
+		logger:    logger,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -134,6 +138,8 @@ func (p *provider) getDomainID(ctx context.Context, client *http.Client) (domain
 		Path:   "/v4/domains",
 	}
 
+	p.logger.Debug("HTTP GET: " + u.String())
+
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return 0, err
@@ -193,6 +199,8 @@ func (p *provider) getRecordID(ctx context.Context, client *http.Client,
 		Host:   "api.linode.com",
 		Path:   "/v4/domains/" + strconv.Itoa(domainID) + "/records",
 	}
+
+	p.logger.Debug("HTTP GET: " + u.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
@@ -258,6 +266,8 @@ func (p *provider) createRecord(ctx context.Context, client *http.Client,
 		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
 	}
 
+	p.logger.Debug("HTTP POST: " + u.String() + ": " + buffer.String())
+
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
 		return err
@@ -310,6 +320,8 @@ func (p *provider) updateRecord(ctx context.Context, client *http.Client,
 	if err := encoder.Encode(data); err != nil {
 		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
 	}
+
+	p.logger.Debug("HTTP PUT: " + u.String() + ": " + buffer.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {

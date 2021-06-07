@@ -15,6 +15,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
+	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -31,9 +32,11 @@ type provider struct {
 	appKey        string
 	appSecret     string
 	consumerKey   string
+	logger        log.Logger
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (p *provider, err error) {
+func New(data json.RawMessage, domain, host string,
+	ipVersion ipversion.IPVersion, logger log.Logger) (p *provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -59,6 +62,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		appKey:        extraSettings.AppKey,
 		appSecret:     extraSettings.AppSecret,
 		consumerKey:   extraSettings.ConsumerKey,
+		logger:        logger,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -137,6 +141,8 @@ func (p *provider) updateWithDynHost(ctx context.Context, client *http.Client, i
 	}
 	u.RawQuery = values.Encode()
 
+	p.logger.Debug("HTTP GET: " + u.String())
+
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
@@ -189,6 +195,9 @@ func (p *provider) updateWithZoneDNS(ctx context.Context, client *ovhClient.Clie
 	// get existing records
 	var recordIDs []uint64
 	url := fmt.Sprintf("/domain/zone/%s/record?fieldType=%s&subDomain=%s", p.domain, recordType, subDomain)
+
+	p.logger.Debug("HTTP GET: " + url + ": " + fmt.Sprintf("%v", recordIDs))
+
 	if err := client.GetWithContext(ctx, url, &recordIDs); err != nil {
 		return nil, err
 	}

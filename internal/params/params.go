@@ -46,6 +46,9 @@ type Reader interface {
 	ListeningPort() (listeningPort uint16, warning string, err error)
 	RootURL() (rootURL string, err error)
 
+	// Healthcheck
+	HealthServerAddress() (address, warning string, err error)
+
 	// Backup
 	BackupPeriod() (duration time.Duration, err error)
 	BackupDirectory() (directory string, err error)
@@ -113,6 +116,10 @@ func (r *reader) GotifyToken() (token string, err error) {
 
 func (r *reader) RootURL() (rootURL string, err error) {
 	return r.env.RootURL("ROOT_URL")
+}
+
+func (r *reader) HealthServerAddress() (address, warning string, err error) {
+	return r.env.ListeningAddress("HEALTH_SERVER_ADDRESS", params.Default("127.0.0.1:9999"))
 }
 
 func (r *reader) Period() (period time.Duration, warnings []string, err error) {

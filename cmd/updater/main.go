@@ -56,6 +56,7 @@ type allParams struct {
 	dataDir         string
 	listeningPort   uint16
 	rootURL         string
+	healthAddress   string
 	backupPeriod    time.Duration
 	backupDirectory string
 }
@@ -66,7 +67,13 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 		// built-in healthcheck, in an ephemeral fashion to query the
 		// long running instance of the program about its status
 		client := health.NewClient()
-		if err := client.Query(ctx); err != nil {
+		paramsReader := params.NewReader(nil) // nil logger as no retro compat use of it
+		address, _, err := paramsReader.HealthServerAddress()
+		if err != nil {
+			fmt.Println(err)
+			return 1
+		}
+		if err := client.Query(ctx, address); err != nil {
 			fmt.Println(err)
 			return 1
 		}
@@ -174,9 +181,8 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	// no need to collect the resulting errors.
 	go runner.ForceUpdate(ctx)
 
-	const healthServerAddr = "127.0.0.1:9999"
 	isHealthy := health.MakeIsHealthy(db, net.LookupIP, logger)
-	healthServer := health.NewServer(healthServerAddr,
+	healthServer := health.NewServer(p.healthAddress,
 		logger.NewChild(logging.Settings{Prefix: "healthcheck server: "}),
 		isHealthy)
 	wg.Add(1)
@@ -299,6 +305,14 @@ func getParams(paramsReader params.Reader, logger logging.Logger) (p allParams, 
 		return p, err
 	}
 	p.rootURL, err = paramsReader.RootURL()
+	if err != nil {
+		return p, err
+	}
+	var warning string
+	p.healthAddress, warning, err = paramsReader.HealthServerAddress()
+	if warning != "" {
+		logger.Warn(warning)
+	}
 	if err != nil {
 		return p, err
 	}

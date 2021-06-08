@@ -12,6 +12,7 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/qdm12/ddns-updater/internal/backup"
 	"github.com/qdm12/ddns-updater/internal/data"

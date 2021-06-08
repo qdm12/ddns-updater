@@ -3,7 +3,7 @@ ARG GO_VERSION=1.16
 ARG BUILDPLATFORM=linux/amd64
 
 FROM --platform=$BUILDPLATFORM alpine:${ALPINE_VERSION} AS alpine
-RUN apk --update add ca-certificates tzdata
+RUN apk --update add ca-certificates
 RUN mkdir /tmp/data && \
     chown 1000 /tmp/data && \
     chmod 700 /tmp/data
@@ -69,7 +69,6 @@ LABEL \
     org.opencontainers.image.title="ddns-updater" \
     org.opencontainers.image.description="Universal DNS updater with WebUI"
 COPY --from=alpine --chown=1000 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=alpine --chown=1000 /usr/share/zoneinfo /usr/share/zoneinfo
 EXPOSE 8000
 HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=2 CMD ["/updater/app", "healthcheck"]
 USER 1000

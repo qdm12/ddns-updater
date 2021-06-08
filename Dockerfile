@@ -85,6 +85,7 @@ ENV \
     PUBLICIPV6_HTTP_PROVIDERS=all \
     PUBLICIP_DNS_PROVIDERS=all \
     HTTP_TIMEOUT=10s \
+    DATADIR=/updater/data \
 
     # Web UI
     LISTENING_PORT=8000 \

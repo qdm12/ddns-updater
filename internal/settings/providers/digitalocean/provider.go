@@ -97,7 +97,7 @@ func (p *provider) setHeaders(request *http.Request) {
 func (p *provider) getRecordID(ctx context.Context, recordType string, client *http.Client) (
 	recordID int, err error) {
 	values := url.Values{}
-	values.Set("name", p.BuildDomainName())
+	values.Set("name", utils.BuildURLQueryHostname(p.host, p.domain))
 	values.Set("type", recordType)
 	u := url.URL{
 		Scheme:   "https",

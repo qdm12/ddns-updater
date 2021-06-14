@@ -106,7 +106,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 	values := url.Values{}
 	values.Set("token", p.token)
-	values.Set("zone", p.BuildDomainName())
+	values.Set("zone", utils.BuildURLQueryHostname(p.host, p.domain))
 	if !p.useProviderIP {
 		if isIPv4 {
 			values.Set("ipv4", ip.String())

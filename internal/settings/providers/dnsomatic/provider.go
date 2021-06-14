@@ -114,13 +114,15 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		User:   url.UserPassword(p.username, p.password),
 	}
 	values := url.Values{}
-	values.Set("hostname", p.BuildDomainName())
 	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	values.Set("wildcard", "NOCHG")
 	if p.host == "*" {
+		values.Set("hostname", p.domain)
 		values.Set("wildcard", "ON")
+	} else {
+		values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
 	}
 	values.Set("mx", "NOCHG")
 	values.Set("backmx", "NOCHG")

@@ -111,15 +111,16 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		Host:   "update.spdyn.de",
 		Path:   "/nic/update",
 	}
+	hostname := utils.BuildURLQueryHostname(p.host, p.domain)
 	values := url.Values{}
-	values.Set("hostname", p.BuildDomainName())
+	values.Set("hostname", hostname)
 	if p.useProviderIP {
 		values.Set("myip", "10.0.0.1")
 	} else {
 		values.Set("myip", ip.String())
 	}
 	if len(p.token) > 0 {
-		values.Set("user", p.BuildDomainName())
+		values.Set("user", hostname)
 		values.Set("pass", p.token)
 	} else {
 		values.Set("user", p.user)

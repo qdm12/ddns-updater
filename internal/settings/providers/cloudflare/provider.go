@@ -158,7 +158,7 @@ func (p *provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 	}
 	values := url.Values{}
 	values.Set("type", recordType)
-	values.Set("name", p.BuildDomainName())
+	values.Set("name", utils.BuildURLQueryHostname(p.host, p.domain))
 	values.Set("page", "1")
 	values.Set("per_page", "1")
 	u.RawQuery = values.Encode()
@@ -238,7 +238,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		TTL     uint   `json:"ttl"`
 	}{
 		Type:    recordType,
-		Name:    p.BuildDomainName(),
+		Name:    utils.BuildURLQueryHostname(p.host, p.domain),
 		Content: ip.String(),
 		Proxied: p.proxied,
 		TTL:     p.ttl,

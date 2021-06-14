@@ -110,7 +110,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	var oldIP net.IP
 	for _, data := range records.Data {
-		if data.Type == recordType && data.Record == p.BuildDomainName() {
+		if data.Type == recordType && data.Record == utils.BuildURLQueryHostname(p.host, p.domain) {
 			if data.Editable == "0" {
 				return nil, errors.ErrRecordNotEditable
 			}

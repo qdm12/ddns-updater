@@ -106,7 +106,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		User:   url.UserPassword(p.username, p.password),
 	}
 	values := url.Values{}
-	fqdn := p.BuildDomainName()
+	fqdn := utils.BuildURLQueryHostname(p.host, p.domain)
 	values.Set("hostname", fqdn)
 	if !p.useProviderIP {
 		values.Set("myip", ip.String())

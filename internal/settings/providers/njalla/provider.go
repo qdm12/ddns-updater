@@ -96,10 +96,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		Path:   "/update",
 	}
 	values := url.Values{}
-	values.Set("h", p.BuildDomainName())
-	if p.host == "*" {
-		values.Set("h", "*."+p.domain)
-	}
+	values.Set("h", utils.BuildURLQueryHostname(p.host, p.domain))
 	values.Set("k", p.key)
 	updatingIP6 := ip.To4() == nil
 	if p.useProviderIP {

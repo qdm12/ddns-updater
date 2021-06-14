@@ -107,7 +107,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		Path:   "/v3/update",
 	}
 	values := url.Values{}
-	values.Set("hostname", p.BuildDomainName())
+	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
 	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}

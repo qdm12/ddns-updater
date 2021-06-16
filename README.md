@@ -96,7 +96,7 @@ The program reads the configuration from a JSON object, either from a file or fr
 1. Run the container with
 
     ```sh
-    docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data qmcgaw/ddns-updater
+    docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data -u $USER):$(id -g $USER) qmcgaw/ddns-updater
     ```
 
 1. ⚠️ If you use IPv6, you might need to set `-e IPV6_PREFIX=/64` (`/64` is your prefix, depending on your ISP)

@@ -45,10 +45,12 @@ func main() {
 	buildInfo.Commit = commit
 	buildInfo.BuildDate = buildDate
 	env := params.NewEnv()
-	os.Exit(_main(context.Background(), env, os.Args, time.Now))
+	logger := logging.NewParent(logging.Settings{Writer: os.Stdout})
+	os.Exit(_main(context.Background(), env, os.Args, logger, time.Now))
 }
 
-func _main(ctx context.Context, env params.Env, args []string, timeNow func() time.Time) int {
+func _main(ctx context.Context, env params.Env, args []string, logger logging.ParentLogger,
+	timeNow func() time.Time) int {
 	if health.IsClientMode(args) {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the
@@ -57,11 +59,11 @@ func _main(ctx context.Context, env params.Env, args []string, timeNow func() ti
 		var healthConfig config.Health
 		_, err := healthConfig.Get(env)
 		if err != nil {
-			fmt.Println(err)
+			logger.Error(err)
 			return 1 // TODO use healthConfig.Port
 		}
 		if err := client.Query(ctx, healthConfig.ServerAddress); err != nil {
-			fmt.Println(err)
+			logger.Error(err)
 			return 1
 		}
 		return 0
@@ -72,10 +74,10 @@ func _main(ctx context.Context, env params.Env, args []string, timeNow func() ti
 	var config config.Config
 	warnings, err := config.Get(env)
 	for _, warning := range warnings {
-		fmt.Println(warning)
+		logger.Warn(warning)
 	}
 	if err != nil {
-		fmt.Println(err)
+		logger.Error(err)
 		return 1
 	}
 
@@ -83,7 +85,7 @@ func _main(ctx context.Context, env params.Env, args []string, timeNow func() ti
 	loggerSettings := logging.Settings{
 		Level:  config.Logger.Level,
 		Caller: config.Logger.Caller}
-	logger := logging.NewParent(loggerSettings)
+	logger = logging.NewParent(loggerSettings)
 
 	notify := setupGotify(config.Gotify, logger)
 

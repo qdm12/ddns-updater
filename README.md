@@ -55,7 +55,7 @@
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
 - Send notifications with [**Shoutrrr**](https://containrrr.dev/shoutrrr/services/overview/) using `SHOUTRRR_ADDRESSES`
-- Compatible with `amd64`, `386`, `arm64`, `arm32v7` (Raspberry Pis) CPU architectures.
+- Compatible with `amd64`, `386`, `arm64`, `armv7`, `armv6`, `s390x`, `ppc64le`, `riscv64` CPU architectures.
 
 ## Setup
 

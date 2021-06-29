@@ -90,8 +90,7 @@ ENV \
     # Other
     LOG_LEVEL=info \
     LOG_CALLER=hidden \
-    GOTIFY_URL= \
-    GOTIFY_TOKEN= \
+    SHOUTRRR_ADDRESSES= \
     TZ=
 ARG VERSION=unknown
 ARG BUILD_DATE="an unknown date"

@@ -30,6 +30,5 @@ services:
       # Other
       - LOG_LEVEL=info
       - LOG_CALLER=hidden
-      - GOTIFY_URL=
-      - GOTIFY_TOKEN=
+      - SHOUTRRR_ADDRESSES=
     restart: always

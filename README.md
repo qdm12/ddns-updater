@@ -54,7 +54,7 @@
 - Persistence with a JSON file *updates.json* to store old IP addresses with change times for each record
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
-- Sends notifications to your Android phone, see the [**Gotify**](#Gotify) section (it's free, open source and self hosted 🆒)
+- Send notifications with [**Shoutrrr**](https://containrrr.dev/shoutrrr/services/overview/) using `SHOUTRRR_ADDRESSES`
 - Compatible with `amd64`, `386`, `arm64`, `arm32v7` (Raspberry Pis) CPU architectures.
 
 ## Setup
@@ -187,8 +187,7 @@ Note that:
 | `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`. |
 | `LOG_LEVEL` | `info` | Level of logging, `debug`, `info`, `warning` or `error` |
 | `LOG_CALLER` | `hidden` | Show caller per log line, `hidden` or `short` |
-| `GOTIFY_URL` |  | (optional) HTTP(s) URL to your Gotify server |
-| `GOTIFY_TOKEN` |  | (optional) Token to access your Gotify server |
+| `SHOUTRRR_ADDRESSES` |  | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/services/overview/) (notification services) |
 | `TZ` | | Timezone to have accurate times, i.e. `America/Montreal` |
 
 #### Public IP
@@ -225,7 +224,6 @@ You can otherwise customize it with the following:
 If you have a host firewall in place, this container needs the following ports:
 
 - TCP 443 outbound for outbound HTTPS
-- TCP 80 outbound if you use a local unsecured HTTP connection to your Gotify server
 - UDP 53 outbound for outbound DNS resolution
 - TCP 8000 inbound (or other) for the WebUI
 
@@ -262,24 +260,6 @@ This is the only way as doing a DNS resolution on the record will give the IP ad
 
 ⚠️ This has the disadvantage that if the record is changed manually, the program will not detect it.
 We could do an API call to get the record IP address every period, but that would get you banned especially with a low period duration.
-
-## Gotify
-
-[![Gotify](https://github.com/qdm12/ddns-updater/blob/master/readme/gotify.png?raw=true)](https://gotify.net)
-
-[**Gotify**](https://gotify.net) is a simple server for sending and receiving messages, and it is **free**, **private** and **open source**
-
-- It has an [Android app](https://play.google.com/store/apps/details?id=com.github.gotify) to receive notifications
-- The app does not drain your battery 👍
-- The notification server is self hosted, see [how to set it up with Docker](https://gotify.net/docs/install)
-- The notifications only go through your own server (ideally through HTTPS though)
-
-To set it up with DDNS updater:
-
-1. Go to the Web GUI of Gotify
-1. Login with the admin credentials
-1. Create an app and copy the generated token to the environment variable `GOTIFYTOKEN` (for this container)
-1. Set the `GOTIFYURL` variable to the URL of your Gotify server address (i.e. `http://127.0.0.1:8080` or `https://bla.com/gotify`)
 
 ## Testing
 

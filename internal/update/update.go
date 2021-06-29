@@ -26,7 +26,7 @@ type updater struct {
 	logger logging.Logger
 }
 
-type notifyFunc func(priority int, messageArgs ...interface{})
+type notifyFunc func(message string)
 
 func NewUpdater(db data.Database, client *http.Client, notify notifyFunc, logger logging.Logger) Updater {
 	return &updater{
@@ -56,7 +56,7 @@ func (u *updater) Update(ctx context.Context, id int, ip net.IP, now time.Time) 
 			record.LastBan = &lastBan
 			message := record.Settings.BuildDomainName() + ": " + record.Message +
 				", no more updates will be attempted for an hour"
-			u.notify(3, message) //nolint:gomnd
+			u.notify(message)
 			err = fmt.Errorf(message)
 		} else {
 			record.LastBan = nil // clear a previous ban
@@ -72,6 +72,6 @@ func (u *updater) Update(ctx context.Context, id int, ip net.IP, now time.Time) 
 		IP:   newIP,
 		Time: now,
 	})
-	u.notify(1, fmt.Sprintf("%s %s", record.Settings.BuildDomainName(), record.Message))
+	u.notify(record.Settings.BuildDomainName() + " " + record.Message)
 	return u.db.Update(id, record) // persists some data if needed (i.e new IP)
 }

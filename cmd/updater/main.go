@@ -13,6 +13,7 @@ import (
 	"time"
 	_ "time/tzdata"
 
+	"github.com/containrrr/shoutrrr"
 	"github.com/qdm12/ddns-updater/internal/backup"
 	"github.com/qdm12/ddns-updater/internal/config"
 	"github.com/qdm12/ddns-updater/internal/data"
@@ -25,7 +26,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/splash"
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
-	"github.com/qdm12/golibs/admin"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network/connectivity"
 	"github.com/qdm12/golibs/params"
@@ -123,20 +123,22 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 		Caller: config.Logger.Caller}
 	logger = logging.NewParent(loggerSettings)
 
-	notify := func(priority int, messageArgs ...interface{}) {}
-	if config.Gotify.URL != nil {
-		client := &http.Client{Timeout: time.Second}
-		gotify := admin.NewGotify(*config.Gotify.URL, config.Gotify.Token, client)
-		notify = func(priority int, messageArgs ...interface{}) {
-			if err := gotify.Notify("DDNS Updater", priority, messageArgs...); err != nil {
-				logger.Error(err)
+	sender, err := shoutrrr.CreateSender(config.Shoutrrr.Addresses...)
+	if err != nil {
+		return err
+	}
+	notify := func(message string) {
+		errs := sender.Send(message, &config.Shoutrrr.Params)
+		for _, err := range errs {
+			if err != nil {
+				logger.Error(err.Error())
 			}
 		}
 	}
 
 	persistentDB, err := persistence.NewJSON(config.Paths.DataDir)
 	if err != nil {
-		notify(4, err)
+		notify(err.Error())
 		return err
 	}
 
@@ -144,10 +146,10 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 	settings, warnings, err := jsonReader.JSONSettings(config.Paths.JSON, logger)
 	for _, w := range warnings {
 		logger.Warn(w)
-		notify(2, w)
+		notify(w)
 	}
 	if err != nil {
-		notify(4, err)
+		notify(err.Error())
 		return err
 	}
 
@@ -173,7 +175,7 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 		logger.Info("Reading history from database: domain %s host %s", s.Domain(), s.Host())
 		events, err := persistentDB.GetEvents(s.Domain(), s.Host())
 		if err != nil {
-			notify(4, err)
+			notify(err.Error())
 			return err
 		}
 		records[i] = recordslib.New(s, events)
@@ -220,7 +222,7 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 	serverHandler, serverCtx, serverDone := goshutdown.NewGoRoutineHandler(
 		"server", goshutdown.GoRoutineSettings{})
 	go server.Run(serverCtx, serverDone)
-	notify(1, fmt.Sprintf("Launched with %d records to watch", len(records)))
+	notify("Launched with " + strconv.Itoa(len(records)) + " records to watch")
 
 	backupHandler, backupCtx, backupDone := goshutdown.NewGoRoutineHandler(
 		"backup", goshutdown.GoRoutineSettings{})
@@ -233,7 +235,7 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 	<-ctx.Done()
 
 	if err := shutdownGroup.Shutdown(context.Background()); err != nil {
-		notify(2, err.Error())
+		notify(err.Error())
 		return err
 	}
 	return nil

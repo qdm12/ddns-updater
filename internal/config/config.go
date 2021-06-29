@@ -5,16 +5,16 @@ import (
 )
 
 type Config struct {
-	Client Client
-	Update Update
-	PubIP  PubIP
-	IPv6   IPv6
-	Server Server
-	Health Health
-	Paths  Paths
-	Backup Backup
-	Logger Logger
-	Gotify Gotify
+	Client   Client
+	Update   Update
+	PubIP    PubIP
+	IPv6     IPv6
+	Server   Server
+	Health   Health
+	Paths    Paths
+	Backup   Backup
+	Logger   Logger
+	Shoutrrr Shoutrrr
 }
 
 func (c *Config) Get(env params.Env) (warnings []string, err error) {
@@ -62,7 +62,9 @@ func (c *Config) Get(env params.Env) (warnings []string, err error) {
 		return warnings, err
 	}
 
-	if err := c.Gotify.get(env); err != nil {
+	newWarnings, err = c.Shoutrrr.get(env)
+	warnings = append(warnings, newWarnings...)
+	if err != nil {
 		return warnings, err
 	}
 

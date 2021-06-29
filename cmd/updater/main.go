@@ -34,16 +34,17 @@ import (
 
 //nolint:gochecknoglobals
 var (
-	buildInfo models.BuildInformation
 	version   = "unknown"
 	commit    = "unknown"
 	buildDate = "an unknown date"
 )
 
 func main() {
-	buildInfo.Version = version
-	buildInfo.Commit = commit
-	buildInfo.BuildDate = buildDate
+	buildInfo := models.BuildInformation{
+		Version:   version,
+		Commit:    commit,
+		BuildDate: buildDate,
+	}
 	env := params.NewEnv()
 	logger := logging.NewParent(logging.Settings{Writer: os.Stdout})
 
@@ -53,7 +54,7 @@ func main() {
 
 	errorCh := make(chan error)
 	go func() {
-		errorCh <- _main(ctx, env, os.Args, logger, time.Now)
+		errorCh <- _main(ctx, env, os.Args, logger, buildInfo, time.Now)
 	}()
 
 	select {
@@ -89,7 +90,7 @@ func main() {
 }
 
 func _main(ctx context.Context, env params.Env, args []string, logger logging.ParentLogger,
-	timeNow func() time.Time) (err error) {
+	buildInfo models.BuildInformation, timeNow func() time.Time) (err error) {
 	if health.IsClientMode(args) {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the

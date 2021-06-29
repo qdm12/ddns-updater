@@ -45,11 +45,11 @@ func main() {
 	buildInfo.Commit = commit
 	buildInfo.BuildDate = buildDate
 	env := params.NewEnv()
-	os.Exit(_main(context.Background(), env, time.Now))
+	os.Exit(_main(context.Background(), env, os.Args, time.Now))
 }
 
-func _main(ctx context.Context, env params.Env, timeNow func() time.Time) int {
-	if health.IsClientMode(os.Args) {
+func _main(ctx context.Context, env params.Env, args []string, timeNow func() time.Time) int {
+	if health.IsClientMode(args) {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the
 		// long running instance of the program about its status

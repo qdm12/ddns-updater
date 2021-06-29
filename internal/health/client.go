@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -15,7 +15,7 @@ func IsClientMode(args []string) bool {
 }
 
 type Client interface {
-	Query(ctx context.Context, address string) error
+	Query(ctx context.Context, port uint16) error
 }
 
 type client struct {
@@ -33,13 +33,8 @@ var ErrParseHealthServerAddress = errors.New("cannot parse health server address
 
 // Query sends an HTTP request to the other instance of
 // the program, and to its internal healthcheck server.
-func (c *client) Query(ctx context.Context, address string) error {
-	_, port, err := net.SplitHostPort(address)
-	if err != nil {
-		return fmt.Errorf("%w: %s: %s", ErrParseHealthServerAddress, address, err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://127.0.0.1:"+port, nil)
+func (c *client) Query(ctx context.Context, port uint16) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://127.0.0.1:"+strconv.Itoa(int(port)), nil)
 	if err != nil {
 		return err
 	}

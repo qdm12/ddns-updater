@@ -63,9 +63,9 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 		_, err := healthConfig.Get(env)
 		if err != nil {
 			logger.Error(err)
-			return 1 // TODO use healthConfig.Port
+			return 1
 		}
-		if err := client.Query(ctx, healthConfig.ServerAddress); err != nil {
+		if err := client.Query(ctx, healthConfig.Port); err != nil {
 			logger.Error(err)
 			return 1
 		}

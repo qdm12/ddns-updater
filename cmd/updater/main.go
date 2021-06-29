@@ -44,11 +44,11 @@ func main() {
 	buildInfo.Version = version
 	buildInfo.Commit = commit
 	buildInfo.BuildDate = buildDate
-	os.Exit(_main(context.Background(), time.Now))
+	env := params.NewEnv()
+	os.Exit(_main(context.Background(), env, time.Now))
 }
 
-func _main(ctx context.Context, timeNow func() time.Time) int {
-	env := params.NewEnv()
+func _main(ctx context.Context, env params.Env, timeNow func() time.Time) int {
 	if health.IsClientMode(os.Args) {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the

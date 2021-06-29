@@ -50,7 +50,14 @@ func (p *PubIP) get(env params.Env) (warnings []string, err error) {
 	if err != nil {
 		return warnings, err
 	}
+
+	dnsTimeout, err := env.Duration("PUBLICIP_DNS_TIMEOUT", params.Default("3s"))
+	if err != nil {
+		return warnings, err
+	}
+
 	p.DNSSettings.Options = []dns.Option{
+		dns.SetTimeout(dnsTimeout),
 		dns.SetProviders(dnsIPProviders[0], dnsIPProviders[1:]...),
 	}
 

@@ -17,6 +17,7 @@ services:
       - PUBLICIPV4_HTTP_PROVIDERS=all
       - PUBLICIPV6_HTTP_PROVIDERS=all
       - PUBLICIP_DNS_PROVIDERS=all
+      - PUBLICIP_DNS_TIMEOUT=3s
       - HTTP_TIMEOUT=10s
 
       # Web UI

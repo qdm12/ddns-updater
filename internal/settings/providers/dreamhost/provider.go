@@ -153,7 +153,7 @@ type (
 )
 
 func (p *provider) defaultURLValues() (values url.Values) {
-	uuid := make([]byte, 16)
+	uuid := make([]byte, 16) //nolint:gomnd
 	_, _ = io.ReadFull(rand.Reader, uuid)
 	//nolint:gomnd
 	uuid[6] = (uuid[6] & 0x0f) | 0x40 // Version 4

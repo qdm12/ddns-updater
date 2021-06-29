@@ -3,14 +3,13 @@ package health
 import (
 	"context"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/qdm12/golibs/logging"
 )
 
 type Server interface {
-	Run(ctx context.Context, wg *sync.WaitGroup)
+	Run(ctx context.Context, done chan<- struct{})
 }
 
 type server struct {
@@ -28,8 +27,8 @@ func NewServer(address string, logger logging.Logger, healthcheck func() error) 
 	}
 }
 
-func (s *server) Run(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (s *server) Run(ctx context.Context, done chan<- struct{}) {
+	defer close(done)
 	server := http.Server{Addr: s.address, Handler: s.handler}
 	go func() {
 		<-ctx.Done()

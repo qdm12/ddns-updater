@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -10,7 +9,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
-	"sync"
 	"syscall"
 	"time"
 	_ "time/tzdata"
@@ -31,6 +29,7 @@ import (
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network/connectivity"
 	"github.com/qdm12/golibs/params"
+	"github.com/qdm12/goshutdown"
 )
 
 //nolint:gochecknoglobals
@@ -74,9 +73,12 @@ func main() {
 	const shutdownGracePeriod = 5 * time.Second
 	timer := time.NewTimer(shutdownGracePeriod)
 	select {
-	case <-errorCh:
+	case err := <-errorCh:
 		if !timer.Stop() {
 			<-timer.C
+		}
+		if err != nil {
+			logger.Error(err)
 		}
 		logger.Info("Shutdown successful")
 	case <-timer.C:
@@ -85,10 +87,6 @@ func main() {
 
 	os.Exit(1)
 }
-
-var (
-	errShuttingDown = errors.New("shutting down")
-)
 
 func _main(ctx context.Context, env params.Env, args []string, logger logging.ParentLogger,
 	timeNow func() time.Time) (err error) {
@@ -189,9 +187,6 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 		}
 	}()
 
-	wg := &sync.WaitGroup{}
-	defer wg.Wait()
-
 	config.PubIP.HTTPSettings.Client = client
 
 	ipGetter, err := publicip.NewFetcher(config.PubIP.DNSSettings, config.PubIP.HTTPSettings)
@@ -200,12 +195,12 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 	}
 
 	updater := update.NewUpdater(db, client, notify, logger)
-	runner := update.NewRunner(db, updater, ipGetter, config.IPv6.Mask,
-		config.Update.Cooldown, logger, timeNow)
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	runner := update.NewRunner(db, updater, ipGetter, config.Update.Period,
+		config.IPv6.Mask, config.Update.Cooldown, logger, timeNow)
 
-	go runner.Run(ctx, config.Update.Period)
+	runnerHandler, runnerCtx, runnerDone := goshutdown.NewGoRoutineHandler(
+		"runner", goshutdown.GoRoutineSettings{})
+	go runner.Run(runnerCtx, runnerDone)
 
 	// note: errors are logged within the goroutine,
 	// no need to collect the resulting errors.
@@ -215,27 +210,38 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 	healthServer := health.NewServer(config.Health.ServerAddress,
 		logger.NewChild(logging.Settings{Prefix: "healthcheck server: "}),
 		isHealthy)
-	wg.Add(1)
-	go healthServer.Run(ctx, wg)
+	healthServerHandler, healthServerCtx, healthServerDone := goshutdown.NewGoRoutineHandler(
+		"health server", goshutdown.GoRoutineSettings{})
+	go healthServer.Run(healthServerCtx, healthServerDone)
 
 	address := ":" + strconv.Itoa(int(config.Server.Port))
 	serverLogger := logger.NewChild(logging.Settings{Prefix: "http server: "})
 	server := server.New(ctx, address, config.Server.RootURL, db, serverLogger, runner)
-	wg.Add(1)
-	go server.Run(ctx, wg)
+	serverHandler, serverCtx, serverDone := goshutdown.NewGoRoutineHandler(
+		"server", goshutdown.GoRoutineSettings{})
+	go server.Run(serverCtx, serverDone)
 	notify(1, fmt.Sprintf("Launched with %d records to watch", len(records)))
 
-	go backupRunLoop(ctx, config.Backup.Period, config.Paths.DataDir, config.Backup.Directory,
+	backupHandler, backupCtx, backupDone := goshutdown.NewGoRoutineHandler(
+		"backup", goshutdown.GoRoutineSettings{})
+	go backupRunLoop(backupCtx, backupDone, config.Backup.Period, config.Paths.DataDir, config.Backup.Directory,
 		logger.NewChild(logging.Settings{Prefix: "backup: "}), timeNow)
 
+	shutdownGroup := goshutdown.NewGroupHandler("", goshutdown.GroupSettings{})
+	shutdownGroup.Add(runnerHandler, healthServerHandler, serverHandler, backupHandler)
+
 	<-ctx.Done()
-	err = fmt.Errorf("%w: %s", errShuttingDown, ctx.Err())
-	notify(2, err.Error())
-	return err
+
+	if err := shutdownGroup.Shutdown(context.Background()); err != nil {
+		notify(2, err.Error())
+		return err
+	}
+	return nil
 }
 
-func backupRunLoop(ctx context.Context, backupPeriod time.Duration, dataDir, outputDir string,
-	logger logging.Logger, timeNow func() time.Time) {
+func backupRunLoop(ctx context.Context, done chan<- struct{}, backupPeriod time.Duration,
+	dataDir, outputDir string, logger logging.Logger, timeNow func() time.Time) {
+	defer close(done)
 	if backupPeriod == 0 {
 		logger.Info("disabled")
 		return

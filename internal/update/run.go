@@ -15,11 +15,12 @@ import (
 )
 
 type Runner interface {
-	Run(ctx context.Context, period time.Duration)
+	Run(ctx context.Context, done chan<- struct{})
 	ForceUpdate(ctx context.Context) []error
 }
 
 type runner struct {
+	period      time.Duration
 	db          data.Database
 	updater     Updater
 	force       chan struct{}
@@ -33,8 +34,10 @@ type runner struct {
 }
 
 func NewRunner(db data.Database, updater Updater, ipGetter publicip.Fetcher,
-	ipv6Mask net.IPMask, cooldown time.Duration, logger logging.Logger, timeNow func() time.Time) Runner {
+	period time.Duration, ipv6Mask net.IPMask, cooldown time.Duration,
+	logger logging.Logger, timeNow func() time.Time) Runner {
 	return &runner{
+		period:      period,
 		db:          db,
 		updater:     updater,
 		force:       make(chan struct{}),
@@ -284,8 +287,9 @@ func (r *runner) updateNecessary(ctx context.Context, ipv6Mask net.IPMask) (erro
 	return errors
 }
 
-func (r *runner) Run(ctx context.Context, period time.Duration) {
-	ticker := time.NewTicker(period)
+func (r *runner) Run(ctx context.Context, done chan<- struct{}) {
+	defer close(done)
+	ticker := time.NewTicker(r.period)
 	for {
 		select {
 		case <-ticker.C:

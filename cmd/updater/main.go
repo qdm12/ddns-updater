@@ -125,7 +125,16 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 		Caller: config.Logger.Caller}
 	logger = logging.NewParent(loggerSettings)
 
-	notify := setupGotify(config.Gotify, logger)
+	notify := func(priority int, messageArgs ...interface{}) {}
+	if config.Gotify.URL != nil {
+		client := &http.Client{Timeout: time.Second}
+		gotify := admin.NewGotify(*config.Gotify.URL, config.Gotify.Token, client)
+		notify = func(priority int, messageArgs ...interface{}) {
+			if err := gotify.Notify("DDNS Updater", priority, messageArgs...); err != nil {
+				logger.Error(err)
+			}
+		}
+	}
 
 	persistentDB, err := persistence.NewJSON(config.Paths.DataDir)
 	if err != nil {
@@ -223,19 +232,6 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 	err = fmt.Errorf("%w: %s", errShuttingDown, ctx.Err())
 	notify(2, err.Error())
 	return err
-}
-
-func setupGotify(config config.Gotify, logger logging.Logger) (
-	notify func(priority int, messageArgs ...interface{})) {
-	if config.URL == nil {
-		return func(priority int, messageArgs ...interface{}) {}
-	}
-	gotify := admin.NewGotify(*config.URL, config.Token, &http.Client{Timeout: time.Second})
-	return func(priority int, messageArgs ...interface{}) {
-		if err := gotify.Notify("DDNS Updater", priority, messageArgs...); err != nil {
-			logger.Error(err)
-		}
-	}
 }
 
 func backupRunLoop(ctx context.Context, backupPeriod time.Duration, dataDir, outputDir string,

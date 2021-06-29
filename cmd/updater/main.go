@@ -173,7 +173,7 @@ func _main(ctx context.Context, timeNow func() time.Time) int {
 	wg.Add(1)
 	go healthServer.Run(ctx, wg)
 
-	address := fmt.Sprintf("0.0.0.0:%d", config.Server.Port)
+	address := ":" + strconv.Itoa(int(config.Server.Port))
 	serverLogger := logger.NewChild(logging.Settings{Prefix: "http server: "})
 	server := server.New(ctx, address, config.Server.RootURL, db, serverLogger, runner)
 	wg.Add(1)

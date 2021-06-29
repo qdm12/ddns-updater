@@ -26,7 +26,7 @@ type runner struct {
 	forceResult chan []error
 	ipv6Mask    net.IPMask
 	cooldown    time.Duration
-	netLookupIP func(hostname string) ([]net.IP, error)
+	resolver    *net.Resolver
 	ipGetter    publicip.Fetcher
 	logger      logging.Logger
 	timeNow     func() time.Time
@@ -41,16 +41,17 @@ func NewRunner(db data.Database, updater Updater, ipGetter publicip.Fetcher,
 		forceResult: make(chan []error),
 		ipv6Mask:    ipv6Mask,
 		cooldown:    cooldown,
-		netLookupIP: net.LookupIP,
+		resolver:    net.DefaultResolver,
 		ipGetter:    ipGetter,
 		logger:      logger,
 		timeNow:     timeNow,
 	}
 }
 
-func (r *runner) lookupIPsResilient(hostname string, tries int) (ipv4 net.IP, ipv6 net.IP, err error) {
+func (r *runner) lookupIPsResilient(ctx context.Context, hostname string, tries int) (
+	ipv4 net.IP, ipv6 net.IP, err error) {
 	for i := 0; i < tries; i++ {
-		ipv4, ipv6, err = r.lookupIPs(hostname)
+		ipv4, ipv6, err = r.lookupIPs(ctx, hostname)
 		if err == nil {
 			return ipv4, ipv6, nil
 		}
@@ -58,8 +59,8 @@ func (r *runner) lookupIPsResilient(hostname string, tries int) (ipv4 net.IP, ip
 	return nil, nil, err
 }
 
-func (r *runner) lookupIPs(hostname string) (ipv4 net.IP, ipv6 net.IP, err error) {
-	ips, err := r.netLookupIP(hostname)
+func (r *runner) lookupIPs(ctx context.Context, hostname string) (ipv4 net.IP, ipv6 net.IP, err error) {
+	ips, err := r.resolver.LookupIP(ctx, "ip", hostname)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -118,19 +119,19 @@ func (r *runner) getNewIPs(ctx context.Context, doIP, doIPv4, doIPv6 bool, ipv6M
 	return ip, ipv4, ipv6, errors
 }
 
-func (r *runner) getRecordIDsToUpdate(records []librecords.Record, ip, ipv4, ipv6 net.IP,
-	now time.Time, ipv6Mask net.IPMask) (recordIDs map[int]struct{}) {
+func (r *runner) getRecordIDsToUpdate(ctx context.Context, records []librecords.Record,
+	ip, ipv4, ipv6 net.IP, now time.Time, ipv6Mask net.IPMask) (recordIDs map[int]struct{}) {
 	recordIDs = make(map[int]struct{})
 	for id, record := range records {
-		if shouldUpdate := r.shouldUpdateRecord(record, ip, ipv4, ipv6, now, ipv6Mask); shouldUpdate {
+		if shouldUpdate := r.shouldUpdateRecord(ctx, record, ip, ipv4, ipv6, now, ipv6Mask); shouldUpdate {
 			recordIDs[id] = struct{}{}
 		}
 	}
 	return recordIDs
 }
 
-func (r *runner) shouldUpdateRecord(record librecords.Record, ip, ipv4, ipv6 net.IP,
-	now time.Time, ipv6Mask net.IPMask) (update bool) {
+func (r *runner) shouldUpdateRecord(ctx context.Context, record librecords.Record,
+	ip, ipv4, ipv6 net.IP, now time.Time, ipv6Mask net.IPMask) (update bool) {
 	isWithinBanPeriod := record.LastBan != nil && now.Sub(*record.LastBan) < time.Hour
 	isWithinCooldown := now.Sub(record.History.GetSuccessTime()) < r.cooldown
 	if isWithinBanPeriod || isWithinCooldown {
@@ -145,7 +146,7 @@ func (r *runner) shouldUpdateRecord(record librecords.Record, ip, ipv4, ipv6 net
 		lastIP := record.History.GetCurrentIP() // can be nil
 		return r.shouldUpdateRecordNoLookup(hostname, ipVersion, lastIP, ip, ipv4, ipv6)
 	}
-	return r.shouldUpdateRecordWithLookup(hostname, ipVersion, ip, ipv4, ipv6, ipv6Mask)
+	return r.shouldUpdateRecordWithLookup(ctx, hostname, ipVersion, ip, ipv4, ipv6, ipv6Mask)
 }
 
 func (r *runner) shouldUpdateRecordNoLookup(hostname string, ipVersion ipversion.IPVersion,
@@ -175,11 +176,15 @@ func (r *runner) shouldUpdateRecordNoLookup(hostname string, ipVersion ipversion
 	return false
 }
 
-func (r *runner) shouldUpdateRecordWithLookup(hostname string, ipVersion ipversion.IPVersion,
+func (r *runner) shouldUpdateRecordWithLookup(ctx context.Context, hostname string, ipVersion ipversion.IPVersion,
 	ip, ipv4, ipv6 net.IP, ipv6Mask net.IPMask) (update bool) {
 	const tries = 5
-	recordIPv4, recordIPv6, err := r.lookupIPsResilient(hostname, tries)
+	recordIPv4, recordIPv6, err := r.lookupIPsResilient(ctx, hostname, tries)
 	if err != nil {
+		if err := ctx.Err(); err != nil {
+			r.logger.Warn("DNS resolution of " + hostname + ": " + err.Error())
+			return false
+		}
 		r.logger.Warn("cannot DNS resolve %s after %d tries: %s", hostname, tries, err) // update anyway
 	}
 
@@ -253,7 +258,7 @@ func (r *runner) updateNecessary(ctx context.Context, ipv6Mask net.IPMask) (erro
 	}
 
 	now := r.timeNow()
-	recordIDs := r.getRecordIDsToUpdate(records, ip, ipv4, ipv6, now, ipv6Mask)
+	recordIDs := r.getRecordIDsToUpdate(ctx, records, ip, ipv4, ipv6, now, ipv6Mask)
 
 	for id, record := range records {
 		_, requireUpdate := recordIDs[id]

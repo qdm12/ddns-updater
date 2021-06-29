@@ -1,6 +1,11 @@
+ARG BUILDPLATFORM=linux/amd64
 ARG ALPINE_VERSION=3.13
 ARG GO_VERSION=1.16
-ARG BUILDPLATFORM=linux/amd64
+ARG XCPUTRANSLATE_VERSION=v0.4.0
+ARG GOLANGCI_LINT_VERSION=v1.40.1
+
+FROM --platform=${BUILDPLATFORM} qmcgaw/xcputranslate:${XCPUTRANSLATE_VERSION} AS xcputranslate
+FROM --platform=${BUILDPLATFORM} qmcgaw/binpot:golangci-lint-${GOLANGCI_LINT_VERSION} AS golangci-lint
 
 FROM --platform=$BUILDPLATFORM alpine:${ALPINE_VERSION} AS alpine
 RUN apk --update add ca-certificates
@@ -9,9 +14,11 @@ RUN mkdir /tmp/data && \
     chmod 700 /tmp/data
 
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
-ENV CGO_ENABLED=0
-RUN apk --update add git
 WORKDIR /tmp/gobuild
+ENV CGO_ENABLED=0
+RUN apk --update add git g++
+COPY --from=xcputranslate /xcputranslate /usr/local/bin/xcputranslate
+COPY --from=golangci-lint /bin /go/bin/golangci-lint
 # Copy repository code and install Go dependencies
 COPY go.mod go.sum ./
 RUN go mod download
@@ -20,14 +27,12 @@ COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 
 FROM --platform=$BUILDPLATFORM base AS test
+# Note on the go race detector:
+# - we set CGO_ENABLED=1 to have it enabled
+# - we installed g++ to support the race detector
 ENV CGO_ENABLED=1
-# g++ is installed for the -race detector in go test
-RUN apk --update add g++
 
 FROM --platform=$BUILDPLATFORM base AS lint
-ARG GOLANGCI_LINT_VERSION=v1.40.1
-RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
-    sh -s -- -b /usr/local/bin ${GOLANGCI_LINT_VERSION}
 COPY .golangci.yml ./
 RUN golangci-lint run --timeout=10m
 
@@ -41,11 +46,10 @@ RUN git init && \
     git diff --exit-code -- go.mod
 
 FROM --platform=$BUILDPLATFORM base AS build
-COPY --from=qmcgaw/xcputranslate:v0.4.0 /xcputranslate /usr/local/bin/xcputranslate
-ARG TARGETPLATFORM
 ARG VERSION=unknown
 ARG BUILD_DATE="an unknown date"
 ARG COMMIT=unknown
+ARG TARGETPLATFORM
 RUN GOARCH="$(xcputranslate -targetplatform ${TARGETPLATFORM} -field arch)" \
     GOARM="$(xcputranslate -targetplatform ${TARGETPLATFORM} -field arm)" \
     go build -trimpath -ldflags="-s -w \
@@ -55,19 +59,7 @@ RUN GOARCH="$(xcputranslate -targetplatform ${TARGETPLATFORM} -field arch)" \
     " -o app cmd/updater/main.go
 
 FROM scratch
-ARG VERSION=unknown
-ARG BUILD_DATE="an unknown date"
-ARG COMMIT=unknown
-LABEL \
-    org.opencontainers.image.authors="quentin.mcgaw@gmail.com" \
-    org.opencontainers.image.version=$VERSION \
-    org.opencontainers.image.created=$BUILD_DATE \
-    org.opencontainers.image.revision=$COMMIT \
-    org.opencontainers.image.url="https://github.com/qdm12/ddns-updater" \
-    org.opencontainers.image.documentation="https://github.com/qdm12/ddns-updater" \
-    org.opencontainers.image.source="https://github.com/qdm12/ddns-updater" \
-    org.opencontainers.image.title="ddns-updater" \
-    org.opencontainers.image.description="Universal DNS updater with WebUI"
+COPY --from=alpine --chown=1000 /tmp/data /updater/data/
 COPY --from=alpine --chown=1000 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 EXPOSE 8000
 HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=2 CMD ["/updater/app", "healthcheck"]
@@ -100,5 +92,17 @@ ENV \
     GOTIFY_URL= \
     GOTIFY_TOKEN= \
     TZ=
-COPY --from=alpine --chown=1000 /tmp/data /updater/data/
+ARG VERSION=unknown
+ARG BUILD_DATE="an unknown date"
+ARG COMMIT=unknown
+LABEL \
+    org.opencontainers.image.authors="quentin.mcgaw@gmail.com" \
+    org.opencontainers.image.version=$VERSION \
+    org.opencontainers.image.created=$BUILD_DATE \
+    org.opencontainers.image.revision=$COMMIT \
+    org.opencontainers.image.url="https://github.com/qdm12/ddns-updater" \
+    org.opencontainers.image.documentation="https://github.com/qdm12/ddns-updater" \
+    org.opencontainers.image.source="https://github.com/qdm12/ddns-updater" \
+    org.opencontainers.image.title="ddns-updater" \
+    org.opencontainers.image.description="Universal DNS updater with WebUI"
 COPY --from=build --chown=1000 /tmp/gobuild/app /updater/app

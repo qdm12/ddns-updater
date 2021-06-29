@@ -1,7 +1,7 @@
 ARG BUILDPLATFORM=linux/amd64
 ARG ALPINE_VERSION=3.13
 ARG GO_VERSION=1.16
-ARG XCPUTRANSLATE_VERSION=v0.4.0
+ARG XCPUTRANSLATE_VERSION=v0.6.0
 ARG GOLANGCI_LINT_VERSION=v1.41.1
 
 FROM --platform=${BUILDPLATFORM} qmcgaw/xcputranslate:${XCPUTRANSLATE_VERSION} AS xcputranslate
@@ -50,8 +50,8 @@ ARG VERSION=unknown
 ARG BUILD_DATE="an unknown date"
 ARG COMMIT=unknown
 ARG TARGETPLATFORM
-RUN GOARCH="$(xcputranslate -targetplatform ${TARGETPLATFORM} -field arch)" \
-    GOARM="$(xcputranslate -targetplatform ${TARGETPLATFORM} -field arm)" \
+RUN GOARCH="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -field arch)" \
+    GOARM="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -field arm)" \
     go build -trimpath -ldflags="-s -w \
     -X 'main.version=$VERSION' \
     -X 'main.buildDate=$BUILD_DATE' \

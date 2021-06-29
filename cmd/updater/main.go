@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -46,14 +47,51 @@ func main() {
 	buildInfo.BuildDate = buildDate
 	env := params.NewEnv()
 	logger := logging.NewParent(logging.Settings{Writer: os.Stdout})
-	os.Exit(_main(context.Background(), env, os.Args, logger, time.Now))
+
+	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	ctx, cancel := context.WithCancel(ctx)
+
+	errorCh := make(chan error)
+	go func() {
+		errorCh <- _main(ctx, env, os.Args, logger, time.Now)
+	}()
+
+	select {
+	case <-ctx.Done():
+		stop()
+		logger.Warn("Caught OS signal, shutting down")
+	case err := <-errorCh:
+		stop()
+		close(errorCh)
+		if err == nil { // expected exit such as healthcheck
+			os.Exit(0)
+		}
+		logger.Error(err)
+		cancel()
+	}
+
+	const shutdownGracePeriod = 5 * time.Second
+	timer := time.NewTimer(shutdownGracePeriod)
+	select {
+	case <-errorCh:
+		if !timer.Stop() {
+			<-timer.C
+		}
+		logger.Info("Shutdown successful")
+	case <-timer.C:
+		logger.Warn("Shutdown timed out")
+	}
+
+	os.Exit(1)
 }
 
-func _main(ctx context.Context, env params.Env, args []string, logger logging.ParentLogger,
-	timeNow func() time.Time) int {
-	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	defer stop()
+var (
+	errShuttingDown = errors.New("shutting down")
+)
 
+func _main(ctx context.Context, env params.Env, args []string, logger logging.ParentLogger,
+	timeNow func() time.Time) (err error) {
 	if health.IsClientMode(args) {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the
@@ -62,14 +100,12 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 		var healthConfig config.Health
 		_, err := healthConfig.Get(env)
 		if err != nil {
-			logger.Error(err)
-			return 1
+			return err
 		}
 		if err := client.Query(ctx, healthConfig.Port); err != nil {
-			logger.Error(err)
-			return 1
+			return err
 		}
-		return 0
+		return nil
 	}
 
 	fmt.Println(splash.Splash(buildInfo))
@@ -80,8 +116,7 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 		logger.Warn(warning)
 	}
 	if err != nil {
-		logger.Error(err)
-		return 1
+		return err
 	}
 
 	// Setup logger
@@ -94,9 +129,8 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 
 	persistentDB, err := persistence.NewJSON(config.Paths.DataDir)
 	if err != nil {
-		logger.Error(err)
 		notify(4, err)
-		return 1
+		return err
 	}
 
 	jsonReader := jsonparams.NewReader(logger)
@@ -106,9 +140,8 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 		notify(2, w)
 	}
 	if err != nil {
-		logger.Error(err)
 		notify(4, err)
-		return 1
+		return err
 	}
 
 	L := len(settings)
@@ -133,9 +166,8 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 		logger.Info("Reading history from database: domain %s host %s", s.Domain(), s.Host())
 		events, err := persistentDB.GetEvents(s.Domain(), s.Host())
 		if err != nil {
-			logger.Error(err)
 			notify(4, err)
-			return 1
+			return err
 		}
 		records[i] = recordslib.New(s, events)
 	}
@@ -155,8 +187,7 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 
 	ipGetter, err := publicip.NewFetcher(config.PubIP.DNSSettings, config.PubIP.HTTPSettings)
 	if err != nil {
-		logger.Error(err)
-		return 1
+		return err
 	}
 
 	updater := update.NewUpdater(db, client, notify, logger)
@@ -189,10 +220,9 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 		logger.NewChild(logging.Settings{Prefix: "backup: "}), timeNow)
 
 	<-ctx.Done()
-	message := "Stopping program: " + ctx.Err().Error()
-	logger.Warn(message)
-	notify(2, message)
-	return 1
+	err = fmt.Errorf("%w: %s", errShuttingDown, ctx.Err())
+	notify(2, err.Error())
+	return err
 }
 
 func setupGotify(config config.Gotify, logger logging.Logger) (

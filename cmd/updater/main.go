@@ -51,6 +51,9 @@ func main() {
 
 func _main(ctx context.Context, env params.Env, args []string, logger logging.ParentLogger,
 	timeNow func() time.Time) int {
+	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	defer stop()
+
 	if health.IsClientMode(args) {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the
@@ -185,23 +188,11 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 	go backupRunLoop(ctx, config.Backup.Period, config.Paths.DataDir, config.Backup.Directory,
 		logger.NewChild(logging.Settings{Prefix: "backup: "}), timeNow)
 
-	osSignals := make(chan os.Signal, 1)
-	signal.Notify(osSignals,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		os.Interrupt,
-	)
-	select {
-	case signal := <-osSignals:
-		message := fmt.Sprintf("Stopping program: caught OS signal %q", signal)
-		logger.Warn(message)
-		notify(2, message)
-		return 1
-	case <-ctx.Done():
-		message := fmt.Sprintf("Stopping program: %s", ctx.Err())
-		logger.Warn(message)
-		return 1
-	}
+	<-ctx.Done()
+	message := "Stopping program: " + ctx.Err().Error()
+	logger.Warn(message)
+	notify(2, message)
+	return 1
 }
 
 func setupGotify(config config.Gotify, logger logging.Logger) (

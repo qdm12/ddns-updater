@@ -1,11 +1,26 @@
-package params
+package config
 
 import (
 	"errors"
 	"fmt"
 	"net"
 	"strings"
+
+	"github.com/qdm12/golibs/params"
 )
+
+type IPv6 struct {
+	Mask net.IPMask
+}
+
+func (i *IPv6) get(env params.Env) (err error) {
+	maskStr, err := env.Get("IPV6_PREFIX", params.Default("/128"))
+	if err != nil {
+		return err
+	}
+	i.Mask, err = ipv6DecimalPrefixToMask(maskStr)
+	return err
+}
 
 var ErrParsePrefix = errors.New("cannot parse IP prefix")
 

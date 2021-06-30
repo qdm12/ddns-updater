@@ -1,6 +1,7 @@
 package params
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,7 +32,7 @@ type commonSettings struct {
 // and then from the file config.json.
 func (r *reader) JSONSettings(filePath string, logger log.Logger) (
 	allSettings []settings.Settings, warnings []string, err error) {
-	allSettings, warnings, err = r.getSettingsFromEnv(logger)
+	allSettings, warnings, err = r.getSettingsFromEnv(filePath, logger)
 	if allSettings != nil || warnings != nil || err != nil {
 		return allSettings, warnings, err
 	}
@@ -53,14 +54,28 @@ func (r *reader) getSettingsFromFile(filePath string, logger log.Logger) (
 }
 
 // getSettingsFromEnv obtain the update settings from the environment variable CONFIG.
-func (r *reader) getSettingsFromEnv(logger log.Logger) (allSettings []settings.Settings, warnings []string, err error) {
+// If the settings are valid, they are written to the filePath.
+func (r *reader) getSettingsFromEnv(filePath string, logger log.Logger) (
+	allSettings []settings.Settings, warnings []string, err error) {
 	s, err := r.env.Get("CONFIG", params.CaseSensitiveValue())
 	if err != nil {
 		return nil, nil, err
 	} else if s == "" {
 		return nil, nil, nil
 	}
-	return extractAllSettings([]byte(s), logger)
+	b := []byte(s)
+
+	allSettings, warnings, err = extractAllSettings(b, logger)
+	if err != nil {
+		return allSettings, warnings, err
+	}
+
+	buffer := bytes.NewBuffer(nil)
+	if err := json.Indent(buffer, b, "", "  "); err != nil {
+		return allSettings, warnings, err
+	}
+	const mode = fs.FileMode(0600)
+	return nil, nil, r.writeFile(filePath, buffer.Bytes(), mode)
 }
 
 func extractAllSettings(jsonBytes []byte, logger log.Logger) (

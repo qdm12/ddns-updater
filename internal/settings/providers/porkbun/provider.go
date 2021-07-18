@@ -24,32 +24,10 @@ type provider struct {
 	host         string
 	ttl          uint
 	ipVersion    ipversion.IPVersion
-	apiURL       *url.URL
 	apiKey       string
 	secretApiKey string
 	logger       log.Logger
 }
-
-type (
-	porkbunRecords struct {
-		Status string `json:"status"`
-		Record []struct {
-			Id      string `json:"id"`
-			Name    string `json:"name"`
-			Type    string `json:"type"`
-			Content string `json:"content"`
-			TTL     uint   `json:"ttl"`
-			Prio    uint   `json:"prio"`
-		} `json:"data"`
-	}
-	porkbunCreateReponse struct {
-		Status string `json:"status"`
-		Id     int64  `json:"id"`
-	}
-	porkbunReponse struct {
-		Status string `json:"status"`
-	}
-)
 
 func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion, logger log.Logger) (p *provider, err error) {

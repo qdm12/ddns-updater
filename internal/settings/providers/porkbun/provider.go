@@ -139,20 +139,12 @@ func (p *provider) getRecords(ctx context.Context, client *http.Client) (recordI
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
-	type domainRecords struct {
-		Status  string `json:"status"`
+	var responseData struct {
 		Records []struct {
 			Id      string `json:"id"`
-			Name    string `json:"title"`
-			Type    string `json:"type"`
 			Content string `json:"content"`
-			TTL     string `json:"ttl"`
-			Prio    string `json:"prio"`
-			Notes   string `json:"notes"`
 		} `json:"records"`
 	}
-	defer response.Body.Close()
-	var responseData domainRecords
 	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&responseData); err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)

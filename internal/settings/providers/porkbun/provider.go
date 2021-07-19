@@ -149,14 +149,15 @@ func (p *provider) getRecords(ctx context.Context, client *http.Client) (recordI
 	if err := decoder.Decode(&responseData); err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
-	var _recordIDs []string
-	for _, recordID := range responseData.Records {
-		if strings.HasSuffix(recordID.Content, p.domain) {
-			_recordIDs = append(_recordIDs, recordID.Id)
+
+	for _, record := range responseData.Records {
+		if strings.HasSuffix(record.Content, p.domain) {
+			recordIDs = append(recordIDs, record.Id)
 		}
 	}
-	p.logger.Debug("getRecords: " + strings.Join(_recordIDs, ", "))
-	return _recordIDs, nil
+
+	p.logger.Debug("getRecords: " + strings.Join(recordIDs, ", "))
+	return recordIDs, nil
 }
 
 func (p *provider) createRecord(ctx context.Context, client *http.Client,

@@ -223,7 +223,7 @@ func (p *provider) updateRecord(ctx context.Context, client *http.Client,
 	u := url.URL{
 		Scheme: "https",
 		Host:   "porkbun.com",
-		Path:   fmt.Sprintf("/api/json/v3/dns/edit/%s/%s", p.domain, recordID),
+		Path:   "/api/json/v3/dns/edit/" + p.domain + "/" + recordID),
 	}
 	postRecordsParams := struct {
 		SecretApiKey string `json:"secretapikey"`

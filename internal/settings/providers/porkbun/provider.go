@@ -110,7 +110,7 @@ func (p *provider) getRecords(ctx context.Context, client *http.Client) (recordI
 	u := url.URL{
 		Scheme: "https",
 		Host:   "porkbun.com",
-		Path:   fmt.Sprintf("/api/json/v3/dns/retrieve/%s", p.domain),
+		Path:   "/api/json/v3/dns/retrieve/" + p.domain,
 	}
 	postRecordsParams := struct {
 		SecretApiKey string `json:"secretapikey"`

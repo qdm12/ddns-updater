@@ -175,7 +175,7 @@ func (p *provider) createRecord(ctx context.Context, client *http.Client,
 	u := url.URL{
 		Scheme: "https",
 		Host:   "porkbun.com",
-		Path:   fmt.Sprintf("/api/json/v3/dns/create/%s", p.domain),
+		Path:   "/api/json/v3/dns/create/" + p.domain,
 	}
 	postRecordsParams := struct {
 		SecretApiKey string `json:"secretapikey"`

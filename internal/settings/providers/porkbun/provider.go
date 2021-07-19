@@ -283,11 +283,12 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		if err := p.createRecord(ctx, client, recordType, ipStr); err != nil {
 			return nil, err
 		}
-	} else {
-		for _, recordID := range recordIDs {
-			if err := p.updateRecord(ctx, client, recordType, ipStr, recordID); err != nil {
-				return nil, err
-			}
+		return ip, nil
+	}
+
+	for _, recordID := range recordIDs {
+		if err := p.updateRecord(ctx, client, recordType, ipStr, recordID); err != nil {
+			return nil, err
 		}
 	}
 

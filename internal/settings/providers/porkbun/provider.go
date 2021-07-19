@@ -32,8 +32,8 @@ type provider struct {
 func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion, logger log.Logger) (p *provider, err error) {
 	extraSettings := struct {
-		SecretApiKey string `json:"secretapikey"`
-		ApiKey       string `json:"apikey"`
+		SecretApiKey string `json:"secret_api_key"`
+		ApiKey       string `json:"api_key"`
 		Name         bool   `json:"name"`
 		Type         string `json:"type"`
 		Content      string `json:"content"`

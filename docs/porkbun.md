@@ -28,7 +28,7 @@
 
 ## Domain setup
 
-- Create api key at <https://porkbun.com/account/api>
-- From [Domain Management](https://porkbun.com/account/domainsSpeedy) page, toggle on "API ACCESS" for your domain.
+- Create an API key at [porkbun.com/account/api](https://porkbun.com/account/api)
+- From the [Domain Management page](https://porkbun.com/account/domainsSpeedy), toggle on **API ACCESS** for your domain.
 
 Official setup documentation: https://kb.porkbun.com/article/190-getting-started-with-the-porkbun-dns-api

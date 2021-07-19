@@ -61,7 +61,7 @@ func (p *provider) isValid() error {
 	switch {
 	case p.apiKey == "":
 		return errors.ErrEmptyAppKey
-	case len(p.secretApiKey) == 0:
+	case p.secretApiKey == "":
 		return errors.ErrEmptyConsumerKey
 	}
 	return nil

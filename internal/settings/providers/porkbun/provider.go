@@ -34,9 +34,6 @@ func New(data json.RawMessage, domain, host string,
 	extraSettings := struct {
 		SecretApiKey string `json:"secret_api_key"`
 		ApiKey       string `json:"api_key"`
-		Name         bool   `json:"name"`
-		Type         string `json:"type"`
-		Content      string `json:"content"`
 		TTL          uint   `json:"ttl"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {

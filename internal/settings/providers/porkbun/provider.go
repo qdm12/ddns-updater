@@ -57,9 +57,9 @@ func New(data json.RawMessage, domain, host string,
 func (p *provider) isValid() error {
 	switch {
 	case p.apiKey == "":
-		return errors.ErrEmptyAppKey
+		return errors.ErrEmptyApiKey
 	case p.secretApiKey == "":
-		return errors.ErrEmptyConsumerKey
+		return errors.ErrEmptyApiSecret
 	}
 	return nil
 }
@@ -103,7 +103,7 @@ func (p *provider) setHeaders(request *http.Request) {
 	headers.SetAccept(request, "application/json")
 }
 
-func (p *provider) getRecords(ctx context.Context, client *http.Client) (recordIDs []string, err error) {
+func (p *provider) getRecordIDs(ctx context.Context, client *http.Client) (recordIDs []string, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "porkbun.com",
@@ -116,14 +116,15 @@ func (p *provider) getRecords(ctx context.Context, client *http.Client) (recordI
 		SecretApiKey: p.secretApiKey,
 		ApiKey:       p.apiKey,
 	}
-	bodyBytes, err := json.Marshal(postRecordsParams)
-	if err != nil {
+	buffer := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buffer)
+	if err := encoder.Encode(postRecordsParams); err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
 	}
 
-	p.logger.Debug("HTTP POST getRecords: " + u.String() + ": " + string(bodyBytes))
+	p.logger.Debug("HTTP POST getRecordIDs: " + u.String() + ": " + buffer.String())
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBuffer(bodyBytes))
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
 		return nil, err
 	}
@@ -133,6 +134,7 @@ func (p *provider) getRecords(ctx context.Context, client *http.Client) (recordI
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, err)
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%w: %d: %s",
@@ -156,7 +158,7 @@ func (p *provider) getRecords(ctx context.Context, client *http.Client) (recordI
 		}
 	}
 
-	p.logger.Debug("getRecords: " + strings.Join(recordIDs, ", "))
+	p.logger.Debug("getRecordIDs: " + strings.Join(recordIDs, ", "))
 	return recordIDs, nil
 }
 
@@ -182,14 +184,15 @@ func (p *provider) createRecord(ctx context.Context, client *http.Client,
 		Name:         p.host,
 		TTL:          fmt.Sprint(p.ttl),
 	}
-	bodyBytes, err := json.Marshal(postRecordsParams)
-	if err != nil {
+	buffer := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buffer)
+	if err := encoder.Encode(postRecordsParams); err != nil {
 		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
 	}
 
-	p.logger.Debug("HTTP POST createRecord: " + u.String() + ": " + string(bodyBytes))
+	p.logger.Debug("HTTP POST createRecord: " + u.String() + ": " + buffer.String())
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBuffer(bodyBytes))
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
 	}
@@ -213,7 +216,7 @@ func (p *provider) updateRecord(ctx context.Context, client *http.Client,
 	u := url.URL{
 		Scheme: "https",
 		Host:   "porkbun.com",
-		Path:   "/api/json/v3/dns/edit/" + p.domain + "/" + recordID),
+		Path:   "/api/json/v3/dns/edit/" + p.domain + "/" + recordID,
 	}
 	postRecordsParams := struct {
 		SecretApiKey string `json:"secretapikey"`
@@ -230,14 +233,15 @@ func (p *provider) updateRecord(ctx context.Context, client *http.Client,
 		TTL:          fmt.Sprint(p.ttl),
 		Name:         p.host,
 	}
-	bodyBytes, err := json.Marshal(postRecordsParams)
-	if err != nil {
+	buffer := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buffer)
+	if err := encoder.Encode(postRecordsParams); err != nil {
 		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
 	}
 
-	p.logger.Debug("HTTP POST updateRecord: " + u.String() + ": " + string(bodyBytes))
+	p.logger.Debug("HTTP POST updateRecord: " + u.String() + ": " + buffer.String())
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBuffer(bodyBytes))
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
 	}
@@ -258,14 +262,11 @@ func (p *provider) updateRecord(ctx context.Context, client *http.Client,
 
 func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := constants.A
-	var ipStr string
 	if ip.To4() == nil { // IPv6
 		recordType = constants.AAAA
-		ipStr = ip.To16().String()
-	} else {
-		ipStr = ip.To4().String()
 	}
-	recordIDs, err := p.getRecords(ctx, client)
+	ipStr := ip.String()
+	recordIDs, err := p.getRecordIDs(ctx, client)
 	if err != nil {
 		return nil, err
 	}

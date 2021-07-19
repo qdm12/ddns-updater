@@ -59,7 +59,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *provider) isValid() error {
 	switch {
-	case len(p.apiKey) == 0:
+	case p.apiKey == "":
 		return errors.ErrEmptyAppKey
 	case len(p.secretApiKey) == 0:
 		return errors.ErrEmptyConsumerKey

@@ -94,8 +94,3 @@ jobs:
             VERSION=${{ steps.vars.outputs.version }}
           tags: qmcgaw/ddns-updater:${{ steps.vars.outputs.version }}
           push: true
-
-      - if: github.event.ref == 'refs/heads/master'
-        name: Microbadger hook
-        run: curl -X POST https://hooks.microbadger.com/images/qmcgaw/ddns-updater/t2fcZxog8ce_kJYJ61JjkYwHF5s=
-        continue-on-error: true

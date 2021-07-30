@@ -8,7 +8,7 @@
 {
   "settings": [
     {
-      "provider": "godaddy",
+      "provider": "google",
       "domain": "domain.com",
       "host": "@",
       "username": "username",

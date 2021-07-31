@@ -29,6 +29,7 @@ const (
 	OpenDNS      models.Provider = "opendns"
 	OVH          models.Provider = "ovh"
 	SelfhostDe   models.Provider = "selfhost.de"
+	Servercow    models.Provider = "servercow"
 	Spdyn        models.Provider = "spdyn"
 	Strato       models.Provider = "strato"
 	Variomedia   models.Provider = "variomedia"

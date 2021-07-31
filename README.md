@@ -57,6 +57,7 @@
     - OpenDNS
     - OVH
     - Selfhost.de
+    - Servercow.de
     - Spdyn
     - Strato.de
     - Variomedia.de
@@ -172,6 +173,7 @@ Check the documentation for your DNS provider:
 - [OpenDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/opendns.md)
 - [OVH](https://github.com/qdm12/ddns-updater/blob/master/docs/ovh.md)
 - [Selfhost.de](https://github.com/qdm12/ddns-updater/blob/master/docs/selfhost.de.md)
+- [Servercow.de](https://github.com/qdm12/ddns-updater/blob/master/docs/servercow.md)
 - [Spdyn](https://github.com/qdm12/ddns-updater/blob/master/docs/spdyn.md)
 - [Strato.de](https://github.com/qdm12/ddns-updater/blob/master/docs/strato.md)
 - [Variomedia.de](https://github.com/qdm12/ddns-updater/blob/master/docs/variomedia.md)

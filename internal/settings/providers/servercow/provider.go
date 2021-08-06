@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
@@ -19,36 +20,37 @@ import (
 )
 
 type provider struct {
-	username 			string
+	username      string
 	host          string
 	domain        string
 	ipVersion     ipversion.IPVersion
 	password      string
 	useProviderIP bool
-	ttl						uint
+	ttl           uint
 	logger        log.Logger
 }
 
 func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion, logger log.Logger) (p *provider, err error) {
 	extraSettings := struct {
-		Username         string `json:"username"`
-		Password         string `json:"password"`
-		Domain					 string `json:"domain"`
-		TTL							 uint		`json:"ttl"`
+		Username      string `json:"username"`
+		Password      string `json:"password"`
+		Domain        string `json:"domain"`
+		TTL           uint   `json:"ttl"`
 		UseProviderIP bool   `json:"provider_ip"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
+
 	p = &provider{
 		host:          host,
 		ipVersion:     ipVersion,
 		username:      extraSettings.Username,
-		password: 		 extraSettings.Password,
+		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
-		domain:				 extraSettings.Domain,
+		domain:        extraSettings.Domain,
 		logger:        logger,
-		ttl:					 extraSettings.TTL,
+		ttl:           extraSettings.TTL,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -62,8 +64,9 @@ func (p *provider) isValid() error {
 		return errors.ErrEmptyUsername
 	case p.password == "":
 		return errors.ErrEmptyPassword
-	case p.host == "@":
-		return errors.ErrHostAt
+	}
+	if strings.Contains(p.host, "*") {
+		return errors.ErrHostWildcard
 	}
 	return nil
 }
@@ -73,7 +76,7 @@ func (p *provider) String() string {
 }
 
 func (p *provider) Domain() string {
-	return "servercow.de"
+	return p.domain
 }
 
 func (p *provider) Host() string {
@@ -89,7 +92,7 @@ func (p *provider) Proxied() bool {
 }
 
 func (p *provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, "servercow.de")
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
 func (p *provider) HTML() models.HTMLRow {
@@ -109,26 +112,22 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.servercow.de",
-		Path:   fmt.Sprintf("/dns/v1/domains/%s", p.domain),
+		Path:   "/dns/v1/domains/" + p.domain,
 	}
-	values := url.Values{}
-	u.RawQuery = values.Encode()
-	if !p.useProviderIP {
-		if ip.To4() == nil {
-			values.Set("ip6", ip.String())
-		} else {
-			values.Set("ip", ip.String())
-		}
+
+	updateHost := p.host
+	if updateHost == "@" {
+		updateHost = ""
 	}
 
 	requestData := struct {
 		Type    string `json:"type"`    // constants.A or constants.AAAA depending on ip address given
-		Name    string `json:"name"`    // DNS record name i.e. example.com
+		Name    string `json:"name"`    // DNS record name (only the subdomain part)
 		Content string `json:"content"` // ip address
 		TTL     uint   `json:"ttl"`
 	}{
 		Type:    recordType,
-		Name:    p.host,
+		Name:    updateHost,
 		Content: ip.String(),
 		TTL:     p.ttl,
 	}
@@ -165,14 +164,14 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	var parsedJSON struct {
 		Message string `json:"message"`
-		Error string `json:"error"`
+		Error   string `json:"error"`
 	}
 
 	if err := decoder.Decode(&parsedJSON); err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
-	if(parsedJSON.Message != "ok") {
+	if parsedJSON.Message != "ok" {
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, parsedJSON.Error)
 	}
 

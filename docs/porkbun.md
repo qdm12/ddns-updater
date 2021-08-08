@@ -25,7 +25,7 @@
 - `"host"` is your host and can be a subdomain, `"*"` or `"@"`
 - `"apikey"`
 - `"secretapikey"`
-- `"ttl"` (optional)
+- `"ttl"` optional integer value corresponding to a number of seconds
 
 ## Domain setup
 

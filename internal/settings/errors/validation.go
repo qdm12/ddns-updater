@@ -3,7 +3,7 @@ package errors
 import "errors"
 
 var (
-	ErrEmptyApiKey             = errors.New("empty aPI key")
+	ErrEmptyApiKey             = errors.New("empty API key")
 	ErrEmptyAppKey             = errors.New("empty app key")
 	ErrEmptyConsumerKey        = errors.New("empty consumer key")
 	ErrEmptyEmail              = errors.New("empty email")

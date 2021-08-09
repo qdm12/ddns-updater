@@ -30,10 +30,10 @@ func SetXFilter(request *http.Request, value string) {
 	request.Header.Set("X-Filter", value)
 }
 
-func SetXAuthUsername(request *http.Request, value string){
+func SetXAuthUsername(request *http.Request, value string) {
 	request.Header.Set("X-Auth-Username", value)
 }
 
-func SetXAuthPassword(request *http.Request, value string){
+func SetXAuthPassword(request *http.Request, value string) {
 	request.Header.Set("X-Auth-Password", value)
 }

@@ -58,6 +58,7 @@ type Settings interface {
 
 var ErrProviderUnknown = errors.New("unknown provider")
 
+//nolint:gocyclo
 func New(provider models.Provider, data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion, matcher regex.Matcher, logger log.Logger) (
 	settings Settings, err error) {

@@ -30,7 +30,8 @@ type provider struct {
 	logger        log.Logger
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion, logger log.Logger) (p *provider, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
+	logger log.Logger) (p *provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`

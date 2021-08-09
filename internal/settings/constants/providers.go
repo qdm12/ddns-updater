@@ -30,6 +30,7 @@ const (
 	OVH          models.Provider = "ovh"
 	Porkbun      models.Provider = "porkbun"
 	SelfhostDe   models.Provider = "selfhost.de"
+	Servercow    models.Provider = "servercow"
 	Spdyn        models.Provider = "spdyn"
 	Strato       models.Provider = "strato"
 	Variomedia   models.Provider = "variomedia"

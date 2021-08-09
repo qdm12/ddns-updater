@@ -38,6 +38,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/providers/ovh"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/porkbun"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/selfhostde"
+	"github.com/qdm12/ddns-updater/internal/settings/providers/servercow"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/spdyn"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/strato"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/variomedia"
@@ -113,6 +114,8 @@ func New(provider models.Provider, data json.RawMessage, domain, host string,
 		return porkbun.New(data, domain, host, ipVersion, logger)
 	case constants.SelfhostDe:
 		return selfhostde.New(data, domain, host, ipVersion, logger)
+	case constants.Servercow:
+		return servercow.New(data, domain, host, ipVersion, logger)
 	case constants.Spdyn:
 		return spdyn.New(data, domain, host, ipVersion, logger)
 	case constants.Strato:

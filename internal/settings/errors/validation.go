@@ -3,12 +3,14 @@ package errors
 import "errors"
 
 var (
+	ErrEmptyApiKey             = errors.New("empty API key")
 	ErrEmptyAppKey             = errors.New("empty app key")
 	ErrEmptyConsumerKey        = errors.New("empty consumer key")
 	ErrEmptyEmail              = errors.New("empty email")
 	ErrEmptyKey                = errors.New("empty key")
 	ErrEmptyName               = errors.New("empty name")
 	ErrEmptyPassword           = errors.New("empty password")
+	ErrEmptyApiSecret          = errors.New("empty API secret")
 	ErrEmptySecret             = errors.New("empty secret")
 	ErrEmptyToken              = errors.New("empty token")
 	ErrEmptyTTL                = errors.New("TTL is not set")

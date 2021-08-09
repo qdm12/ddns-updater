@@ -28,6 +28,7 @@ const (
 	NoIP         models.Provider = "noip"
 	OpenDNS      models.Provider = "opendns"
 	OVH          models.Provider = "ovh"
+	Porkbun      models.Provider = "porkbun"
 	SelfhostDe   models.Provider = "selfhost.de"
 	Spdyn        models.Provider = "spdyn"
 	Strato       models.Provider = "strato"
@@ -60,6 +61,7 @@ func ProviderChoices() []models.Provider {
 		NoIP,
 		OpenDNS,
 		OVH,
+		Porkbun,
 		SelfhostDe,
 		Spdyn,
 		Strato,

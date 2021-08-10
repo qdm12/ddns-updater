@@ -37,3 +37,7 @@ func SetXAuthUsername(request *http.Request, value string) {
 func SetXAuthPassword(request *http.Request, value string) {
 	request.Header.Set("X-Auth-Password", value)
 }
+
+func SetXAPIKey(request *http.Request, value string) {
+	request.Header.Set("X-API-Key", value)
+}

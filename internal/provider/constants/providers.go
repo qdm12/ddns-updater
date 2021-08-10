@@ -29,6 +29,7 @@ const (
 	Hetzner      models.Provider = "hetzner"
 	Infomaniak   models.Provider = "infomaniak"
 	INWX         models.Provider = "inwx"
+	Ionos        models.Provider = "ionos"
 	Linode       models.Provider = "linode"
 	LuaDNS       models.Provider = "luadns"
 	Namecheap    models.Provider = "namecheap"
@@ -75,6 +76,7 @@ func ProviderChoices() []models.Provider {
 		Hetzner,
 		Infomaniak,
 		INWX,
+		Ionos,
 		Linode,
 		LuaDNS,
 		Namecheap,

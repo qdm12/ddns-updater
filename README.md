@@ -57,6 +57,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
   - Hetzner
   - Infomaniak
   - INWX
+  - Ionos
   - Linode
   - LuaDNS
   - Name.com
@@ -193,6 +194,7 @@ Check the documentation for your DNS provider:
 - [He.net](https://github.com/qdm12/ddns-updater/blob/master/docs/he.net.md)
 - [Infomaniak](https://github.com/qdm12/ddns-updater/blob/master/docs/infomaniak.md)
 - [INWX](https://github.com/qdm12/ddns-updater/blob/master/docs/inwx.md)
+- [Ionos](https://github.com/qdm12/ddns-updater/blob/master/docs/ionos.md)
 - [Linode](https://github.com/qdm12/ddns-updater/blob/master/docs/linode.md)
 - [LuaDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/luadns.md)
 - [Name.com](https://github.com/qdm12/ddns-updater/blob/master/docs/name.com.md)

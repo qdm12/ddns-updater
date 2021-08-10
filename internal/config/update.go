@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -19,7 +20,11 @@ func (u *Update) get(env params.Env) (warning string, err error) {
 	}
 
 	u.Cooldown, err = env.Duration("UPDATE_COOLDOWN_PERIOD", params.Default("5m"))
-	return warning, err
+	if err != nil {
+		return "", fmt.Errorf("%w: for environment variable UPDATE_COOLDOWN_PERIOD", err)
+	}
+
+	return warning, nil
 }
 
 func (u *Update) getPeriod(env params.Env) (warning string, err error) {
@@ -42,5 +47,9 @@ func (u *Update) getPeriod(env params.Env) (warning string, err error) {
 	}
 
 	u.Period, err = env.Duration("PERIOD", params.Default("10m"))
+	if err != nil {
+		return "", fmt.Errorf("%w: for environment variable PERIOD", err)
+	}
+
 	return "", err
 }

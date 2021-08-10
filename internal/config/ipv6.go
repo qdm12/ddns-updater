@@ -16,10 +16,14 @@ type IPv6 struct {
 func (i *IPv6) get(env params.Env) (err error) {
 	maskStr, err := env.Get("IPV6_PREFIX", params.Default("/128"))
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: for environment variable IPV6_PREFIX", err)
 	}
 	i.Mask, err = ipv6DecimalPrefixToMask(maskStr)
-	return err
+	if err != nil {
+		return fmt.Errorf("%w: for environment variable IPV6_PREFIX", err)
+	}
+
+	return nil
 }
 
 var ErrParsePrefix = errors.New("cannot parse IP prefix")

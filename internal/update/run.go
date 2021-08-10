@@ -2,6 +2,7 @@ package update
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"time"
 
@@ -138,8 +139,8 @@ func (r *runner) shouldUpdateRecord(ctx context.Context, record librecords.Recor
 	isWithinBanPeriod := record.LastBan != nil && now.Sub(*record.LastBan) < time.Hour
 	isWithinCooldown := now.Sub(record.History.GetSuccessTime()) < r.cooldown
 	if isWithinBanPeriod || isWithinCooldown {
-		r.logger.Debug("record %s is within ban period or cooldown period, skipping update",
-			record.Settings.BuildDomainName())
+		domain := record.Settings.BuildDomainName()
+		r.logger.Debug("record " + domain + " is within ban period or cooldown period, skipping update")
 		return false
 	}
 
@@ -157,24 +158,28 @@ func (r *runner) shouldUpdateRecordNoLookup(hostname string, ipVersion ipversion
 	switch ipVersion {
 	case ipversion.IP4or6:
 		if ip != nil && !ip.Equal(lastIP) {
-			r.logger.Info("Last IP address stored for %s is %s and your IP address is %s", hostname, lastIP, ip)
+			r.logger.Info("Last IP address stored for " + hostname +
+				" is " + lastIP.String() + " and your IP address is " + ip.String())
 			return true
 		}
-		r.logger.Debug("Last IP address stored for %s is %s and your IP address is %s, skipping update", hostname, lastIP, ip)
+		r.logger.Debug("Last IP address stored for " + hostname + " is " +
+			lastIP.String() + " and your IP address is " + ip.String() + ", skipping update")
 	case ipversion.IP4:
 		if ipv4 != nil && !ipv4.Equal(lastIP) {
-			r.logger.Info("Last IPv4 address stored for %s is %s and your IPv4 address is %s", hostname, lastIP, ip)
+			r.logger.Info("Last IPv4 address stored for " + hostname +
+				" is " + lastIP.String() + " and your IPv4 address is " + ip.String())
 			return true
 		}
-		r.logger.Debug("Last IPv4 address stored for %s is %s and your IP address is %s, skipping update",
-			hostname, lastIP, ip)
+		r.logger.Debug("Last IPv4 address stored for " + hostname + " is " +
+			lastIP.String() + " and your IPv4 address is " + ip.String() + ", skipping update")
 	case ipversion.IP6:
 		if ipv6 != nil && !ipv6.Equal(lastIP) {
-			r.logger.Info("Last IPv6 address stored for %s is %s and your IPv6 address is %s", hostname, lastIP, ip)
+			r.logger.Info("Last IPv6 address stored for " + hostname +
+				" is " + lastIP.String() + " and your IPv6 address is " + ip.String())
 			return true
 		}
-		r.logger.Debug("Last IPv6 address stored for %s is %s and your IP address is %s, skipping update",
-			hostname, lastIP, ip)
+		r.logger.Debug("Last IPv6 address stored for " + hostname + " is " +
+			lastIP.String() + " and your IPv6 address is " + ip.String() + ", skipping update")
 	}
 	return false
 }
@@ -188,7 +193,8 @@ func (r *runner) shouldUpdateRecordWithLookup(ctx context.Context, hostname stri
 			r.logger.Warn("DNS resolution of " + hostname + ": " + err.Error())
 			return false
 		}
-		r.logger.Warn("cannot DNS resolve %s after %d tries: %s", hostname, tries, err) // update anyway
+		r.logger.Warn("cannot DNS resolve " + hostname + " after " +
+			fmt.Sprint(tries) + " tries: " + err.Error()) // update anyway
 	}
 
 	if recordIPv6 != nil {
@@ -202,22 +208,28 @@ func (r *runner) shouldUpdateRecordWithLookup(ctx context.Context, hostname stri
 			recordIP = recordIPv6
 		}
 		if ip != nil && !ip.Equal(recordIPv4) && !ip.Equal(recordIPv6) {
-			r.logger.Info("IP address of %s is %s and your IP address is %s", hostname, recordIP, ip)
+			r.logger.Info("IP address of " + hostname + " is " + recordIP.String() +
+				" and your IP address is " + ip.String())
 			return true
 		}
-		r.logger.Debug("IP address of %s is %s and your IP address is %s, skipping update", hostname, recordIP, ip)
+		r.logger.Debug("IP address of " + hostname + " is " + recordIP.String() +
+			" and your IP address is " + ip.String() + ", skipping update")
 	case ipversion.IP4:
 		if ipv4 != nil && !ipv4.Equal(recordIPv4) {
-			r.logger.Info("IPv4 address of %s is %s and your IPv4 address is %s", hostname, recordIPv4, ipv4)
+			r.logger.Info("IPv4 address of " + hostname + " is " + recordIPv4.String() +
+				" and your IPv4 address is " + ipv4.String())
 			return true
 		}
-		r.logger.Debug("IPv4 address of %s is %s and your IPv4 address is %s, skipping update", hostname, recordIPv4, ipv4)
+		r.logger.Debug("IPv4 address of " + hostname + " is " + recordIPv4.String() +
+			" and your IPv4 address is " + ipv4.String() + ", skipping update")
 	case ipversion.IP6:
 		if ipv6 != nil && !ipv6.Equal(recordIPv6) {
-			r.logger.Info("IPv6 address of %s is %s and your IPv6 address is %s", hostname, recordIPv6, ipv6)
+			r.logger.Info("IPv6 address of " + hostname + " is " + recordIPv6.String() +
+				" and your IPv6 address is " + ipv6.String())
 			return true
 		}
-		r.logger.Debug("IPv6 address of %s is %s and your IPv6 address is %s, skipping update", hostname, recordIPv6, ipv6)
+		r.logger.Debug("IPv6 address of " + hostname + " is " + recordIPv6.String() +
+			" and your IPv6 address is " + ipv6.String() + ", skipping update")
 	}
 	return false
 }
@@ -253,11 +265,11 @@ func setInitialUpToDateStatus(db data.Database, id int, updateIP net.IP, now tim
 func (r *runner) updateNecessary(ctx context.Context, ipv6Mask net.IPMask) (errors []error) {
 	records := r.db.SelectAll()
 	doIP, doIPv4, doIPv6 := doIPVersion(records)
-	r.logger.Debug("configured to fetch IP: v4 or v6: %t, v4: %t, v6: %t", doIP, doIPv4, doIPv6)
+	r.logger.Debug(fmt.Sprintf("configured to fetch IP: v4 or v6: %t, v4: %t, v6: %t", doIP, doIPv4, doIPv6))
 	ip, ipv4, ipv6, errors := r.getNewIPs(ctx, doIP, doIPv4, doIPv6, ipv6Mask)
-	r.logger.Debug("your public IP address are: v4 or v6: %s, v4: %s, v6: %s", ip, ipv4, ipv6)
+	r.logger.Debug(fmt.Sprintf("your public IP address are: v4 or v6: %s, v4: %s, v6: %s", ip, ipv4, ipv6))
 	for _, err := range errors {
-		r.logger.Error(err)
+		r.logger.Error(err.Error())
 	}
 
 	now := r.timeNow()
@@ -271,16 +283,16 @@ func (r *runner) updateNecessary(ctx context.Context, ipv6Mask net.IPMask) (erro
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
 		if err := setInitialUpToDateStatus(r.db, id, updateIP, now); err != nil {
 			errors = append(errors, err)
-			r.logger.Error(err)
+			r.logger.Error(err.Error())
 		}
 	}
 	for id := range recordIDs {
 		record := records[id]
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
-		r.logger.Info("Updating record %s to use %s", record.Settings, updateIP)
+		r.logger.Info("Updating record " + record.Settings.String() + " to use " + updateIP.String())
 		if err := r.updater.Update(ctx, id, updateIP, r.timeNow()); err != nil {
 			errors = append(errors, err)
-			r.logger.Error(err)
+			r.logger.Error(err.Error())
 		}
 	}
 

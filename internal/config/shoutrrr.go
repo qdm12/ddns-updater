@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"net/url"
 	"path"
 	"strings"
@@ -18,7 +19,7 @@ type Shoutrrr struct {
 func (s *Shoutrrr) get(env params.Env) (warnings []string, err error) {
 	s.Addresses, err = env.CSV("SHOUTRRR_ADDRESSES")
 	if err != nil {
-		return warnings, err
+		return nil, fmt.Errorf("%w: for environment variable SHOUTRRR_ADDRESSES", err)
 	}
 
 	// Retro-compatibility: GOTIFY_URL and GOTIFY_TOKEN
@@ -28,7 +29,7 @@ func (s *Shoutrrr) get(env params.Env) (warnings []string, err error) {
 		warnings = append(warnings, warning)
 	}
 	if err != nil {
-		return warnings, err
+		return nil, fmt.Errorf("%w: for environment variable GOTIFY_URL", err)
 	} else if gotifyURL != nil {
 		gotifyToken, err := env.Get("GOTIFY_TOKEN", params.CaseSensitiveValue(),
 			params.Compulsory(), params.Unset())
@@ -45,7 +46,7 @@ func (s *Shoutrrr) get(env params.Env) (warnings []string, err error) {
 
 	str, err := env.Get("SHOUTRRR_PARAMS", params.Default("title=DDNS Updater"))
 	if err != nil {
-		return warnings, err
+		return warnings, fmt.Errorf("%w: for environment variable SHOUTRRR_PARAMS", err)
 	}
 
 	keyValues := strings.Split(str, ",")
@@ -56,7 +57,7 @@ func (s *Shoutrrr) get(env params.Env) (warnings []string, err error) {
 		s.Params[key] = value
 	}
 
-	return warnings, err
+	return warnings, nil
 }
 
 func gotifyURLTokenToShoutrrr(url *url.URL, token string) (address string) {

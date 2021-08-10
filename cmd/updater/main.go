@@ -26,8 +26,8 @@ import (
 	"github.com/qdm12/ddns-updater/internal/server"
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
+	"github.com/qdm12/golibs/connectivity"
 	"github.com/qdm12/golibs/logging"
-	"github.com/qdm12/golibs/network/connectivity"
 	"github.com/qdm12/golibs/params"
 	"github.com/qdm12/goshutdown"
 	"github.com/qdm12/gosplash"
@@ -68,7 +68,7 @@ func main() {
 		if err == nil { // expected exit such as healthcheck
 			os.Exit(0)
 		}
-		logger.Error(err)
+		logger.Error(err.Error())
 		cancel()
 	}
 
@@ -80,7 +80,7 @@ func main() {
 			<-timer.C
 		}
 		if err != nil {
-			logger.Error(err)
+			logger.Error(err.Error())
 		}
 		logger.Info("Shutdown successful")
 	case <-timer.C:
@@ -181,19 +181,20 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 	case 1:
 		logger.Info("Found single setting to update record")
 	default:
-		logger.Info("Found %d settings to update records", len(settings))
+		logger.Info("Found " + fmt.Sprint(len(settings)) + " settings to update records")
 	}
 
 	client := &http.Client{Timeout: config.Client.Timeout}
 
-	connectivity := connectivity.NewConnectivity(net.DefaultResolver, client)
-	for _, err := range connectivity.Checks(ctx, "github.com") {
-		logger.Warn(err)
+	connectivity := connectivity.NewHTTPSGetChecker(client, http.StatusOK)
+	if err := connectivity.Check(ctx, "https://github.com"); err != nil {
+		logger.Warn(err.Error())
 	}
 
 	records := make([]recordslib.Record, len(settings))
 	for i, s := range settings {
-		logger.Info("Reading history from database: domain %s host %s", s.Domain(), s.Host())
+		logger.Info("Reading history from database: domain " +
+			s.Domain() + " host " + s.Host())
 		events, err := persistentDB.GetEvents(s.Domain(), s.Host())
 		if err != nil {
 			notify(err.Error())
@@ -206,7 +207,7 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 	db := data.NewDatabase(records, persistentDB)
 	defer func() {
 		if err := db.Close(); err != nil {
-			logger.Error(err)
+			logger.Error(err.Error())
 		}
 	}()
 
@@ -269,7 +270,8 @@ func backupRunLoop(ctx context.Context, done chan<- struct{}, backupPeriod time.
 		logger.Info("disabled")
 		return
 	}
-	logger.Info("each %s; writing zip files to directory %s", backupPeriod, outputDir)
+	logger.Info("each " + backupPeriod.String() +
+		"; writing zip files to directory " + outputDir)
 	ziper := backup.NewZiper()
 	timer := time.NewTimer(backupPeriod)
 	for {
@@ -280,7 +282,7 @@ func backupRunLoop(ctx context.Context, done chan<- struct{}, backupPeriod time.
 			filepath.Join(dataDir, "updates.json"),
 			filepath.Join(dataDir, "config.json"),
 		); err != nil {
-			logger.Error(err)
+			logger.Error(err.Error())
 		}
 		select {
 		case <-timer.C:

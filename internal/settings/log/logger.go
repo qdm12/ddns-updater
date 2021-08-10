@@ -1,5 +1,5 @@
 package log
 
 type Logger interface {
-	Debug(args ...interface{})
+	Debug(s string)
 }

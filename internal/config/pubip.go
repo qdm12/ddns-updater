@@ -69,7 +69,7 @@ var ErrInvalidFetcher = errors.New("invalid fetcher specified")
 func (p *PubIP) getFetchers(env params.Env) (err error) {
 	s, err := env.Get("PUBLICIP_FETCHERS", params.Default(all))
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: for environment variable PUBLICIP_FETCHERS", err)
 	}
 
 	fields := strings.Split(s, ",")
@@ -96,7 +96,7 @@ func (p *PubIP) getFetchers(env params.Env) (err error) {
 func (p *PubIP) getDNSProviders(env params.Env) (providers []dns.Provider, err error) {
 	s, err := env.Get("PUBLICIP_DNS_PROVIDERS", params.Default(all))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: for environment variable PUBLICIP_DNS_PROVIDERS", err)
 	}
 
 	availableProviders := dns.ListProviders()
@@ -147,7 +147,7 @@ func httpIPMethod(env params.Env, envKey, retroKey string, version ipversion.IPV
 	})
 	s, err := env.Get(envKey, params.Default("cycle"), retroKeyOption)
 	if err != nil {
-		return nil, warning, err
+		return nil, warning, fmt.Errorf("%w: for environment variable %s", err, envKey)
 	}
 
 	availableProviders := http.ListProvidersForVersion(version)

@@ -23,13 +23,13 @@ import (
 	"github.com/qdm12/ddns-updater/internal/persistence"
 	recordslib "github.com/qdm12/ddns-updater/internal/records"
 	"github.com/qdm12/ddns-updater/internal/server"
-	"github.com/qdm12/ddns-updater/internal/splash"
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
 	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/network/connectivity"
 	"github.com/qdm12/golibs/params"
 	"github.com/qdm12/goshutdown"
+	"github.com/qdm12/gosplash"
 )
 
 //nolint:gochecknoglobals
@@ -107,7 +107,26 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 		return nil
 	}
 
-	fmt.Println(splash.Splash(buildInfo))
+	announcementExp, err := time.Parse(time.RFC3339, "2021-07-22T00:00:00Z")
+	if err != nil {
+		return err
+	}
+	splashSettings := gosplash.Settings{
+		User:         "qdm12",
+		Repository:   "gluetun",
+		Emails:       []string{"quentin.mcgaw@gmail.com"},
+		Version:      buildInfo.Version,
+		Commit:       buildInfo.Commit,
+		BuildDate:    buildInfo.BuildDate,
+		Announcement: "",
+		AnnounceExp:  announcementExp,
+		// Sponsor information
+		PaypalUser:    "qmcgaw",
+		GithubSponsor: "qdm12",
+	}
+	for _, line := range gosplash.MakeLines(splashSettings) {
+		fmt.Println(line)
+	}
 
 	var config config.Config
 	warnings, err := config.Get(env)

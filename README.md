@@ -290,6 +290,24 @@ We could do an API call to get the record IP address every period, but that woul
     1. Run the container
     1. Refresh the DNS management webpage and verify the update happened
 
+## Build the image
+
+You can build the image yourself with:
+
+```sh
+docker build -t qmcgaw/ddns-updater https://github.com/qdm12/ddns-updater.git
+```
+
+You can use optional build arguments with `--build-arg KEY=VALUE` from the table below:
+
+| Build argument | Default | Description |
+| --- | --- | --- |
+| `UID` | `1000` | User ID running the container |
+| `GID` | `1000` | User group ID running the container |
+| `VERSION` | `unknown` | Version of the program and Docker image |
+| `BUILD_DATE` | `an unknown date` | Build date of the program and Docker image |
+| `COMMIT` | `unknown` | Commit hash of the program and Docker image |
+
 ## Development and contributing
 
 - [Contribute with code](https://github.com/qdm12/ddns-updater/blob/master/docs/contributing.md)

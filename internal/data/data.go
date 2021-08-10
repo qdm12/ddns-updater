@@ -3,18 +3,15 @@ package data
 import (
 	"sync"
 
-	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/persistence"
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
+var _ Database = (*database)(nil)
+
 type Database interface {
-	Close() error
-	Select(id int) (record records.Record, err error)
-	SelectAll() (records []records.Record)
-	// Using persistence database
-	Update(id int, record records.Record) error
-	GetEvents(domain, host string) (events []models.HistoryEvent, err error)
+	EphemeralDatabase
+	PersistentDatabase
 }
 
 type database struct {
@@ -29,10 +26,4 @@ func NewDatabase(data []records.Record, persistentDB persistence.Database) Datab
 		data:         data,
 		persistentDB: persistentDB,
 	}
-}
-
-func (db *database) Close() error {
-	db.Lock() // ensure write operation finishes
-	defer db.Unlock()
-	return db.persistentDB.Close()
 }

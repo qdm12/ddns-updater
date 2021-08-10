@@ -7,11 +7,19 @@ import (
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
+var _ PersistentDatabase = (*database)(nil)
+
+type PersistentDatabase interface {
+	GetEvents(domain, host string) (events []models.HistoryEvent, err error)
+	Update(id int, record records.Record) (err error)
+	Close() (err error)
+}
+
 func (db *database) GetEvents(domain, host string) (events []models.HistoryEvent, err error) {
 	return db.persistentDB.GetEvents(domain, host)
 }
 
-func (db *database) Update(id int, record records.Record) error {
+func (db *database) Update(id int, record records.Record) (err error) {
 	db.Lock()
 	defer db.Unlock()
 	if id < 0 {
@@ -35,4 +43,10 @@ func (db *database) Update(id int, record records.Record) error {
 		}
 	}
 	return nil
+}
+
+func (db *database) Close() (err error) {
+	db.Lock() // ensure write operation finishes
+	defer db.Unlock()
+	return db.persistentDB.Close()
 }

@@ -91,8 +91,7 @@ The program reads the configuration from a JSON object, either from a file or fr
     chmod 400 data/config.json
     ```
 
-    *(You could change the user ID, for example with `1001`, by running the container with `--user=1001`)*
-
+    If you want to use another user ID, [build the image yourself](#Build-the-image) with `--build-arg UID=<your-uid>`. You could also just run the container as root with `--user="0"` but this is not advised security wise.
 1. Write a JSON configuration in *data/config.json*, for example:
 
     ```json

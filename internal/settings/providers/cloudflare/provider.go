@@ -15,7 +15,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
-	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/verification"
@@ -33,11 +32,10 @@ type provider struct {
 	proxied        bool
 	ttl            uint
 	matcher        regex.Matcher
-	logger         log.Logger
 }
 
 func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher regex.Matcher, logger log.Logger) (p *provider, err error) {
+	matcher regex.Matcher) (p *provider, err error) {
 	extraSettings := struct {
 		Key            string `json:"key"`
 		Token          string `json:"token"`
@@ -62,7 +60,6 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		proxied:        extraSettings.Proxied,
 		ttl:            extraSettings.TTL,
 		matcher:        matcher,
-		logger:         logger,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -163,8 +160,6 @@ func (p *provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 	values.Set("per_page", "1")
 	u.RawQuery = values.Encode()
 
-	p.logger.Debug("HTTP GET: " + u.String())
-
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return "", false, err
@@ -249,8 +244,6 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	if err := encoder.Encode(requestData); err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrRequestEncode, err)
 	}
-
-	p.logger.Debug("HTTP PUT: " + u.String() + ": " + buffer.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {

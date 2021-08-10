@@ -13,7 +13,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
-	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -23,11 +22,10 @@ type provider struct {
 	host      string
 	ipVersion ipversion.IPVersion
 	token     string
-	logger    log.Logger
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion, logger log.Logger) (p *provider, err error) {
+	ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
@@ -39,7 +37,6 @@ func New(data json.RawMessage, domain, host string,
 		host:      host,
 		ipVersion: ipVersion,
 		token:     extraSettings.Token,
-		logger:    logger,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -105,8 +102,6 @@ func (p *provider) getRecordID(ctx context.Context, recordType string, client *h
 		Path:     "/v2/domains/" + p.domain + "/records",
 		RawQuery: values.Encode(),
 	}
-
-	p.logger.Debug("HTTP GET: " + u.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
@@ -175,8 +170,6 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	if err := encoder.Encode(requestData); err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrRequestEncode, err)
 	}
-
-	p.logger.Debug("HTTP PUT: " + u.String() + ": " + buffer.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {

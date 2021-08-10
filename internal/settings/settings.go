@@ -11,7 +11,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
-	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/cloudflare"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/dd24"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/ddnss"
@@ -60,69 +59,69 @@ var ErrProviderUnknown = errors.New("unknown provider")
 
 //nolint:gocyclo
 func New(provider models.Provider, data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion, matcher regex.Matcher, logger log.Logger) (
+	ipVersion ipversion.IPVersion, matcher regex.Matcher) (
 	settings Settings, err error) {
 	switch provider {
 	case constants.Cloudflare:
-		return cloudflare.New(data, domain, host, ipVersion, matcher, logger)
+		return cloudflare.New(data, domain, host, ipVersion, matcher)
 	case constants.Dd24:
-		return dd24.New(data, domain, host, ipVersion, logger)
+		return dd24.New(data, domain, host, ipVersion)
 	case constants.DdnssDe:
-		return ddnss.New(data, domain, host, ipVersion, logger)
+		return ddnss.New(data, domain, host, ipVersion)
 	case constants.DigitalOcean:
-		return digitalocean.New(data, domain, host, ipVersion, logger)
+		return digitalocean.New(data, domain, host, ipVersion)
 	case constants.DnsOMatic:
-		return dnsomatic.New(data, domain, host, ipVersion, matcher, logger)
+		return dnsomatic.New(data, domain, host, ipVersion, matcher)
 	case constants.DNSPod:
-		return dnspod.New(data, domain, host, ipVersion, logger)
+		return dnspod.New(data, domain, host, ipVersion)
 	case constants.DonDominio:
-		return dondominio.New(data, domain, host, ipVersion, logger)
+		return dondominio.New(data, domain, host, ipVersion)
 	case constants.Dreamhost:
-		return dreamhost.New(data, domain, host, ipVersion, matcher, logger)
+		return dreamhost.New(data, domain, host, ipVersion, matcher)
 	case constants.DuckDNS:
-		return duckdns.New(data, domain, host, ipVersion, matcher, logger)
+		return duckdns.New(data, domain, host, ipVersion, matcher)
 	case constants.Dyn:
-		return dyn.New(data, domain, host, ipVersion, logger)
+		return dyn.New(data, domain, host, ipVersion)
 	case constants.DynV6:
-		return dynv6.New(data, domain, host, ipVersion, logger)
+		return dynv6.New(data, domain, host, ipVersion)
 	case constants.FreeDNS:
-		return freedns.New(data, domain, host, ipVersion, logger)
+		return freedns.New(data, domain, host, ipVersion)
 	case constants.Gandi:
-		return gandi.New(data, domain, host, ipVersion, logger)
+		return gandi.New(data, domain, host, ipVersion)
 	case constants.GoDaddy:
-		return godaddy.New(data, domain, host, ipVersion, matcher, logger)
+		return godaddy.New(data, domain, host, ipVersion, matcher)
 	case constants.Google:
-		return google.New(data, domain, host, ipVersion, logger)
+		return google.New(data, domain, host, ipVersion)
 	case constants.HE:
-		return he.New(data, domain, host, ipVersion, logger)
+		return he.New(data, domain, host, ipVersion)
 	case constants.Infomaniak:
-		return infomaniak.New(data, domain, host, ipVersion, logger)
+		return infomaniak.New(data, domain, host, ipVersion)
 	case constants.Linode:
-		return linode.New(data, domain, host, ipVersion, logger)
+		return linode.New(data, domain, host, ipVersion)
 	case constants.LuaDNS:
-		return luadns.New(data, domain, host, ipVersion, logger)
+		return luadns.New(data, domain, host, ipVersion)
 	case constants.Namecheap:
-		return namecheap.New(data, domain, host, ipVersion, matcher, logger)
+		return namecheap.New(data, domain, host, ipVersion, matcher)
 	case constants.Njalla:
-		return njalla.New(data, domain, host, ipVersion, logger)
+		return njalla.New(data, domain, host, ipVersion)
 	case constants.NoIP:
-		return noip.New(data, domain, host, ipVersion, logger)
+		return noip.New(data, domain, host, ipVersion)
 	case constants.OpenDNS:
-		return opendns.New(data, domain, host, ipVersion, logger)
+		return opendns.New(data, domain, host, ipVersion)
 	case constants.OVH:
-		return ovh.New(data, domain, host, ipVersion, logger)
+		return ovh.New(data, domain, host, ipVersion)
 	case constants.Porkbun:
-		return porkbun.New(data, domain, host, ipVersion, logger)
+		return porkbun.New(data, domain, host, ipVersion)
 	case constants.SelfhostDe:
-		return selfhostde.New(data, domain, host, ipVersion, logger)
+		return selfhostde.New(data, domain, host, ipVersion)
 	case constants.Servercow:
-		return servercow.New(data, domain, host, ipVersion, logger)
+		return servercow.New(data, domain, host, ipVersion)
 	case constants.Spdyn:
-		return spdyn.New(data, domain, host, ipVersion, logger)
+		return spdyn.New(data, domain, host, ipVersion)
 	case constants.Strato:
-		return strato.New(data, domain, host, ipVersion, logger)
+		return strato.New(data, domain, host, ipVersion)
 	case constants.Variomedia:
-		return variomedia.New(data, domain, host, ipVersion, matcher, logger)
+		return variomedia.New(data, domain, host, ipVersion, matcher)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrProviderUnknown, provider)
 	}

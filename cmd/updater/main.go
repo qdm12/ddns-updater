@@ -163,8 +163,8 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 		return err
 	}
 
-	jsonReader := jsonparams.NewReader(logger)
-	settings, warnings, err := jsonReader.JSONSettings(config.Paths.JSON, logger)
+	jsonReader := jsonparams.NewReader()
+	settings, warnings, err := jsonReader.JSONSettings(config.Paths.JSON)
 	for _, w := range warnings {
 		logger.Warn(w)
 		notify(w)

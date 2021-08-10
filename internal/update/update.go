@@ -29,6 +29,7 @@ type updater struct {
 type notifyFunc func(message string)
 
 func NewUpdater(db data.Database, client *http.Client, notify notifyFunc, logger logging.Logger) Updater {
+	client = makeLogClient(client, logger)
 	return &updater{
 		db:     db,
 		client: client,

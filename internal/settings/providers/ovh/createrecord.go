@@ -32,8 +32,6 @@ func (p *provider) createRecord(ctx context.Context, client *http.Client,
 		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
 	}
 
-	p.logger.Debug("HTTP POST: " + u.String() + ": " + string(bodyBytes))
-
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		return fmt.Errorf("%w: %s", errors.ErrBadRequest, err)

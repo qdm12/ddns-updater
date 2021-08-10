@@ -22,8 +22,6 @@ func (p *provider) getRecords(ctx context.Context, client *http.Client,
 		RawQuery: values.Encode(),
 	}
 
-	p.logger.Debug("HTTP GET: " + u.String())
-
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrBadRequest, err)

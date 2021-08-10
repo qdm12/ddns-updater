@@ -15,7 +15,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
-	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -34,11 +33,10 @@ type provider struct {
 	consumerKey   string
 	timeNow       func() time.Time
 	serverDelta   time.Duration
-	logger        log.Logger
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion, logger log.Logger) (p *provider, err error) {
+	ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -71,7 +69,6 @@ func New(data json.RawMessage, domain, host string,
 		appSecret:     extraSettings.AppSecret,
 		consumerKey:   extraSettings.ConsumerKey,
 		timeNow:       time.Now,
-		logger:        logger,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -149,8 +146,6 @@ func (p *provider) updateWithDynHost(ctx context.Context, client *http.Client, i
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()
-
-	p.logger.Debug("HTTP GET: " + u.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {

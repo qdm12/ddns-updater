@@ -29,8 +29,6 @@ func (p *provider) updateRecord(ctx context.Context, client *http.Client,
 		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
 	}
 
-	p.logger.Debug("HTTP PUT: " + u.String() + ": " + string(bodyBytes))
-
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		return fmt.Errorf("%w: %s", errors.ErrBadRequest, err)

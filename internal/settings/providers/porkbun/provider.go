@@ -14,7 +14,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
-	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -26,11 +25,10 @@ type provider struct {
 	ipVersion    ipversion.IPVersion
 	apiKey       string
 	secretApiKey string
-	logger       log.Logger
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion, logger log.Logger) (p *provider, err error) {
+	ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
 		SecretApiKey string `json:"secret_api_key"`
 		ApiKey       string `json:"api_key"`
@@ -46,7 +44,6 @@ func New(data json.RawMessage, domain, host string,
 		secretApiKey: extraSettings.SecretApiKey,
 		apiKey:       extraSettings.ApiKey,
 		ttl:          extraSettings.TTL,
-		logger:       logger,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -122,8 +119,6 @@ func (p *provider) getRecordIDs(ctx context.Context, client *http.Client) (recor
 		return nil, fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
 	}
 
-	p.logger.Debug("HTTP POST getRecordIDs: " + u.String() + ": " + buffer.String())
-
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
 		return nil, err
@@ -158,7 +153,6 @@ func (p *provider) getRecordIDs(ctx context.Context, client *http.Client) (recor
 		}
 	}
 
-	p.logger.Debug("getRecordIDs: " + strings.Join(recordIDs, ", "))
 	return recordIDs, nil
 }
 
@@ -189,8 +183,6 @@ func (p *provider) createRecord(ctx context.Context, client *http.Client,
 	if err := encoder.Encode(postRecordsParams); err != nil {
 		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
 	}
-
-	p.logger.Debug("HTTP POST createRecord: " + u.String() + ": " + buffer.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
@@ -238,8 +230,6 @@ func (p *provider) updateRecord(ctx context.Context, client *http.Client,
 	if err := encoder.Encode(postRecordsParams); err != nil {
 		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
 	}
-
-	p.logger.Debug("HTTP POST updateRecord: " + u.String() + ": " + buffer.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {

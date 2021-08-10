@@ -14,7 +14,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
-	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -27,11 +26,10 @@ type provider struct {
 	password      string
 	useProviderIP bool
 	ttl           uint
-	logger        log.Logger
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	logger log.Logger) (p *provider, err error) {
+func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion) (
+	p *provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -50,7 +48,6 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 		domain:        extraSettings.Domain,
-		logger:        logger,
 		ttl:           extraSettings.TTL,
 	}
 	if err := p.isValid(); err != nil {
@@ -138,8 +135,6 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	if err := encoder.Encode(requestData); err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrRequestEncode, err)
 	}
-
-	p.logger.Debug("HTTP POST: " + u.String() + ": " + buffer.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {

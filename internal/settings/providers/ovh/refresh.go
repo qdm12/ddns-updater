@@ -16,8 +16,6 @@ func (p *provider) refresh(ctx context.Context, client *http.Client, timestamp i
 		Path:   p.apiURL.Path + "/domain/zone/" + p.domain + "/refresh",
 	}
 
-	p.logger.Debug("HTTP POST: " + u.String())
-
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), nil)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errors.ErrBadRequest, err)

@@ -15,7 +15,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
-	"github.com/qdm12/ddns-updater/internal/settings/log"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -26,11 +25,10 @@ type provider struct {
 	ipVersion ipversion.IPVersion
 	key       string
 	matcher   regex.Matcher
-	logger    log.Logger
 }
 
 func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher regex.Matcher, logger log.Logger) (p *provider, err error) {
+	matcher regex.Matcher) (p *provider, err error) {
 	extraSettings := struct {
 		Key string `json:"key"`
 	}{}
@@ -46,7 +44,6 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		ipVersion: ipVersion,
 		key:       extraSettings.Key,
 		matcher:   matcher,
-		logger:    logger,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -176,8 +173,6 @@ func (p *provider) getRecords(ctx context.Context, client *http.Client) (
 	values.Set("cmd", "dns-list_records")
 	u.RawQuery = values.Encode()
 
-	p.logger.Debug("HTTP GET " + u.String())
-
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return records, err
@@ -222,8 +217,6 @@ func (p *provider) removeRecord(ctx context.Context, client *http.Client, ip net
 	values.Set("type", recordType)
 	values.Set("value", ip.String())
 	u.RawQuery = values.Encode()
-
-	p.logger.Debug("HTTP GET " + u.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
@@ -271,8 +264,6 @@ func (p *provider) createRecord(ctx context.Context, client *http.Client, ip net
 	values.Set("type", recordType)
 	values.Set("value", ip.String())
 	u.RawQuery = values.Encode()
-
-	p.logger.Debug("HTTP GET " + u.String())
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {

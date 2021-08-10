@@ -9,7 +9,6 @@ FROM --platform=${BUILDPLATFORM} qmcgaw/binpot:golangci-lint-${GOLANGCI_LINT_VER
 
 FROM --platform=$BUILDPLATFORM alpine:${ALPINE_VERSION} AS alpine
 RUN mkdir /tmp/data && \
-    chown 1000 /tmp/data && \
     chmod 700 /tmp/data
 
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
@@ -62,7 +61,9 @@ FROM scratch
 COPY --from=alpine --chown=1000 /tmp/data /updater/data/
 EXPOSE 8000
 HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=2 CMD ["/updater/app", "healthcheck"]
-USER 1000
+ARG UID=1000
+ARG GID=1000
+USER ${UID}:${GID}
 ENTRYPOINT ["/updater/app"]
 ENV \
     # Core
@@ -104,4 +105,4 @@ LABEL \
     org.opencontainers.image.source="https://github.com/qdm12/ddns-updater" \
     org.opencontainers.image.title="ddns-updater" \
     org.opencontainers.image.description="Universal DNS updater with WebUI"
-COPY --from=build --chown=1000 /tmp/gobuild/app /updater/app
+COPY --from=build --chown=${UID}:${GID} /tmp/gobuild/app /updater/app

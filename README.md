@@ -1,6 +1,6 @@
 # Lightweight universal DDNS Updater with Docker and web UI
 
-*Light container updating DNS A and/or AAAA records periodically for multiple DNS providers*
+Light container updating DNS A and/or AAAA records periodically for multiple DNS providers
 
 <img height="200" alt="DDNS Updater logo" src="https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/ddnsgopher.svg">
 
@@ -33,36 +33,36 @@
 ## Features
 
 - Updates periodically A records for different DNS providers:
-    - Cloudflare
-    - DD24
-    - DDNSS.de
-    - DigitalOcean
-    - DonDominio
-    - DNSOMatic
-    - DNSPod
-    - Dreamhost
-    - DuckDNS
-    - DynDNS
-    - FreeDNS
-    - Gandi
-    - GoDaddy
-    - Google
-    - He.net
-    - Infomaniak
-    - Linode
-    - LuaDNS
-    - Namecheap
-    - NoIP
-    - Njalla
-    - OpenDNS
-    - OVH
-    - Porkbun
-    - Selfhost.de
-    - Servercow.de
-    - Spdyn
-    - Strato.de
-    - Variomedia.de
-    - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
+  - Cloudflare
+  - DD24
+  - DDNSS.de
+  - DigitalOcean
+  - DonDominio
+  - DNSOMatic
+  - DNSPod
+  - Dreamhost
+  - DuckDNS
+  - DynDNS
+  - FreeDNS
+  - Gandi
+  - GoDaddy
+  - Google
+  - He.net
+  - Infomaniak
+  - Linode
+  - LuaDNS
+  - Namecheap
+  - NoIP
+  - Njalla
+  - OpenDNS
+  - OVH
+  - Porkbun
+  - Selfhost.de
+  - Servercow.de
+  - Spdyn
+  - Strato.de
+  - Variomedia.de
+  - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
 - Web User interface
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)

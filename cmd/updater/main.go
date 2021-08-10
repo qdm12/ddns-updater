@@ -13,6 +13,7 @@ import (
 	"time"
 	_ "time/tzdata"
 
+	_ "github.com/breml/rootcerts"
 	"github.com/containrrr/shoutrrr"
 	"github.com/qdm12/ddns-updater/internal/backup"
 	"github.com/qdm12/ddns-updater/internal/config"

@@ -43,16 +43,3 @@ func (db *Database) GetEvents(domain, host string) (events []models.HistoryEvent
 	}
 	return nil, nil
 }
-
-// GetAllDomainsHosts gets all the domains and hosts from the database.
-func (db *Database) GetAllDomainsHosts() (domainshosts []models.DomainHost, err error) {
-	db.RLock()
-	defer db.RUnlock()
-	for _, record := range db.data.Records {
-		domainshosts = append(domainshosts, models.DomainHost{
-			Domain: record.Domain,
-			Host:   record.Host,
-		})
-	}
-	return domainshosts, nil
-}

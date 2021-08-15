@@ -1,17 +1,18 @@
-ARG ALPINE_VERSION=3.13
-ARG GO_VERSION=1.16
 ARG BUILDPLATFORM=linux/amd64
+ARG ALPINE_VERSION=3.14
+ARG GO_VERSION=1.16
+ARG XCPUTRANSLATE_VERSION=v0.6.0
+ARG GOLANGCI_LINT_VERSION=v1.41.1
 
-FROM --platform=$BUILDPLATFORM alpine:${ALPINE_VERSION} AS alpine
-RUN apk --update add ca-certificates tzdata
-RUN mkdir /tmp/data && \
-    chown 1000 /tmp/data && \
-    chmod 700 /tmp/data
+FROM --platform=${BUILDPLATFORM} qmcgaw/xcputranslate:${XCPUTRANSLATE_VERSION} AS xcputranslate
+FROM --platform=${BUILDPLATFORM} qmcgaw/binpot:golangci-lint-${GOLANGCI_LINT_VERSION} AS golangci-lint
 
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
-ENV CGO_ENABLED=0
-RUN apk --update add git
 WORKDIR /tmp/gobuild
+ENV CGO_ENABLED=0
+RUN apk --update add git g++
+COPY --from=xcputranslate /xcputranslate /usr/local/bin/xcputranslate
+COPY --from=golangci-lint /bin /go/bin/golangci-lint
 # Copy repository code and install Go dependencies
 COPY go.mod go.sum ./
 RUN go mod download
@@ -20,14 +21,13 @@ COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 
 FROM --platform=$BUILDPLATFORM base AS test
+# Note on the go race detector:
+# - we set CGO_ENABLED=1 to have it enabled
+# - we installed g++ to support the race detector
 ENV CGO_ENABLED=1
-# g++ is installed for the -race detector in go test
-RUN apk --update add g++
+ENTRYPOINT go test -race -coverpkg=./... -coverprofile=coverage.txt -covermode=atomic ./...
 
 FROM --platform=$BUILDPLATFORM base AS lint
-ARG GOLANGCI_LINT_VERSION=v1.40.1
-RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
-    sh -s -- -b /usr/local/bin ${GOLANGCI_LINT_VERSION}
 COPY .golangci.yml ./
 RUN golangci-lint run --timeout=10m
 
@@ -41,13 +41,12 @@ RUN git init && \
     git diff --exit-code -- go.mod
 
 FROM --platform=$BUILDPLATFORM base AS build
-COPY --from=qmcgaw/xcputranslate:v0.4.0 /xcputranslate /usr/local/bin/xcputranslate
-ARG TARGETPLATFORM
 ARG VERSION=unknown
 ARG BUILD_DATE="an unknown date"
 ARG COMMIT=unknown
-RUN GOARCH="$(xcputranslate -targetplatform ${TARGETPLATFORM} -field arch)" \
-    GOARM="$(xcputranslate -targetplatform ${TARGETPLATFORM} -field arm)" \
+ARG TARGETPLATFORM
+RUN GOARCH="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -field arch)" \
+    GOARM="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -field arm)" \
     go build -trimpath -ldflags="-s -w \
     -X 'main.version=$VERSION' \
     -X 'main.buildDate=$BUILD_DATE' \
@@ -55,6 +54,39 @@ RUN GOARCH="$(xcputranslate -targetplatform ${TARGETPLATFORM} -field arch)" \
     " -o app cmd/updater/main.go
 
 FROM scratch
+EXPOSE 8000
+HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=2 CMD ["/updater/app", "healthcheck"]
+ARG UID=1000
+ARG GID=1000
+USER ${UID}:${GID}
+ENTRYPOINT ["/updater/app"]
+ENV \
+    # Core
+    CONFIG= \
+    PERIOD=5m \
+    UPDATE_COOLDOWN_PERIOD=5m \
+    PUBLICIP_FETCHERS=all \
+    PUBLICIP_HTTP_PROVIDERS=all \
+    PUBLICIPV4_HTTP_PROVIDERS=all \
+    PUBLICIPV6_HTTP_PROVIDERS=all \
+    PUBLICIP_DNS_PROVIDERS=all \
+    PUBLICIP_DNS_TIMEOUT=3s \
+    HTTP_TIMEOUT=10s \
+    DATADIR=/updater/data \
+
+    # Web UI
+    LISTENING_PORT=8000 \
+    ROOT_URL=/ \
+
+    # Backup
+    BACKUP_PERIOD=0 \
+    BACKUP_DIRECTORY=/updater/data \
+
+    # Other
+    LOG_LEVEL=info \
+    LOG_CALLER=hidden \
+    SHOUTRRR_ADDRESSES= \
+    TZ=
 ARG VERSION=unknown
 ARG BUILD_DATE="an unknown date"
 ARG COMMIT=unknown
@@ -68,38 +100,4 @@ LABEL \
     org.opencontainers.image.source="https://github.com/qdm12/ddns-updater" \
     org.opencontainers.image.title="ddns-updater" \
     org.opencontainers.image.description="Universal DNS updater with WebUI"
-COPY --from=alpine --chown=1000 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=alpine --chown=1000 /usr/share/zoneinfo /usr/share/zoneinfo
-EXPOSE 8000
-HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=2 CMD ["/updater/app", "healthcheck"]
-USER 1000
-ENTRYPOINT ["/updater/app"]
-ENV \
-    # Core
-    CONFIG= \
-    PERIOD=5m \
-    UPDATE_COOLDOWN_PERIOD=5m \
-    PUBLICIP_FETCHERS=all \
-    PUBLICIP_HTTP_PROVIDERS=all \
-    PUBLICIPV4_HTTP_PROVIDERS=all \
-    PUBLICIPV6_HTTP_PROVIDERS=all \
-    PUBLICIP_DNS_PROVIDERS=all \
-    HTTP_TIMEOUT=10s \
-
-    # Web UI
-    LISTENING_PORT=8000 \
-    ROOT_URL=/ \
-
-    # Backup
-    BACKUP_PERIOD=0 \
-    BACKUP_DIRECTORY=/updater/data \
-
-    # Other
-    LOG_LEVEL=info \
-    LOG_CALLER=hidden \
-    GOTIFY_URL= \
-    GOTIFY_TOKEN= \
-    TZ=
-COPY --from=alpine --chown=1000 /tmp/data /updater/data/
-COPY --from=build --chown=1000 /tmp/gobuild/app /updater/app
-COPY --chown=1000 ui/* /updater/ui/
+COPY --from=build --chown=${UID}:${GID} /tmp/gobuild/app /updater/app

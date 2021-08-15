@@ -6,25 +6,27 @@ import (
 	"os"
 )
 
-type Ziper interface {
+var _ FileZiper = (*Ziper)(nil)
+
+type FileZiper interface {
 	ZipFiles(outputFilepath string, inputFilepaths ...string) error
 }
 
-type ziper struct {
+type Ziper struct {
 	createFile func(name string) (*os.File, error)
 	openFile   func(name string) (*os.File, error)
 	ioCopy     func(dst io.Writer, src io.Reader) (written int64, err error)
 }
 
-func NewZiper() Ziper {
-	return &ziper{
+func NewZiper() *Ziper {
+	return &Ziper{
 		createFile: os.Create,
 		openFile:   os.Open,
 		ioCopy:     io.Copy,
 	}
 }
 
-func (z *ziper) ZipFiles(outputFilepath string, inputFilepaths ...string) error {
+func (z *Ziper) ZipFiles(outputFilepath string, inputFilepaths ...string) error {
 	f, err := z.createFile(outputFilepath)
 	if err != nil {
 		return err
@@ -40,7 +42,7 @@ func (z *ziper) ZipFiles(outputFilepath string, inputFilepaths ...string) error 
 	return nil
 }
 
-func (z *ziper) addFile(w *zip.Writer, filepath string) error {
+func (z *Ziper) addFile(w *zip.Writer, filepath string) error {
 	f, err := z.openFile(filepath)
 	if err != nil {
 		return err

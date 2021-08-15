@@ -1,51 +1,69 @@
 # Lightweight universal DDNS Updater with Docker and web UI
 
-*Light container updating DNS A and/or AAAA records periodically for multiple DNS providers*
+Light container updating DNS A and/or AAAA records periodically for multiple DNS providers
 
-<img height="200" alt="DDNS Updater logo" src="https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/ddnsgopher.svg?sanitize=true">
+<img height="200" alt="DDNS Updater logo" src="https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/ddnsgopher.svg">
 
-[![Build status](https://github.com/qdm12/ddns-updater/workflows/Buildx%20latest/badge.svg)](https://github.com/qdm12/ddns-updater/actions?query=workflow%3A%22Buildx+latest%22)
-[![Docker Pulls](https://img.shields.io/docker/pulls/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
-[![Docker Stars](https://img.shields.io/docker/stars/qmcgaw/ddns-updater.svg)](https://hub.docker.com/r/qmcgaw/ddns-updater)
-[![Image size](https://images.microbadger.com/badges/image/qmcgaw/ddns-updater.svg)](https://microbadger.com/images/qmcgaw/ddns-updater)
-[![Image version](https://images.microbadger.com/badges/version/qmcgaw/ddns-updater.svg)](https://microbadger.com/images/qmcgaw/ddns-updater)
+[![Build status](https://github.com/qdm12/ddns-updater/actions/workflows/build.yml/badge.svg)](https://github.com/qdm12/ddns-updater/actions/workflows/build.yml)
 
-[![Join Slack channel](https://img.shields.io/badge/slack-@qdm12-yellow.svg?logo=slack)](https://join.slack.com/t/qdm12/shared_invite/enQtODMwMDQyMTAxMjY1LTU1YjE1MTVhNTBmNTViNzJiZmQwZWRmMDhhZjEyNjVhZGM4YmIxOTMxOTYzN2U0N2U2YjQ2MDk3YmYxN2NiNTc)
-[![GitHub last commit](https://img.shields.io/github/last-commit/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
-[![GitHub commit activity](https://img.shields.io/github/commit-activity/y/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
+[![dockeri.co](https://dockeri.co/image/qmcgaw/ddns-updater)](https://hub.docker.com/r/qmcgaw/ddns-updater)
+
+![Last release](https://img.shields.io/github/release/qdm12/ddns-updater?label=Last%20release)
+![Last Docker tag](https://img.shields.io/docker/v/qmcgaw/ddns-updater?sort=semver&label=Last%20Docker%20tag)
+[![Last release size](https://img.shields.io/docker/image-size/qmcgaw/ddns-updater?sort=semver&label=Last%20released%20image)](https://hub.docker.com/r/qmcgaw/ddns-updater/tags?page=1&ordering=last_updated)
+![GitHub last release date](https://img.shields.io/github/release-date/qdm12/ddns-updater?label=Last%20release%20date)
+![Commits since release](https://img.shields.io/github/commits-since/qdm12/ddns-updater/latest?sort=semver)
+
+[![Latest size](https://img.shields.io/docker/image-size/qmcgaw/ddns-updater/latest?label=Latest%20image)](https://hub.docker.com/r/qmcgaw/ddns-updater/tags)
+
+[![GitHub last commit](https://img.shields.io/github/last-commit/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/commits/main)
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/y/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/graphs/contributors)
+[![GitHub closed PRs](https://img.shields.io/github/issues-pr-closed/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/pulls?q=is%3Apr+is%3Aclosed)
 [![GitHub issues](https://img.shields.io/github/issues/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
+[![GitHub closed issues](https://img.shields.io/github/issues-closed/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues?q=is%3Aissue+is%3Aclosed)
+
+[![Lines of code](https://img.shields.io/tokei/lines/github/qdm12/ddns-updater)](https://github.com/qdm12/ddns-updater)
+![Code size](https://img.shields.io/github/languages/code-size/qdm12/ddns-updater)
+![GitHub repo size](https://img.shields.io/github/repo-size/qdm12/ddns-updater)
+![Go version](https://img.shields.io/github/go-mod/go-version/qdm12/ddns-updater)
+
+[![MIT](https://img.shields.io/github/license/qdm12/ddns-updater)](https://github.com/qdm12/ddns-updater/master/LICENSE)
+![Visitors count](https://visitor-badge.laobi.icu/badge?page_id=ddns-updater.readme)
 
 ## Features
 
 - Updates periodically A records for different DNS providers:
-    - Aliyun
-    - Cloudflare
-    - DDNSS.de
-    - DigitalOcean
-    - DonDominio
-    - DNSOMatic
-    - DNSPod
-    - Dreamhost
-    - DuckDNS
-    - DynDNS
-    - FreeDNS
-    - Gandi
-    - GoDaddy
-    - Google
-    - He.net
-    - Infomaniak
-    - Linode
-    - LuaDNS
-    - Namecheap
-    - NoIP
-    - Njalla
-    - OpenDNS
-    - OVH
-    - Selfhost.de
-    - [Spdyn](spdyn.de)
-    - Strato.de
-    - Variomedia.de
-    - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
+  - Aliyun
+  - Cloudflare
+  - DD24
+  - DDNSS.de
+  - DigitalOcean
+  - DonDominio
+  - DNSOMatic
+  - DNSPod
+  - Dreamhost
+  - DuckDNS
+  - DynDNS
+  - FreeDNS
+  - Gandi
+  - GoDaddy
+  - Google
+  - He.net
+  - Infomaniak
+  - Linode
+  - LuaDNS
+  - Namecheap
+  - NoIP
+  - Njalla
+  - OpenDNS
+  - OVH
+  - Porkbun
+  - Selfhost.de
+  - Servercow.de
+  - Spdyn
+  - Strato.de
+  - Variomedia.de
+  - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
 - Web User interface
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
@@ -54,8 +72,8 @@
 - Persistence with a JSON file *updates.json* to store old IP addresses with change times for each record
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
-- Sends notifications to your Android phone, see the [**Gotify**](#Gotify) section (it's free, open source and self hosted 🆒)
-- Compatible with `amd64`, `386`, `arm64`, `arm32v7` (Raspberry Pis) CPU architectures.
+- Send notifications with [**Shoutrrr**](https://containrrr.dev/shoutrrr/services/overview/) using `SHOUTRRR_ADDRESSES`
+- Compatible with `amd64`, `386`, `arm64`, `armv7`, `armv6`, `s390x`, `ppc64le`, `riscv64` CPU architectures.
 
 ## Setup
 
@@ -74,8 +92,7 @@ The program reads the configuration from a JSON object, either from a file or fr
     chmod 400 data/config.json
     ```
 
-    *(You could change the user ID, for example with `1001`, by running the container with `--user=1001`)*
-
+    If you want to use another user ID, [build the image yourself](#Build-the-image) with `--build-arg UID=<your-uid>`. You could also just run the container as root with `--user="0"` but this is not advised security wise.
 1. Write a JSON configuration in *data/config.json*, for example:
 
     ```json
@@ -99,6 +116,7 @@ The program reads the configuration from a JSON object, either from a file or fr
     docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data qmcgaw/ddns-updater
     ```
 
+1. ⚠️ If you use IPv6, you might need to set `-e IPV6_PREFIX=/64` (`/64` is your prefix, depending on your ISP)
 1. (Optional) You can also set your JSON configuration as a single environment variable line (i.e. `{"settings": [{"provider": "namecheap", ...}]}`), which takes precedence over config.json. Note however that if you don't bind mount the `/updater/data` directory, there won't be a persistent database file `/updater/updates.json` but it will still work.
 
 ### Next steps
@@ -135,6 +153,7 @@ Check the documentation for your DNS provider:
 - [Cloudflare](https://github.com/qdm12/ddns-updater/blob/master/docs/cloudflare.md)
 - [DDNSS.de](https://github.com/qdm12/ddns-updater/blob/master/docs/ddnss.de.md)
 - [DigitalOcean](https://github.com/qdm12/ddns-updater/blob/master/docs/digitalocean.md)
+- [DD24](https://github.com/qdm12/ddns-updater/blob/master/docs/domaindiscount24.md)
 - [DonDominio](https://github.com/qdm12/ddns-updater/blob/master/docs/dondominio.md)
 - [DNSOMatic](https://github.com/qdm12/ddns-updater/blob/master/docs/dnsomatic.md)
 - [DNSPod](https://github.com/qdm12/ddns-updater/blob/master/docs/dnspod.md)
@@ -155,7 +174,9 @@ Check the documentation for your DNS provider:
 - [Njalla](https://github.com/qdm12/ddns-updater/blob/master/docs/njalla.md)
 - [OpenDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/opendns.md)
 - [OVH](https://github.com/qdm12/ddns-updater/blob/master/docs/ovh.md)
+- [Porkbun](https://github.com/qdm12/ddns-updater/blob/master/docs/porkbun.md)
 - [Selfhost.de](https://github.com/qdm12/ddns-updater/blob/master/docs/selfhost.de.md)
+- [Servercow.de](https://github.com/qdm12/ddns-updater/blob/master/docs/servercow.md)
 - [Spdyn](https://github.com/qdm12/ddns-updater/blob/master/docs/spdyn.md)
 - [Strato.de](https://github.com/qdm12/ddns-updater/blob/master/docs/strato.md)
 - [Variomedia.de](https://github.com/qdm12/ddns-updater/blob/master/docs/variomedia.md)
@@ -169,22 +190,25 @@ Note that:
 | Environment variable | Default | Description |
 | --- | --- | --- |
 | `CONFIG` | | One line JSON object containing the entire config (takes precendence over config.json file) if specified |
-| `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |\
+| `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
+| `IPV6_PREFIX` | `/128` | IPv6 prefix used to mask your public IPv6 address and your record IPv6 address. Ranges from `/0` to `/128` depending on your ISP. |
 | `PUBLICIP_FETCHERS` | `all` | Comma separated fetcher types to obtain the public IP address from `http` and `dns` |
 | `PUBLICIP_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IP address (ipv4 or ipv6). See the [Public IP section](#Public-IP) |
 | `PUBLICIPV4_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IPv4 address only. See the [Public IP section](#Public-IP) |
 | `PUBLICIPV6_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IPv6 address only. See the [Public IP section](#Public-IP) |
 | `PUBLICIP_DNS_PROVIDERS` | `all` | Comma separated providers to obtain the public IP address (IPv4 and/or IPv6). See the [Public IP section](#Public-IP) |
+| `PUBLICIP_DNS_TIMEOUT` | `3s` | Public IP DNS query timeout |
 | `UPDATE_COOLDOWN_PERIOD` | `5m` | Duration to cooldown between updates for each record. This is useful to avoid being rate limited or banned. |
 | `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
+| `HEALTH_SERVER_ADDRESS` | `127.0.0.1:9999` | Health server listening address |
+| `DATADIR` | `/updater/data` | Directory to read and write data files from internally |
 | `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file |
 | `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`. |
-| `LOG_LEVEL` | `info` | Level of logging, `info`, `warning` or `error` |
+| `LOG_LEVEL` | `info` | Level of logging, `debug`, `info`, `warning` or `error` |
 | `LOG_CALLER` | `hidden` | Show caller per log line, `hidden` or `short` |
-| `GOTIFY_URL` |  | (optional) HTTP(s) URL to your Gotify server |
-| `GOTIFY_TOKEN` |  | (optional) Token to access your Gotify server |
+| `SHOUTRRR_ADDRESSES` |  | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/services/overview/) (notification services) |
 | `TZ` | | Timezone to have accurate times, i.e. `America/Montreal` |
 
 #### Public IP
@@ -221,7 +245,6 @@ You can otherwise customize it with the following:
 If you have a host firewall in place, this container needs the following ports:
 
 - TCP 443 outbound for outbound HTTPS
-- TCP 80 outbound if you use a local unsecured HTTP connection to your Gotify server
 - UDP 53 outbound for outbound DNS resolution
 - TCP 8000 inbound (or other) for the WebUI
 
@@ -259,24 +282,6 @@ This is the only way as doing a DNS resolution on the record will give the IP ad
 ⚠️ This has the disadvantage that if the record is changed manually, the program will not detect it.
 We could do an API call to get the record IP address every period, but that would get you banned especially with a low period duration.
 
-## Gotify
-
-[![Gotify](https://github.com/qdm12/ddns-updater/blob/master/readme/gotify.png?raw=true)](https://gotify.net)
-
-[**Gotify**](https://gotify.net) is a simple server for sending and receiving messages, and it is **free**, **private** and **open source**
-
-- It has an [Android app](https://play.google.com/store/apps/details?id=com.github.gotify) to receive notifications
-- The app does not drain your battery 👍
-- The notification server is self hosted, see [how to set it up with Docker](https://gotify.net/docs/install)
-- The notifications only go through your own server (ideally through HTTPS though)
-
-To set it up with DDNS updater:
-
-1. Go to the Web GUI of Gotify
-1. Login with the admin credentials
-1. Create an app and copy the generated token to the environment variable `GOTIFYTOKEN` (for this container)
-1. Set the `GOTIFYURL` variable to the URL of your Gotify server address (i.e. `http://127.0.0.1:8080` or `https://bla.com/gotify`)
-
 ## Testing
 
 - The automated healthcheck verifies all your records are up to date [using DNS lookups](https://github.com/qdm12/ddns-updater/blob/master/internal/healthcheck/healthcheck.go#L15)
@@ -285,6 +290,24 @@ To set it up with DDNS updater:
     1. Setting your record to `127.0.0.1`
     1. Run the container
     1. Refresh the DNS management webpage and verify the update happened
+
+## Build the image
+
+You can build the image yourself with:
+
+```sh
+docker build -t qmcgaw/ddns-updater https://github.com/qdm12/ddns-updater.git
+```
+
+You can use optional build arguments with `--build-arg KEY=VALUE` from the table below:
+
+| Build argument | Default | Description |
+| --- | --- | --- |
+| `UID` | `1000` | User ID running the container |
+| `GID` | `1000` | User group ID running the container |
+| `VERSION` | `unknown` | Version of the program and Docker image |
+| `BUILD_DATE` | `an unknown date` | Build date of the program and Docker image |
+| `COMMIT` | `unknown` | Commit hash of the program and Docker image |
 
 ## Development and contributing
 

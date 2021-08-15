@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"embed"
 	"net/http"
 	"text/template"
 	"time"
@@ -22,9 +23,12 @@ type handlers struct {
 	timeNow func() time.Time
 }
 
-func newHandler(ctx context.Context, rootURL, uiDir string,
+//go:embed ui/*
+var uiFS embed.FS //nolint:gochecknoglobals
+
+func newHandler(ctx context.Context, rootURL string,
 	db data.Database, runner update.Runner) http.Handler {
-	indexTemplate := template.Must(template.ParseFiles(uiDir + "/index.html"))
+	indexTemplate := template.Must(template.ParseFS(uiFS, "ui/index.html"))
 
 	handlers := &handlers{
 		ctx:           ctx,
@@ -37,14 +41,11 @@ func newHandler(ctx context.Context, rootURL, uiDir string,
 
 	router := chi.NewRouter()
 
-	router.Use(middleware.Logger, middleware.CleanPath)
+	router.Use(middleware.Logger)
 
 	router.Get(rootURL+"/", handlers.index)
 
 	router.Get(rootURL+"/update", handlers.update)
-
-	// UI file server for other paths
-	fileServer(router, rootURL+"/", http.Dir(uiDir))
 
 	return router
 }

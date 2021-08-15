@@ -8,9 +8,10 @@ type settings struct {
 }
 
 func newDefaultSettings() settings {
+	const defaultTimeout = 3 * time.Second
 	return settings{
 		providers: ListProviders(),
-		timeout:   time.Second,
+		timeout:   defaultTimeout,
 	}
 }
 

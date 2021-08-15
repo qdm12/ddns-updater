@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/data"
@@ -12,7 +11,7 @@ import (
 )
 
 type Server interface {
-	Run(ctx context.Context, wg *sync.WaitGroup)
+	Run(ctx context.Context, done chan<- struct{})
 }
 
 type server struct {
@@ -21,9 +20,9 @@ type server struct {
 	handler http.Handler
 }
 
-func New(ctx context.Context, address, rootURL, uiDir string, db data.Database, logger logging.Logger,
+func New(ctx context.Context, address, rootURL string, db data.Database, logger logging.Logger,
 	runner update.Runner) Server {
-	handler := newHandler(ctx, rootURL, uiDir, db, runner)
+	handler := newHandler(ctx, rootURL, db, runner)
 	return &server{
 		address: address,
 		logger:  logger,
@@ -31,8 +30,8 @@ func New(ctx context.Context, address, rootURL, uiDir string, db data.Database, 
 	}
 }
 
-func (s *server) Run(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (s *server) Run(ctx context.Context, done chan<- struct{}) {
+	defer close(done)
 	server := http.Server{Addr: s.address, Handler: s.handler}
 	go func() {
 		<-ctx.Done()
@@ -42,14 +41,14 @@ func (s *server) Run(ctx context.Context, wg *sync.WaitGroup) {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownGraceDuration)
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
-			s.logger.Error("failed shutting down: %s", err)
+			s.logger.Error("failed shutting down: " + err.Error())
 		}
 	}()
 	for ctx.Err() == nil {
-		s.logger.Info("listening on %s", s.address)
+		s.logger.Info("listening on " + s.address)
 		err := server.ListenAndServe()
 		if err != nil && ctx.Err() == nil { // server crashed
-			s.logger.Error(err)
+			s.logger.Error(err.Error())
 			s.logger.Info("restarting")
 		}
 	}

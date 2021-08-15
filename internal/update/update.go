@@ -11,7 +11,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/settings"
+	settingserrors "github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/golibs/logging"
 )
 
@@ -26,9 +26,10 @@ type updater struct {
 	logger logging.Logger
 }
 
-type notifyFunc func(priority int, messageArgs ...interface{})
+type notifyFunc func(message string)
 
 func NewUpdater(db data.Database, client *http.Client, notify notifyFunc, logger logging.Logger) Updater {
+	client = makeLogClient(client, logger)
 	return &updater{
 		db:     db,
 		client: client,
@@ -51,13 +52,13 @@ func (u *updater) Update(ctx context.Context, id int, ip net.IP, now time.Time) 
 	newIP, err := record.Settings.Update(ctx, u.client, ip)
 	if err != nil {
 		record.Message = err.Error()
-		if errors.Is(err, settings.ErrAbuse) {
+		if errors.Is(err, settingserrors.ErrAbuse) {
 			lastBan := time.Unix(now.Unix(), 0)
 			record.LastBan = &lastBan
 			message := record.Settings.BuildDomainName() + ": " + record.Message +
 				", no more updates will be attempted for an hour"
-			u.notify(3, message) //nolint:gomnd
-			err = errors.New(message)
+			u.notify(message)
+			err = fmt.Errorf(message)
 		} else {
 			record.LastBan = nil // clear a previous ban
 		}
@@ -72,6 +73,6 @@ func (u *updater) Update(ctx context.Context, id int, ip net.IP, now time.Time) 
 		IP:   newIP,
 		Time: now,
 	})
-	u.notify(1, fmt.Sprintf("%s %s", record.Settings.BuildDomainName(), record.Message))
+	u.notify(record.Settings.BuildDomainName() + " " + record.Message)
 	return u.db.Update(id, record) // persists some data if needed (i.e new IP)
 }

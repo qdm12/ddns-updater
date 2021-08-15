@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"testing"
@@ -156,7 +156,7 @@ func Test_fetch(t *testing.T) {
 					}
 					return &http.Response{
 						StatusCode: http.StatusOK,
-						Body:       ioutil.NopCloser(bytes.NewReader(tc.httpContent)),
+						Body:       io.NopCloser(bytes.NewReader(tc.httpContent)),
 					}, nil
 				}),
 			}

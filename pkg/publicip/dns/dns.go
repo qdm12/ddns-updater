@@ -44,16 +44,19 @@ func New(options ...Option) (f Fetcher, err error) {
 			providers: settings.providers,
 		},
 		client: &dns.Client{
-			Net:    "udp",
-			Dialer: dialer,
+			Net:     "udp",
+			Dialer:  dialer,
+			Timeout: settings.timeout,
 		},
 		client4: &dns.Client{
-			Net:    "udp4",
-			Dialer: dialer,
+			Net:     "udp4",
+			Dialer:  dialer,
+			Timeout: settings.timeout,
 		},
 		client6: &dns.Client{
-			Net:    "udp6",
-			Dialer: dialer,
+			Net:     "udp6",
+			Dialer:  dialer,
+			Timeout: settings.timeout,
 		},
 	}, nil
 }

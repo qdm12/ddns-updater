@@ -2,9 +2,11 @@ package health
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -13,7 +15,7 @@ func IsClientMode(args []string) bool {
 }
 
 type Client interface {
-	Query(ctx context.Context) error
+	Query(ctx context.Context, port uint16) error
 }
 
 type client struct {
@@ -27,10 +29,12 @@ func NewClient() Client {
 	}
 }
 
+var ErrParseHealthServerAddress = errors.New("cannot parse health server address")
+
 // Query sends an HTTP request to the other instance of
 // the program, and to its internal healthcheck server.
-func (c *client) Query(ctx context.Context) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://127.0.0.1:9999", nil)
+func (c *client) Query(ctx context.Context, port uint16) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://127.0.0.1:"+strconv.Itoa(int(port)), nil)
 	if err != nil {
 		return err
 	}
@@ -44,7 +48,7 @@ func (c *client) Query(ctx context.Context) error {
 		return nil
 	}
 
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("%s: %s", resp.Status, err)
 	}

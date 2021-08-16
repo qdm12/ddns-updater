@@ -114,7 +114,7 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 	}
 	splashSettings := gosplash.Settings{
 		User:         "qdm12",
-		Repository:   "gluetun",
+		Repository:   "ddns-updater",
 		Emails:       []string{"quentin.mcgaw@gmail.com"},
 		Version:      buildInfo.Version,
 		Commit:       buildInfo.Commit,

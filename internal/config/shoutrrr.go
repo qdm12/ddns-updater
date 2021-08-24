@@ -41,7 +41,7 @@ func (s *Shoutrrr) get(env params.Env) (warnings []string, err error) {
 	}
 
 	if _, err = shoutrrr.CreateSender(s.Addresses...); err != nil {
-		return warnings, err // validation step
+		return warnings, fmt.Errorf("for environment variable SHOUTRRR_ADDRESSES: %w", err) // validation step
 	}
 
 	str, err := env.Get("SHOUTRRR_PARAMS", params.Default("title=DDNS Updater"))

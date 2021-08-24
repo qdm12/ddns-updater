@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -90,6 +91,10 @@ func main() {
 	os.Exit(1)
 }
 
+var (
+	errShoutrrrSetup = errors.New("failed setting up Shoutrrr")
+)
+
 func _main(ctx context.Context, env params.Env, args []string, logger logging.ParentLogger,
 	buildInfo models.BuildInformation, timeNow func() time.Time) (err error) {
 	if health.IsClientMode(args) {
@@ -146,7 +151,7 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 
 	sender, err := shoutrrr.CreateSender(config.Shoutrrr.Addresses...)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %s", errShoutrrrSetup, err)
 	}
 	notify := func(message string) {
 		errs := sender.Send(message, &config.Shoutrrr.Params)

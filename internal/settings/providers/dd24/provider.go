@@ -100,9 +100,9 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	values.Set("hostname", p.BuildDomainName())
 	values.Set("password", p.password)
 	if p.useProviderIP {
-		values.Set("hostname", "auto")
+		values.Set("ip", "auto")
 	} else {
-		values.Set("hostname", ip.String())
+		values.Set("ip", ip.String())
 	}
 	u.RawQuery = values.Encode()
 

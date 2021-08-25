@@ -13,7 +13,7 @@ type Update struct {
 	Cooldown time.Duration
 }
 
-func (u *Update) get(env params.Env) (warning string, err error) {
+func (u *Update) get(env params.Interface) (warning string, err error) {
 	warning, err = u.getPeriod(env)
 	if err != nil {
 		return warning, err
@@ -27,7 +27,7 @@ func (u *Update) get(env params.Env) (warning string, err error) {
 	return warning, nil
 }
 
-func (u *Update) getPeriod(env params.Env) (warning string, err error) {
+func (u *Update) getPeriod(env params.Interface) (warning string, err error) {
 	// Backward compatibility: DELAY
 	s, err := env.Get("DELAY", params.Compulsory())
 	if err == nil {

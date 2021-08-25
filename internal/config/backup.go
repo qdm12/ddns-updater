@@ -12,7 +12,7 @@ type Backup struct {
 	Directory string
 }
 
-func (b *Backup) get(env params.Env) (err error) {
+func (b *Backup) get(env params.Interface) (err error) {
 	b.Period, err = env.Duration("BACKUP_PERIOD", params.Default("0"))
 	if err != nil {
 		return fmt.Errorf("%w: for environment variable BACKUP_PERIOD", err)

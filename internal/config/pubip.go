@@ -20,7 +20,7 @@ type PubIP struct {
 	DNSSettings  publicip.DNSSettings
 }
 
-func (p *PubIP) get(env params.Env) (warnings []string, err error) {
+func (p *PubIP) get(env params.Interface) (warnings []string, err error) {
 	if err = p.getFetchers(env); err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (p *PubIP) get(env params.Env) (warnings []string, err error) {
 
 var ErrInvalidFetcher = errors.New("invalid fetcher specified")
 
-func (p *PubIP) getFetchers(env params.Env) (err error) {
+func (p *PubIP) getFetchers(env params.Interface) (err error) {
 	s, err := env.Get("PUBLICIP_FETCHERS", params.Default(all))
 	if err != nil {
 		return fmt.Errorf("%w: for environment variable PUBLICIP_FETCHERS", err)
@@ -93,7 +93,7 @@ func (p *PubIP) getFetchers(env params.Env) (err error) {
 }
 
 // getDNSProviders obtains the DNS providers to obtain your public IPv4 and/or IPv6 address.
-func (p *PubIP) getDNSProviders(env params.Env) (providers []dns.Provider, err error) {
+func (p *PubIP) getDNSProviders(env params.Interface) (providers []dns.Provider, err error) {
 	s, err := env.Get("PUBLICIP_DNS_PROVIDERS", params.Default(all))
 	if err != nil {
 		return nil, fmt.Errorf("%w: for environment variable PUBLICIP_DNS_PROVIDERS", err)
@@ -118,19 +118,19 @@ func (p *PubIP) getDNSProviders(env params.Env) (providers []dns.Provider, err e
 }
 
 // getHTTPProviders obtains the HTTP providers to obtain your public IPv4 or IPv6 address.
-func (p *PubIP) getIPHTTPProviders(env params.Env) (
+func (p *PubIP) getIPHTTPProviders(env params.Interface) (
 	providers []http.Provider, warning string, err error) {
 	return httpIPMethod(env, "PUBLICIP_HTTP_PROVIDERS", "IP_METHOD", ipversion.IP4or6)
 }
 
 // getIPv4HTTPProviders obtains the HTTP providers to obtain your public IPv4 address.
-func (p *PubIP) getIPv4HTTPProviders(env params.Env) (
+func (p *PubIP) getIPv4HTTPProviders(env params.Interface) (
 	providers []http.Provider, warning string, err error) {
 	return httpIPMethod(env, "PUBLICIPV4_HTTP_PROVIDERS", "IPV4_METHOD", ipversion.IP4)
 }
 
 // getIPv6HTTPProviders obtains the HTTP providers to obtain your public IPv6 address.
-func (p *PubIP) getIPv6HTTPProviders(env params.Env) (
+func (p *PubIP) getIPv6HTTPProviders(env params.Interface) (
 	providers []http.Provider, warning string, err error) {
 	return httpIPMethod(env, "PUBLICIPV6_HTTP_PROVIDERS", "IPV6_METHOD", ipversion.IP6)
 }
@@ -139,7 +139,7 @@ var (
 	ErrInvalidPublicIPHTTPProvider = errors.New("invalid public IP HTTP provider")
 )
 
-func httpIPMethod(env params.Env, envKey, retroKey string, version ipversion.IPVersion) (
+func httpIPMethod(env params.Interface, envKey, retroKey string, version ipversion.IPVersion) (
 	providers []http.Provider, warning string, err error) {
 	retroKeyOption := params.RetroKeys([]string{retroKey}, func(oldKey, newKey string) {
 		warning = "You are using an old environment variable " + oldKey +

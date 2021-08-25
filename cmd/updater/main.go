@@ -47,8 +47,8 @@ func main() {
 		Commit:    commit,
 		BuildDate: buildDate,
 	}
-	env := params.NewEnv()
-	logger := logging.NewParent(logging.Settings{Writer: os.Stdout})
+	env := params.New()
+	logger := logging.New(logging.Settings{Writer: os.Stdout})
 
 	ctx := context.Background()
 	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
@@ -95,7 +95,7 @@ var (
 	errShoutrrrSetup = errors.New("failed setting up Shoutrrr")
 )
 
-func _main(ctx context.Context, env params.Env, args []string, logger logging.ParentLogger,
+func _main(ctx context.Context, env params.Interface, args []string, logger logging.ParentLogger,
 	buildInfo models.BuildInformation, timeNow func() time.Time) (err error) {
 	if health.IsClientMode(args) {
 		// Running the program in a separate instance through the Docker
@@ -147,7 +147,7 @@ func _main(ctx context.Context, env params.Env, args []string, logger logging.Pa
 	loggerSettings := logging.Settings{
 		Level:  config.Logger.Level,
 		Caller: config.Logger.Caller}
-	logger = logging.NewParent(loggerSettings)
+	logger = logging.New(loggerSettings)
 
 	sender, err := shoutrrr.CreateSender(config.Shoutrrr.Addresses...)
 	if err != nil {

@@ -13,7 +13,7 @@ type IPv6 struct {
 	Mask net.IPMask
 }
 
-func (i *IPv6) get(env params.Env) (err error) {
+func (i *IPv6) get(env params.Interface) (err error) {
 	maskStr, err := env.Get("IPV6_PREFIX", params.Default("/128"))
 	if err != nil {
 		return fmt.Errorf("%w: for environment variable IPV6_PREFIX", err)

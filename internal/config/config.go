@@ -17,7 +17,7 @@ type Config struct {
 	Shoutrrr Shoutrrr
 }
 
-func (c *Config) Get(env params.Env) (warnings []string, err error) {
+func (c *Config) Get(env params.Interface) (warnings []string, err error) {
 	if err := c.Client.get(env); err != nil {
 		return warnings, err
 	}

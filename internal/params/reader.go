@@ -14,14 +14,14 @@ type Reader interface {
 }
 
 type reader struct {
-	env       params.Env
+	env       envInterface
 	readFile  func(filename string) ([]byte, error)
 	writeFile func(filename string, data []byte, perm fs.FileMode) (err error)
 }
 
 func NewReader() Reader {
 	return &reader{
-		env:       params.NewEnv(),
+		env:       params.New(),
 		readFile:  ioutil.ReadFile,
 		writeFile: os.WriteFile,
 	}

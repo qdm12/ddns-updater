@@ -11,7 +11,7 @@ type Server struct {
 	RootURL string
 }
 
-func (s *Server) get(env params.Env) (warning string, err error) {
+func (s *Server) get(env params.Interface) (warning string, err error) {
 	s.RootURL, err = env.RootURL("ROOT_URL")
 	if err != nil {
 		return "", fmt.Errorf("%w: for environment variable ROOT_URL", err)

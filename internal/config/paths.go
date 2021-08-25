@@ -12,7 +12,7 @@ type Paths struct {
 	JSON    string // obtained from DataDir
 }
 
-func (p *Paths) get(env params.Env) (err error) {
+func (p *Paths) get(env params.Interface) (err error) {
 	p.DataDir, err = env.Path("DATADIR", params.Default("./data"))
 	if err != nil {
 		return fmt.Errorf("%w: for environment variable DATADIR", err)

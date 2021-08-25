@@ -13,7 +13,7 @@ type Health struct {
 	Port          uint16 // obtained from ServerAddress
 }
 
-func (h *Health) Get(env params.Env) (warning string, err error) {
+func (h *Health) Get(env params.Interface) (warning string, err error) {
 	h.ServerAddress, warning, err = env.ListeningAddress(
 		"HEALTH_SERVER_ADDRESS", params.Default("127.0.0.1:9999"))
 	if err != nil {

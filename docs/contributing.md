@@ -47,6 +47,6 @@ go build -o app cmd/updater/main.go
 
 ## Guidelines
 
-The Go code is in the Go file [cmd/updater/main.go](](../cmd/updater/main.go) and the [internal directory](](../internal), you might want to start reading the main.go file.
+The Go code is in the Go file [cmd/updater/main.go](../cmd/updater/main.go) and the [internal directory](../internal), you might want to start reading the main.go file.
 
-See the [Contributing document](](../.github/CONTRIBUTING.md) for more information on how to contribute to this repository.
+See the [Contributing document](../.github/CONTRIBUTING.md) for more information on how to contribute to this repository.

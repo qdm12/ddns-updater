@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 	_ "time/tzdata"
@@ -155,9 +156,10 @@ func _main(ctx context.Context, env params.Interface, args []string, logger logg
 	}
 	notify := func(message string) {
 		errs := sender.Send(message, &config.Shoutrrr.Params)
-		for _, err := range errs {
+		for i, err := range errs {
 			if err != nil {
-				logger.Error(err.Error())
+				destination := strings.Split(config.Shoutrrr.Addresses[i], ":")[0]
+				logger.Error(destination + ": " + err.Error())
 			}
 		}
 	}

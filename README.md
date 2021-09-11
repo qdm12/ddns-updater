@@ -67,7 +67,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
-- 14MB Docker image based on a Go static binary in a Scratch Docker image with ca-certificates and timezone data
+- 11MB Docker image based on a Go static binary in a Scratch Docker image
 - Persistence with a JSON file *updates.json* to store old IP addresses with change times for each record
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable

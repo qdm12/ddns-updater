@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/breml/rootcerts v0.1.0
-	github.com/containrrr/shoutrrr v0.4.4
+	github.com/containrrr/shoutrrr v0.5.1
 	github.com/go-chi/chi v1.5.4
 	github.com/golang/mock v1.6.0
 	github.com/miekg/dns v1.1.42

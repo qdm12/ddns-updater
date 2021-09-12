@@ -16,7 +16,7 @@ type Shoutrrr struct {
 }
 
 func (s *Shoutrrr) get(env params.Env) (warnings []string, err error) {
-	s.Addresses, err = env.CSV("SHOUTRRR_ADDRESSES")
+	s.Addresses, err = env.CSV("SHOUTRRR_ADDRESSES", params.CaseSensitiveValue())
 	if err != nil {
 		return warnings, err
 	}
@@ -43,7 +43,7 @@ func (s *Shoutrrr) get(env params.Env) (warnings []string, err error) {
 		return warnings, err // validation step
 	}
 
-	str, err := env.Get("SHOUTRRR_PARAMS", params.Default("title=DDNS Updater"))
+	str, err := env.Get("SHOUTRRR_PARAMS", params.Default("title=DDNS Updater"), params.CaseSensitiveValue())
 	if err != nil {
 		return warnings, err
 	}

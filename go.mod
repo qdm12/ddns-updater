@@ -9,7 +9,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/miekg/dns v1.1.42
 	github.com/qdm12/golibs v0.0.0-20210822203818-5c568b0777b6
-	github.com/qdm12/goshutdown v0.1.0
+	github.com/qdm12/goshutdown v0.3.0
 	github.com/qdm12/gosplash v0.1.0
 	github.com/stretchr/testify v1.7.0
 )

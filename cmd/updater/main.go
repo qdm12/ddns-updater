@@ -229,8 +229,7 @@ func _main(ctx context.Context, env params.Interface, args []string, logger logg
 	runner := update.NewRunner(db, updater, ipGetter, config.Update.Period,
 		config.IPv6.Mask, config.Update.Cooldown, logger, timeNow)
 
-	runnerHandler, runnerCtx, runnerDone := goshutdown.NewGoRoutineHandler(
-		"runner", goshutdown.GoRoutineSettings{})
+	runnerHandler, runnerCtx, runnerDone := goshutdown.NewGoRoutineHandler("runner")
 	go runner.Run(runnerCtx, runnerDone)
 
 	// note: errors are logged within the goroutine,
@@ -241,24 +240,21 @@ func _main(ctx context.Context, env params.Interface, args []string, logger logg
 	healthServer := health.NewServer(config.Health.ServerAddress,
 		logger.NewChild(logging.Settings{Prefix: "healthcheck server: "}),
 		isHealthy)
-	healthServerHandler, healthServerCtx, healthServerDone := goshutdown.NewGoRoutineHandler(
-		"health server", goshutdown.GoRoutineSettings{})
+	healthServerHandler, healthServerCtx, healthServerDone := goshutdown.NewGoRoutineHandler("health server")
 	go healthServer.Run(healthServerCtx, healthServerDone)
 
 	address := ":" + strconv.Itoa(int(config.Server.Port))
 	serverLogger := logger.NewChild(logging.Settings{Prefix: "http server: "})
 	server := server.New(ctx, address, config.Server.RootURL, db, serverLogger, runner)
-	serverHandler, serverCtx, serverDone := goshutdown.NewGoRoutineHandler(
-		"server", goshutdown.GoRoutineSettings{})
+	serverHandler, serverCtx, serverDone := goshutdown.NewGoRoutineHandler("server")
 	go server.Run(serverCtx, serverDone)
 	notify("Launched with " + strconv.Itoa(len(records)) + " records to watch")
 
-	backupHandler, backupCtx, backupDone := goshutdown.NewGoRoutineHandler(
-		"backup", goshutdown.GoRoutineSettings{})
+	backupHandler, backupCtx, backupDone := goshutdown.NewGoRoutineHandler("backup")
 	go backupRunLoop(backupCtx, backupDone, config.Backup.Period, config.Paths.DataDir, config.Backup.Directory,
 		logger.NewChild(logging.Settings{Prefix: "backup: "}), timeNow)
 
-	shutdownGroup := goshutdown.NewGroupHandler("", goshutdown.GroupSettings{})
+	shutdownGroup := goshutdown.NewGroupHandler("")
 	shutdownGroup.Add(runnerHandler, healthServerHandler, serverHandler, backupHandler)
 
 	<-ctx.Done()

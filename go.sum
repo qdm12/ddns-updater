@@ -178,8 +178,8 @@ github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084/go.mod h1:TjEm7z
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
 github.com/qdm12/golibs v0.0.0-20210822203818-5c568b0777b6 h1:bge5AL7cjHJMPz+5IOz5yF01q/l8No6+lIEBieA8gMg=
 github.com/qdm12/golibs v0.0.0-20210822203818-5c568b0777b6/go.mod h1:6aRbg4Z/bTbm9JfxsGXfWKHi7zsOvPfUTK1S5HuAFKg=
-github.com/qdm12/goshutdown v0.1.0 h1:lmwnygdXtnr2pa6VqfR/bm8077/BnBef1+7CP96B7Sw=
-github.com/qdm12/goshutdown v0.1.0/go.mod h1:/LP3MWLqI+wGH/ijfaUG+RHzBbKXIiVKnrg5vXOCf6Q=
+github.com/qdm12/goshutdown v0.3.0 h1:pqBpJkdwlZlfTEx4QHtS8u8CXx6pG0fVo6S1N0MpSEM=
+github.com/qdm12/goshutdown v0.3.0/go.mod h1:EqZ46No00kCTZ5qzdd3qIzY6ayhMt24QI8Mh8LVQYmM=
 github.com/qdm12/gosplash v0.1.0 h1:Sfl+zIjFZFP7b0iqf2l5UkmEY97XBnaKkH3FNY6Gf7g=
 github.com/qdm12/gosplash v0.1.0/go.mod h1:+A3fWW4/rUeDXhY3ieBzwghKdnIPFJgD8K3qQkenJlw=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=

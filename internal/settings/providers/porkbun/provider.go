@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
@@ -100,12 +99,17 @@ func (p *provider) setHeaders(request *http.Request) {
 	headers.SetAccept(request, "application/json")
 }
 
-func (p *provider) getRecordIDs(ctx context.Context, client *http.Client) (recordIDs []string, err error) {
+func (p *provider) getRecordIDs(ctx context.Context, client *http.Client, recordType string) (
+	recordIDs []string, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "porkbun.com",
-		Path:   "/api/json/v3/dns/retrieve/" + p.domain,
+		Path:   "/api/json/v3/dns/retrieveByNameType/" + p.domain + "/" + recordType + "/",
 	}
+	if p.host != "@" {
+		u.Path += p.host
+	}
+
 	postRecordsParams := struct {
 		SecretApiKey string `json:"secretapikey"`
 		ApiKey       string `json:"apikey"`
@@ -138,8 +142,7 @@ func (p *provider) getRecordIDs(ctx context.Context, client *http.Client) (recor
 
 	var responseData struct {
 		Records []struct {
-			Id      string `json:"id"`
-			Content string `json:"content"`
+			Id string `json:"id"`
 		} `json:"records"`
 	}
 	decoder := json.NewDecoder(response.Body)
@@ -148,9 +151,7 @@ func (p *provider) getRecordIDs(ctx context.Context, client *http.Client) (recor
 	}
 
 	for _, record := range responseData.Records {
-		if strings.HasSuffix(record.Content, p.domain) {
-			recordIDs = append(recordIDs, record.Id)
-		}
+		recordIDs = append(recordIDs, record.Id)
 	}
 
 	return recordIDs, nil
@@ -256,7 +257,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		recordType = constants.AAAA
 	}
 	ipStr := ip.String()
-	recordIDs, err := p.getRecordIDs(ctx, client)
+	recordIDs, err := p.getRecordIDs(ctx, client, recordType)
 	if err != nil {
 		return nil, err
 	}

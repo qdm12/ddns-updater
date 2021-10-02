@@ -24,7 +24,8 @@
 
 - `"zone_identifier"` is the Zone ID of your site
 - `"domain"`
-- `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
+- `"host"` is your host. It should be left to `"@"`, since subdomain and wildcards (`"*"`) are not really supported by Cloudflare it seems.
+See [this issue comment for context](https://github.com/qdm12/ddns-updater/issues/243#issuecomment-928313949). This is left as is for compatibility.
 - `"ttl"` integer value for record TTL in seconds (specify 1 for automatic)
 - One of the following:
     - Email `"email"` and Global API Key `"key"`

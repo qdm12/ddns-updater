@@ -225,8 +225,9 @@ func (p *provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 	if ip.To4() == nil {
 		recordType = constants.AAAA
 	}
+	recordName := utils.BuildURLQueryHostname(p.host, p.domain) + "."
 	for _, record := range records {
-		if record.Type == recordType && record.Name == utils.BuildURLQueryHostname(p.host, p.domain) {
+		if record.Type == recordType && record.Name == recordName {
 			return record, nil
 		}
 	}

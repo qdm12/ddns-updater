@@ -11,6 +11,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/settings/providers/aliyun"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/cloudflare"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/dd24"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/ddnss"
@@ -62,6 +63,8 @@ func New(provider models.Provider, data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion, matcher regex.Matcher) (
 	settings Settings, err error) {
 	switch provider {
+	case constants.Aliyun:
+		return aliyun.New(data, domain, host, ipVersion)
 	case constants.Cloudflare:
 		return cloudflare.New(data, domain, host, ipVersion, matcher)
 	case constants.Dd24:

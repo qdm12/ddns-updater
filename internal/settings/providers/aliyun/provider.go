@@ -22,6 +22,7 @@ type provider struct {
 	ipVersion    ipversion.IPVersion
 	accessKeyId  string
 	accessSecret string
+	region       string
 }
 
 func New(data json.RawMessage, domain, host string,
@@ -29,6 +30,7 @@ func New(data json.RawMessage, domain, host string,
 	extraSettings := struct {
 		AccessKeyId  string `json:"access_key_id"`
 		AccessSecret string `json:"access_secret"`
+		Region       string `json:"region"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
@@ -39,6 +41,10 @@ func New(data json.RawMessage, domain, host string,
 		ipVersion:    ipVersion,
 		accessKeyId:  extraSettings.AccessKeyId,
 		accessSecret: extraSettings.AccessSecret,
+		region:       "cn-hangzhou",
+	}
+	if extraSettings.Region != "" {
+		p.region = extraSettings.Region
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -47,8 +53,11 @@ func New(data json.RawMessage, domain, host string,
 }
 
 func (p *provider) isValid() error {
-	if len(p.accessKeyId) == 0 || len(p.accessSecret) == 0 {
-		return errors.ErrEmptyToken
+	switch {
+	case p.accessKeyId == "":
+		return errors.ErrEmptyAccessKeyId
+	case p.accessSecret == "":
+		return errors.ErrEmptyAccessKeySecret
 	}
 	return nil
 }
@@ -92,12 +101,14 @@ func (p *provider) Update(ctx context.Context, _ *http.Client, ip net.IP) (newIP
 		recordType = constants.AAAA
 	}
 
-	client, err := alidns.NewClientWithAccessKey("cn-hangzhou", p.accessKeyId, p.accessSecret)
+	client, err := alidns.NewClientWithAccessKey(p.region, p.accessKeyId, p.accessSecret)
 	if err != nil {
 		return nil, err
 	}
 
 	listRequest := alidns.CreateDescribeDomainRecordsRequest()
+	listRequest.Scheme = "https"
+
 	listRequest.DomainName = p.domain
 	listRequest.RRKeyWord = p.host
 	resp, err := client.DescribeDomainRecords(listRequest)
@@ -112,7 +123,7 @@ func (p *provider) Update(ctx context.Context, _ *http.Client, ip net.IP) (newIP
 		}
 	}
 	if recordID == "" {
-		return nil, fmt.Errorf("record(%s) not found", p.host)
+		return nil, errors.ErrRecordNotFound
 	}
 
 	request := alidns.CreateUpdateDomainRecordRequest()
@@ -124,8 +135,5 @@ func (p *provider) Update(ctx context.Context, _ *http.Client, ip net.IP) (newIP
 	request.RecordId = recordID
 
 	_, err = client.UpdateDomainRecord(request)
-	if err != nil {
-		return nil, err
-	}
-	return ip, nil
+	return ip, err
 }

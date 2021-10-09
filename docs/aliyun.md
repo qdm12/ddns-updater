@@ -13,6 +13,7 @@
       "host": "@",
       "access_key_id": "your access_key_id",
       "access_secret": "your access_secret",
+      "region": "your region",
       "ip_version": "ipv4"
     }
   ]

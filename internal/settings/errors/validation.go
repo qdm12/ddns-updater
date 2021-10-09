@@ -13,6 +13,8 @@ var (
 	ErrEmptyApiSecret          = errors.New("empty API secret")
 	ErrEmptySecret             = errors.New("empty secret")
 	ErrEmptyToken              = errors.New("empty token")
+	ErrEmptyAccessKeyId        = errors.New("empty access key id")
+	ErrEmptyAccessKeySecret    = errors.New("empty key secret")
 	ErrEmptyTTL                = errors.New("TTL is not set")
 	ErrEmptyUsername           = errors.New("empty username")
 	ErrEmptyZoneIdentifier     = errors.New("empty zone identifier")

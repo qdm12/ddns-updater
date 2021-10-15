@@ -50,7 +50,7 @@ func (p *provider) getOVHTime(ctx context.Context, client *http.Client) (ovhTime
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return ovhTime, err
+		return ovhTime, fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
 	}
 	p.setHeaderCommon(request.Header)
 

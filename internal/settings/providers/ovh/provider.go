@@ -3,6 +3,7 @@ package ovh
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"io"
 	"net"
@@ -149,7 +150,7 @@ func (p *provider) updateWithDynHost(ctx context.Context, client *http.Client, i
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
 	}
 	headers.SetUserAgent(request)
 
@@ -181,6 +182,11 @@ func (p *provider) updateWithDynHost(ctx context.Context, client *http.Client, i
 	}
 }
 
+var (
+	ErrGetAdjustedTime = stderrors.New("cannot obtain adjusted time from OVH")
+	ErrRefresh         = stderrors.New("cannot refresh records")
+)
+
 func (p *provider) updateWithZoneDNS(ctx context.Context, client *http.Client, ip net.IP) (
 	newIP net.IP, err error) {
 	recordType := constants.A
@@ -199,28 +205,28 @@ func (p *provider) updateWithZoneDNS(ctx context.Context, client *http.Client, i
 
 	timestamp, err := p.getAdjustedUnixTimestamp(ctx, client)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", ErrGetAdjustedTime, err)
 	}
 
 	recordIDs, err := p.getRecords(ctx, client, recordType, subDomain, timestamp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", errors.ErrListRecords, err)
 	}
 
 	if len(recordIDs) == 0 {
 		if err := p.createRecord(ctx, client, recordType, subDomain, ipStr, timestamp); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %s", errors.ErrCreateRecord, err)
 		}
 	} else {
 		for _, recordID := range recordIDs {
 			if err := p.updateRecord(ctx, client, recordID, ipStr, timestamp); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%w: %s", errors.ErrUpdateRecord, err)
 			}
 		}
 	}
 
 	if err := p.refresh(ctx, client, timestamp); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", ErrRefresh, err)
 	}
 
 	return ip, nil

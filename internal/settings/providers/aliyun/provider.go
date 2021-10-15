@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
 
-	"github.com/aliyun/alibaba-cloud-sdk-go/services/alidns"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
@@ -97,45 +95,22 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) Update(_ context.Context, _ *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+	// Documentation at https://api.aliyun.com/
 	recordType := constants.A
 	if ip.To4() == nil {
 		recordType = constants.AAAA
 	}
 
-	client, err := alidns.NewClientWithAccessKey(p.region, p.accessKeyID, p.accessSecret)
+	recordID, err := p.getRecordID(ctx, client, recordType)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
 	}
 
-	listRequest := alidns.CreateDescribeDomainRecordsRequest()
-	listRequest.Scheme = "https"
-
-	listRequest.DomainName = p.domain
-	listRequest.RRKeyWord = p.host
-	resp, err := client.DescribeDomainRecords(listRequest)
+	err = p.updateRecord(ctx, client, recordID, ip)
 	if err != nil {
-		return nil, err
-	}
-	recordID := ""
-	for _, record := range resp.DomainRecords.Record {
-		if strings.EqualFold(record.RR, p.host) {
-			recordID = record.RecordId
-			break
-		}
-	}
-	if recordID == "" {
-		return nil, fmt.Errorf("%w", errors.ErrRecordNotFound)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
 	}
 
-	request := alidns.CreateUpdateDomainRecordRequest()
-	request.Scheme = "https"
-
-	request.Value = ip.String()
-	request.Type = recordType
-	request.RR = p.host
-	request.RecordId = recordID
-
-	_, err = client.UpdateDomainRecord(request)
-	return ip, err
+	return ip, nil
 }

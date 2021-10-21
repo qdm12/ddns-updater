@@ -170,7 +170,7 @@ func _main(ctx context.Context, env params.Interface, args []string, logger logg
 		return err
 	}
 
-	jsonReader := jsonparams.NewReader()
+	jsonReader := jsonparams.NewReader(logger)
 	settings, warnings, err := jsonReader.JSONSettings(config.Paths.JSON)
 	for _, w := range warnings {
 		logger.Warn(w)

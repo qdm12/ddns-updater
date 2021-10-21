@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/qdm12/ddns-updater/internal/settings"
+	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/params"
 )
 
@@ -14,13 +15,15 @@ type Reader interface {
 }
 
 type reader struct {
+	logger    logging.Logger
 	env       envInterface
 	readFile  func(filename string) ([]byte, error)
 	writeFile func(filename string, data []byte, perm fs.FileMode) (err error)
 }
 
-func NewReader() Reader {
+func NewReader(logger logging.Logger) Reader {
 	return &reader{
+		logger:    logger,
 		env:       params.New(),
 		readFile:  ioutil.ReadFile,
 		writeFile: os.WriteFile,

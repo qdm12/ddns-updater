@@ -43,11 +43,15 @@ var errWriteConfigToFile = errors.New("cannot write configuration to file")
 // getSettingsFromFile obtain the update settings from config.json.
 func (r *reader) getSettingsFromFile(filePath string) (
 	allSettings []settings.Settings, warnings []string, err error) {
+	r.logger.Info("reading JSON config from file " + filePath)
 	bytes, err := r.readFile(filePath)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			return nil, nil, err
 		}
+
+		r.logger.Info("file not found, creating an empty settings file")
+
 		const mode = fs.FileMode(0600)
 
 		err = r.writeFile(filePath, []byte(`{}`), mode)
@@ -56,6 +60,8 @@ func (r *reader) getSettingsFromFile(filePath string) (
 		}
 		return nil, nil, err
 	}
+	r.logger.Debug("config read: " + string(bytes))
+
 	return extractAllSettings(bytes)
 }
 
@@ -69,6 +75,9 @@ func (r *reader) getSettingsFromEnv(filePath string) (
 	} else if s == "" {
 		return nil, nil, nil
 	}
+	r.logger.Info("reading JSON config from environment variable CONFIG")
+	r.logger.Debug("config read: " + s)
+
 	b := []byte(s)
 
 	allSettings, warnings, err = extractAllSettings(b)

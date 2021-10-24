@@ -35,7 +35,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	if len(host) == 0 {
+	if host == "" { // TODO-v2 remove default
 		host = "@" // default
 	}
 	p = &provider{
@@ -52,11 +52,8 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 }
 
 func (p *provider) isValid() error {
-	switch {
-	case !p.matcher.DreamhostKey(p.key):
+	if !p.matcher.DreamhostKey(p.key) {
 		return fmt.Errorf("invalid key format")
-	case p.host != "@":
-		return fmt.Errorf(`host can only be "@"`)
 	}
 	return nil
 }
@@ -213,7 +210,7 @@ func (p *provider) removeRecord(ctx context.Context, client *http.Client, ip net
 	}
 	values := p.defaultURLValues()
 	values.Set("cmd", "dns-remove_record")
-	values.Set("record", p.domain)
+	values.Set("record", utils.BuildURLQueryHostname(p.host, p.domain))
 	values.Set("type", recordType)
 	values.Set("value", ip.String())
 	u.RawQuery = values.Encode()
@@ -260,7 +257,7 @@ func (p *provider) createRecord(ctx context.Context, client *http.Client, ip net
 	}
 	values := p.defaultURLValues()
 	values.Set("cmd", "dns-add_record")
-	values.Set("record", p.domain)
+	values.Set("record", utils.BuildURLQueryHostname(p.host, p.domain))
 	values.Set("type", recordType)
 	values.Set("value", ip.String())
 	u.RawQuery = values.Encode()

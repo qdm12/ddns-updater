@@ -41,7 +41,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusNotFound:
-		return "", errors.ErrRecordNotFound
+		return "", fmt.Errorf("%w", errors.ErrRecordNotFound)
 	default:
 		return "", fmt.Errorf("%w: %d: %s",
 			errors.ErrBadHTTPStatus, response.StatusCode,
@@ -63,7 +63,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 
 	switch len(data.DomainRecords.Record) {
 	case 0:
-		return "", errors.ErrRecordNotFound
+		return "", fmt.Errorf("%w", errors.ErrRecordNotFound)
 	case 1:
 	default:
 		return "", fmt.Errorf("%w: %d records found instead of 1",

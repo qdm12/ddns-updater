@@ -63,6 +63,13 @@ jobs:
           username: qmcgaw
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set variables
         id: vars
         run: |
@@ -89,5 +96,7 @@ jobs:
             BUILD_DATE=${{ steps.vars.outputs.build_date }}
             COMMIT=${{ steps.vars.outputs.commit }}
             VERSION=${{ steps.vars.outputs.version }}
-          tags: qmcgaw/ddns-updater:${{ steps.vars.outputs.version }}
+          tags: |
+            qmcgaw/ddns-updater:${{ steps.vars.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/ddns-updater:${{ steps.vars.outputs.version }}
           push: true

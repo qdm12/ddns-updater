@@ -129,6 +129,10 @@ docker-compose up -d
 
 You can update the image with `docker pull qmcgaw/ddns-updater`. Other [Docker image tags are available](https://hub.docker.com/repository/docker/qmcgaw/ddns-updater/tags).
 
+### GHCR
+
+Images are also added to the Github Container Registry. To use the GHCR container replace `qmcgaw/ddns-updater` to `ghcr.io/qdm12/ddns-updater`, further details are available [here](https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater)
+
 ## Configuration
 
 Start by having the following content in *config.json*, or in your `CONFIG` environment variable:

@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1280
-	github.com/breml/rootcerts v0.1.0
+	github.com/breml/rootcerts v0.2.0
 	github.com/containrrr/shoutrrr v0.5.1
 	github.com/go-chi/chi v1.5.4
 	github.com/golang/mock v1.6.0

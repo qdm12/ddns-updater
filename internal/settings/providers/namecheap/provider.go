@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -131,6 +132,10 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 
 	decoder := xml.NewDecoder(response.Body)
+	decoder.CharsetReader = func(encoding string, input io.Reader) (io.Reader, error) {
+		return input, nil
+	}
+
 	var parsedXML struct {
 		Errors struct {
 			Error string `xml:"errors.Err1"`

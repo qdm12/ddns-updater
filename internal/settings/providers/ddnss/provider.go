@@ -107,11 +107,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	values.Set("pwd", p.password)
 	values.Set("host", utils.BuildURLQueryHostname(p.host, p.domain))
 	if !p.useProviderIP {
-		if ip.To4() == nil { // ipv6
-			values.Set("ip6", ip.String())
-		} else {
-			values.Set("ip", ip.String())
-		}
+	    values.Set("ip", ip.String())
 	}
 	u.RawQuery = values.Encode()
 

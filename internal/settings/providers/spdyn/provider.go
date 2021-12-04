@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
@@ -148,20 +149,29 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.ToSingleLine(bodyString))
 	}
 
-	switch bodyString {
-	case constants.Abuse, "numhost":
+	switch {
+	case isAny(bodyString, constants.Abuse, "numhost"):
 		return nil, errors.ErrAbuse
-	case constants.Badauth, "!yours":
+	case isAny(bodyString, constants.Badauth, "!yours"):
 		return nil, errors.ErrAuth
-	case "good":
+	case strings.HasPrefix(bodyString, "good"):
 		return ip, nil
-	case constants.Notfqdn:
+	case bodyString == constants.Notfqdn:
 		return nil, fmt.Errorf("%w: not fqdn", errors.ErrBadRequest)
-	case "nochg":
+	case bodyString == "nochg":
 		return ip, nil
-	case "nohost", "fatal":
+	case isAny(bodyString, "nohost", "fatal"):
 		return nil, errors.ErrHostnameNotExists
 	default:
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, bodyString)
 	}
+}
+
+func isAny(s string, values ...string) (ok bool) {
+	for _, value := range values {
+		if s == value {
+			return true
+		}
+	}
+	return false
 }

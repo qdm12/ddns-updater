@@ -158,7 +158,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		return ip, nil
 	case bodyString == constants.Notfqdn:
 		return nil, fmt.Errorf("%w: not fqdn", errors.ErrBadRequest)
-	case bodyString == "nochg":
+	case strings.HasPrefix(bodyString, "nochg"):
 		return ip, nil
 	case isAny(bodyString, "nohost", "fatal"):
 		return nil, errors.ErrHostnameNotExists

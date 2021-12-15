@@ -117,9 +117,11 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	return ip, nil
 }
 
-type linodeError struct {
-	Field  string `json:"field"`
-	Reason string `json:"reason"`
+type linodeErrors struct {
+	Errors []struct {
+		Field  string `json:"field"`
+		Reason string `json:"reason"`
+	} `json:"errors"`
 }
 
 func (p *provider) setHeaders(request *http.Request) {
@@ -347,7 +349,7 @@ func (p *provider) updateRecord(ctx context.Context, client *http.Client,
 }
 
 func (p *provider) getError(body io.Reader) (err error) {
-	var errorObj linodeError
+	var errorObj linodeErrors
 	b, err := io.ReadAll(body)
 	if err != nil {
 		return err
@@ -355,5 +357,5 @@ func (p *provider) getError(body io.Reader) (err error) {
 	if err := json.Unmarshal(b, &errorObj); err != nil {
 		return fmt.Errorf("%s", utils.ToSingleLine(string(b)))
 	}
-	return fmt.Errorf("%s: %s", errorObj.Field, errorObj.Reason)
+	return fmt.Errorf("%v", errorObj)
 }

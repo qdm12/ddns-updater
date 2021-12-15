@@ -24,7 +24,7 @@ type handlers struct {
 }
 
 //go:embed ui/*
-var uiFS embed.FS //nolint:gochecknoglobals
+var uiFS embed.FS
 
 func newHandler(ctx context.Context, rootURL string,
 	db data.Database, runner update.Runner) http.Handler {

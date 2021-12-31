@@ -22,6 +22,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/providers/dreamhost"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/duckdns"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/dyn"
+	"github.com/qdm12/ddns-updater/internal/settings/providers/dynu"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/dynv6"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/freedns"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/gandi"
@@ -85,6 +86,8 @@ func New(provider models.Provider, data json.RawMessage, domain, host string,
 		return duckdns.New(data, domain, host, ipVersion, matcher)
 	case constants.Dyn:
 		return dyn.New(data, domain, host, ipVersion)
+	case constants.Dynu:
+		return dynu.New(data, domain, host, ipVersion)
 	case constants.DynV6:
 		return dynv6.New(data, domain, host, ipVersion)
 	case constants.FreeDNS:

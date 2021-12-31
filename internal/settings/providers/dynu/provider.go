@@ -147,7 +147,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		return nil, errors.ErrAbuse
 	case strings.Contains(s, "good"):
 		return ip, nil
-	case strings.Contains(s, "nochg"): //Updated but not changed
+	case strings.Contains(s, "nochg"): // Updated but not changed
 		return ip, nil
 	default:
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)

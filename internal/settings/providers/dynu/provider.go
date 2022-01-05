@@ -21,6 +21,8 @@ import (
 type provider struct {
 	domain        string
 	host          string
+	location      string
+	alias         string
 	ipVersion     ipversion.IPVersion
 	username      string
 	password      string
@@ -33,6 +35,8 @@ func New(data json.RawMessage, domain, host string,
 		Username      string `json:"username"`
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`
+		Location      string `json:"location"`
+		Alias         string `json:"alias"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
@@ -41,6 +45,8 @@ func New(data json.RawMessage, domain, host string,
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
+		location:      extraSettings.Location,
+		alias:         extraSettings.Alias,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
@@ -53,12 +59,14 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *provider) isValid() error {
 	switch {
-	case len(p.username) == 0:
+	case p.username == "":
 		return errors.ErrEmptyUsername
-	case len(p.password) == 0:
+	case p.password == "":
 		return errors.ErrEmptyPassword
 	case p.host == "*":
 		return errors.ErrHostWildcard
+	case p.alias != "" && p.host == "@":
+		return errors.ErrHostWithAlias
 	}
 	return nil
 }
@@ -72,6 +80,9 @@ func (p *provider) Domain() string {
 }
 
 func (p *provider) Host() string {
+	if p.alias != "" {
+		return p.alias + "." + p.host
+	}
 	return p.host
 }
 
@@ -84,7 +95,7 @@ func (p *provider) Proxied() bool {
 }
 
 func (p *provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return utils.BuildDomainName(p.Host(), p.domain)
 }
 
 func (p *provider) HTML() models.HTMLRow {
@@ -105,9 +116,15 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	values := url.Values{}
 	values.Set("username", p.username)
 	values.Set("password", p.password)
-	values.Set("host", utils.BuildURLQueryHostname(p.host, p.domain))
+	values.Set("location", p.location)
+	if p.host != "@" {
+		values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
+	}
+	if p.alias != "" {
+		values.Set("alias", p.alias)
+	}
 	if !p.useProviderIP {
-		if ip.To4() == nil { // ipv6
+		if ip.To4() == nil {
 			values.Set("myipv6", ip.String())
 		} else {
 			values.Set("myip", ip.String())
@@ -150,6 +167,6 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	case strings.Contains(s, "nochg"): // Updated but not changed
 		return ip, nil
 	default:
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, utils.ToSingleLine(s))
 	}
 }

@@ -21,6 +21,7 @@ var (
 	ErrHostOnlyAt              = errors.New(`host can only be "@"`)
 	ErrHostOnlySubdomain       = errors.New("host can only be a subdomain")
 	ErrHostWildcard            = errors.New(`host cannot be a "*"`)
+	ErrHostWithAlias           = errors.New("host cannot be @ if alias is set") // Dynu
 	ErrIPv6NotSupported        = errors.New("IPv6 is not supported by this provider")
 	ErrMalformedEmail          = errors.New("malformed email address")
 	ErrMalformedKey            = errors.New("malformed key")

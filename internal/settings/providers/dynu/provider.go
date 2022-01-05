@@ -72,7 +72,7 @@ func (p *provider) isValid() error {
 }
 
 func (p *provider) String() string {
-	return utils.ToString(p.domain, p.host, constants.Dynu, p.ipVersion)
+	return utils.ToString(p.domain, p.Host(), constants.Dynu, p.ipVersion)
 }
 
 func (p *provider) Domain() string {

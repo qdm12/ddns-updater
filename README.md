@@ -44,6 +44,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
   - Dreamhost
   - DuckDNS
   - DynDNS
+  - Dynu
   - FreeDNS
   - Gandi
   - GoDaddy
@@ -164,6 +165,7 @@ Check the documentation for your DNS provider:
 - [Dreamhost](https://github.com/qdm12/ddns-updater/blob/master/docs/dreamhost.md)
 - [DuckDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/duckdns.md)
 - [DynDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/dyndns.md)
+- [Dynu](https://github.com/qdm12/ddns-updater/blob/master/docs/dynu.md)
 - [DynV6](https://github.com/qdm12/ddns-updater/blob/master/docs/dynv6.md)
 - [FreeDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/freedns.md)
 - [Gandi](https://github.com/qdm12/ddns-updater/blob/master/docs/gandi.md)

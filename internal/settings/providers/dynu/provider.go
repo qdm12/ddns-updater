@@ -21,8 +21,7 @@ import (
 type provider struct {
 	domain        string
 	host          string
-	location      string
-	alias         string
+	group         string
 	ipVersion     ipversion.IPVersion
 	username      string
 	password      string
@@ -35,8 +34,7 @@ func New(data json.RawMessage, domain, host string,
 		Username      string `json:"username"`
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`
-		Location      string `json:"location"`
-		Alias         string `json:"alias"`
+		Group         string `json:"group"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
@@ -45,8 +43,7 @@ func New(data json.RawMessage, domain, host string,
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
-		location:      extraSettings.Location,
-		alias:         extraSettings.Alias,
+		group:         extraSettings.Group,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
@@ -63,16 +60,16 @@ func (p *provider) isValid() error {
 		return errors.ErrEmptyUsername
 	case p.password == "":
 		return errors.ErrEmptyPassword
+	case p.host == "":
+		return errors.ErrEmptyHost
 	case p.host == "*":
 		return errors.ErrHostWildcard
-	case p.alias != "" && p.host == "@":
-		return errors.ErrHostWithAlias
 	}
 	return nil
 }
 
 func (p *provider) String() string {
-	return utils.ToString(p.domain, p.Host(), constants.Dynu, p.ipVersion)
+	return utils.ToString(p.domain, p.host, constants.Dynu, p.ipVersion)
 }
 
 func (p *provider) Domain() string {
@@ -80,9 +77,6 @@ func (p *provider) Domain() string {
 }
 
 func (p *provider) Host() string {
-	if p.alias != "" {
-		return p.alias + "." + p.host
-	}
 	return p.host
 }
 
@@ -95,7 +89,7 @@ func (p *provider) Proxied() bool {
 }
 
 func (p *provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.Host(), p.domain)
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
 func (p *provider) HTML() models.HTMLRow {
@@ -116,12 +110,12 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	values := url.Values{}
 	values.Set("username", p.username)
 	values.Set("password", p.password)
-	values.Set("location", p.location)
+	values.Set("location", p.group)
 	if p.host != "@" {
+		values.Set("alias", p.host)
+		values.Set("hostname", p.domain)
+	} else {
 		values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
-	}
-	if p.alias != "" {
-		values.Set("alias", p.alias)
 	}
 	if !p.useProviderIP {
 		if ip.To4() == nil {

@@ -119,23 +119,14 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
 	}
 
-	if s == "" {
+	loweredResponse := strings.ToLower(s)
+	switch {
+	case loweredResponse == "":
 		return nil, errors.ErrNoResultReceived
+	case strings.HasPrefix(loweredResponse, "no ip change detected"),
+		strings.HasPrefix(loweredResponse, "updated "):
+		return ip, nil
+	default:
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, utils.ToSingleLine(s))
 	}
-
-	// Example: Updated demo.freshdns.com from 50.23.197.94 to 2607:f0d0:1102:d5::2
-	words := strings.Fields(s)
-	const expectedWords = 6
-	if len(words) != expectedWords {
-		return nil, fmt.Errorf("%w: not enough fields in response: %s", errors.ErrUnmarshalResponse, s)
-	}
-
-	ipString := words[5]
-
-	newIP = net.ParseIP(ipString)
-	if newIP == nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, newIP)
-	}
-
-	return newIP, nil
 }

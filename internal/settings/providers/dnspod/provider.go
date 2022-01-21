@@ -144,7 +144,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	var recordID, recordLine string
 	for _, record := range recordResp.Records {
-		if record.Type == constants.A && record.Name == p.host {
+		if record.Type == recordType && record.Name == p.host {
 			receivedIP := net.ParseIP(record.Value)
 			if ip.Equal(receivedIP) {
 				return ip, nil

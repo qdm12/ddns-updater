@@ -5,6 +5,7 @@ import "github.com/qdm12/ddns-updater/internal/models"
 // All possible provider values.
 const (
 	Aliyun       models.Provider = "aliyun"
+	AllInkl       models.Provider = "allinkl"
 	Cloudflare   models.Provider = "cloudflare"
 	Dd24         models.Provider = "dd24"
 	DdnssDe      models.Provider = "ddnss"

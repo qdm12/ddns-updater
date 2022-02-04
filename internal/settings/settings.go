@@ -12,6 +12,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/aliyun"
+	"github.com/qdm12/ddns-updater/internal/settings/providers/allinkl"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/cloudflare"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/dd24"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/ddnss"
@@ -125,6 +126,8 @@ func New(provider models.Provider, data json.RawMessage, domain, host string,
 		return strato.New(data, domain, host, ipVersion)
 	case constants.Variomedia:
 		return variomedia.New(data, domain, host, ipVersion, matcher)
+	case constants.AllInkl:
+		return allinkl.New(data, domain, host, ipVersion)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrProviderUnknown, provider)
 	}

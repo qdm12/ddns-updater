@@ -18,6 +18,7 @@ var (
 	ErrEmptyTTL                = errors.New("TTL is not set")
 	ErrEmptyUsername           = errors.New("empty username")
 	ErrEmptyZoneIdentifier     = errors.New("empty zone identifier")
+	ErrEmptyHost               = errors.New("host cannot be empty")
 	ErrHostOnlyAt              = errors.New(`host can only be "@"`)
 	ErrHostOnlySubdomain       = errors.New("host can only be a subdomain")
 	ErrHostWildcard            = errors.New(`host cannot be a "*"`)

@@ -15,6 +15,7 @@ const (
 	Dreamhost    models.Provider = "dreamhost"
 	DuckDNS      models.Provider = "duckdns"
 	Dyn          models.Provider = "dyn"
+	Dynu         models.Provider = "dynu"
 	DynV6        models.Provider = "dynv6"
 	FreeDNS      models.Provider = "freedns"
 	Gandi        models.Provider = "gandi"
@@ -50,6 +51,7 @@ func ProviderChoices() []models.Provider {
 		Dreamhost,
 		DuckDNS,
 		Dyn,
+		Dynu,
 		DynV6,
 		FreeDNS,
 		Gandi,

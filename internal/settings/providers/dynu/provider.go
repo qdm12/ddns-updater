@@ -39,6 +39,11 @@ func New(data json.RawMessage, domain, host string,
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
+
+	if host == "" {
+		host = "@" // default
+	}
+
 	p = &provider{
 		domain:        domain,
 		host:          host,
@@ -60,8 +65,6 @@ func (p *provider) isValid() error {
 		return errors.ErrEmptyUsername
 	case p.password == "":
 		return errors.ErrEmptyPassword
-	case p.host == "":
-		return errors.ErrEmptyHost
 	case p.host == "*":
 		return errors.ErrHostWildcard
 	}
@@ -115,7 +118,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		values.Set("alias", p.host)
 		values.Set("hostname", p.domain)
 	} else {
-		values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
+		values.Set("hostname", p.domain)
 	}
 	if !p.useProviderIP {
 		if ip.To4() == nil {
@@ -128,13 +131,13 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
 	}
 	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, err)
 	}
 	defer response.Body.Close()
 

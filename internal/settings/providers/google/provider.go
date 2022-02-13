@@ -144,20 +144,28 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	case "conflict constants.A", "conflict constants.AAAA":
 		return nil, errors.ErrConflictingRecord
 	}
-	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
-		ipsV4 := verification.NewVerifier().SearchIPv4(s)
-		ipsV6 := verification.NewVerifier().SearchIPv6(s)
-		ips := append(ipsV4, ipsV6...) //nolint:gocritic
-		if len(ips) == 0 {
-			return nil, errors.ErrNoResultReceived
-		}
-		newIP = net.ParseIP(ips[0])
-		if newIP == nil {
-			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
-		} else if !p.useProviderIP && !ip.Equal(newIP) {
-			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
-		}
-		return newIP, nil
+
+	if !strings.Contains(s, "nochg") && !strings.Contains(s, "good") {
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
-	return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+
+	var ips []string
+	verifier := verification.NewVerifier()
+	if ip.To4() != nil {
+		ips = verifier.SearchIPv4(s)
+	} else {
+		ips = verifier.SearchIPv6(s)
+	}
+
+	if len(ips) == 0 {
+		return nil, errors.ErrNoIPInResponse
+	}
+
+	newIP = net.ParseIP(ips[0])
+	if newIP == nil {
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
+	} else if !p.useProviderIP && !ip.Equal(newIP) {
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
+	}
+	return newIP, nil
 }

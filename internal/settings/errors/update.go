@@ -19,6 +19,7 @@ var (
 	ErrIPReceivedMalformed     = errors.New("malformed IP address received")
 	ErrIPReceivedMismatch      = errors.New("mismatching IP address received")
 	ErrMalformedIPSent         = errors.New("malformed IP address sent")
+	ErrNoIPInResponse          = errors.New("no IP address in response")
 	ErrNoResultReceived        = errors.New("no result received")
 	ErrNotFound                = errors.New("not found")
 	ErrNumberOfResultsReceived = errors.New("wrong number of results received")

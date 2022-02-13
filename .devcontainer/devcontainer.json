@@ -1,10 +1,14 @@
 {
     "name": "ddns-dev",
-    "dockerComposeFile": ["docker-compose.yml"],
+    "dockerComposeFile": [
+        "docker-compose.yml"
+    ],
     "service": "vscode",
-    "runServices": ["vscode"],
+    "runServices": [
+        "vscode"
+    ],
     "shutdownAction": "stopCompose",
-    "postCreateCommand": "source ~/.windows.sh && go mod download && go mod tidy",
+    "postCreateCommand": "~/.windows.sh && go mod download && go mod tidy",
     "workspaceFolder": "/workspace",
     // "overrideCommand": "",
     "extensions": [
@@ -71,9 +75,13 @@
         "go.testEnvVars": {
             "": "",
         },
-        "go.testFlags": ["-v", "-race"],
+        "go.testFlags": [
+            "-v",
+            "-race"
+        ],
         "go.testTimeout": "10s",
         "go.coverOnSingleTest": true,
         "go.coverOnSingleTestFile": true,
+        "go.coverOnTestPackage": true
     }
 }

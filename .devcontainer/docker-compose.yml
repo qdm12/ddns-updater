@@ -3,7 +3,6 @@ version: "3.7"
 services:
   vscode:
     build: .
-    image: godevcontainer
     volumes:
       - ../:/workspace
       # Docker
@@ -29,4 +28,4 @@ services:
     security_opt:
       # For debugging with dlv
       - seccomp:unconfined
-    entrypoint: zsh -c "while sleep 1000; do :; done"
+    entrypoint: [ "zsh", "-c", "while sleep 1000; do :; done" ]

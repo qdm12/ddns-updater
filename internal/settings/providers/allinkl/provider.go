@@ -164,9 +164,11 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	} else {
 		ips = verifier.SearchIPv6(s)
 	}
+
 	if len(ips) == 0 {
 		return nil, errors.ErrNoIPInResponse
 	}
+
 	newIP = net.ParseIP(ips[0])
 	if newIP == nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])

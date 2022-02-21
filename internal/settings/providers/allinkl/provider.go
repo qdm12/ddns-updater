@@ -154,19 +154,29 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	case constants.Nohost:
 		return nil, errors.ErrHostnameNotExists
 	}
-	if strings.Contains(s, "nochg") || strings.Contains(s, "good") {
-		ips := verification.NewVerifier().SearchIPv4(s)
-		if ips == nil {
-			return nil, errors.ErrNoResultReceived
-		}
-		newIP = net.ParseIP(ips[0])
-		if newIP == nil {
-			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
-		}
-		if !p.useProviderIP && !ip.Equal(newIP) {
-			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
-		}
-		return newIP, nil
+	if !strings.Contains(s, "nochg") && !strings.Contains(s, "good") {
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
+
+	var ips []string
+	verifier := verification.NewVerifier()
+	if ip.To4() != nil {
+		ips = verifier.SearchIPv4(s)
+	} else {
+		ips = verifier.SearchIPv6(s)
+	}
+
+	if len(ips) == 0 {
+		return nil, errors.ErrNoIPInResponse
+	}
+
+	newIP = net.ParseIP(ips[0])
+	if newIP == nil {
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
+	}
+	if !p.useProviderIP && !ip.Equal(newIP) {
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
+	}
+	return newIP, nil
 	return nil, errors.ErrUnknownResponse
 }

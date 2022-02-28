@@ -123,7 +123,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, err)
 	}
 	defer response.Body.Close()
 

@@ -135,7 +135,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
+		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	switch s {

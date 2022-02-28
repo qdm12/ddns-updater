@@ -56,7 +56,7 @@ func (p *provider) isValid() error {
 	switch {
 	case p.username == "":
 		return errors.ErrEmptyUsername
-	case len(p.password) == 0:
+	case p.password == "":
 		return errors.ErrEmptyPassword
 	case p.host == "*":
 		return errors.ErrHostWildcard

@@ -108,7 +108,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	values.Set("host", utils.BuildURLQueryHostname(p.host, p.domain))
 	if !p.useProviderIP {
 		if ip.To4() == nil { // ipv6
-			values.Set("myip", ip.String())
+			values.Set("myip6", ip.String())
 		} else {
 			values.Set("myip", ip.String())
 		}

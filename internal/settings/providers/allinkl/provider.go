@@ -117,7 +117,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
 	}
 	headers.SetUserAgent(request)
 

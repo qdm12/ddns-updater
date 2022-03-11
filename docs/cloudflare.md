@@ -10,6 +10,7 @@
     {
       "provider": "cloudflare",
       "zone_identifier": "some id",
+      "identifier": "<IDENTIFIER>",
       "domain": "domain.com",
       "host": "@",
       "ttl": 600,
@@ -19,10 +20,14 @@
   ]
 }
 ```
+### Create a DNS record in the cloudflare
+
+The ddns-updater here could only update ip address in the existing record instead of adding new dns record.
 
 ### Compulsory parameters
 
 - `"zone_identifier"` is the Zone ID of your site
+- "identifier" is the ID of your API Token (Step 4 in Domain setup)
 - `"domain"`
 - `"host"` is your host. It should be left to `"@"`, since subdomain and wildcards (`"*"`) are not really supported by Cloudflare it seems.
 See [this issue comment for context](https://github.com/qdm12/ddns-updater/issues/243#issuecomment-928313949). This is left as is for compatibility.
@@ -51,6 +56,47 @@ See [this issue comment for context](https://github.com/qdm12/ddns-updater/issue
     curl -X GET "https://api.cloudflare.com/client/v4/zones/$ZONEID/dns_records" \
         -H "X-Auth-Email: $EMAIL" \
         -H "X-Auth-Key: $APIKEY"
+    ```
+    
+    ```json
+    {
+        "result":[
+            {
+                "id":"sfdhjalsdjfhlasjhdfa",          <------ IDENTIFIER 
+                "zone_id":"1231231231dsfasdf",
+                "zone_name":"******",
+                "name":"******",
+                "type":"A",
+                "content":"108.49.66.116",
+                "proxiable":true,
+                "proxied":true,
+                "ttl":1,
+                "locked":false,
+                "meta":{
+                    "auto_added":false,
+                    "managed_by_apps":false,
+                    "managed_by_argo_tunnel":false,
+                    "source":"primary"
+                },
+                "created_on":"2022-03-10T05:07:01.397266Z",
+                "modified_on":"2022-03-10T05:07:01.397266Z"
+            }
+        ],
+        "success":true,
+        "errors":[
+            
+        ],
+        "messages":[
+            
+        ],
+        "result_info":{
+            "page":1,
+            "per_page":100,
+            "count":1,
+            "total_count":1,
+            "total_pages":1
+        }
+    }
     ```
 
 You can now fill in the necessary parameters in *config.json*

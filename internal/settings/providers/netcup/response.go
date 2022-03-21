@@ -19,6 +19,6 @@ type NetcupResponse struct {
 	StatusCode      int             `json:"statuscode"`
 }
 
-func (r *NetcupResponse) isSuccess() bool {
-	return r.Status == "success"
+func (r *NetcupResponse) isError() bool {
+	return r.Status == "error"
 }

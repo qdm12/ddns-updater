@@ -102,49 +102,38 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:     "/run/webservice/servers/endpoint.php",
 		RawQuery: "JSON",
 	}
-	nc := NewClient(p.customerNumber, p.apiKey, p.password, u.String())
+	nc := NewClient(p.customerNumber, p.apiKey, p.password, u.String(), ctx)
 
-	err = nc.Login(ctx)
+	err = nc.Login()
 	if err != nil {
 		return netip.Addr{}, err
 	}
-	fmt.Println("Try to get record to update: ")
 
-	record, err := nc.GetRecordToUpdate(ctx, p.domain, p.host, ip)
+	record, err := nc.GetRecordToUpdate(p.domain, p.host, ip)
 	if err != nil {
 		return netip.Addr{}, err
 	}
-	fmt.Println(record)
-	fmt.Println("------------------")
 
 	recordType := constants.A
 	if ip.Is6() {
 		recordType = constants.AAAA
 	}
-	// if record == nil { // Otherwise the record gets set two times.
-	// 	record = NewDNSRecord(p.host, recordType, ip.String())
-	// }
 
 	var updateRecords []DNSRecord
 	updateRecords = append(updateRecords, *record)
 	updateRecordSet := NewDNSRecordSet(updateRecords)
-	fmt.Println("UpdateRecordSet: ", updateRecordSet)
-	fmt.Println("UpdateRecords: ", updateRecords)
-	updated, err := nc.UpdateDNSRecords(ctx, p.domain, updateRecordSet)
+	updated, err := nc.UpdateDNSRecords(p.domain, updateRecordSet)
 	if err != nil {
 		return netip.Addr{}, err
 	}
-	fmt.Println("Updated: ", updated)
 
 	var result DNSRecordSet
 	err = json.Unmarshal(updated.ResponseData, &result)
 	if err != nil {
 		return netip.Addr{}, err
 	}
-	fmt.Println("Result: ", result)
 	var returnedUpdated = result.GetRecord(p.host, recordType)
 	var destination = returnedUpdated.Destination
-	fmt.Println("destination: ", destination)
 	newIP, err = netip.ParseAddr(destination)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)

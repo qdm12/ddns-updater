@@ -2,7 +2,7 @@
 
 ## Configuration
 
-Note: This implementation does not require a domain reseller account.
+Note: This implementation does not require a domain reseller account. The warning in the dashboard can be ignored.
 
 ### Example
 
@@ -14,8 +14,8 @@ Note: This implementation does not require a domain reseller account.
       "domain": "domain.com",
       "host": "host",
       "api_key": "xxxxx",
-      "password": "password",
-      "customer_number": "1111111"
+      "password": "api-key-password",
+      "customer_number": "111111"
     }
   ]
 }

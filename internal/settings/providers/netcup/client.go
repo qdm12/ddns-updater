@@ -16,6 +16,7 @@ import (
 
 type NetcupClient struct {
 	client         *http.Client
+	ctx            context.Context
 	ApiKey         string
 	Password       string
 	Session        string
@@ -23,22 +24,23 @@ type NetcupClient struct {
 	endpoint       string
 }
 
-func NewClient(customerNumber string, apikey, password string, url string) *NetcupClient {
+func NewClient(customerNumber, apikey, password, url string, ctx context.Context) *NetcupClient {
 	return &NetcupClient{
 		CustomerNumber: customerNumber,
 		ApiKey:         apikey,
 		Password:       password,
 		client:         http.DefaultClient,
 		endpoint:       url,
+		ctx:            ctx,
 	}
 }
 
-func (c *NetcupClient) do(ctx context.Context, req *NetcupRequest) (*NetcupResponse, error) {
+func (c *NetcupClient) do(req *NetcupRequest) (*NetcupResponse, error) {
 	b, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, c.endpoint, bytes.NewBuffer(b))
+	request, err := http.NewRequestWithContext(c.ctx, http.MethodPost, c.endpoint, bytes.NewBuffer(b))
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
 	}
@@ -53,7 +55,6 @@ func (c *NetcupClient) do(ctx context.Context, req *NetcupRequest) (*NetcupRespo
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
-	// s := string(b)
 
 	var res NetcupResponse
 	err = json.Unmarshal(b, &res)
@@ -61,14 +62,14 @@ func (c *NetcupClient) do(ctx context.Context, req *NetcupRequest) (*NetcupRespo
 		return nil, err
 	}
 
-	if !res.isSuccess() {
+	if res.isError() {
 		return nil, errors.ErrBadHTTPStatus // TODO change error
 	}
 
 	return &res, nil
 }
 
-func (c *NetcupClient) Login(ctx context.Context) error {
+func (c *NetcupClient) Login() error {
 	var params = NewParams()
 	params.AddParam("apikey", c.ApiKey)
 	params.AddParam("apipassword", c.Password)
@@ -76,7 +77,7 @@ func (c *NetcupClient) Login(ctx context.Context) error {
 
 	request := NewNetcupRequest("login", &params)
 
-	response, err := c.do(ctx, request)
+	response, err := c.do(request)
 	if err != nil {
 		return err
 	}
@@ -96,7 +97,11 @@ func (c *NetcupClient) Login(ctx context.Context) error {
 	return nil
 }
 
-func (c *NetcupClient) InfoDNSRecords(ctx context.Context, domainname string) (*DNSRecordSet, error) {
+func (c *NetcupClient) Logout() error {
+	return nil
+}
+
+func (c *NetcupClient) InfoDNSRecords(domainname string) (*DNSRecordSet, error) {
 	params, err := c.addAuthParams(domainname)
 	if err != nil {
 		return nil, err
@@ -104,7 +109,7 @@ func (c *NetcupClient) InfoDNSRecords(ctx context.Context, domainname string) (*
 
 	request := NewNetcupRequest("infoDnsRecords", params)
 
-	response, err := c.do(ctx, request)
+	response, err := c.do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +123,7 @@ func (c *NetcupClient) InfoDNSRecords(ctx context.Context, domainname string) (*
 	return &dnsRecordSet, nil
 }
 
-func (c *NetcupClient) UpdateDNSRecords(ctx context.Context, domainname string, dnsRecordSet *DNSRecordSet) (*NetcupResponse, error) {
+func (c *NetcupClient) UpdateDNSRecords(domainname string, dnsRecordSet *DNSRecordSet) (*NetcupResponse, error) {
 	params, err := c.addAuthParams(domainname)
 	if err != nil {
 		return nil, err
@@ -127,7 +132,7 @@ func (c *NetcupClient) UpdateDNSRecords(ctx context.Context, domainname string, 
 	params.AddParam("dnsrecordset", dnsRecordSet)
 	request := NewNetcupRequest("updateDnsRecords", params)
 
-	response, err := c.do(ctx, request)
+	response, err := c.do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -149,26 +154,21 @@ func (c *NetcupClient) addAuthParams(domainname string) (*Params, error) {
 	return &params, nil
 }
 
-func (c *NetcupClient) GetRecordToUpdate(ctx context.Context, domain string, host string, ip netip.Addr) (*DNSRecord, error) {
-	fmt.Println("Try to get infoDNSRecords")
-	records, err := c.InfoDNSRecords(ctx, domain)
+func (c *NetcupClient) GetRecordToUpdate(domain, host string, ip netip.Addr) (*DNSRecord, error) {
+	records, err := c.InfoDNSRecords(domain)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Found records: ")
-	fmt.Println(records)
 
 	recordType := constants.A
 	if ip.Is6() {
 		recordType = constants.AAAA
 	}
-	fmt.Println(records.GetRecordOccurences(host, recordType) > 1)
 	if records.GetRecordOccurences(host, recordType) > 1 {
 		return nil, errors.ErrListRecords // TODO change error
 	}
-	fmt.Println("searchedRecord: ")
+
 	searchedRecord := records.GetRecord(host, recordType)
-	fmt.Println(searchedRecord)
 	if searchedRecord == nil {
 		searchedRecord = NewDNSRecord(host, recordType, ip.String())
 	}

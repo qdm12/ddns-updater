@@ -4,38 +4,32 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
-	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
-	"github.com/qdm12/ddns-updater/internal/settings/headers"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
-	"github.com/qdm12/golibs/verification"
 )
 
 type provider struct {
-	customerNumber int
+	customerNumber string
 	domain         string
 	host           string
 	ipVersion      ipversion.IPVersion
 	apiKey         string
 	password       string
-	useProviderIP  bool
 }
 
 func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion) (p *provider, err error) {
 	extraSettings := struct {
-		CustomerNumber int    `json:"customer_number"`
+		CustomerNumber string `json:"customer_number"`
 		ApiKey         string `json:"api_key"`
 		Password       string `json:"password"`
-		UseProviderIP  bool   `json:"provider_ip"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
@@ -47,7 +41,6 @@ func New(data json.RawMessage, domain, host string,
 		customerNumber: extraSettings.CustomerNumber,
 		apiKey:         extraSettings.ApiKey,
 		password:       extraSettings.Password,
-		useProviderIP:  extraSettings.UseProviderIP,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -57,7 +50,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *provider) isValid() error {
 	switch {
-	case p.customerNumber == 0:
+	case p.customerNumber == "":
 		return errors.ErrEmptyCustomerNumber
 	case p.apiKey == "":
 		return errors.ErrEmptyAppKey
@@ -102,80 +95,63 @@ func (p *provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{
 		Scheme:   "https",
 		Host:     "ccp.netcup.net",
 		Path:     "/run/webservice/servers/endpoint.php",
 		RawQuery: "JSON",
-		//User:   url.UserPassword(p.username, p.password),
 	}
-	// https://ccp.netcup.net/run/webservice/servers/endpoint.php?JSON
 	nc := NewClient(p.customerNumber, p.apiKey, p.password, u.String())
 
 	err = nc.Login(ctx)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	fmt.Println("Try to get record to update: ")
+
+	record, err := nc.GetRecordToUpdate(ctx, p.domain, p.host, ip)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
+		return netip.Addr{}, err
 	}
-	headers.SetUserAgent(request)
+	fmt.Println(record)
+	fmt.Println("------------------")
 
-	response, err := client.Do(request)
+	recordType := constants.A
+	if ip.Is6() {
+		recordType = constants.AAAA
+	}
+	// if record == nil { // Otherwise the record gets set two times.
+	// 	record = NewDNSRecord(p.host, recordType, ip.String())
+	// }
+
+	var updateRecords []DNSRecord
+	updateRecords = append(updateRecords, *record)
+	updateRecordSet := NewDNSRecordSet(updateRecords)
+	fmt.Println("UpdateRecordSet: ", updateRecordSet)
+	fmt.Println("UpdateRecords: ", updateRecords)
+	updated, err := nc.UpdateDNSRecords(ctx, p.domain, updateRecordSet)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, err)
+		return netip.Addr{}, err
 	}
-	defer response.Body.Close()
+	fmt.Println("Updated: ", updated)
 
-	b, err := io.ReadAll(response.Body)
+	var result DNSRecordSet
+	err = json.Unmarshal(updated.ResponseData, &result)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, err
 	}
-	s := string(b)
-
-	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, utils.ToSingleLine(s))
+	fmt.Println("Result: ", result)
+	var returnedUpdated = result.GetRecord(p.host, recordType)
+	var destination = returnedUpdated.Destination
+	fmt.Println("destination: ", destination)
+	newIP, err = netip.ParseAddr(destination)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
 	}
-
-	switch s {
-	case "":
-		return nil, errors.ErrNoResultReceived
-	case constants.Nineoneone:
-		return nil, errors.ErrDNSServerSide
-	case constants.Abuse:
-		return nil, errors.ErrAbuse
-	case "!donator":
-		return nil, errors.ErrFeatureUnavailable
-	case constants.Badagent:
-		return nil, errors.ErrBannedUserAgent
-	case constants.Badauth:
-		return nil, errors.ErrAuth
-	case constants.Nohost:
-		return nil, errors.ErrHostnameNotExists
-	}
-	if !strings.Contains(s, "nochg") && !strings.Contains(s, "good") {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
-	}
-	var ips []string
-	verifier := verification.NewVerifier()
-	if ip.To4() != nil {
-		ips = verifier.SearchIPv4(s)
-	} else {
-		ips = verifier.SearchIPv6(s)
-	}
-
-	if len(ips) == 0 {
-		return nil, errors.ErrNoIPInResponse
-	}
-
-	newIP = net.ParseIP(ips[0])
-	if newIP == nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
-	}
-	if !p.useProviderIP && !ip.Equal(newIP) {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
+	if ip.Compare(newIP) != 0 {
+		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
+			errors.ErrIPReceivedMismatch, ip, newIP)
 	}
 	return newIP, nil
 }

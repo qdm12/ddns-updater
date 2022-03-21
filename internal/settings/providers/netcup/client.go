@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/netip"
 
+	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
 	"golang.org/x/net/context"
@@ -17,11 +19,11 @@ type NetcupClient struct {
 	ApiKey         string
 	Password       string
 	Session        string
-	CustomerNumber int
+	CustomerNumber string
 	endpoint       string
 }
 
-func NewClient(customerNumber int, apikey, password string, url string) *NetcupClient {
+func NewClient(customerNumber string, apikey, password string, url string) *NetcupClient {
 	return &NetcupClient{
 		CustomerNumber: customerNumber,
 		ApiKey:         apikey,
@@ -116,21 +118,21 @@ func (c *NetcupClient) InfoDNSRecords(ctx context.Context, domainname string) (*
 	return &dnsRecordSet, nil
 }
 
-func (c *NetcupClient) UpdateDNSRecords(ctx context.Context, domainname string, dnsRecordSet *DNSRecordSet) error {
+func (c *NetcupClient) UpdateDNSRecords(ctx context.Context, domainname string, dnsRecordSet *DNSRecordSet) (*NetcupResponse, error) {
 	params, err := c.addAuthParams(domainname)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	params.AddParam("dnsrecordset", dnsRecordSet)
 	request := NewNetcupRequest("updateDnsRecords", params)
 
-	_, err = c.do(ctx, request)
+	response, err := c.do(ctx, request)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return response, nil
 }
 
 func (c *NetcupClient) addAuthParams(domainname string) (*Params, error) {
@@ -145,4 +147,31 @@ func (c *NetcupClient) addAuthParams(domainname string) (*Params, error) {
 	params.AddParam("domainname", domainname)
 
 	return &params, nil
+}
+
+func (c *NetcupClient) GetRecordToUpdate(ctx context.Context, domain string, host string, ip netip.Addr) (*DNSRecord, error) {
+	fmt.Println("Try to get infoDNSRecords")
+	records, err := c.InfoDNSRecords(ctx, domain)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("Found records: ")
+	fmt.Println(records)
+
+	recordType := constants.A
+	if ip.Is6() {
+		recordType = constants.AAAA
+	}
+	fmt.Println(records.GetRecordOccurences(host, recordType) > 1)
+	if records.GetRecordOccurences(host, recordType) > 1 {
+		return nil, errors.ErrListRecords // TODO change error
+	}
+	fmt.Println("searchedRecord: ")
+	searchedRecord := records.GetRecord(host, recordType)
+	fmt.Println(searchedRecord)
+	if searchedRecord == nil {
+		searchedRecord = NewDNSRecord(host, recordType, ip.String())
+	}
+	searchedRecord.Destination = ip.String()
+	return searchedRecord, nil
 }

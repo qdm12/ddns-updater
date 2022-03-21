@@ -2,19 +2,19 @@ package netcup
 
 type DNSRecord struct {
 	ID           string `json:"id"`
-	Hostname     string `json:"hostname"`
-	Type         string `json:"type"`
-	Priority     string `json:"priority"`
-	Destination  string `json:"destination"`
 	DeleteRecord bool   `json:"deleterecord"`
+	Destination  string `json:"destination"`
+	Hostname     string `json:"hostname"`
+	Priority     string `json:"priority"`
 	State        string `json:"state"`
+	Type         string `json:"type"`
 }
 
 func NewDNSRecord(hostname, dnstype, destination string) *DNSRecord {
 	return &DNSRecord{
+		Destination: destination,
 		Hostname:    hostname,
 		Type:        dnstype,
-		Destination: destination,
 	}
 }
 

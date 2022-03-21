@@ -5,24 +5,20 @@ import (
 )
 
 type LoginResponse struct {
-	Session string `json:"session"`
+	Session string `json:"apisessionid"`
 }
 
 type NetcupResponse struct {
-	ServerRequestID string          `json:"serverrequestid"`
-	ClientRequestID string          `json:"clientrequestid"`
 	Action          string          `json:"action"`
-	Status          string          `json:"status"`
-	StatusCode      int             `json:"statuscode"`
-	ShortMessage    string          `json:"shortmessage"`
+	ClientRequestID string          `json:"clientrequestid"`
 	LongMessage     string          `json:"longmessage"`
 	ResponseData    json.RawMessage `json:"responsedata"`
+	ServerRequestID string          `json:"serverrequestid"`
+	ShortMessage    string          `json:"shortmessage"`
+	Status          string          `json:"status"`
+	StatusCode      int             `json:"statuscode"`
 }
 
 func (r *NetcupResponse) isSuccess() bool {
 	return r.Status == "success"
-}
-
-func (r *NetcupResponse) isError() bool {
-	return r.Status == "error"
 }

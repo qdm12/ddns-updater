@@ -16,13 +16,11 @@ issues:
         - gomnd
 
 linters:
-  disable-all: true
   enable:
     - asciicheck
     - bodyclose
     - dogsled
     - dupl
-    - errcheck
     - exhaustive
     - exportloopref
     - gci
@@ -39,10 +37,7 @@ linters:
     - goprintffuncname
     - gosec
     # - goerr113 # TODO
-    - gosimple
-    - govet
     - importas
-    - ineffassign
     - lll
     - misspell
     - nakedret
@@ -55,13 +50,10 @@ linters:
     - rowserrcheck
     - exportloopref
     - sqlclosecheck
-    - staticcheck
     - thelper
     - tparallel
-    - typecheck
     - unconvert
     - unparam
-    - unused
     - wastedassign
     - whitespace
 

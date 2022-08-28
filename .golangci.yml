@@ -17,15 +17,26 @@ issues:
     - path: _test\.go
       linters:
         - dupl
+        - containedctx
 
 linters:
   enable:
+    - asasalint
     - asciicheck
+    - bidichk
     - bodyclose
+    - containedctx
+    - decorder
     - dogsled
     - dupl
+    - durationcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - execinquery
     - exhaustive
     - exportloopref
+    - forcetypeassert
     - gci
     - gochecknoglobals
     - gochecknoinits
@@ -37,28 +48,39 @@ linters:
     - goheader
     - goimports
     - gomnd
+    - gomoddirectives
     - goprintffuncname
     - gosec
     # - goerr113 # TODO
+    - grouper
     - importas
+    - interfacebloat
     - ireturn
     - lll
+    - maintidx
+    - makezero
     - misspell
     - nakedret
     - nestif
     - nilerr
+    - nilnil
     - noctx
     - nolintlint
+    - nosprintfhostport
     - prealloc
     - predeclared
+    - promlinter
+    - reassign
     - revive
     - rowserrcheck
     - exportloopref
     - sqlclosecheck
+    - tenv
     - thelper
     - tparallel
     - unconvert
     - unparam
+    - usestdlibvars
     - wastedassign
     - whitespace
 

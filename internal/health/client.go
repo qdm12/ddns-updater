@@ -46,7 +46,7 @@ func (c *Client) Query(ctx context.Context, port uint16) error {
 
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("%s: %s", resp.Status, err)
+		return fmt.Errorf("reading body from response with status %s: %w", resp.Status, err)
 	}
 
 	return fmt.Errorf(string(b))

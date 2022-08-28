@@ -2,6 +2,7 @@ package update
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -25,7 +26,11 @@ func makeLogClient(client *http.Client, logger Logger) (newClient *http.Client) 
 		originalTransport = http.DefaultTransport
 	}
 
-	transport := originalTransport.(*http.Transport)
+	transport, ok := originalTransport.(*http.Transport)
+	if !ok {
+		panic(fmt.Sprintf("transport %T is not *http.Transport", originalTransport))
+	}
+
 	clonedTransport := transport.Clone()
 
 	newClient.Transport = &loggingRoundTripper{

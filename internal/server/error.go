@@ -15,7 +15,10 @@ func httpError(w http.ResponseWriter, status int, errString string) {
 		errString = http.StatusText(status)
 	}
 	body := errJSONWrapper{Error: errString}
-	_ = json.NewEncoder(w).Encode(body)
+	err := json.NewEncoder(w).Encode(body)
+	if err != nil {
+		panic(err)
+	}
 }
 
 type errorsJSONWrapper struct {
@@ -31,5 +34,8 @@ func httpErrors(w http.ResponseWriter, status int, errors []error) {
 	}
 
 	body := errorsJSONWrapper{Errors: errs}
-	_ = json.NewEncoder(w).Encode(body)
+	err := json.NewEncoder(w).Encode(body)
+	if err != nil {
+		panic(err)
+	}
 }

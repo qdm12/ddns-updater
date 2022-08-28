@@ -12,7 +12,7 @@ import (
 )
 
 type handlers struct {
-	ctx context.Context
+	ctx context.Context //nolint:containedctx
 	// Objects
 	db            Database
 	runner        UpdateForcer

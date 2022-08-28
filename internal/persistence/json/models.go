@@ -17,6 +17,10 @@ type record struct {
 }
 
 func (r record) String() string {
-	b, _ := json.Marshal(r)
+	b, err := json.Marshal(r)
+	if err != nil {
+		panic(err)
+	}
+
 	return string(b)
 }

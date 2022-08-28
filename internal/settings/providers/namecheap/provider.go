@@ -149,6 +149,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	if parsedXML.Errors.Error != "" {
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, parsedXML.Errors.Error)
 	}
+
+	if parsedXML.IP == "" {
+		// If XML has not IP address, just return the IP we sent.
+		newIP = ip
+		return newIP, nil
+	}
+
 	newIP = net.ParseIP(parsedXML.IP)
 	if newIP == nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, parsedXML.IP)

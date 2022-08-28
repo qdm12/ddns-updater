@@ -11,7 +11,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 )
 
-func (p *provider) createRecord(ctx context.Context, client *http.Client,
+func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	recordType, subdomain, ipStr string, timestamp int64) (err error) {
 	u := url.URL{
 		Scheme: p.apiURL.Scheme,

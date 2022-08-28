@@ -9,12 +9,12 @@ import (
 	"strconv"
 )
 
-func (p *provider) setHeaderCommon(header http.Header) {
+func (p *Provider) setHeaderCommon(header http.Header) {
 	header.Add("Accept", "application/json;charset=utf-8")
 	header.Add("X-Ovh-Application", p.appKey)
 }
 
-func (p *provider) setHeaderAuth(header http.Header, timestamp int64,
+func (p *Provider) setHeaderAuth(header http.Header, timestamp int64,
 	httpMethod string, url *url.URL, body []byte) {
 	header.Add("X-Ovh-Timestamp", strconv.Itoa(int(timestamp)))
 	header.Add("X-Ovh-Consumer", p.consumerKey)

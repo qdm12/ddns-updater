@@ -10,7 +10,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 )
 
-func (p *provider) getRecords(ctx context.Context, client *http.Client,
+func (p *Provider) getRecords(ctx context.Context, client *http.Client,
 	recordType, subdomain string, timestamp int64) (recordIDs []uint64, err error) {
 	values := url.Values{}
 	values.Set("fieldType", recordType)

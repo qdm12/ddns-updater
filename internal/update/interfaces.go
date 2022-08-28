@@ -14,7 +14,7 @@ type PublicIPFetcher interface {
 	IP6(ctx context.Context) (net.IP, error)
 }
 
-type Updater interface {
+type UpdaterInterface interface {
 	Update(ctx context.Context, recordID int, ip net.IP, now time.Time) (err error)
 }
 

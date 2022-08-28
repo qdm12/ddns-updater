@@ -9,7 +9,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 )
 
-func (p *provider) refresh(ctx context.Context, client *http.Client, timestamp int64) (err error) {
+func (p *Provider) refresh(ctx context.Context, client *http.Client, timestamp int64) (err error) {
 	u := url.URL{
 		Scheme: p.apiURL.Scheme,
 		Host:   p.apiURL.Host,

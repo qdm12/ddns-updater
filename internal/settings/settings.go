@@ -9,7 +9,7 @@ import (
 	"net/http"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/regex"
+	"github.com/qdm12/ddns-updater/internal/settings/common"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/aliyun"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/allinkl"
@@ -62,7 +62,7 @@ var ErrProviderUnknown = errors.New("unknown provider")
 
 //nolint:gocyclo
 func New(provider models.Provider, data json.RawMessage, domain, host string, //nolint:ireturn
-	ipVersion ipversion.IPVersion, matcher regex.Matcher) (
+	ipVersion ipversion.IPVersion, matcher common.Matcher) (
 	settings Settings, err error) {
 	switch provider {
 	case constants.Aliyun:
@@ -77,7 +77,7 @@ func New(provider models.Provider, data json.RawMessage, domain, host string, //
 		return ddnss.New(data, domain, host, ipVersion)
 	case constants.DigitalOcean:
 		return digitalocean.New(data, domain, host, ipVersion)
-	case constants.DnsOMatic:
+	case constants.DNSOMatic:
 		return dnsomatic.New(data, domain, host, ipVersion, matcher)
 	case constants.DNSPod:
 		return dnspod.New(data, domain, host, ipVersion)

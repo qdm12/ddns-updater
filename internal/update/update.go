@@ -14,7 +14,7 @@ import (
 	"github.com/qdm12/golibs/logging"
 )
 
-type updater struct {
+type Updater struct {
 	db     Database
 	client *http.Client
 	notify notifyFunc
@@ -23,9 +23,9 @@ type updater struct {
 
 type notifyFunc func(message string)
 
-func NewUpdater(db Database, client *http.Client, notify notifyFunc, logger logging.Logger) *updater {
+func NewUpdater(db Database, client *http.Client, notify notifyFunc, logger logging.Logger) *Updater {
 	client = makeLogClient(client, logger)
-	return &updater{
+	return &Updater{
 		db:     db,
 		client: client,
 		notify: notify,
@@ -33,7 +33,7 @@ func NewUpdater(db Database, client *http.Client, notify notifyFunc, logger logg
 	}
 }
 
-func (u *updater) Update(ctx context.Context, id int, ip net.IP, now time.Time) (err error) {
+func (u *Updater) Update(ctx context.Context, id int, ip net.IP, now time.Time) (err error) {
 	record, err := u.db.Select(id)
 	if err != nil {
 		return err

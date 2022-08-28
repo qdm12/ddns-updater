@@ -6,15 +6,15 @@ import (
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
-type database struct {
+type Database struct {
 	data []records.Record
 	sync.RWMutex
 	persistentDB PersistentDatabase
 }
 
 // NewDatabase creates a new in memory database.
-func NewDatabase(data []records.Record, persistentDB PersistentDatabase) *database {
-	return &database{
+func NewDatabase(data []records.Record, persistentDB PersistentDatabase) *Database {
+	return &Database{
 		data:         data,
 		persistentDB: persistentDB,
 	}

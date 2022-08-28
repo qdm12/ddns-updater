@@ -35,7 +35,7 @@ func Test_fetcher_IP(t *testing.T) {
 		}),
 	}
 
-	initialFetcher := &fetcher{
+	initialFetcher := &Fetcher{
 		client:  client,
 		timeout: time.Hour,
 		ip4or6: urlsRing{
@@ -43,7 +43,7 @@ func Test_fetcher_IP(t *testing.T) {
 			urls:    []string{"a", "b", "c"},
 		},
 	}
-	expectedFetcher := &fetcher{
+	expectedFetcher := &Fetcher{
 		client:  client,
 		timeout: time.Hour,
 		ip4or6: urlsRing{
@@ -79,7 +79,7 @@ func Test_fetcher_IP4(t *testing.T) {
 		}),
 	}
 
-	initialFetcher := &fetcher{
+	initialFetcher := &Fetcher{
 		client:  client,
 		timeout: time.Hour,
 		ip4: urlsRing{
@@ -87,7 +87,7 @@ func Test_fetcher_IP4(t *testing.T) {
 			urls:    []string{"a", "b", "c"},
 		},
 	}
-	expectedFetcher := &fetcher{
+	expectedFetcher := &Fetcher{
 		client:  client,
 		timeout: time.Hour,
 		ip4: urlsRing{
@@ -126,7 +126,7 @@ func Test_fetcher_IP6(t *testing.T) {
 		}),
 	}
 
-	initialFetcher := &fetcher{
+	initialFetcher := &Fetcher{
 		client:  client,
 		timeout: time.Hour,
 		ip6: urlsRing{
@@ -134,7 +134,7 @@ func Test_fetcher_IP6(t *testing.T) {
 			urls:    []string{"a", "b", "c"},
 		},
 	}
-	expectedFetcher := &fetcher{
+	expectedFetcher := &Fetcher{
 		client:  client,
 		timeout: time.Hour,
 		ip6: urlsRing{
@@ -177,15 +177,15 @@ func Test_fetcher_ip(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		initialFetcher *fetcher
+		initialFetcher *Fetcher
 		ctx            context.Context
 		publicIP       net.IP
 		err            error
-		finalFetcher   *fetcher // client is ignored when comparing the two
+		finalFetcher   *Fetcher // client is ignored when comparing the two
 	}{
 		"first run": {
 			ctx: context.Background(),
-			initialFetcher: &fetcher{
+			initialFetcher: &Fetcher{
 				timeout: time.Hour,
 				client:  newTestClient("b", []byte(`55.55.55.55`), nil),
 				ip4or6: urlsRing{
@@ -194,7 +194,7 @@ func Test_fetcher_ip(t *testing.T) {
 				},
 			},
 			publicIP: net.IP{55, 55, 55, 55},
-			finalFetcher: &fetcher{
+			finalFetcher: &Fetcher{
 				timeout: time.Hour,
 				ip4or6: urlsRing{
 					counter: uint32Ptr(1),
@@ -204,7 +204,7 @@ func Test_fetcher_ip(t *testing.T) {
 		},
 		"second run": {
 			ctx: context.Background(),
-			initialFetcher: &fetcher{
+			initialFetcher: &Fetcher{
 				timeout: time.Hour,
 				client:  newTestClient("a", []byte(`55.55.55.55`), nil),
 				ip4or6: urlsRing{
@@ -213,7 +213,7 @@ func Test_fetcher_ip(t *testing.T) {
 				},
 			},
 			publicIP: net.IP{55, 55, 55, 55},
-			finalFetcher: &fetcher{
+			finalFetcher: &Fetcher{
 				timeout: time.Hour,
 				ip4or6: urlsRing{
 					counter: uint32Ptr(2),
@@ -223,7 +223,7 @@ func Test_fetcher_ip(t *testing.T) {
 		},
 		"max uint32": {
 			ctx: context.Background(),
-			initialFetcher: &fetcher{
+			initialFetcher: &Fetcher{
 				timeout: time.Hour,
 				client:  newTestClient("a", []byte(`55.55.55.55`), nil),
 				ip4or6: urlsRing{
@@ -232,7 +232,7 @@ func Test_fetcher_ip(t *testing.T) {
 				},
 			},
 			publicIP: net.IP{55, 55, 55, 55},
-			finalFetcher: &fetcher{
+			finalFetcher: &Fetcher{
 				timeout: time.Hour,
 				ip4or6: urlsRing{
 					counter: uint32Ptr(0),
@@ -242,14 +242,14 @@ func Test_fetcher_ip(t *testing.T) {
 		},
 		"zero timeout": {
 			ctx: context.Background(),
-			initialFetcher: &fetcher{
+			initialFetcher: &Fetcher{
 				client: newTestClient("a", nil, nil),
 				ip4or6: urlsRing{
 					counter: uint32Ptr(1),
 					urls:    []string{"a", "b"},
 				},
 			},
-			finalFetcher: &fetcher{
+			finalFetcher: &Fetcher{
 				ip4or6: urlsRing{
 					counter: uint32Ptr(2),
 					urls:    []string{"a", "b"},
@@ -259,7 +259,7 @@ func Test_fetcher_ip(t *testing.T) {
 		},
 		"canceled context": {
 			ctx: canceledCtx,
-			initialFetcher: &fetcher{
+			initialFetcher: &Fetcher{
 				timeout: time.Hour,
 				client:  newTestClient("a", nil, nil),
 				ip4or6: urlsRing{
@@ -267,7 +267,7 @@ func Test_fetcher_ip(t *testing.T) {
 					urls:    []string{"a", "b"},
 				},
 			},
-			finalFetcher: &fetcher{
+			finalFetcher: &Fetcher{
 				timeout: time.Hour,
 				ip4or6: urlsRing{
 					counter: uint32Ptr(2),

@@ -15,7 +15,7 @@ type ipFetcher interface {
 	IP6(ctx context.Context) (ipv6 net.IP, err error)
 }
 
-type fetcher struct {
+type Fetcher struct {
 	settings settings
 	fetchers []ipFetcher
 	// Cycling effect if both are enabled
@@ -24,13 +24,13 @@ type fetcher struct {
 
 var ErrNoFetchTypeSpecified = errors.New("at least one fetcher type must be specified")
 
-func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f *fetcher, err error) {
+func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f *Fetcher, err error) {
 	settings := settings{
 		dns:  dnsSettings,
 		http: httpSettings,
 	}
 
-	fetcher := &fetcher{
+	fetcher := &Fetcher{
 		settings: settings,
 		counter:  new(uint32),
 	}
@@ -58,14 +58,14 @@ func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f *fetcher,
 	return fetcher, nil
 }
 
-func (f *fetcher) IP(ctx context.Context) (ip net.IP, err error) {
+func (f *Fetcher) IP(ctx context.Context) (ip net.IP, err error) {
 	return f.getSubFetcher().IP(ctx)
 }
 
-func (f *fetcher) IP4(ctx context.Context) (ipv4 net.IP, err error) {
+func (f *Fetcher) IP4(ctx context.Context) (ipv4 net.IP, err error) {
 	return f.getSubFetcher().IP4(ctx)
 }
 
-func (f *fetcher) IP6(ctx context.Context) (ipv6 net.IP, err error) {
+func (f *Fetcher) IP6(ctx context.Context) (ipv6 net.IP, err error) {
 	return f.getSubFetcher().IP6(ctx)
 }

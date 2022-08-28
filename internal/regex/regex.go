@@ -2,19 +2,7 @@ package regex
 
 import "regexp"
 
-type Matcher interface {
-	GandiKey(s string) bool
-	GodaddyKey(s string) bool
-	DuckDNSToken(s string) bool
-	NamecheapPassword(s string) bool
-	DreamhostKey(s string) bool
-	CloudflareKey(s string) bool
-	CloudflareUserServiceKey(s string) bool
-	DNSOMaticUsername(s string) bool
-	DNSOMaticPassword(s string) bool
-}
-
-type matcher struct {
+type Matcher struct {
 	goDaddyKey, duckDNSToken, namecheapPassword, dreamhostKey, cloudflareKey,
 	cloudflareUserServiceKey, dnsOMaticUsername, dnsOMaticPassword, gandiKey *regexp.Regexp
 }
@@ -31,8 +19,8 @@ var (
 	dnsOMaticPassword        = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{5,19}$`)
 )
 
-func NewMatcher() *matcher {
-	return &matcher{
+func NewMatcher() *Matcher {
+	return &Matcher{
 		gandiKey:                 gandiKey,
 		goDaddyKey:               goDaddyKey,
 		duckDNSToken:             duckDNSToken,
@@ -45,14 +33,14 @@ func NewMatcher() *matcher {
 	}
 }
 
-func (m *matcher) GandiKey(s string) bool          { return m.gandiKey.MatchString(s) }
-func (m *matcher) GodaddyKey(s string) bool        { return m.goDaddyKey.MatchString(s) }
-func (m *matcher) DuckDNSToken(s string) bool      { return m.duckDNSToken.MatchString(s) }
-func (m *matcher) NamecheapPassword(s string) bool { return m.namecheapPassword.MatchString(s) }
-func (m *matcher) DreamhostKey(s string) bool      { return m.dreamhostKey.MatchString(s) }
-func (m *matcher) CloudflareKey(s string) bool     { return m.cloudflareKey.MatchString(s) }
-func (m *matcher) CloudflareUserServiceKey(s string) bool {
+func (m *Matcher) GandiKey(s string) bool          { return m.gandiKey.MatchString(s) }
+func (m *Matcher) GodaddyKey(s string) bool        { return m.goDaddyKey.MatchString(s) }
+func (m *Matcher) DuckDNSToken(s string) bool      { return m.duckDNSToken.MatchString(s) }
+func (m *Matcher) NamecheapPassword(s string) bool { return m.namecheapPassword.MatchString(s) }
+func (m *Matcher) DreamhostKey(s string) bool      { return m.dreamhostKey.MatchString(s) }
+func (m *Matcher) CloudflareKey(s string) bool     { return m.cloudflareKey.MatchString(s) }
+func (m *Matcher) CloudflareUserServiceKey(s string) bool {
 	return m.cloudflareUserServiceKey.MatchString(s)
 }
-func (m *matcher) DNSOMaticUsername(s string) bool { return m.dnsOMaticUsername.MatchString(s) }
-func (m *matcher) DNSOMaticPassword(s string) bool { return m.dnsOMaticPassword.MatchString(s) }
+func (m *Matcher) DNSOMaticUsername(s string) bool { return m.dnsOMaticUsername.MatchString(s) }
+func (m *Matcher) DNSOMaticPassword(s string) bool { return m.dnsOMaticPassword.MatchString(s) }

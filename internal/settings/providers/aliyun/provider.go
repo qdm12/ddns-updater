@@ -16,30 +16,30 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type provider struct {
+type Provider struct {
 	domain       string
 	host         string
 	ipVersion    ipversion.IPVersion
-	accessKeyId  string
+	accessKeyID  string
 	accessSecret string
 	region       string
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion) (p *provider, err error) {
+	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
-		AccessKeyId  string `json:"access_key_id"`
+		AccessKeyID  string `json:"access_key_id"`
 		AccessSecret string `json:"access_secret"`
 		Region       string `json:"region"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	p = &provider{
+	p = &Provider{
 		domain:       domain,
 		host:         host,
 		ipVersion:    ipVersion,
-		accessKeyId:  extraSettings.AccessKeyId,
+		accessKeyID:  extraSettings.AccessKeyID,
 		accessSecret: extraSettings.AccessSecret,
 		region:       "cn-hangzhou",
 	}
@@ -52,41 +52,41 @@ func New(data json.RawMessage, domain, host string,
 	return p, nil
 }
 
-func (p *provider) isValid() error {
+func (p *Provider) isValid() error {
 	switch {
-	case p.accessKeyId == "":
-		return errors.ErrEmptyAccessKeyId
+	case p.accessKeyID == "":
+		return errors.ErrEmptyAccessKeyID
 	case p.accessSecret == "":
 		return errors.ErrEmptyAccessKeySecret
 	}
 	return nil
 }
 
-func (p *provider) String() string {
+func (p *Provider) String() string {
 	return utils.ToString(p.domain, p.host, constants.Aliyun, p.ipVersion)
 }
 
-func (p *provider) Domain() string {
+func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *provider) Host() string {
+func (p *Provider) Host() string {
 	return p.host
 }
 
-func (p *provider) IPVersion() ipversion.IPVersion {
+func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
 }
 
-func (p *provider) Proxied() bool {
+func (p *Provider) Proxied() bool {
 	return false
 }
 
-func (p *provider) BuildDomainName() string {
+func (p *Provider) BuildDomainName() string {
 	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (p *provider) HTML() models.HTMLRow {
+func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
 		Host:      models.HTML(p.Host()),
@@ -95,13 +95,13 @@ func (p *provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *provider) Update(ctx context.Context, _ *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, _ *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := constants.A
 	if ip.To4() == nil {
 		recordType = constants.AAAA
 	}
 
-	client, err := alidns.NewClientWithAccessKey(p.region, p.accessKeyId, p.accessSecret)
+	client, err := alidns.NewClientWithAccessKey(p.region, p.accessKeyID, p.accessSecret)
 	if err != nil {
 		return nil, err
 	}

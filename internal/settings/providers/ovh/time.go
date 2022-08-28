@@ -11,7 +11,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 )
 
-func (p *provider) getAdjustedUnixTimestamp(ctx context.Context, client *http.Client) (
+func (p *Provider) getAdjustedUnixTimestamp(ctx context.Context, client *http.Client) (
 	unix int64, err error) {
 	delta, err := p.getTimeDelta(ctx, client)
 	if err != nil {
@@ -26,7 +26,7 @@ func (p *provider) getAdjustedUnixTimestamp(ctx context.Context, client *http.Cl
 // getTimeDelta obtains the delta between the OVH server time and this machine time.
 // If it is the first time executing, it fetches the time from OVH servers to calculate the
 // delta. Otherwise, it uses the delta calculated previously.
-func (p *provider) getTimeDelta(ctx context.Context, client *http.Client) (delta time.Duration, err error) {
+func (p *Provider) getTimeDelta(ctx context.Context, client *http.Client) (delta time.Duration, err error) {
 	if p.serverDelta > 0 {
 		return p.serverDelta, nil
 	}
@@ -41,7 +41,7 @@ func (p *provider) getTimeDelta(ctx context.Context, client *http.Client) (delta
 	return p.serverDelta, nil
 }
 
-func (p *provider) getOVHTime(ctx context.Context, client *http.Client) (ovhTime time.Time, err error) {
+func (p *Provider) getOVHTime(ctx context.Context, client *http.Client) (ovhTime time.Time, err error) {
 	u := url.URL{
 		Scheme: p.apiURL.Scheme,
 		Host:   p.apiURL.Host,

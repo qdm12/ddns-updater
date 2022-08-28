@@ -18,7 +18,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type provider struct {
+type Provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
@@ -29,7 +29,7 @@ type provider struct {
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion) (p *provider, err error) {
+	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
 		User          string `json:"user"`
 		Password      string `json:"password"`
@@ -39,7 +39,7 @@ func New(data json.RawMessage, domain, host string,
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	p = &provider{
+	p = &Provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
@@ -54,7 +54,7 @@ func New(data json.RawMessage, domain, host string,
 	return p, nil
 }
 
-func (p *provider) isValid() error {
+func (p *Provider) isValid() error {
 	if len(p.token) > 0 {
 		return nil
 	}
@@ -69,31 +69,31 @@ func (p *provider) isValid() error {
 	return nil
 }
 
-func (p *provider) String() string {
+func (p *Provider) String() string {
 	return fmt.Sprintf("[domain: %s | host: %s | provider: Spdyn]", p.domain, p.host)
 }
 
-func (p *provider) Domain() string {
+func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *provider) Host() string {
+func (p *Provider) Host() string {
 	return p.host
 }
 
-func (p *provider) IPVersion() ipversion.IPVersion {
+func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
 }
 
-func (p *provider) Proxied() bool {
+func (p *Provider) Proxied() bool {
 	return false
 }
 
-func (p *provider) BuildDomainName() string {
+func (p *Provider) BuildDomainName() string {
 	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (p *provider) HTML() models.HTMLRow {
+func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
 		Host:      models.HTML(p.Host()),
@@ -102,7 +102,7 @@ func (p *provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	// see https://wiki.securepoint.de/SPDyn/Variablen
 	u := url.URL{
 		Scheme: "https",

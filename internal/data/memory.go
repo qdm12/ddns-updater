@@ -6,7 +6,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
-func (db *database) Select(id int) (record records.Record, err error) {
+func (db *Database) Select(id int) (record records.Record, err error) {
 	db.RLock()
 	defer db.RUnlock()
 	if id < 0 {
@@ -18,7 +18,7 @@ func (db *database) Select(id int) (record records.Record, err error) {
 	return db.data[id], nil
 }
 
-func (db *database) SelectAll() (records []records.Record) {
+func (db *Database) SelectAll() (records []records.Record) {
 	db.RLock()
 	defer db.RUnlock()
 	return db.data

@@ -7,7 +7,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type fetcher struct {
+type Fetcher struct {
 	client  *http.Client
 	timeout time.Duration
 	ip4or6  urlsRing // URLs to get ipv4 or ipv6
@@ -20,7 +20,7 @@ type urlsRing struct {
 	urls    []string
 }
 
-func New(client *http.Client, options ...Option) (f *fetcher, err error) {
+func New(client *http.Client, options ...Option) (f *Fetcher, err error) {
 	settings := newDefaultSettings()
 	for _, option := range options {
 		if err := option(&settings); err != nil {
@@ -28,7 +28,7 @@ func New(client *http.Client, options ...Option) (f *fetcher, err error) {
 		}
 	}
 
-	fetcher := &fetcher{
+	fetcher := &Fetcher{
 		client:  client,
 		timeout: settings.timeout,
 	}

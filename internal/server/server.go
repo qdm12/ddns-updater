@@ -8,23 +8,23 @@ import (
 	"github.com/qdm12/golibs/logging"
 )
 
-type server struct {
+type Server struct {
 	address string
 	logger  logging.Logger
 	handler http.Handler
 }
 
 func New(ctx context.Context, address, rootURL string, db Database,
-	logger logging.Logger, runner UpdateForcer) *server {
+	logger logging.Logger, runner UpdateForcer) *Server {
 	handler := newHandler(ctx, rootURL, db, runner)
-	return &server{
+	return &Server{
 		address: address,
 		logger:  logger,
 		handler: handler,
 	}
 }
 
-func (s *server) Run(ctx context.Context, done chan<- struct{}) {
+func (s *Server) Run(ctx context.Context, done chan<- struct{}) {
 	defer close(done)
 	server := http.Server{
 		Addr:              s.address,

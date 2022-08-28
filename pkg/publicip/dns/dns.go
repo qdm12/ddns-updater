@@ -6,7 +6,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-type fetcher struct {
+type Fetcher struct {
 	ring    ring
 	client  Client
 	client4 Client
@@ -19,7 +19,7 @@ type ring struct {
 	providers []Provider
 }
 
-func New(options ...Option) (f *fetcher, err error) {
+func New(options ...Option) (f *Fetcher, err error) {
 	settings := newDefaultSettings()
 	for _, option := range options {
 		if err := option(&settings); err != nil {
@@ -31,7 +31,7 @@ func New(options ...Option) (f *fetcher, err error) {
 		Timeout: settings.timeout,
 	}
 
-	return &fetcher{
+	return &Fetcher{
 		ring: ring{
 			counter:   new(uint32),
 			providers: settings.providers,

@@ -29,7 +29,7 @@ type commonSettings struct {
 
 // JSONSettings obtain the update settings from the JSON content, first trying from the environment variable CONFIG
 // and then from the file config.json.
-func (r *reader) JSONSettings(filePath string) (
+func (r *Reader) JSONSettings(filePath string) (
 	allSettings []settings.Settings, warnings []string, err error) {
 	allSettings, warnings, err = r.getSettingsFromEnv(filePath)
 	if allSettings != nil || warnings != nil || err != nil {
@@ -41,7 +41,7 @@ func (r *reader) JSONSettings(filePath string) (
 var errWriteConfigToFile = errors.New("cannot write configuration to file")
 
 // getSettingsFromFile obtain the update settings from config.json.
-func (r *reader) getSettingsFromFile(filePath string) (
+func (r *Reader) getSettingsFromFile(filePath string) (
 	allSettings []settings.Settings, warnings []string, err error) {
 	r.logger.Info("reading JSON config from file " + filePath)
 	bytes, err := r.readFile(filePath)
@@ -67,7 +67,7 @@ func (r *reader) getSettingsFromFile(filePath string) (
 
 // getSettingsFromEnv obtain the update settings from the environment variable CONFIG.
 // If the settings are valid, they are written to the filePath.
-func (r *reader) getSettingsFromEnv(filePath string) (
+func (r *Reader) getSettingsFromEnv(filePath string) (
 	allSettings []settings.Settings, warnings []string, err error) {
 	s, err := r.env.Get("CONFIG", params.CaseSensitiveValue())
 	if err != nil {
@@ -132,7 +132,7 @@ func extractAllSettings(jsonBytes []byte) (
 }
 
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
-	matcher regex.Matcher) (
+	matcher *regex.Matcher) (
 	settingsSlice []settings.Settings, warnings []string, err error) {
 	provider := models.Provider(common.Provider)
 	if provider == constants.DuckDNS { // only hosts, no domain

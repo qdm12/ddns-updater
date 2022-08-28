@@ -12,7 +12,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 )
 
-func (p *provider) updateRecord(ctx context.Context, client *http.Client,
+func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	recordID uint64, ipStr string, timestamp int64) (err error) {
 	u := url.URL{
 		Scheme: p.apiURL.Scheme,

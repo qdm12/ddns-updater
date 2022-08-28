@@ -19,7 +19,7 @@ import (
 	"github.com/qdm12/golibs/verification"
 )
 
-type provider struct {
+type Provider struct {
 	domain    string
 	host      string
 	ipVersion ipversion.IPVersion
@@ -28,7 +28,7 @@ type provider struct {
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion) (p *provider, err error) {
+	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
 		Email string `json:"email"`
 		Token string `json:"token"`
@@ -36,7 +36,7 @@ func New(data json.RawMessage, domain, host string,
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
-	p = &provider{
+	p = &Provider{
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
@@ -49,7 +49,7 @@ func New(data json.RawMessage, domain, host string,
 	return p, nil
 }
 
-func (p *provider) isValid() error {
+func (p *Provider) isValid() error {
 	switch {
 	case !verification.NewRegex().MatchEmail(p.email):
 		return errors.ErrMalformedEmail
@@ -59,31 +59,31 @@ func (p *provider) isValid() error {
 	return nil
 }
 
-func (p *provider) String() string {
+func (p *Provider) String() string {
 	return utils.ToString(p.domain, p.host, constants.LuaDNS, p.ipVersion)
 }
 
-func (p *provider) Domain() string {
+func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *provider) Host() string {
+func (p *Provider) Host() string {
 	return p.host
 }
 
-func (p *provider) IPVersion() ipversion.IPVersion {
+func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
 }
 
-func (p *provider) Proxied() bool {
+func (p *Provider) Proxied() bool {
 	return false
 }
 
-func (p *provider) BuildDomainName() string {
+func (p *Provider) BuildDomainName() string {
 	return utils.BuildDomainName(p.host, p.domain)
 }
 
-func (p *provider) HTML() models.HTMLRow {
+func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
 		Host:      models.HTML(p.Host()),
@@ -92,13 +92,13 @@ func (p *provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *provider) setHeaders(request *http.Request) {
+func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetAccept(request, "application/json")
 }
 
 // Using https://www.luadns.com/api.html
-func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	zoneID, err := p.getZoneID(ctx, client)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrGetZoneID, err)
@@ -130,7 +130,7 @@ type luaDNSError struct {
 	Message string `json:"message"`
 }
 
-func (p *provider) getZoneID(ctx context.Context, client *http.Client) (zoneID int, err error) {
+func (p *Provider) getZoneID(ctx context.Context, client *http.Client) (zoneID int, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.luadns.com",
@@ -181,7 +181,7 @@ func (p *provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 	return 0, errors.ErrZoneNotFound
 }
 
-func (p *provider) getRecord(ctx context.Context, client *http.Client, zoneID int, ip net.IP) (
+func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID int, ip net.IP) (
 	record luaDNSRecord, err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -235,7 +235,7 @@ func (p *provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 		errors.ErrRecordNotFound, recordType, zoneID)
 }
 
-func (p *provider) updateRecord(ctx context.Context, client *http.Client,
+func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	zoneID int, newRecord luaDNSRecord) (err error) {
 	u := url.URL{
 		Scheme: "https",

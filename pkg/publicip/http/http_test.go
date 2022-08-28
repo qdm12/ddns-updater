@@ -17,11 +17,11 @@ func Test_New(t *testing.T) {
 
 	testCases := map[string]struct {
 		options []Option
-		fetcher *fetcher
+		fetcher *Fetcher
 		err     error
 	}{
 		"no options": {
-			fetcher: &fetcher{
+			fetcher: &Fetcher{
 				client:  client,
 				timeout: 5 * time.Second,
 				ip4or6: urlsRing{
@@ -45,7 +45,7 @@ func Test_New(t *testing.T) {
 				SetProvidersIP6(Ipify),
 				SetTimeout(time.Second),
 			},
-			fetcher: &fetcher{
+			fetcher: &Fetcher{
 				client:  client,
 				timeout: time.Second,
 				ip4or6: urlsRing{

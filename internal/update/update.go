@@ -9,18 +9,13 @@ import (
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
-	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/models"
 	settingserrors "github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/golibs/logging"
 )
 
-type Updater interface {
-	Update(ctx context.Context, id int, ip net.IP, now time.Time) (err error)
-}
-
 type updater struct {
-	db     data.Database
+	db     Database
 	client *http.Client
 	notify notifyFunc
 	logger logging.Logger
@@ -28,7 +23,7 @@ type updater struct {
 
 type notifyFunc func(message string)
 
-func NewUpdater(db data.Database, client *http.Client, notify notifyFunc, logger logging.Logger) Updater {
+func NewUpdater(db Database, client *http.Client, notify notifyFunc, logger logging.Logger) *updater {
 	client = makeLogClient(client, logger)
 	return &updater{
 		db:     db,

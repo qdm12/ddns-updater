@@ -9,7 +9,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/http"
 )
 
-type Fetcher interface {
+type ipFetcher interface {
 	IP(ctx context.Context) (ip net.IP, err error)
 	IP4(ctx context.Context) (ipv4 net.IP, err error)
 	IP6(ctx context.Context) (ipv6 net.IP, err error)
@@ -17,14 +17,14 @@ type Fetcher interface {
 
 type fetcher struct {
 	settings settings
-	fetchers []Fetcher
+	fetchers []ipFetcher
 	// Cycling effect if both are enabled
 	counter *uint32 // 32 bit for 32 bit systems
 }
 
 var ErrNoFetchTypeSpecified = errors.New("at least one fetcher type must be specified")
 
-func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f Fetcher, err error) {
+func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f *fetcher, err error) {
 	settings := settings{
 		dns:  dnsSettings,
 		http: httpSettings,

@@ -6,11 +6,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
-type EphemeralDatabase interface {
-	Select(id int) (record records.Record, err error)
-	SelectAll() (records []records.Record)
-}
-
 func (db *database) Select(id int) (record records.Record, err error) {
 	db.RLock()
 	defer db.RUnlock()

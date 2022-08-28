@@ -31,7 +31,7 @@ var (
 	dnsOMaticPassword        = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{5,19}$`)
 )
 
-func NewMatcher() Matcher {
+func NewMatcher() *matcher {
 	return &matcher{
 		gandiKey:                 gandiKey,
 		goDaddyKey:               goDaddyKey,

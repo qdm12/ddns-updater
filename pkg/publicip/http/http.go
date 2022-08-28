@@ -1,19 +1,11 @@
 package http
 
 import (
-	"context"
-	"net"
 	"net/http"
 	"time"
 
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
-
-type Fetcher interface {
-	IP(ctx context.Context) (publicIP net.IP, err error)
-	IP4(ctx context.Context) (publicIP net.IP, err error)
-	IP6(ctx context.Context) (publicIP net.IP, err error)
-}
 
 type fetcher struct {
 	client  *http.Client
@@ -28,7 +20,7 @@ type urlsRing struct {
 	urls    []string
 }
 
-func New(client *http.Client, options ...Option) (f Fetcher, err error) {
+func New(client *http.Client, options ...Option) (f *fetcher, err error) {
 	settings := newDefaultSettings()
 	for _, option := range options {
 		if err := option(&settings); err != nil {

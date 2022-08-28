@@ -9,15 +9,13 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/qdm12/ddns-updater/internal/data"
-	"github.com/qdm12/ddns-updater/internal/update"
 )
 
 type handlers struct {
 	ctx context.Context
 	// Objects
-	db            data.Database
-	runner        update.Runner
+	db            Database
+	runner        UpdateForcer
 	indexTemplate *template.Template
 	// Mockable functions
 	timeNow func() time.Time
@@ -27,7 +25,7 @@ type handlers struct {
 var uiFS embed.FS
 
 func newHandler(ctx context.Context, rootURL string,
-	db data.Database, runner update.Runner) http.Handler {
+	db Database, runner UpdateForcer) http.Handler {
 	indexTemplate := template.Must(template.ParseFS(uiFS, "ui/index.html"))
 
 	handlers := &handlers{

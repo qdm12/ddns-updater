@@ -75,18 +75,16 @@ func Test_New(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			f, err := New(client, testCase.options...)
+			fetcher, err := New(client, testCase.options...)
 
 			if testCase.err != nil {
 				require.Error(t, err)
 				assert.Equal(t, testCase.err.Error(), err.Error())
-				assert.Nil(t, f)
+				assert.Nil(t, fetcher)
 				return
 			}
 			assert.NoError(t, err)
-			implementation, ok := f.(*fetcher)
-			require.True(t, ok)
-			assert.Equal(t, testCase.fetcher, implementation)
+			assert.Equal(t, testCase.fetcher, fetcher)
 		})
 	}
 }

@@ -8,17 +8,13 @@ import (
 	"github.com/qdm12/golibs/logging"
 )
 
-type Server interface {
-	Run(ctx context.Context, done chan<- struct{})
-}
-
 type server struct {
 	address string
 	logger  logging.Logger
 	handler http.Handler
 }
 
-func NewServer(address string, logger logging.Logger, healthcheck func() error) Server {
+func NewServer(address string, logger logging.Logger, healthcheck func() error) *server {
 	handler := newHandler(logger, healthcheck)
 	return &server{
 		address: address,

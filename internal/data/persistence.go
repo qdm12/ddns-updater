@@ -7,14 +7,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
-var _ PersistentDatabase = (*database)(nil)
-
-type PersistentDatabase interface {
-	GetEvents(domain, host string) (events []models.HistoryEvent, err error)
-	Update(id int, record records.Record) (err error)
-	Close() (err error)
-}
-
 func (db *database) GetEvents(domain, host string) (events []models.HistoryEvent, err error) {
 	return db.persistentDB.GetEvents(domain, host)
 }

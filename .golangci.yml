@@ -41,6 +41,7 @@ linters:
     - gosec
     # - goerr113 # TODO
     - importas
+    - ireturn
     - lll
     - misspell
     - nakedret

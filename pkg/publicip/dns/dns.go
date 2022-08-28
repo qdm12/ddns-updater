@@ -1,17 +1,10 @@
 package dns
 
 import (
-	"context"
 	"net"
 
 	"github.com/miekg/dns"
 )
-
-type Fetcher interface {
-	IP(ctx context.Context) (publicIP net.IP, err error)
-	IP4(ctx context.Context) (publicIP net.IP, err error)
-	IP6(ctx context.Context) (publicIP net.IP, err error)
-}
 
 type fetcher struct {
 	ring    ring
@@ -26,7 +19,7 @@ type ring struct {
 	providers []Provider
 }
 
-func New(options ...Option) (f Fetcher, err error) {
+func New(options ...Option) (f *fetcher, err error) {
 	settings := newDefaultSettings()
 	for _, option := range options {
 		if err := option(&settings); err != nil {

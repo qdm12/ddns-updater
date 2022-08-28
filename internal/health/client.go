@@ -14,15 +14,11 @@ func IsClientMode(args []string) bool {
 	return len(args) > 1 && args[1] == "healthcheck"
 }
 
-type Client interface {
-	Query(ctx context.Context, port uint16) error
-}
-
 type client struct {
 	*http.Client
 }
 
-func NewClient() Client {
+func NewClient() *client {
 	const timeout = 5 * time.Second
 	return &client{
 		Client: &http.Client{Timeout: timeout},

@@ -23,7 +23,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/health"
 	"github.com/qdm12/ddns-updater/internal/models"
 	jsonparams "github.com/qdm12/ddns-updater/internal/params"
-	"github.com/qdm12/ddns-updater/internal/persistence"
+	persistence "github.com/qdm12/ddns-updater/internal/persistence/json"
 	recordslib "github.com/qdm12/ddns-updater/internal/records"
 	"github.com/qdm12/ddns-updater/internal/server"
 	"github.com/qdm12/ddns-updater/internal/update"
@@ -164,7 +164,7 @@ func _main(ctx context.Context, env params.Interface, args []string, logger logg
 		}
 	}
 
-	persistentDB, err := persistence.NewJSON(config.Paths.DataDir)
+	persistentDB, err := persistence.NewDatabase(config.Paths.DataDir)
 	if err != nil {
 		notify(err.Error())
 		return err

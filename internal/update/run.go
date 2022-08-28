@@ -7,36 +7,29 @@ import (
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
-	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/models"
 	librecords "github.com/qdm12/ddns-updater/internal/records"
-	"github.com/qdm12/ddns-updater/pkg/publicip"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/golibs/logging"
 )
 
-type Runner interface {
-	Run(ctx context.Context, done chan<- struct{})
-	ForceUpdate(ctx context.Context) []error
-}
-
 type runner struct {
 	period      time.Duration
-	db          data.Database
+	db          Database
 	updater     Updater
 	force       chan struct{}
 	forceResult chan []error
 	ipv6Mask    net.IPMask
 	cooldown    time.Duration
 	resolver    *net.Resolver
-	ipGetter    publicip.Fetcher
+	ipGetter    PublicIPFetcher
 	logger      logging.Logger
 	timeNow     func() time.Time
 }
 
-func NewRunner(db data.Database, updater Updater, ipGetter publicip.Fetcher,
+func NewRunner(db Database, updater Updater, ipGetter PublicIPFetcher,
 	period time.Duration, ipv6Mask net.IPMask, cooldown time.Duration,
-	logger logging.Logger, timeNow func() time.Time) Runner {
+	logger logging.Logger, timeNow func() time.Time) *runner {
 	return &runner{
 		period:      period,
 		db:          db,
@@ -246,7 +239,7 @@ func getIPMatchingVersion(ip, ipv4, ipv6 net.IP, ipVersion ipversion.IPVersion) 
 	return nil
 }
 
-func setInitialUpToDateStatus(db data.Database, id int, updateIP net.IP, now time.Time) error {
+func setInitialUpToDateStatus(db Database, id int, updateIP net.IP, now time.Time) error {
 	record, err := db.Select(id)
 	if err != nil {
 		return err

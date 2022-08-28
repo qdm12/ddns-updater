@@ -20,7 +20,7 @@ func Test_newDefaultSettings(t *testing.T) {
 	assert.GreaterOrEqual(t, int(settings.timeout), int(time.Millisecond))
 }
 
-func Test_SetProvidersIP(t *testing.T) { //nolint:dupl
+func Test_SetProvidersIP(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -72,7 +72,7 @@ func Test_SetProvidersIP(t *testing.T) { //nolint:dupl
 	}
 }
 
-func Test_SetProvidersIP4(t *testing.T) { //nolint:dupl
+func Test_SetProvidersIP4(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -124,7 +124,7 @@ func Test_SetProvidersIP4(t *testing.T) { //nolint:dupl
 	}
 }
 
-func Test_SetProvidersIP6(t *testing.T) { //nolint:dupl
+func Test_SetProvidersIP6(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {

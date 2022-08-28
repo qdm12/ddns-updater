@@ -32,7 +32,12 @@ func New(ctx context.Context, address, rootURL string, db data.Database, logger 
 
 func (s *server) Run(ctx context.Context, done chan<- struct{}) {
 	defer close(done)
-	server := http.Server{Addr: s.address, Handler: s.handler}
+	server := http.Server{
+		Addr:              s.address,
+		Handler:           s.handler,
+		ReadHeaderTimeout: time.Second,
+		ReadTimeout:       time.Second,
+	}
 	go func() {
 		<-ctx.Done()
 		s.logger.Warn("shutting down (context canceled)")

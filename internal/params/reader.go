@@ -2,7 +2,6 @@ package params
 
 import (
 	"io/fs"
-	"io/ioutil"
 	"os"
 
 	"github.com/qdm12/ddns-updater/internal/settings"
@@ -25,7 +24,7 @@ func NewReader(logger logging.Logger) Reader {
 	return &reader{
 		logger:    logger,
 		env:       params.New(),
-		readFile:  ioutil.ReadFile,
+		readFile:  os.ReadFile,
 		writeFile: os.WriteFile,
 	}
 }

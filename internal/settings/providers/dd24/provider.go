@@ -134,7 +134,7 @@ func (p *provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	switch {
 	case strings.Contains(s, "authorization failed"):
 		return nil, errors.ErrAuth
-	case s == "":
+	case s == "", strings.Contains(s, "success"):
 		return ip, nil
 	// TODO missing cases
 	default:

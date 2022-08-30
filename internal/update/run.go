@@ -117,10 +117,11 @@ func (r *Runner) getNewIPs(ctx context.Context, doIP, doIPv4, doIPv6 bool, ipv6M
 }
 
 func (r *Runner) getRecordIDsToUpdate(ctx context.Context, records []librecords.Record,
-	ip, ipv4, ipv6 net.IP, now time.Time, ipv6Mask net.IPMask) (recordIDs map[int]struct{}) {
-	recordIDs = make(map[int]struct{})
-	for id, record := range records {
+	ip, ipv4, ipv6 net.IP, now time.Time, ipv6Mask net.IPMask) (recordIDs map[uint]struct{}) {
+	recordIDs = make(map[uint]struct{})
+	for i, record := range records {
 		if shouldUpdate := r.shouldUpdateRecord(ctx, record, ip, ipv4, ipv6, now, ipv6Mask); shouldUpdate {
+			id := uint(i)
 			recordIDs[id] = struct{}{}
 		}
 	}
@@ -239,7 +240,7 @@ func getIPMatchingVersion(ip, ipv4, ipv6 net.IP, ipVersion ipversion.IPVersion) 
 	return nil
 }
 
-func setInitialUpToDateStatus(db Database, id int, updateIP net.IP, now time.Time) error {
+func setInitialUpToDateStatus(db Database, id uint, updateIP net.IP, now time.Time) error {
 	record, err := db.Select(id)
 	if err != nil {
 		return err
@@ -268,7 +269,8 @@ func (r *Runner) updateNecessary(ctx context.Context, ipv6Mask net.IPMask) (erro
 	now := r.timeNow()
 	recordIDs := r.getRecordIDsToUpdate(ctx, records, ip, ipv4, ipv6, now, ipv6Mask)
 
-	for id, record := range records {
+	for i, record := range records {
+		id := uint(i)
 		_, requireUpdate := recordIDs[id]
 		if requireUpdate || record.Status != constants.UNSET {
 			continue

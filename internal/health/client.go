@@ -25,7 +25,7 @@ func NewClient() *Client {
 	}
 }
 
-var ErrParseHealthServerAddress = errors.New("cannot parse health server address")
+var ErrUnhealthy = errors.New("program is unhealthy")
 
 // Query sends an HTTP request to the other instance of
 // the program, and to its internal healthcheck server.
@@ -49,5 +49,5 @@ func (c *Client) Query(ctx context.Context, port uint16) error {
 		return fmt.Errorf("reading body from response with status %s: %w", resp.Status, err)
 	}
 
-	return fmt.Errorf(string(b))
+	return fmt.Errorf("%w: %s", ErrUnhealthy, string(b))
 }

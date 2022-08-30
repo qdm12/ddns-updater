@@ -33,7 +33,7 @@ func NewUpdater(db Database, client *http.Client, notify notifyFunc, logger logg
 	}
 }
 
-func (u *Updater) Update(ctx context.Context, id int, ip net.IP, now time.Time) (err error) {
+func (u *Updater) Update(ctx context.Context, id uint, ip net.IP, now time.Time) (err error) {
 	record, err := u.db.Select(id)
 	if err != nil {
 		return err
@@ -50,10 +50,11 @@ func (u *Updater) Update(ctx context.Context, id int, ip net.IP, now time.Time) 
 		if errors.Is(err, settingserrors.ErrAbuse) {
 			lastBan := time.Unix(now.Unix(), 0)
 			record.LastBan = &lastBan
-			message := record.Settings.BuildDomainName() + ": " + record.Message +
+			domainName := record.Settings.BuildDomainName()
+			message := domainName + ": " + record.Message +
 				", no more updates will be attempted for an hour"
 			u.notify(message)
-			err = fmt.Errorf(message)
+			err = fmt.Errorf("%w: for domain %s, no more update will be attempted for 1h", err, domainName)
 		} else {
 			record.LastBan = nil // clear a previous ban
 		}

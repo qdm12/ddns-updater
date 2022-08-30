@@ -16,8 +16,9 @@ issues:
         - gomnd
     - path: _test\.go
       linters:
-        - dupl
         - containedctx
+        - dupl
+        - goerr113
 
 linters:
   enable:
@@ -51,7 +52,7 @@ linters:
     - gomoddirectives
     - goprintffuncname
     - gosec
-    # - goerr113 # TODO
+    - goerr113
     - grouper
     - importas
     - interfacebloat

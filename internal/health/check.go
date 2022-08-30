@@ -1,6 +1,7 @@
 package health
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -17,12 +18,18 @@ func MakeIsHealthy(db AllSelecter, lookupIP lookupIPFunc, logger logging.Logger)
 	}
 }
 
+var (
+	ErrRecordUpdateFailed = errors.New("record update failed")
+	ErrRecordIPNotSet     = errors.New("record IP not set")
+	ErrLookupMismatch     = errors.New("lookup IP addresses do not match")
+)
+
 // isHealthy checks all the records were updated successfully and returns an error if not.
 func isHealthy(db AllSelecter, lookupIP lookupIPFunc) (err error) {
 	records := db.SelectAll()
 	for _, record := range records {
 		if record.Status == constants.FAIL {
-			return fmt.Errorf("%s", record.String())
+			return fmt.Errorf("%w: %s", ErrRecordUpdateFailed, record.String())
 		} else if record.Settings.Proxied() {
 			continue
 		}
@@ -33,7 +40,7 @@ func isHealthy(db AllSelecter, lookupIP lookupIPFunc) (err error) {
 		}
 		currentIP := record.History.GetCurrentIP()
 		if currentIP == nil {
-			return fmt.Errorf("no database set IP address found for %s", hostname)
+			return fmt.Errorf("%w: for hostname %s", ErrRecordIPNotSet, hostname)
 		}
 		found := false
 		lookedUpIPsString := make([]string, len(lookedUpIPs))
@@ -45,8 +52,8 @@ func isHealthy(db AllSelecter, lookupIP lookupIPFunc) (err error) {
 			}
 		}
 		if !found {
-			return fmt.Errorf("lookup IP addresses for %s are %s instead of %s",
-				hostname, strings.Join(lookedUpIPsString, ","), currentIP)
+			return fmt.Errorf("%w: %s instead of %s for %s",
+				ErrLookupMismatch, strings.Join(lookedUpIPsString, ","), currentIP, hostname)
 		}
 	}
 	return nil

@@ -153,7 +153,7 @@ func (p *Provider) getDomainID(ctx context.Context, client *http.Client) (domain
 
 	if response.StatusCode != http.StatusOK {
 		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
-		return 0, fmt.Errorf("%w: %s", err, p.getError(response.Body))
+		return 0, fmt.Errorf("%w: %s", err, p.getErrorMessage(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -212,7 +212,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 
 	if response.StatusCode != http.StatusOK {
 		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
-		return 0, fmt.Errorf("%w: %s", err, p.getError(response.Body))
+		return 0, fmt.Errorf("%w: %s", err, p.getErrorMessage(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -276,7 +276,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 
 	if response.StatusCode != http.StatusOK {
 		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
-		return fmt.Errorf("%w: %s", err, p.getError(response.Body))
+		return fmt.Errorf("%w: %s", err, p.getErrorMessage(response.Body))
 	}
 
 	var responseData domainRecord
@@ -329,7 +329,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	if response.StatusCode != http.StatusOK {
 		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
-		return fmt.Errorf("%w: %s", err, p.getError(response.Body))
+		return fmt.Errorf("%w: %s", err, p.getErrorMessage(response.Body))
 	}
 
 	data.IP = ""
@@ -348,14 +348,14 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	return nil
 }
 
-func (p *Provider) getError(body io.Reader) (err error) {
+func (p *Provider) getErrorMessage(body io.Reader) (message string) {
 	var errorObj linodeErrors
 	b, err := io.ReadAll(body)
 	if err != nil {
-		return err
+		return fmt.Sprintf("reading body: %s", err)
 	}
 	if err := json.Unmarshal(b, &errorObj); err != nil {
-		return fmt.Errorf("%s", utils.ToSingleLine(string(b)))
+		return utils.ToSingleLine(string(b))
 	}
-	return fmt.Errorf("%v", errorObj)
+	return fmt.Sprintf("%v", errorObj)
 }

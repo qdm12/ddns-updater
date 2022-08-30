@@ -200,9 +200,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	newIP = net.ParseIP(responseData.DomainRecord.Data)
 	if newIP == nil {
-		return nil, fmt.Errorf("IP address received %q is malformed", responseData.DomainRecord.Data)
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, responseData.DomainRecord.Data)
 	} else if !newIP.Equal(ip) {
-		return nil, fmt.Errorf("updated IP address %s is not the IP address %s sent for update", newIP, ip)
+		return nil, fmt.Errorf("%w: sent %s but received %s ",
+			errors.ErrIPReceivedMismatch, ip, newIP)
 	}
 	return newIP, nil
 }

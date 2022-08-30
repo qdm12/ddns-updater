@@ -15,11 +15,11 @@ type PublicIPFetcher interface {
 }
 
 type UpdaterInterface interface {
-	Update(ctx context.Context, recordID int, ip net.IP, now time.Time) (err error)
+	Update(ctx context.Context, recordID uint, ip net.IP, now time.Time) (err error)
 }
 
 type Database interface {
-	Select(recordID int) (record records.Record, err error)
+	Select(recordID uint) (record records.Record, err error)
 	SelectAll() (records []records.Record)
-	Update(recordID int, record records.Record) (err error)
+	Update(recordID uint, record records.Record) (err error)
 }

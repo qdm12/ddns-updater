@@ -53,7 +53,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 
 func (p *Provider) isValid() error {
 	if !p.matcher.DreamhostKey(p.key) {
-		return fmt.Errorf("invalid key format")
+		return fmt.Errorf("%w: %s", errors.ErrMalformedKey, p.key)
 	}
 	return nil
 }

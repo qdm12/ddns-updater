@@ -252,7 +252,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 
 	requestData := domainRecord{
 		Type: recordType,
-		Host: p.host,
+		Host: p.BuildDomainName(),
 		IP:   ip.String(),
 	}
 	buffer := bytes.NewBuffer(nil)

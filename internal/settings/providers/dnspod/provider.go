@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -187,7 +188,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
-	decoder = json.NewDecoder(response.Body)
+	data, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading response body: %w", err)
+	}
+
 	var ddnsResp struct {
 		Record struct {
 			ID    int64  `json:"id"`
@@ -195,14 +200,15 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 			Name  string `json:"name"`
 		} `json:"record"`
 	}
-	if err := decoder.Decode(&ddnsResp); err != nil {
+	err = json.Unmarshal(data, &ddnsResp)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
 	}
 
 	ipStr := ddnsResp.Record.Value
 	receivedIP := net.ParseIP(ipStr)
 	if receivedIP == nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ipStr)
+		return nil, fmt.Errorf("%w: %s from JSON data: %s", errors.ErrIPReceivedMalformed, ipStr, data)
 	} else if !ip.Equal(receivedIP) {
 		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, receivedIP.String())
 	}

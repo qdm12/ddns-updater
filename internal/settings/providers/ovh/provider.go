@@ -175,6 +175,8 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client, i
 		return nil, errors.ErrHostnameNotExists
 	case strings.HasPrefix(s, "badrequest"):
 		return nil, errors.ErrBadRequest
+	case strings.HasPrefix(s, "nochg"):
+		return ip, nil
 	case strings.HasPrefix(s, "good"):
 		return ip, nil
 	default:

@@ -95,10 +95,6 @@ func (c *Client) Login(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) Logout() error {
-	return nil
-}
-
 func (c *Client) InfoDNSRecords(ctx context.Context, domainname string) (*DNSRecordSet, error) {
 	params, err := c.addAuthParams(domainname)
 	if err != nil {

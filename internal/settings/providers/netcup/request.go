@@ -1,12 +1,12 @@
 package netcup
 
-type NetcupRequest struct {
+type Request struct {
 	Action string `json:"action"`
 	Param  Params `json:"param"`
 }
 
-func NewNetcupRequest(action string, params *Params) *NetcupRequest {
-	return &NetcupRequest{
+func NewNetcupRequest(action string, params *Params) *Request {
+	return &Request{
 		Action: action,
 		Param:  *params,
 	}

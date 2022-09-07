@@ -28,7 +28,7 @@ func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
 		CustomerNumber string `json:"customer_number"`
-		ApiKey         string `json:"api_key"`
+		APIKey         string `json:"api_key"`
 		Password       string `json:"password"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
@@ -39,7 +39,7 @@ func New(data json.RawMessage, domain, host string,
 		host:           host,
 		ipVersion:      ipVersion,
 		customerNumber: extraSettings.CustomerNumber,
-		apiKey:         extraSettings.ApiKey,
+		apiKey:         extraSettings.APIKey,
 		password:       extraSettings.Password,
 	}
 	if err := p.isValid(); err != nil {
@@ -102,14 +102,14 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:     "/run/webservice/servers/endpoint.php",
 		RawQuery: "JSON",
 	}
-	nc := NewClient(p.customerNumber, p.apiKey, p.password, u.String(), ctx)
+	nc := NewClient(ctx, p.customerNumber, p.apiKey, p.password, u.String())
 
-	err = nc.Login()
+	err = nc.Login(ctx)
 	if err != nil {
 		return netip.Addr{}, err
 	}
 
-	record, err := nc.GetRecordToUpdate(p.domain, p.host, ip)
+	record, err := nc.GetRecordToUpdate(ctx, p.domain, p.host, ip)
 	if err != nil {
 		return netip.Addr{}, err
 	}
@@ -122,7 +122,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	var updateRecords []DNSRecord
 	updateRecords = append(updateRecords, *record)
 	updateRecordSet := NewDNSRecordSet(updateRecords)
-	updated, err := nc.UpdateDNSRecords(p.domain, updateRecordSet)
+	updated, err := nc.UpdateDNSRecords(ctx, p.domain, updateRecordSet)
 	if err != nil {
 		return netip.Addr{}, err
 	}

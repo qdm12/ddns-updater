@@ -8,7 +8,7 @@ type LoginResponse struct {
 	Session string `json:"apisessionid"`
 }
 
-type NetcupResponse struct {
+type Response struct {
 	Action          string          `json:"action"`
 	ClientRequestID string          `json:"clientrequestid"`
 	LongMessage     string          `json:"longmessage"`
@@ -19,6 +19,6 @@ type NetcupResponse struct {
 	StatusCode      int             `json:"statuscode"`
 }
 
-func (r *NetcupResponse) isError() bool {
+func (r *Response) isError() bool {
 	return r.Status == "error"
 }

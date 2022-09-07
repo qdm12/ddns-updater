@@ -61,7 +61,7 @@ func (c *Client) do(ctx context.Context, req *Request) (*Response, error) {
 	}
 
 	if res.isError() {
-		return nil, errors.ErrBadHTTPStatus // TODO change error
+		return nil, errors.ErrBadHTTPStatus
 	}
 
 	return &res, nil

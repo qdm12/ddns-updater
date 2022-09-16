@@ -15,7 +15,7 @@ This provider uses Gandi v5 API
       "host": "@",
       "key": "key",
       "ttl": 3600,
-      "ip_version": "ipv4",
+      "ip_version": "ipv4"
     }
   ]
 }

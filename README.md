@@ -47,6 +47,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
   - Dynu
   - FreeDNS
   - Gandi
+  - GCP
   - GoDaddy
   - Google
   - He.net
@@ -169,6 +170,7 @@ Check the documentation for your DNS provider:
 - [DynV6](https://github.com/qdm12/ddns-updater/blob/master/docs/dynv6.md)
 - [FreeDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/freedns.md)
 - [Gandi](https://github.com/qdm12/ddns-updater/blob/master/docs/gandi.md)
+- [GCP](https://github.com/qdm12/ddns-updater/blob/master/docs/gcp.md)
 - [GoDaddy](https://github.com/qdm12/ddns-updater/blob/master/docs/godaddy.md)
 - [Google](https://github.com/qdm12/ddns-updater/blob/master/docs/google.md)
 - [He.net](https://github.com/qdm12/ddns-updater/blob/master/docs/he.net.md)

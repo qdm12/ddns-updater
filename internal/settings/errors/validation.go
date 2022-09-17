@@ -3,6 +3,7 @@ package errors
 import "errors"
 
 var (
+	ErrCredentialsNotSet       = errors.New("credentials are not set")
 	ErrEmptyAPIKey             = errors.New("empty API key")
 	ErrEmptyAppKey             = errors.New("empty app key")
 	ErrEmptyConsumerKey        = errors.New("empty consumer key")
@@ -19,6 +20,7 @@ var (
 	ErrEmptyUsername           = errors.New("empty username")
 	ErrEmptyZoneIdentifier     = errors.New("empty zone identifier")
 	ErrEmptyHost               = errors.New("host cannot be empty")
+	ErrGCPProjectNotSet        = errors.New("GCP project is not set")
 	ErrHostOnlyAt              = errors.New(`host can only be "@"`)
 	ErrHostOnlySubdomain       = errors.New("host can only be a subdomain")
 	ErrHostWildcard            = errors.New(`host cannot be a "*"`)

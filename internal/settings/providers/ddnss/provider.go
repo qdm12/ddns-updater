@@ -24,6 +24,7 @@ type Provider struct {
 	ipVersion     ipversion.IPVersion
 	username      string
 	password      string
+	dualStack     bool
 	useProviderIP bool
 }
 
@@ -32,6 +33,7 @@ func New(data json.RawMessage, domain, host string,
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
+		DualStack     bool   `json:"dual_stack"`
 		UseProviderIP bool   `json:"provider_ip"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
@@ -43,6 +45,7 @@ func New(data json.RawMessage, domain, host string,
 		ipVersion:     ipVersion,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
+		dualStack:     extraSettings.DualStack,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
 	if err := p.isValid(); err != nil {
@@ -107,11 +110,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	values.Set("pwd", p.password)
 	values.Set("host", utils.BuildURLQueryHostname(p.host, p.domain))
 	if !p.useProviderIP {
-		if ip.To4() == nil { // ipv6
-			values.Set("ip6", ip.String())
-		} else {
-			values.Set("ip", ip.String())
+		ipKey := "ip"
+		if p.dualStack && ip.To4() == nil { // ipv6 update for dual stack
+			ipKey = "ip6"
 		}
+		values.Set(ipKey, ip.String())
 	}
 	u.RawQuery = values.Encode()
 

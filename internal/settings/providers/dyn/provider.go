@@ -137,7 +137,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	case strings.HasPrefix(s, constants.Notfqdn):
 		return nil, errors.ErrHostnameNotExists
 	case strings.HasPrefix(s, "badrequest"):
-		return nil, errors.ErrBadRequest
+		return nil, fmt.Errorf("%w: %s", errors.ErrBadRequest, strings.TrimPrefix(s, "badrequest"))
 	case strings.HasPrefix(s, "good"):
 		return ip, nil
 	default:

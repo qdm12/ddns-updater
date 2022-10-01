@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
-	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
@@ -26,14 +25,16 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion) (p *Provider, err error) {
-	extraSettings := struct {
+	var extraSettings struct {
 		CustomerNumber string `json:"customer_number"`
 		APIKey         string `json:"api_key"`
 		Password       string `json:"password"`
-	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
-		return nil, err
 	}
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
+		return nil, fmt.Errorf("JSON decoding provider specific settings: %w", err)
+	}
+
 	p = &Provider{
 		domain:         domain,
 		host:           host,
@@ -42,22 +43,25 @@ func New(data json.RawMessage, domain, host string,
 		apiKey:         extraSettings.APIKey,
 		password:       extraSettings.Password,
 	}
-	if err := p.isValid(); err != nil {
-		return nil, err
+
+	err = p.isValid()
+	if err != nil {
+		return nil, fmt.Errorf("validating provider settings: %w", err)
 	}
+
 	return p, nil
 }
 
 func (p *Provider) isValid() error {
 	switch {
 	case p.customerNumber == "":
-		return errors.ErrEmptyCustomerNumber
+		return fmt.Errorf("%w", errors.ErrEmptyCustomerNumber)
 	case p.apiKey == "":
-		return errors.ErrEmptyAppKey
+		return fmt.Errorf("%w", errors.ErrEmptyAPIKey)
 	case p.password == "":
-		return errors.ErrEmptyPassword
+		return fmt.Errorf("%w", errors.ErrEmptyPassword)
 	case p.host == "*":
-		return errors.ErrHostWildcard
+		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}
 	return nil
 }
@@ -96,22 +100,14 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	u := url.URL{
-		Scheme:   "https",
-		Host:     "ccp.netcup.net",
-		Path:     "/run/webservice/servers/endpoint.php",
-		RawQuery: "JSON",
-	}
-	nc := NewClient(ctx, p.customerNumber, p.apiKey, p.password, u.String())
-
-	err = nc.Login(ctx)
+	session, err := p.login(ctx, client)
 	if err != nil {
-		return netip.Addr{}, err
+		return netip.Addr{}, fmt.Errorf("logging in: %w", err)
 	}
 
-	record, err := nc.GetRecordToUpdate(ctx, p.domain, p.host, ip)
+	record, err := p.getRecordToUpdate(ctx, client, session, ip)
 	if err != nil {
-		return netip.Addr{}, err
+		return netip.Addr{}, fmt.Errorf("getting record to update: %w", err)
 	}
 
 	recordType := constants.A
@@ -119,28 +115,37 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		recordType = constants.AAAA
 	}
 
-	var updateRecords []DNSRecord
-	updateRecords = append(updateRecords, *record)
-	updateRecordSet := NewDNSRecordSet(updateRecords)
-	updated, err := nc.UpdateDNSRecords(ctx, p.domain, updateRecordSet)
+	updateRecordSet := dnsRecordSet{
+		DNSRecords: []dnsRecord{record},
+	}
+	updateResponse, err := p.updateDNSRecords(ctx, client, session, updateRecordSet)
 	if err != nil {
-		return netip.Addr{}, err
+		return netip.Addr{}, fmt.Errorf("updating DNS records: %w", err)
 	}
 
-	var result DNSRecordSet
-	err = json.Unmarshal(updated.ResponseData, &result)
-	if err != nil {
-		return netip.Addr{}, err
+	found := false
+	for _, record = range updateResponse.ResponseData.DNSRecords {
+		if record.Hostname == p.host && record.Type == recordType {
+			found = true
+			break
+		}
 	}
-	var returnedUpdated = result.GetRecord(p.host, recordType)
-	var destination = returnedUpdated.Destination
-	newIP, err = netip.ParseAddr(destination)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+
+	if !found {
+		return netip.Addr{}, fmt.Errorf("%w: in %d records from update response data",
+			errors.ErrRecordNotFound, len(updateResponse.ResponseData.DNSRecords))
 	}
+
+	newIP, err = netip.ParseAddr(record.Destination)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("%w: %s",
+			errors.ErrIPReceivedMalformed, record.Destination)
+	}
+
 	if ip.Compare(newIP) != 0 {
-		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
+		return netip.Addr{}, fmt.Errorf("%w: expected %s but received %s",
 			errors.ErrIPReceivedMismatch, ip, newIP)
 	}
+
 	return newIP, nil
 }

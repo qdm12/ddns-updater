@@ -18,6 +18,7 @@ issues:
       linters:
         - containedctx
         - dupl
+        - dupword
         - goerr113
 
 linters:
@@ -30,6 +31,7 @@ linters:
     - decorder
     - dogsled
     - dupl
+    - dupword
     - durationcheck
     - errchkjson
     - errname
@@ -46,13 +48,13 @@ linters:
     - gocritic
     - gocyclo
     - godot
+    - goerr113
     - goheader
     - goimports
     - gomnd
     - gomoddirectives
     - goprintffuncname
     - gosec
-    - goerr113
     - grouper
     - importas
     - interfacebloat
@@ -68,13 +70,13 @@ linters:
     - noctx
     - nolintlint
     - nosprintfhostport
+    - paralleltest
     - prealloc
     - predeclared
     - promlinter
     - reassign
     - revive
     - rowserrcheck
-    - exportloopref
     - sqlclosecheck
     - tenv
     - thelper

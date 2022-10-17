@@ -52,6 +52,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
   - Google
   - He.net
   - Infomaniak
+  - INWX
   - Linode
   - LuaDNS
   - Namecheap
@@ -175,6 +176,7 @@ Check the documentation for your DNS provider:
 - [Google](https://github.com/qdm12/ddns-updater/blob/master/docs/google.md)
 - [He.net](https://github.com/qdm12/ddns-updater/blob/master/docs/he.net.md)
 - [Infomaniak](https://github.com/qdm12/ddns-updater/blob/master/docs/infomaniak.md)
+- [INWX](https://github.com/qdm12/ddns-updater/blob/master/docs/inwx.md)
 - [Linode](https://github.com/qdm12/ddns-updater/blob/master/docs/linode.md)
 - [LuaDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/luadns.md)
 - [Namecheap](https://github.com/qdm12/ddns-updater/blob/master/docs/namecheap.md)

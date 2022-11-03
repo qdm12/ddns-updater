@@ -20,6 +20,8 @@ type ipinfo struct {
 
 func (p *ipinfo) get(ctx context.Context, ip net.IP) (
 	result Result, err error) {
+	result.Source = string(Ipinfo)
+
 	const baseURL = "https://ipinfo.io/"
 	url := baseURL + ip.String()
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

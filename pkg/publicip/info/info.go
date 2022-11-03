@@ -2,10 +2,12 @@ package info
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net"
 	"net/http"
+	"sync"
 
 	"github.com/qdm12/golibs/crypto/random/sources/maphash"
 )
@@ -14,6 +16,8 @@ type Info struct {
 	client    *http.Client
 	rand      *rand.Rand
 	providers []provider
+	banMutex  sync.RWMutex
+	banned    map[provider]struct{}
 }
 
 func New(client *http.Client, options ...Option) (info *Info, err error) {
@@ -38,6 +42,7 @@ func New(client *http.Client, options ...Option) (info *Info, err error) {
 		client:    client,
 		rand:      generator,
 		providers: providers,
+		banned:    make(map[provider]struct{}),
 	}, nil
 }
 
@@ -53,11 +58,20 @@ func (i *Info) Get(ctx context.Context, ip net.IP) (result Result, err error) {
 	failed := 0
 	for failed < len(i.providers) {
 		provider := i.providers[index]
+		if i.isBanned(provider) { // try next provider
+			index++
+			failed++
+			continue
+		}
+
 		result, err = provider.get(ctx, ip)
 		if err != nil {
 			// try next provider
 			index++
 			failed++
+			if errors.Is(err, ErrTooManyRequests) {
+				i.ban(provider)
+			}
 			continue
 		}
 	}
@@ -108,4 +122,17 @@ func (i *Info) GetMultiple(ctx context.Context, ips []net.IP) (results []Result,
 	}
 
 	return results, nil
+}
+
+func (i *Info) isBanned(p provider) (banned bool) {
+	i.banMutex.RLock()
+	_, banned = i.banned[p]
+	i.banMutex.RUnlock()
+	return banned
+}
+
+func (i *Info) ban(p provider) {
+	i.banMutex.Lock()
+	i.banned[p] = struct{}{}
+	i.banMutex.Unlock()
 }

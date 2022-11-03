@@ -21,10 +21,11 @@ type ipinfo struct {
 func (p *ipinfo) get(ctx context.Context, ip net.IP) (
 	result Result, err error) {
 	result.Source = string(Ipinfo)
-	result.IP = ip
 
-	const baseURL = "https://ipinfo.io/"
-	url := baseURL + ip.String()
+	url := "https://ipinfo.io/"
+	if ip != nil {
+		url += ip.String()
+	}
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return result, fmt.Errorf("creating request: %w", err)
@@ -50,6 +51,7 @@ func (p *ipinfo) get(ctx context.Context, ip net.IP) (
 
 	decoder := json.NewDecoder(response.Body)
 	var data struct {
+		IP      net.IP `json:"ip"`
 		Region  string `json:"region"`
 		Country string `json:"country"`
 		City    string `json:"city"`
@@ -59,6 +61,7 @@ func (p *ipinfo) get(ctx context.Context, ip net.IP) (
 		return result, fmt.Errorf("decoding JSON response: %w", err)
 	}
 
+	result.IP = data.IP
 	if data.Region != "" {
 		result.Region = stringPtr(data.Region)
 	}

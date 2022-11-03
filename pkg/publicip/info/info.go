@@ -50,7 +50,8 @@ func (i *Info) pickProvider() provider { //nolint:ireturn
 }
 
 // Get finds IP information for the given IP address using one of
-// the ip data provider picked at random.
+// the ip data provider picked at random. A `nil` IP address can be
+// given to signal to fetch information on the current public IP address.
 func (i *Info) Get(ctx context.Context, ip net.IP) (result Result, err error) {
 	provider := i.pickProvider()
 	return provider.get(ctx, ip)

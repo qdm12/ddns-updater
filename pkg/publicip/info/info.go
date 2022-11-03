@@ -41,20 +41,28 @@ func New(client *http.Client, options ...Option) (info *Info, err error) {
 	}, nil
 }
 
-func (i *Info) pickProvider() provider { //nolint:ireturn
-	index := 0
-	if L := len(i.providers); L > 1 {
-		index = i.rand.Intn(L)
-	}
-	return i.providers[index]
-}
-
 // Get finds IP information for the given IP address using one of
 // the ip data provider picked at random. A `nil` IP address can be
 // given to signal to fetch information on the current public IP address.
 func (i *Info) Get(ctx context.Context, ip net.IP) (result Result, err error) {
-	provider := i.pickProvider()
-	return provider.get(ctx, ip)
+	if len(i.providers) == 1 {
+		return i.providers[0].get(ctx, ip)
+	}
+
+	index := i.rand.Intn(len(i.providers))
+	failed := 0
+	for failed < len(i.providers) {
+		provider := i.providers[index]
+		result, err = provider.get(ctx, ip)
+		if err != nil {
+			// try next provider
+			index++
+			failed++
+			continue
+		}
+	}
+
+	return result, err
 }
 
 // GetMultiple finds IP information for the given IP addresses, each using

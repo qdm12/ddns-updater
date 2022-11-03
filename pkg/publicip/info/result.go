@@ -1,6 +1,9 @@
 package info
 
+import "net"
+
 type Result struct {
+	IP      net.IP
 	Country *string
 	Region  *string
 	City    *string

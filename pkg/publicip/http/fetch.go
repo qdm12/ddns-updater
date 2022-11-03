@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -16,6 +17,7 @@ var (
 	ErrNoIPFound   = errors.New("no IP address found")
 	ErrTooManyIPs  = errors.New("too many IP addresses")
 	ErrIPMalformed = errors.New("IP address malformed")
+	ErrBanned      = errors.New("we got banned")
 )
 
 var (
@@ -35,6 +37,13 @@ func fetch(ctx context.Context, client *http.Client, url string, version ipversi
 		return nil, err
 	}
 	defer response.Body.Close()
+
+	switch response.StatusCode {
+	case http.StatusOK:
+	case http.StatusForbidden, http.StatusTooManyRequests:
+		return nil, fmt.Errorf("%w: %d (%s)", ErrBanned,
+			response.StatusCode, bodyToSingleLine(response.Body))
+	}
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -95,4 +104,21 @@ func fetch(ctx context.Context, client *http.Client, url string, version ipversi
 	}
 
 	return publicIP, nil
+}
+
+func bodyToSingleLine(body io.Reader) (s string) {
+	b, err := io.ReadAll(body)
+	if err != nil {
+		return ""
+	}
+	data := string(b)
+	return toSingleLine(data)
+}
+
+func toSingleLine(s string) (line string) {
+	line = strings.ReplaceAll(s, "\n", "")
+	line = strings.ReplaceAll(line, "\r", "")
+	line = strings.ReplaceAll(line, "  ", " ")
+	line = strings.ReplaceAll(line, "  ", " ")
+	return line
 }

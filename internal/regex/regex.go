@@ -15,7 +15,7 @@ var (
 	dreamhostKey             = regexp.MustCompile(`^[a-zA-Z0-9]{16}$`)
 	cloudflareKey            = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
 	cloudflareUserServiceKey = regexp.MustCompile(`^v1\.0.+$`)
-	dnsOMaticUsername        = regexp.MustCompile(`^[a-zA-Z0-9._-]{3,25}$`)
+	dnsOMaticUsername        = regexp.MustCompile(`^[a-zA-Z0-9@._-]{3,25}$`)
 	dnsOMaticPassword        = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{5,19}$`)
 )
 

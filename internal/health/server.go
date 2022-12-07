@@ -15,7 +15,7 @@ type Server struct {
 }
 
 func NewServer(address string, logger logging.Logger, healthcheck func() error) *Server {
-	handler := newHandler(logger, healthcheck)
+	handler := newHandler(healthcheck)
 	return &Server{
 		address: address,
 		logger:  logger,

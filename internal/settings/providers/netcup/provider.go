@@ -124,7 +124,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	found := false
-	for _, record = range updateResponse.ResponseData.DNSRecords {
+	for _, record = range updateResponse.DNSRecords {
 		if record.Hostname == p.host && record.Type == recordType {
 			found = true
 			break
@@ -133,7 +133,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	if !found {
 		return netip.Addr{}, fmt.Errorf("%w: in %d records from update response data",
-			errors.ErrRecordNotFound, len(updateResponse.ResponseData.DNSRecords))
+			errors.ErrRecordNotFound, len(updateResponse.DNSRecords))
 	}
 
 	newIP, err = netip.ParseAddr(record.Destination)

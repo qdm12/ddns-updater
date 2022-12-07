@@ -43,12 +43,8 @@ func (p *Provider) getRecordToUpdate(ctx context.Context,
 	return record, nil
 }
 
-type updateResponse struct {
-	ResponseData dnsRecordSet `json:"responsedata"`
-}
-
 func (p *Provider) updateDNSRecords(ctx context.Context, client *http.Client,
-	session string, recordSet dnsRecordSet) (response updateResponse, err error) {
+	session string, recordSet dnsRecordSet) (response dnsRecordSet, err error) {
 	type jsonParam struct {
 		APIKey         string       `json:"apikey"`
 		APISessionID   string       `json:"apisessionid"`

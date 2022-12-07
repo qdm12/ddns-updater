@@ -30,18 +30,16 @@ func (p *Provider) login(ctx context.Context, client *http.Client) (
 		},
 	}
 
-	var responseBody struct {
-		ResponseData struct {
-			Session string `json:"apisessionid"`
-		} `json:"responsedata"`
+	var responseData struct {
+		Session string `json:"apisessionid"`
 	}
 
-	err = doJSONHTTP(ctx, client, requestBody, &responseBody)
+	err = doJSONHTTP(ctx, client, requestBody, &responseData)
 	if err != nil {
 		return "", fmt.Errorf("doing JSON HTTP exchange: %w", err)
 	}
 
-	session = responseBody.ResponseData.Session
+	session = responseData.Session
 
 	if session == "" {
 		return "", fmt.Errorf("%w", errors.ErrSessionIsEmpty)

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 
@@ -14,7 +13,7 @@ import (
 )
 
 func doJSONHTTP(ctx context.Context, client *http.Client,
-	jsonRequestBody, jsonResponseBody any) (err error) {
+	jsonRequestBody, jsonResponseDataTarget any) (err error) {
 	endpointURL := url.URL{
 		Scheme:   "https",
 		Host:     "ccp.netcup.net",
@@ -40,10 +39,18 @@ func doJSONHTTP(ctx context.Context, client *http.Client,
 		return fmt.Errorf("%w: %w", errors.ErrUnsuccessfulResponse, err)
 	}
 
-	responseBytes, err := io.ReadAll(httpResponse.Body)
+	var commonResponse struct {
+		ShortMessage string          `json:"shortmessage"`
+		Status       string          `json:"status"`
+		StatusCode   uint            `json:"statuscode"`
+		ResponseData json.RawMessage `json:"responsedata"`
+	}
+
+	decoder := json.NewDecoder(httpResponse.Body)
+	err = decoder.Decode(&commonResponse)
 	if err != nil {
 		_ = httpResponse.Body.Close()
-		return fmt.Errorf("reading response body data: %w", err)
+		return fmt.Errorf("decoding json common response: %w", err)
 	}
 
 	err = httpResponse.Body.Close()
@@ -51,22 +58,12 @@ func doJSONHTTP(ctx context.Context, client *http.Client,
 		return fmt.Errorf("closing response body: %w", err)
 	}
 
-	var commonResponse struct {
-		ShortMessage string `json:"shortmessage"`
-		Status       string `json:"status"`
-		StatusCode   uint   `json:"statuscode"`
-	}
-	err = json.Unmarshal(responseBytes, &commonResponse)
-	if err != nil {
-		return fmt.Errorf("json decoding common response: %w", err)
-	}
-
 	if commonResponse.Status == "error" {
 		return fmt.Errorf("%w: %s (status %d)", errors.ErrBadHTTPStatus,
 			commonResponse.ShortMessage, commonResponse.StatusCode)
 	}
 
-	err = json.Unmarshal(responseBytes, jsonResponseBody)
+	err = json.Unmarshal(commonResponse.ResponseData, jsonResponseDataTarget)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}

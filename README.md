@@ -34,6 +34,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
 
 - Updates periodically A records for different DNS providers:
   - Aliyun
+  - AllInkl
   - Cloudflare
   - DD24
   - DDNSS.de

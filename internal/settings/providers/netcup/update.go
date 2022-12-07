@@ -22,25 +22,18 @@ func (p *Provider) getRecordToUpdate(ctx context.Context,
 		recordType = constants.AAAA
 	}
 
-	found := false
 	for _, record = range recordSet.DNSRecords {
 		if record.Hostname == p.host && record.Type == recordType {
-			found = true
-			break
+			record.Destination = ip.String()
+			return record, nil
 		}
 	}
 
-	if found {
-		record.Destination = ip.String()
-	} else {
-		record = dnsRecord{
-			Hostname:    p.host,
-			Type:        recordType,
-			Destination: ip.String(),
-		}
-	}
-
-	return record, nil
+	return dnsRecord{
+		Hostname:    p.host,
+		Type:        recordType,
+		Destination: ip.String(),
+	}, nil
 }
 
 func (p *Provider) updateDNSRecords(ctx context.Context, client *http.Client,

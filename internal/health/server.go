@@ -4,17 +4,15 @@ import (
 	"context"
 	"net/http"
 	"time"
-
-	"github.com/qdm12/golibs/logging"
 )
 
 type Server struct {
 	address string
-	logger  logging.Logger
+	logger  Logger
 	handler http.Handler
 }
 
-func NewServer(address string, logger logging.Logger, healthcheck func() error) *Server {
+func NewServer(address string, logger Logger, healthcheck func() error) *Server {
 	handler := newHandler(healthcheck)
 	return &Server{
 		address: address,

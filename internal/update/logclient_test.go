@@ -93,7 +93,7 @@ func Test_LogClient(t *testing.T) {
 
 			client := server.Client()
 
-			logger := mock_update.NewMockLogger(ctrl)
+			logger := mock_update.NewMockDebugLogger(ctrl)
 			logger.EXPECT().Debug(gomock.AssignableToTypeOf("")).
 				DoAndReturn(func(s string) {
 					assert.Regexp(t, testCase.requestLineRegex, s)

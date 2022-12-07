@@ -11,19 +11,18 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
 	settingserrors "github.com/qdm12/ddns-updater/internal/settings/errors"
-	"github.com/qdm12/golibs/logging"
 )
 
 type Updater struct {
 	db     Database
 	client *http.Client
 	notify notifyFunc
-	logger logging.Logger
+	logger DebugLogger
 }
 
 type notifyFunc func(message string)
 
-func NewUpdater(db Database, client *http.Client, notify notifyFunc, logger logging.Logger) *Updater {
+func NewUpdater(db Database, client *http.Client, notify notifyFunc, logger DebugLogger) *Updater {
 	client = makeLogClient(client, logger)
 	return &Updater{
 		db:     db,

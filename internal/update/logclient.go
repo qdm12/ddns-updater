@@ -10,13 +10,13 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 )
 
-//go:generate mockgen -destination=mock_$GOPACKAGE/$GOFILE . Logger
+//go:generate mockgen -destination=mock_$GOPACKAGE/$GOFILE . DebugLogger
 
-type Logger interface {
+type DebugLogger interface {
 	Debug(s string)
 }
 
-func makeLogClient(client *http.Client, logger Logger) (newClient *http.Client) {
+func makeLogClient(client *http.Client, logger DebugLogger) (newClient *http.Client) {
 	newClient = &http.Client{
 		Timeout: client.Timeout,
 	}
@@ -43,7 +43,7 @@ func makeLogClient(client *http.Client, logger Logger) (newClient *http.Client) 
 
 type loggingRoundTripper struct {
 	proxied http.RoundTripper
-	logger  Logger
+	logger  DebugLogger
 }
 
 func (lrt *loggingRoundTripper) RoundTrip(request *http.Request) (

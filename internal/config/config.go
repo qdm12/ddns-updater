@@ -67,7 +67,8 @@ func (c *Config) Get(env params.Interface) (warnings []string, err error) {
 		return warnings, err
 	}
 
-	if err := c.Logger.get(env); err != nil {
+	c.Logger, err = readLog()
+	if err != nil {
 		return warnings, err
 	}
 

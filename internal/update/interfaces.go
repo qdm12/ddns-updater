@@ -27,3 +27,10 @@ type Database interface {
 type LookupIPer interface {
 	LookupIP(ctx context.Context, network, host string) (ips []net.IP, err error)
 }
+
+type Logger interface {
+	DebugLogger
+	Info(s string)
+	Warn(s string)
+	Error(s string)
+}

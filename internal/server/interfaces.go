@@ -13,3 +13,9 @@ type Database interface {
 type UpdateForcer interface {
 	ForceUpdate(ctx context.Context) (errors []error)
 }
+
+type Logger interface {
+	Info(s string)
+	Warn(s string)
+	Error(s string)
+}

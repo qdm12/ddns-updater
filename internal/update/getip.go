@@ -6,13 +6,12 @@ import (
 	"strconv"
 
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
-	"github.com/qdm12/golibs/logging"
 )
 
 type getIPFunc func(ctx context.Context) (ip net.IP, err error)
 
 func tryAndRepeatGettingIP(ctx context.Context, getIPFunc getIPFunc,
-	logger logging.Logger, version ipversion.IPVersion) (ip net.IP, err error) {
+	logger Logger, version ipversion.IPVersion) (ip net.IP, err error) {
 	const tries = 3
 	logMessagePrefix := "obtaining " + version.String() + " address"
 	for try := 0; try < tries; try++ {

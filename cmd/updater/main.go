@@ -29,10 +29,10 @@ import (
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
 	"github.com/qdm12/golibs/connectivity"
-	"github.com/qdm12/golibs/logging"
 	"github.com/qdm12/golibs/params"
 	"github.com/qdm12/goshutdown"
 	"github.com/qdm12/gosplash"
+	"github.com/qdm12/log"
 )
 
 //nolint:gochecknoglobals
@@ -49,7 +49,7 @@ func main() {
 		BuildDate: buildDate,
 	}
 	env := params.New()
-	logger := logging.New(logging.Settings{Writer: os.Stdout})
+	logger := log.New()
 
 	ctx := context.Background()
 	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
@@ -96,7 +96,7 @@ var (
 	errShoutrrrSetup = errors.New("failed setting up Shoutrrr")
 )
 
-func _main(ctx context.Context, env params.Interface, args []string, logger logging.ParentLogger,
+func _main(ctx context.Context, env params.Interface, args []string, logger log.LoggerInterface,
 	buildInfo models.BuildInformation, timeNow func() time.Time) (err error) {
 	if health.IsClientMode(args) {
 		// Running the program in a separate instance through the Docker
@@ -145,10 +145,11 @@ func _main(ctx context.Context, env params.Interface, args []string, logger logg
 	}
 
 	// Setup logger
-	loggerSettings := logging.Settings{
-		Level:  config.Logger.Level,
-		Caller: config.Logger.Caller}
-	logger = logging.New(loggerSettings)
+	options := []log.Option{log.SetLevel(config.Logger.Level)}
+	if config.Logger.Caller {
+		options = append(options, log.SetCallerFile(true), log.SetCallerLine(true))
+	}
+	logger.Patch(options...)
 
 	sender, err := shoutrrr.CreateSender(config.Shoutrrr.Addresses...)
 	if err != nil {
@@ -242,22 +243,23 @@ func _main(ctx context.Context, env params.Interface, args []string, logger logg
 	go runner.ForceUpdate(ctx)
 
 	isHealthy := health.MakeIsHealthy(db, resolver)
+	healthLogger := logger.New(log.SetComponent("healthcheck server"))
 	healthServer := health.NewServer(config.Health.ServerAddress,
-		logger.NewChild(logging.Settings{Prefix: "healthcheck server: "}),
-		isHealthy)
+		healthLogger, isHealthy)
 	healthServerHandler, healthServerCtx, healthServerDone := goshutdown.NewGoRoutineHandler("health server")
 	go healthServer.Run(healthServerCtx, healthServerDone)
 
 	address := ":" + strconv.Itoa(int(config.Server.Port))
-	serverLogger := logger.NewChild(logging.Settings{Prefix: "http server: "})
+	serverLogger := logger.New(log.SetComponent("http server"))
 	server := server.New(ctx, address, config.Server.RootURL, db, serverLogger, runner)
 	serverHandler, serverCtx, serverDone := goshutdown.NewGoRoutineHandler("server")
 	go server.Run(serverCtx, serverDone)
 	notify("Launched with " + strconv.Itoa(len(records)) + " records to watch")
 
 	backupHandler, backupCtx, backupDone := goshutdown.NewGoRoutineHandler("backup")
+	backupLogger := logger.New(log.SetComponent("backup"))
 	go backupRunLoop(backupCtx, backupDone, config.Backup.Period, config.Paths.DataDir, config.Backup.Directory,
-		logger.NewChild(logging.Settings{Prefix: "backup: "}), timeNow)
+		backupLogger, timeNow)
 
 	shutdownGroup := goshutdown.NewGroupHandler("")
 	shutdownGroup.Add(runnerHandler, healthServerHandler, serverHandler, backupHandler)
@@ -271,8 +273,13 @@ func _main(ctx context.Context, env params.Interface, args []string, logger logg
 	return nil
 }
 
+type InfoErroer interface {
+	Info(s string)
+	Error(s string)
+}
+
 func backupRunLoop(ctx context.Context, done chan<- struct{}, backupPeriod time.Duration,
-	dataDir, outputDir string, logger logging.Logger, timeNow func() time.Time) {
+	dataDir, outputDir string, logger InfoErroer, timeNow func() time.Time) {
 	defer close(done)
 	if backupPeriod == 0 {
 		logger.Info("disabled")

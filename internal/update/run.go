@@ -10,7 +10,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 	librecords "github.com/qdm12/ddns-updater/internal/records"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
-	"github.com/qdm12/golibs/logging"
 )
 
 type Runner struct {
@@ -23,13 +22,13 @@ type Runner struct {
 	cooldown    time.Duration
 	resolver    LookupIPer
 	ipGetter    PublicIPFetcher
-	logger      logging.Logger
+	logger      Logger
 	timeNow     func() time.Time
 }
 
 func NewRunner(db Database, updater UpdaterInterface, ipGetter PublicIPFetcher,
 	period time.Duration, ipv6Mask net.IPMask, cooldown time.Duration,
-	logger logging.Logger, resolver LookupIPer, timeNow func() time.Time) *Runner {
+	logger Logger, resolver LookupIPer, timeNow func() time.Time) *Runner {
 	return &Runner{
 		period:      period,
 		db:          db,

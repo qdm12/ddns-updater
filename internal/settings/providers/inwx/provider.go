@@ -31,8 +31,9 @@ func New(data json.RawMessage, domain, host string,
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
-		return nil, err
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
+		return nil, fmt.Errorf("decoding inwx extra settings: %w", err)
 	}
 	p = &Provider{
 		domain:    domain,
@@ -41,20 +42,21 @@ func New(data json.RawMessage, domain, host string,
 		username:  extraSettings.Username,
 		password:  extraSettings.Password,
 	}
-	if err := p.isValid(); err != nil {
-		return nil, err
+	err = p.isValid()
+	if err != nil {
+		return nil, fmt.Errorf("validating provider settings: %w", err)
 	}
 	return p, nil
 }
 
 func (p *Provider) isValid() error {
 	switch {
-	case len(p.username) == 0:
-		return errors.ErrEmptyUsername
-	case len(p.password) == 0:
-		return errors.ErrEmptyPassword
+	case p.username == "":
+		return fmt.Errorf("%w", errors.ErrEmptyUsername)
+	case p.password == "":
+		return fmt.Errorf("%w", errors.ErrEmptyPassword)
 	case p.host == "*":
-		return errors.ErrHostWildcard
+		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}
 	return nil
 }
@@ -99,25 +101,25 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		Host:   "dyndns.inwx.com",
 		Path:   "/nic/update",
 	}
-	values := url.Values{}
+	var values url.Values
 	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
 	if ip.To4() != nil {
 		values.Set("myip", ip.String())
 	} else {
-		values.Set("myipv6",ip.String())
+		values.Set("myipv6", ip.String())
 	}
 
 	u.RawQuery = values.Encode()
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating http request: %w", err)
 	}
 	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("doing http request: %w", err)
 	}
 	defer response.Body.Close()
 
@@ -131,10 +133,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
 	}
 
-	if !strings.HasPrefix(s, "good") || !strings.HasPrefix(s,"nochg") {
+	if !strings.HasPrefix(s, "good") || !strings.HasPrefix(s, "nochg") {
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
-	
-	
+
 	return ip, nil
 }

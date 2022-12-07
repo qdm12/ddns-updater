@@ -64,6 +64,8 @@ ENV \
     PUBLICIP_DNS_TIMEOUT=3s \
     HTTP_TIMEOUT=10s \
     DATADIR=/updater/data \
+    RESOLVER_ADDRESS= \
+    RESOLVER_TIMEOUT=5s \
 
     # Web UI
     LISTENING_PORT=8000 \

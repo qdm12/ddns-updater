@@ -1,20 +1,18 @@
 package health
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"net"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/golibs/logging"
 )
 
-type lookupIPFunc func(host string) ([]net.IP, error)
-
-func MakeIsHealthy(db AllSelecter, lookupIP lookupIPFunc, logger logging.Logger) func() error {
+func MakeIsHealthy(db AllSelecter, resolver LookupIPer, logger logging.Logger) func() error {
 	return func() (err error) {
-		return isHealthy(db, lookupIP)
+		return isHealthy(db, resolver)
 	}
 }
 
@@ -25,7 +23,7 @@ var (
 )
 
 // isHealthy checks all the records were updated successfully and returns an error if not.
-func isHealthy(db AllSelecter, lookupIP lookupIPFunc) (err error) {
+func isHealthy(db AllSelecter, resolver LookupIPer) (err error) {
 	records := db.SelectAll()
 	for _, record := range records {
 		if record.Status == constants.FAIL {
@@ -34,7 +32,7 @@ func isHealthy(db AllSelecter, lookupIP lookupIPFunc) (err error) {
 			continue
 		}
 		hostname := record.Settings.BuildDomainName()
-		lookedUpIPs, err := lookupIP(hostname)
+		lookedUpIPs, err := resolver.LookupIP(context.Background(), "ip", hostname)
 		if err != nil {
 			return err
 		}

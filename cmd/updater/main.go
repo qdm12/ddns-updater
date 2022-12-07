@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,6 +24,7 @@ import (
 	jsonparams "github.com/qdm12/ddns-updater/internal/params"
 	persistence "github.com/qdm12/ddns-updater/internal/persistence/json"
 	recordslib "github.com/qdm12/ddns-updater/internal/records"
+	"github.com/qdm12/ddns-updater/internal/resolver"
 	"github.com/qdm12/ddns-updater/internal/server"
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
@@ -225,9 +225,14 @@ func _main(ctx context.Context, env params.Interface, args []string, logger logg
 		return err
 	}
 
+	resolver, err := resolver.New(config.Resolver)
+	if err != nil {
+		return fmt.Errorf("creating resolver: %w", err)
+	}
+
 	updater := update.NewUpdater(db, client, notify, logger)
 	runner := update.NewRunner(db, updater, ipGetter, config.Update.Period,
-		config.IPv6.Mask, config.Update.Cooldown, logger, timeNow)
+		config.IPv6.Mask, config.Update.Cooldown, logger, resolver, timeNow)
 
 	runnerHandler, runnerCtx, runnerDone := goshutdown.NewGoRoutineHandler("runner")
 	go runner.Run(runnerCtx, runnerDone)
@@ -236,7 +241,7 @@ func _main(ctx context.Context, env params.Interface, args []string, logger logg
 	// no need to collect the resulting errors.
 	go runner.ForceUpdate(ctx)
 
-	isHealthy := health.MakeIsHealthy(db, net.LookupIP, logger)
+	isHealthy := health.MakeIsHealthy(db, resolver, logger)
 	healthServer := health.NewServer(config.Health.ServerAddress,
 		logger.NewChild(logging.Settings{Prefix: "healthcheck server: "}),
 		isHealthy)

@@ -21,7 +21,7 @@ type Runner struct {
 	forceResult chan []error
 	ipv6Mask    net.IPMask
 	cooldown    time.Duration
-	resolver    *net.Resolver
+	resolver    LookupIPer
 	ipGetter    PublicIPFetcher
 	logger      logging.Logger
 	timeNow     func() time.Time
@@ -29,7 +29,7 @@ type Runner struct {
 
 func NewRunner(db Database, updater UpdaterInterface, ipGetter PublicIPFetcher,
 	period time.Duration, ipv6Mask net.IPMask, cooldown time.Duration,
-	logger logging.Logger, timeNow func() time.Time) *Runner {
+	logger logging.Logger, resolver LookupIPer, timeNow func() time.Time) *Runner {
 	return &Runner{
 		period:      period,
 		db:          db,
@@ -38,7 +38,7 @@ func NewRunner(db Database, updater UpdaterInterface, ipGetter PublicIPFetcher,
 		forceResult: make(chan []error),
 		ipv6Mask:    ipv6Mask,
 		cooldown:    cooldown,
-		resolver:    net.DefaultResolver,
+		resolver:    resolver,
 		ipGetter:    ipGetter,
 		logger:      logger,
 		timeNow:     timeNow,

@@ -23,3 +23,7 @@ type Database interface {
 	SelectAll() (records []records.Record)
 	Update(recordID uint, record records.Record) (err error)
 }
+
+type LookupIPer interface {
+	LookupIP(ctx context.Context, network, host string) (ips []net.IP, err error)
+}

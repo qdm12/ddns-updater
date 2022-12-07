@@ -1,6 +1,9 @@
 package config
 
 import (
+	"fmt"
+
+	"github.com/qdm12/ddns-updater/internal/resolver"
 	"github.com/qdm12/golibs/params"
 )
 
@@ -8,6 +11,7 @@ type Config struct {
 	Client   Client
 	Update   Update
 	PubIP    PubIP
+	Resolver resolver.Settings
 	IPv6     IPv6
 	Server   Server
 	Health   Health
@@ -32,6 +36,11 @@ func (c *Config) Get(env params.Interface) (warnings []string, err error) {
 	warnings = append(warnings, newWarnings...)
 	if err != nil {
 		return warnings, err
+	}
+
+	c.Resolver, err = readResolver()
+	if err != nil {
+		return warnings, fmt.Errorf("reading resolver settings: %w", err)
 	}
 
 	if err := c.IPv6.get(env); err != nil {

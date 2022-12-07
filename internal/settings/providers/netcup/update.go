@@ -14,7 +14,7 @@ func (p *Provider) getRecordToUpdate(ctx context.Context,
 	record dnsRecord, err error) {
 	recordSet, err := p.infoDNSRecords(ctx, client, session)
 	if err != nil {
-		return record, err
+		return record, fmt.Errorf("getting DNS records: %w", err)
 	}
 
 	recordType := constants.A

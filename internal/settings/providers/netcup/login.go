@@ -36,7 +36,7 @@ func (p *Provider) login(ctx context.Context, client *http.Client) (
 
 	err = doJSONHTTP(ctx, client, requestBody, &responseData)
 	if err != nil {
-		return "", fmt.Errorf("doing JSON HTTP exchange: %w", err)
+		return "", err
 	}
 
 	session = responseData.Session

@@ -1,7 +1,6 @@
 package netcup
 
 import (
-	"fmt"
 	"net/http"
 
 	"golang.org/x/net/context"
@@ -32,9 +31,5 @@ func (p *Provider) infoDNSRecords(ctx context.Context, client *http.Client,
 	}
 
 	err = doJSONHTTP(ctx, client, request, &recordSet)
-	if err != nil {
-		return recordSet, fmt.Errorf("doing JSON HTTP exchange: %w", err)
-	}
-
-	return recordSet, nil
+	return recordSet, err
 }

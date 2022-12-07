@@ -241,7 +241,7 @@ func _main(ctx context.Context, env params.Interface, args []string, logger logg
 	// no need to collect the resulting errors.
 	go runner.ForceUpdate(ctx)
 
-	isHealthy := health.MakeIsHealthy(db, resolver, logger)
+	isHealthy := health.MakeIsHealthy(db, resolver)
 	healthServer := health.NewServer(config.Health.ServerAddress,
 		logger.NewChild(logging.Settings{Prefix: "healthcheck server: "}),
 		isHealthy)

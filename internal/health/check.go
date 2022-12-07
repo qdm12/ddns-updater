@@ -7,10 +7,9 @@ import (
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
-	"github.com/qdm12/golibs/logging"
 )
 
-func MakeIsHealthy(db AllSelecter, resolver LookupIPer, logger logging.Logger) func() error {
+func MakeIsHealthy(db AllSelecter, resolver LookupIPer) func() error {
 	return func() (err error) {
 		return isHealthy(db, resolver)
 	}

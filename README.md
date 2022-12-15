@@ -132,13 +132,18 @@ The program reads the configuration from a JSON object, either from a file or fr
 
 ### Next steps
 
+#### Docker-Compose
+
 You can also use [docker-compose.yml](https://github.com/qdm12/ddns-updater/blob/master/docker-compose.yml) with:
 
 ```sh
 docker-compose up -d
 ```
-
 You can update the image with `docker pull qmcgaw/ddns-updater`. Other [Docker image tags are available](https://hub.docker.com/repository/docker/qmcgaw/ddns-updater/tags).
+
+#### Kubernetes
+
+If you want to run the ddns-updater on Kubernetes check the [K8s-folder](/k8s) for an installation guide and examples.
 
 ### GHCR
 

@@ -12,7 +12,7 @@
       "domain": "domain.com",
       "host": "@",
       "username": "username",
-      "password": "password",
+      "client_key": "client_key",
       "ip_version": "ipv4",
       "provider_ip": true
     }
@@ -25,7 +25,7 @@
 - `"domain"`
 - `"host"` is your host and can be a subdomain or `"@"`
 - `"username"`
-- `"password"`
+- `"client_key"`
 
 ### Optional parameters
 

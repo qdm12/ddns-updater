@@ -23,7 +23,7 @@ type Provider struct {
 	host          string
 	ipVersion     ipversion.IPVersion
 	username      string
-	password      string
+	clientKey     string
 	useProviderIP bool
 }
 
@@ -31,18 +31,25 @@ func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
-		Password      string `json:"password"`
+		Password      string `json:"password"` // Retro-compatibility
+		ClientKey     string `json:"client_key"`
 		UseProviderIP bool   `json:"provider_ip"`
 	}{}
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, err
 	}
+
+	clientKey := extraSettings.ClientKey
+	if clientKey == "" { // Retro-compatibility try
+		clientKey = extraSettings.Password
+	}
+
 	p = &Provider{
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
 		username:      extraSettings.Username,
-		password:      extraSettings.Password,
+		clientKey:     clientKey,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
 	if err := p.isValid(); err != nil {
@@ -55,7 +62,7 @@ func (p *Provider) isValid() error {
 	switch {
 	case len(p.username) == 0:
 		return errors.ErrEmptyUsername
-	case len(p.password) == 0:
+	case p.clientKey == "":
 		return errors.ErrEmptyPassword
 	case p.host == "*":
 		return errors.ErrHostWildcard
@@ -99,7 +106,7 @@ func (p *Provider) HTML() models.HTMLRow {
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	u := url.URL{
 		Scheme: "https",
-		User:   url.UserPassword(p.username, p.password),
+		User:   url.UserPassword(p.username, p.clientKey),
 		Host:   "members.dyndns.org",
 		Path:   "/v3/update",
 	}
@@ -137,7 +144,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	case strings.HasPrefix(s, constants.Notfqdn):
 		return nil, errors.ErrHostnameNotExists
 	case strings.HasPrefix(s, "badrequest"):
-		return nil, fmt.Errorf("%w: %s", errors.ErrBadRequest, strings.TrimPrefix(s, "badrequest"))
+		return nil, fmt.Errorf("%w", errors.ErrBadRequest)
 	case strings.HasPrefix(s, "good"):
 		return ip, nil
 	default:

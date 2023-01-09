@@ -114,12 +114,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	values.Set("username", p.username)
 	values.Set("password", p.password)
 	values.Set("location", p.group)
-	if p.host != "@" {
-		values.Set("alias", p.host)
-		values.Set("hostname", p.domain)
-	} else {
-		values.Set("hostname", p.domain)
-	}
+	hostname := utils.BuildDomainName(p.host, p.domain)
+	values.Set("hostname", hostname)
 	if !p.useProviderIP {
 		if ip.To4() == nil {
 			values.Set("myipv6", ip.String())

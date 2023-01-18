@@ -137,6 +137,28 @@ You can update the image with `docker pull qmcgaw/ddns-updater`. Other [Docker i
 
 Images are also added to the Github Container Registry. To use the GHCR container replace `qmcgaw/ddns-updater` to `ghcr.io/qdm12/ddns-updater`, further details are available [here](https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater)
 
+### Split DNS
+
+If you have split DNS configured, you should add a external dns server to the container. This way it will not trigger constant updates. Note this is docker specific flag and not part of ddns-updater.
+
+Example with docker run:
+
+```sh
+docker run ... --dns=1.1.1.1 ...
+```
+
+Example with docker-compose:
+
+```yaml
+version: "3.7"
+services:
+  ddns-updater:
+  ...
+    dns:
+      - 1.1.1.1
+  ...
+```
+
 ## Configuration
 
 Start by having the following content in *config.json*, or in your `CONFIG` environment variable:

@@ -124,7 +124,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 

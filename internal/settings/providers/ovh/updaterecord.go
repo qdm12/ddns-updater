@@ -26,12 +26,12 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	}
 	bodyBytes, err := json.Marshal(putRecordsParams)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
+		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
+		return fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
 	}
 	request.Header.Add("Content-Type", "application/json;charset=utf-8")
 	p.setHeaderCommon(request.Header)
@@ -39,7 +39,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	response, err := client.Do(request)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, err)
+		return fmt.Errorf("%w: %w", errors.ErrUnsuccessfulResponse, err)
 	}
 
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {

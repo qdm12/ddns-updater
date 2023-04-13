@@ -143,7 +143,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		IP string `xml:"IP"`
 	}
 	if err := decoder.Decode(&parsedXML); err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if parsedXML.Errors.Error != "" {

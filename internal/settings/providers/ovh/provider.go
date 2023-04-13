@@ -150,7 +150,7 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client, i
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
 	}
 	headers.SetUserAgent(request)
 
@@ -162,7 +162,7 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client, i
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
@@ -207,28 +207,28 @@ func (p *Provider) updateWithZoneDNS(ctx context.Context, client *http.Client, i
 
 	timestamp, err := p.getAdjustedUnixTimestamp(ctx, client)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrGetAdjustedTime, err)
+		return nil, fmt.Errorf("%w: %w", ErrGetAdjustedTime, err)
 	}
 
 	recordIDs, err := p.getRecords(ctx, client, recordType, subDomain, timestamp)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrListRecords, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrListRecords, err)
 	}
 
 	if len(recordIDs) == 0 {
 		if err := p.createRecord(ctx, client, recordType, subDomain, ipStr, timestamp); err != nil {
-			return nil, fmt.Errorf("%w: %s", errors.ErrCreateRecord, err)
+			return nil, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
 		}
 	} else {
 		for _, recordID := range recordIDs {
 			if err := p.updateRecord(ctx, client, recordID, ipStr, timestamp); err != nil {
-				return nil, fmt.Errorf("%w: %s", errors.ErrUpdateRecord, err)
+				return nil, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
 			}
 		}
 	}
 
 	if err := p.refresh(ctx, client, timestamp); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrRefresh, err)
+		return nil, fmt.Errorf("%w: %w", ErrRefresh, err)
 	}
 
 	return ip, nil

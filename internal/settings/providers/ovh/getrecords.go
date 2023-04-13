@@ -24,14 +24,14 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client,
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
 	}
 	p.setHeaderCommon(request.Header)
 	p.setHeaderAuth(request.Header, timestamp, request.Method, request.URL, nil)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnsuccessfulResponse, err)
 	}
 
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
@@ -41,7 +41,7 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client,
 	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&recordIDs); err != nil {
 		_ = response.Body.Close()
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	_ = response.Body.Close()

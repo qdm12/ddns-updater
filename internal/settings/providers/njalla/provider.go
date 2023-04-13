@@ -128,7 +128,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		} `json:"value"`
 	}
 	if err := decoder.Decode(&respBody); err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	switch response.StatusCode {

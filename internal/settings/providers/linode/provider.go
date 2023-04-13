@@ -91,7 +91,7 @@ func (p *Provider) HTML() models.HTMLRow {
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	domainID, err := p.getDomainID(ctx, client)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrGetDomainID, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrGetDomainID, err)
 	}
 
 	recordType := constants.A
@@ -103,15 +103,15 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	if goerrors.Is(err, errors.ErrNotFound) {
 		err := p.createRecord(ctx, client, domainID, recordType, ip)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %s", errors.ErrCreateRecord, err)
+			return nil, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
 		}
 		return ip, nil
 	} else if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrGetRecordID, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
 	}
 
 	if err := p.updateRecord(ctx, client, domainID, recordID, ip); err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUpdateRecord, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
 	}
 
 	return ip, nil
@@ -224,7 +224,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 		} `json:"data"`
 	}
 	if err := decoder.Decode(&obj); err != nil {
-		return 0, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return 0, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	for _, domainRecord := range obj.Data {
@@ -258,7 +258,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
 	if err := encoder.Encode(requestData); err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
+		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
@@ -282,7 +282,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	var responseData domainRecord
 	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&responseData); err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	newIP := net.ParseIP(responseData.IP)
@@ -311,7 +311,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
 	if err := encoder.Encode(data); err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
+		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
@@ -335,7 +335,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	data.IP = ""
 	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&data); err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	newIP := net.ParseIP(data.IP)

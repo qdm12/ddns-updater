@@ -101,18 +101,18 @@ func (p *Provider) setHeaders(request *http.Request) {
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	zoneID, err := p.getZoneID(ctx, client)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrGetZoneID, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrGetZoneID, err)
 	}
 
 	record, err := p.getRecord(ctx, client, zoneID, ip)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrGetRecordInZone, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrGetRecordInZone, err)
 	}
 
 	newRecord := record
 	newRecord.Content = ip.String()
 	if err := p.updateRecord(ctx, client, zoneID, newRecord); err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUpdateRecord, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
 	}
 	return ip, nil
 }
@@ -153,7 +153,7 @@ func (p *Provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return 0, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return 0, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -171,7 +171,7 @@ func (p *Provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 	var zones []zone
 
 	if err := json.Unmarshal(b, &zones); err != nil {
-		return 0, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return 0, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 	for _, zone := range zones {
 		if zone.Name == p.domain {
@@ -204,7 +204,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return record, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return record, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -219,7 +219,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 	var records []luaDNSRecord
 
 	if err := json.Unmarshal(b, &records); err != nil {
-		return record, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return record, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 	recordType := constants.A
 	if ip.To4() == nil {
@@ -264,7 +264,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -279,7 +279,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	var updatedRecord luaDNSRecord
 	if jsonErr := json.Unmarshal(b, &updatedRecord); jsonErr != nil {
-		return fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if updatedRecord.Content != newRecord.Content {

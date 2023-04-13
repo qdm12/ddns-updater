@@ -50,7 +50,7 @@ func (p *Provider) getOVHTime(ctx context.Context, client *http.Client) (ovhTime
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return ovhTime, fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
+		return ovhTime, fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
 	}
 	p.setHeaderCommon(request.Header)
 
@@ -68,7 +68,7 @@ func (p *Provider) getOVHTime(ctx context.Context, client *http.Client) (ovhTime
 
 	var unixTimestamp int64
 	if err := decoder.Decode(&unixTimestamp); err != nil {
-		return ovhTime, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return ovhTime, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if err := response.Body.Close(); err != nil {

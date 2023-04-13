@@ -18,7 +18,7 @@ func extractAPIError(response *http.Response) (err error) {
 		b, err := io.ReadAll(response.Body)
 		if err != nil {
 			_ = response.Body.Close()
-			return fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+			return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 		}
 		apiError.Message = string(b)
 	}

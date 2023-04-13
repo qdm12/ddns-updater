@@ -99,7 +99,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	records, err := p.getRecords(ctx, client)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrListRecords, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrListRecords, err)
 	}
 
 	var oldIP net.IP
@@ -118,12 +118,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	// Create the record with the new IP before removing the old one if it exists.
 	if err := p.createRecord(ctx, client, ip); err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrCreateRecord, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
 	}
 
 	if oldIP != nil { // Found editable record with a different IP address, so remove it
 		if err := p.removeRecord(ctx, client, oldIP); err != nil {
-			return nil, fmt.Errorf("%w: %s", errors.ErrRemoveRecord, err)
+			return nil, fmt.Errorf("%w: %w", errors.ErrRemoveRecord, err)
 		}
 	}
 
@@ -189,7 +189,7 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
 
 	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&records); err != nil {
-		return records, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return records, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if records.Result != constants.Success {
@@ -235,7 +235,7 @@ func (p *Provider) removeRecord(ctx context.Context, client *http.Client, ip net
 	var dhResponse dreamhostReponse
 	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&dhResponse); err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if dhResponse.Result != constants.Success { // this should not happen
@@ -282,7 +282,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	var dhResponse dreamhostReponse
 	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&dhResponse); err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if dhResponse.Result != constants.Success {

@@ -108,10 +108,7 @@ func _main(ctx context.Context, env params.Interface, args []string, logger log.
 		if err != nil {
 			return err
 		}
-		if err := client.Query(ctx, healthConfig.Port); err != nil {
-			return err
-		}
-		return nil
+		return client.Query(ctx, healthConfig.Port)
 	}
 
 	announcementExp, err := time.Parse(time.RFC3339, "2021-07-22T00:00:00Z")
@@ -153,7 +150,7 @@ func _main(ctx context.Context, env params.Interface, args []string, logger log.
 
 	sender, err := shoutrrr.CreateSender(config.Shoutrrr.Addresses...)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errShoutrrrSetup, err)
+		return fmt.Errorf("%w: %w", errShoutrrrSetup, err)
 	}
 	notify := func(message string) {
 		errs := sender.Send(message, &config.Shoutrrr.Params)

@@ -58,7 +58,7 @@ func (u *Updater) Update(ctx context.Context, id uint, ip net.IP, now time.Time)
 			record.LastBan = nil // clear a previous ban
 		}
 		if updateErr := u.db.Update(id, record); updateErr != nil {
-			return fmt.Errorf("%w (with database update error: %s)", err, updateErr)
+			return fmt.Errorf("%w (with database update error: %w)", err, updateErr)
 		}
 		return err
 	}

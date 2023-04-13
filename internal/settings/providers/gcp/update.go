@@ -70,7 +70,7 @@ func (p *Provider) getResourceRecordSet(rrSetsService *clouddns.ResourceRecordSe
 	if err != nil {
 		googleAPIError := new(googleapi.Error)
 		if errors.As(err, &googleAPIError) && googleAPIError.Code == http.StatusNotFound {
-			return nil, fmt.Errorf("%w: %s", ddnserrors.ErrNotFound, err)
+			return nil, fmt.Errorf("%w: %w", ddnserrors.ErrNotFound, err)
 		}
 		return nil, err
 	}

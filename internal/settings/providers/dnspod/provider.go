@@ -140,7 +140,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		} `json:"records"`
 	}
 	if err := decoder.Decode(&recordResp); err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	var recordID, recordLine string
@@ -202,7 +202,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 	err = json.Unmarshal(data, &ddnsResp)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	ipStr := ddnsResp.Record.Value

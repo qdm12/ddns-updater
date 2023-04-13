@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
+func (h *handlers) update(w http.ResponseWriter, _ *http.Request) {
 	start := h.timeNow()
 	errors := h.runner.ForceUpdate(h.ctx)
 	duration := h.timeNow().Sub(start)

@@ -120,7 +120,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
 	if err := encoder.Encode(postRecordsParams); err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
@@ -131,7 +131,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnsuccessfulResponse, err)
 	}
 	defer response.Body.Close()
 
@@ -147,7 +147,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 	}
 	decoder := json.NewDecoder(response.Body)
 	if err := decoder.Decode(&responseData); err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	for _, record := range responseData.Records {
@@ -182,18 +182,18 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
 	if err := encoder.Encode(postRecordsParams); err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
+		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
+		return fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
 	}
 	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, err)
+		return fmt.Errorf("%w: %w", errors.ErrUnsuccessfulResponse, err)
 	}
 	defer response.Body.Close()
 
@@ -229,18 +229,18 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
 	if err := encoder.Encode(postRecordsParams); err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrRequestMarshal, err)
+		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrBadRequest, err)
+		return fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
 	}
 	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, err)
+		return fmt.Errorf("%w: %w", errors.ErrUnsuccessfulResponse, err)
 	}
 	defer response.Body.Close()
 

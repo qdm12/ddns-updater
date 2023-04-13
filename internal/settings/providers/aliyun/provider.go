@@ -95,7 +95,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) Update(ctx context.Context, _ *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(_ context.Context, _ *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := constants.A
 	if ip.To4() == nil {
 		recordType = constants.AAAA

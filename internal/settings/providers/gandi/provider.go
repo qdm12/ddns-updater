@@ -125,7 +125,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		TTL:    ttl,
 	}
 	if err := encoder.Encode(requestData); err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrRequestEncode, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)

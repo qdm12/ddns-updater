@@ -55,7 +55,7 @@ func (r *Reader) getSettingsFromFile(filePath string) (
 
 		err = r.writeFile(filePath, []byte(`{}`), mode)
 		if err != nil {
-			err = fmt.Errorf("%w: %s", errWriteConfigToFile, err)
+			err = fmt.Errorf("%w: %w", errWriteConfigToFile, err)
 		}
 		return nil, nil, err
 	}
@@ -86,12 +86,12 @@ func (r *Reader) getSettingsFromEnv(filePath string) (
 
 	buffer := bytes.NewBuffer(nil)
 	if err := json.Indent(buffer, b, "", "  "); err != nil {
-		return allSettings, warnings, fmt.Errorf("%w: %s", errWriteConfigToFile, err)
+		return allSettings, warnings, fmt.Errorf("%w: %w", errWriteConfigToFile, err)
 	}
 	const mode = fs.FileMode(0600)
 	err = r.writeFile(filePath, buffer.Bytes(), mode)
 	if err != nil {
-		return allSettings, warnings, fmt.Errorf("%w: %s", errWriteConfigToFile, err)
+		return allSettings, warnings, fmt.Errorf("%w: %w", errWriteConfigToFile, err)
 	}
 
 	return allSettings, warnings, nil
@@ -111,10 +111,10 @@ func extractAllSettings(jsonBytes []byte) (
 		Settings []json.RawMessage `json:"settings"`
 	}{}
 	if err := json.Unmarshal(jsonBytes, &config); err != nil {
-		return nil, nil, fmt.Errorf("%w: %s", errUnmarshalCommon, err)
+		return nil, nil, fmt.Errorf("%w: %w", errUnmarshalCommon, err)
 	}
 	if err := json.Unmarshal(jsonBytes, &rawConfig); err != nil {
-		return nil, nil, fmt.Errorf("%w: %s", errUnmarshalRaw, err)
+		return nil, nil, fmt.Errorf("%w: %w", errUnmarshalRaw, err)
 	}
 
 	for i, common := range config.CommonSettings {

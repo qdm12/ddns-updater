@@ -190,7 +190,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 		} `json:"result"`
 	}{}
 	if err := decoder.Decode(&listRecordsResponse); err != nil {
-		return "", false, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return "", false, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	switch {
@@ -217,7 +217,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 	identifier, upToDate, err := p.getRecordID(ctx, client, ip)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ErrGetRecordID, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
 	} else if upToDate {
 		return ip, nil
 	}
@@ -245,7 +245,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
 	if err := encoder.Encode(requestData); err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrRequestEncode, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
@@ -278,7 +278,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		} `json:"result"`
 	}
 	if err := decoder.Decode(&parsedJSON); err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if !parsedJSON.Success {

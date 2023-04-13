@@ -9,9 +9,9 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/settings/common"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
@@ -25,11 +25,10 @@ type Provider struct {
 	ipVersion     ipversion.IPVersion
 	password      string
 	useProviderIP bool
-	matcher       common.Matcher
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher common.Matcher) (p *Provider, err error) {
+func New(data json.RawMessage, domain, host string,
+	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	if ipVersion == ipversion.IP6 {
 		return p, errors.ErrIPv6NotSupported
 	}
@@ -46,7 +45,6 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		ipVersion:     ipVersion,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
-		matcher:       matcher,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -54,8 +52,10 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	return p, nil
 }
 
+var passwordRegex = regexp.MustCompile(`^[a-f0-9]{32}$`)
+
 func (p *Provider) isValid() error {
-	if !p.matcher.NamecheapPassword(p.password) {
+	if !passwordRegex.MatchString(p.password) {
 		return errors.ErrMalformedPassword
 	}
 	return nil

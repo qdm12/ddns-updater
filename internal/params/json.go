@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/regex"
 	"github.com/qdm12/ddns-updater/internal/settings"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -117,10 +116,9 @@ func extractAllSettings(jsonBytes []byte) (
 	if err := json.Unmarshal(jsonBytes, &rawConfig); err != nil {
 		return nil, nil, fmt.Errorf("%w: %s", errUnmarshalRaw, err)
 	}
-	matcher := regex.NewMatcher()
 
 	for i, common := range config.CommonSettings {
-		newSettings, newWarnings, err := makeSettingsFromObject(common, rawConfig.Settings[i], matcher)
+		newSettings, newWarnings, err := makeSettingsFromObject(common, rawConfig.Settings[i])
 		warnings = append(warnings, newWarnings...)
 		if err != nil {
 			return nil, warnings, err
@@ -131,8 +129,7 @@ func extractAllSettings(jsonBytes []byte) (
 	return allSettings, warnings, nil
 }
 
-func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
-	matcher *regex.Matcher) (
+func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) (
 	settingsSlice []settings.Settings, warnings []string, err error) {
 	provider := models.Provider(common.Provider)
 	if provider == constants.DuckDNS { // only hosts, no domain
@@ -162,7 +159,7 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	settingsSlice = make([]settings.Settings, len(hosts))
 	for i, host := range hosts {
 		settingsSlice[i], err = settings.New(provider, rawSettings, common.Domain,
-			host, ipVersion, matcher)
+			host, ipVersion)
 		if err != nil {
 			return nil, warnings, err
 		}

@@ -8,10 +8,10 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/settings/common"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
@@ -31,11 +31,10 @@ type Provider struct {
 	zoneIdentifier string
 	proxied        bool
 	ttl            uint
-	matcher        common.Matcher
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher common.Matcher) (p *Provider, err error) {
+func New(data json.RawMessage, domain, host string,
+	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
 		Key            string `json:"key"`
 		Token          string `json:"token"`
@@ -59,7 +58,6 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		zoneIdentifier: extraSettings.ZoneIdentifier,
 		proxied:        extraSettings.Proxied,
 		ttl:            extraSettings.TTL,
-		matcher:        matcher,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -67,17 +65,22 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	return p, nil
 }
 
+var (
+	keyRegex            = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
+	userServiceKeyRegex = regexp.MustCompile(`^v1\.0.+$`)
+)
+
 func (p *Provider) isValid() error {
 	switch {
 	case len(p.key) > 0: // email and key must be provided
 		switch {
-		case !p.matcher.CloudflareKey(p.key):
+		case !keyRegex.MatchString(p.key):
 			return errors.ErrMalformedKey
 		case !verification.NewVerifier().MatchEmail(p.email):
 			return errors.ErrMalformedEmail
 		}
 	case len(p.userServiceKey) > 0: // only user service key
-		if !p.matcher.CloudflareUserServiceKey(p.key) {
+		if !userServiceKeyRegex.MatchString(p.key) {
 			return errors.ErrMalformedUserServiceKey
 		}
 	default: // constants.API token only

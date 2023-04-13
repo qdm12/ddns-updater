@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/settings/common"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
@@ -28,8 +27,8 @@ type Provider struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher common.Matcher) (p *Provider, err error) {
+func New(data json.RawMessage, domain, host string,
+	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
 		Email         string `json:"email"`
 		Password      string `json:"password"`

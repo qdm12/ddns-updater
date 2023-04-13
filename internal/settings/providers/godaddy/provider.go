@@ -9,9 +9,9 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/settings/common"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
@@ -25,11 +25,10 @@ type Provider struct {
 	ipVersion ipversion.IPVersion
 	key       string
 	secret    string
-	matcher   common.Matcher
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher common.Matcher) (p *Provider, err error) {
+func New(data json.RawMessage, domain, host string,
+	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
 		Key    string `json:"key"`
 		Secret string `json:"secret"`
@@ -43,7 +42,6 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		ipVersion: ipVersion,
 		key:       extraSettings.Key,
 		secret:    extraSettings.Secret,
-		matcher:   matcher,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -51,9 +49,11 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	return p, nil
 }
 
+var keyRegex = regexp.MustCompile(`^[A-Za-z0-9]{8,14}\_[A-Za-z0-9]{21,22}$`)
+
 func (p *Provider) isValid() error {
 	switch {
-	case !p.matcher.GodaddyKey(p.key):
+	case !keyRegex.MatchString(p.key):
 		return errors.ErrMalformedKey
 	case len(p.secret) == 0:
 		return errors.ErrEmptySecret

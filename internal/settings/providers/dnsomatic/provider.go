@@ -8,10 +8,10 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/settings/common"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
@@ -27,11 +27,10 @@ type Provider struct {
 	username      string
 	password      string
 	useProviderIP bool
-	matcher       common.Matcher
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher common.Matcher) (p *Provider, err error) {
+func New(data json.RawMessage, domain, host string,
+	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -47,7 +46,6 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
-		matcher:       matcher,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -55,12 +53,12 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	return p, nil
 }
 
+var regexUsername = regexp.MustCompile(`^[a-zA-Z0-9@._-]{3,25}$`)
+
 func (p *Provider) isValid() error {
 	switch {
-	case !p.matcher.DNSOMaticUsername(p.username):
+	case !regexUsername.MatchString(p.username):
 		return fmt.Errorf("%w: %s", errors.ErrMalformedUsername, p.username)
-	case len(p.username) == 0:
-		return errors.ErrEmptyUsername
 	case len(p.password) == 0:
 		return errors.ErrEmptyPassword
 	}

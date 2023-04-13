@@ -8,9 +8,9 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/settings/common"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
@@ -24,11 +24,10 @@ type Provider struct {
 	ipVersion     ipversion.IPVersion
 	token         string
 	useProviderIP bool
-	matcher       common.Matcher
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher common.Matcher) (p *Provider, err error) {
+func New(data json.RawMessage, domain, host string,
+	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
 		Token         string `json:"token"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -41,7 +40,6 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		ipVersion:     ipVersion,
 		token:         extraSettings.Token,
 		useProviderIP: extraSettings.UseProviderIP,
-		matcher:       matcher,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -49,8 +47,10 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	return p, nil
 }
 
+var tokenRegex = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$`)
+
 func (p *Provider) isValid() error {
-	if !p.matcher.DuckDNSToken(p.token) {
+	if !tokenRegex.MatchString(p.token) {
 		return errors.ErrMalformedToken
 	}
 	switch p.host {

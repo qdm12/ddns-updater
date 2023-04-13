@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/settings/common"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/aliyun"
 	"github.com/qdm12/ddns-updater/internal/settings/providers/allinkl"
@@ -64,7 +63,7 @@ var ErrProviderUnknown = errors.New("unknown provider")
 
 //nolint:gocyclo
 func New(provider models.Provider, data json.RawMessage, domain, host string, //nolint:ireturn
-	ipVersion ipversion.IPVersion, matcher common.Matcher) (
+	ipVersion ipversion.IPVersion) (
 	settings Settings, err error) {
 	switch provider {
 	case constants.Aliyun:
@@ -72,7 +71,7 @@ func New(provider models.Provider, data json.RawMessage, domain, host string, //
 	case constants.AllInkl:
 		return allinkl.New(data, domain, host, ipVersion)
 	case constants.Cloudflare:
-		return cloudflare.New(data, domain, host, ipVersion, matcher)
+		return cloudflare.New(data, domain, host, ipVersion)
 	case constants.Dd24:
 		return dd24.New(data, domain, host, ipVersion)
 	case constants.DdnssDe:
@@ -80,15 +79,15 @@ func New(provider models.Provider, data json.RawMessage, domain, host string, //
 	case constants.DigitalOcean:
 		return digitalocean.New(data, domain, host, ipVersion)
 	case constants.DNSOMatic:
-		return dnsomatic.New(data, domain, host, ipVersion, matcher)
+		return dnsomatic.New(data, domain, host, ipVersion)
 	case constants.DNSPod:
 		return dnspod.New(data, domain, host, ipVersion)
 	case constants.DonDominio:
 		return dondominio.New(data, domain, host, ipVersion)
 	case constants.Dreamhost:
-		return dreamhost.New(data, domain, host, ipVersion, matcher)
+		return dreamhost.New(data, domain, host, ipVersion)
 	case constants.DuckDNS:
-		return duckdns.New(data, domain, host, ipVersion, matcher)
+		return duckdns.New(data, domain, host, ipVersion)
 	case constants.Dyn:
 		return dyn.New(data, domain, host, ipVersion)
 	case constants.Dynu:
@@ -102,7 +101,7 @@ func New(provider models.Provider, data json.RawMessage, domain, host string, //
 	case constants.GCP:
 		return gcp.New(data, domain, host, ipVersion)
 	case constants.GoDaddy:
-		return godaddy.New(data, domain, host, ipVersion, matcher)
+		return godaddy.New(data, domain, host, ipVersion)
 	case constants.Google:
 		return google.New(data, domain, host, ipVersion)
 	case constants.HE:
@@ -116,7 +115,7 @@ func New(provider models.Provider, data json.RawMessage, domain, host string, //
 	case constants.LuaDNS:
 		return luadns.New(data, domain, host, ipVersion)
 	case constants.Namecheap:
-		return namecheap.New(data, domain, host, ipVersion, matcher)
+		return namecheap.New(data, domain, host, ipVersion)
 	case constants.Njalla:
 		return njalla.New(data, domain, host, ipVersion)
 	case constants.NoIP:
@@ -136,7 +135,7 @@ func New(provider models.Provider, data json.RawMessage, domain, host string, //
 	case constants.Strato:
 		return strato.New(data, domain, host, ipVersion)
 	case constants.Variomedia:
-		return variomedia.New(data, domain, host, ipVersion, matcher)
+		return variomedia.New(data, domain, host, ipVersion)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrProviderUnknown, provider)
 	}

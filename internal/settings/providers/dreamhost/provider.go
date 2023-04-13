@@ -9,9 +9,9 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/settings/common"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
@@ -24,11 +24,10 @@ type Provider struct {
 	host      string
 	ipVersion ipversion.IPVersion
 	key       string
-	matcher   common.Matcher
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion,
-	matcher common.Matcher) (p *Provider, err error) {
+func New(data json.RawMessage, domain, host string,
+	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
 		Key string `json:"key"`
 	}{}
@@ -43,7 +42,6 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		host:      host,
 		ipVersion: ipVersion,
 		key:       extraSettings.Key,
-		matcher:   matcher,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -51,8 +49,10 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	return p, nil
 }
 
+var keyRegex = regexp.MustCompile(`^[a-zA-Z0-9]{16}$`)
+
 func (p *Provider) isValid() error {
-	if !p.matcher.DreamhostKey(p.key) {
+	if !keyRegex.MatchString(p.key) {
 		return fmt.Errorf("%w: %s", errors.ErrMalformedKey, p.key)
 	}
 	return nil

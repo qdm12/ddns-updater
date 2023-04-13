@@ -217,6 +217,7 @@ Note that:
 | `DATADIR` | `/updater/data` | Directory to read and write data files from internally |
 | `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file |
 | `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`. |
+| `RESOLVER_ADDRESS` | Your network DNS | A plaintext DNS address to use, such as `1.1.1.1:53`. This is useful for split dns, see [#389](https://github.com/qdm12/ddns-updater/issues/389) |
 | `LOG_LEVEL` | `info` | Level of logging, `debug`, `info`, `warning` or `error` |
 | `LOG_CALLER` | `hidden` | Show caller per log line, `hidden` or `short` |
 | `SHOUTRRR_ADDRESSES` |  | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/services/overview/) (notification services) |

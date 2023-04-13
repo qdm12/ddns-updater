@@ -77,7 +77,7 @@ func (p *Provider) isValid() error {
 			return errors.ErrMalformedEmail
 		}
 	case len(p.userServiceKey) > 0: // only user service key
-		if !p.matcher.CloudflareKey(p.key) {
+		if !p.matcher.CloudflareUserServiceKey(p.key) {
 			return errors.ErrMalformedUserServiceKey
 		}
 	default: // constants.API token only

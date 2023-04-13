@@ -62,7 +62,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	switch {
-	case len(p.username) == 0:
+	case p.username == "":
 		return errors.ErrEmptyUsername
 	case p.clientKey == "":
 		return errors.ErrEmptyPassword

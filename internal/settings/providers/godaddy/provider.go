@@ -57,7 +57,7 @@ func (p *Provider) isValid() error {
 	switch {
 	case !keyRegex.MatchString(p.key):
 		return errors.ErrMalformedKey
-	case len(p.secret) == 0:
+	case p.secret == "":
 		return errors.ErrEmptySecret
 	}
 	return nil
@@ -153,7 +153,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		Message string `json:"message"`
 	}
 	jsonErr := json.Unmarshal(b, &parsedJSON)
-	if jsonErr != nil || len(parsedJSON.Message) == 0 {
+	if jsonErr != nil || parsedJSON.Message == "" {
 		return nil, fmt.Errorf("%w: %s", err, utils.ToSingleLine(string(b)))
 	}
 	return nil, fmt.Errorf("%w: %s", err, parsedJSON.Message)

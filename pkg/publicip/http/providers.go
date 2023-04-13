@@ -100,7 +100,7 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 		url = strings.TrimPrefix(s, "url:")
 	}
 
-	if len(url) == 0 {
+	if url == "" {
 		return "", false
 	}
 

@@ -49,7 +49,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	switch {
-	case len(p.token) == 0:
+	case p.token == "":
 		return errors.ErrEmptyToken
 	case p.host == "*":
 		return errors.ErrHostWildcard

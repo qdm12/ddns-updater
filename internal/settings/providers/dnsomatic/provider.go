@@ -61,7 +61,7 @@ func (p *Provider) isValid() error {
 	switch {
 	case !regexUsername.MatchString(p.username):
 		return fmt.Errorf("%w: %s", errors.ErrMalformedUsername, p.username)
-	case len(p.password) == 0:
+	case p.password == "":
 		return errors.ErrEmptyPassword
 	}
 	return nil

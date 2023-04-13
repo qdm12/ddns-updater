@@ -76,7 +76,7 @@ func Test_data(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			if len(testCase.panicMessage) > 0 {
+			if testCase.panicMessage != "" {
 				assert.PanicsWithValue(t, testCase.panicMessage, func() {
 					testCase.provider.data()
 				})

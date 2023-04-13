@@ -47,7 +47,7 @@ func New(data json.RawMessage, domain, host string,
 }
 
 func (p *Provider) isValid() error {
-	if len(p.token) == 0 {
+	if p.token == "" {
 		return errors.ErrEmptyToken
 	}
 	return nil

@@ -37,7 +37,7 @@ func New(data json.RawMessage, domain, host string,
 	if err != nil {
 		return nil, err
 	}
-	if len(host) == 0 {
+	if host == "" {
 		host = "@" // default
 	}
 	p = &Provider{
@@ -57,11 +57,11 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	switch {
-	case len(p.username) == 0:
+	case p.username == "":
 		return errors.ErrEmptyUsername
-	case len(p.password) == 0:
+	case p.password == "":
 		return errors.ErrEmptyPassword
-	case len(p.name) == 0:
+	case p.name == "":
 		return errors.ErrEmptyName
 	case p.host != "@":
 		return errors.ErrHostOnlyAt

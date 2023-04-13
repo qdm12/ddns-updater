@@ -136,8 +136,8 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) 
 	settingsSlice []settings.Settings, warnings []string, err error) {
 	provider := models.Provider(common.Provider)
 	if provider == constants.DuckDNS { // only hosts, no domain
-		if len(common.Domain) > 0 { // retro compatibility
-			if len(common.Host) == 0 {
+		if common.Domain != "" { // retro compatibility
+			if common.Host == "" {
 				common.Host = strings.TrimSuffix(common.Domain, ".duckdns.org")
 				warnings = append(warnings,
 					fmt.Sprintf("DuckDNS record should have %q specified as host instead of %q as domain",
@@ -151,7 +151,7 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) 
 	}
 	hosts := strings.Split(common.Host, ",")
 
-	if len(common.IPVersion) == 0 {
+	if common.IPVersion == "" {
 		common.IPVersion = ipversion.IP4or6.String()
 	}
 	ipVersion, err := ipversion.Parse(common.IPVersion)

@@ -71,9 +71,9 @@ var (
 func (db *Database) Check() error {
 	for _, record := range db.data.Records {
 		switch {
-		case len(record.Domain) == 0:
+		case record.Domain == "":
 			return fmt.Errorf("%w: for record %s", ErrDomainEmpty, record)
-		case len(record.Host) == 0:
+		case record.Host == "":
 			return fmt.Errorf("%w: for record %s", ErrHostIsEmpty, record)
 		}
 		var t time.Time

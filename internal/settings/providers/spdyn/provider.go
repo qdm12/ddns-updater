@@ -57,13 +57,13 @@ func New(data json.RawMessage, domain, host string,
 }
 
 func (p *Provider) isValid() error {
-	if len(p.token) > 0 {
+	if p.token != "" {
 		return nil
 	}
 	switch {
-	case len(p.user) == 0:
+	case p.user == "":
 		return errors.ErrEmptyUsername
-	case len(p.password) == 0:
+	case p.password == "":
 		return errors.ErrEmptyPassword
 	case p.host == "*":
 		return errors.ErrHostWildcard
@@ -119,7 +119,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	} else {
 		values.Set("myip", ip.String())
 	}
-	if len(p.token) > 0 {
+	if p.token != "" {
 		values.Set("user", hostname)
 		values.Set("pass", p.token)
 	} else {

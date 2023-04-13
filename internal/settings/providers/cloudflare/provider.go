@@ -74,21 +74,21 @@ var (
 
 func (p *Provider) isValid() error {
 	switch {
-	case len(p.key) > 0: // email and key must be provided
+	case p.key != "": // email and key must be provided
 		switch {
 		case !keyRegex.MatchString(p.key):
 			return errors.ErrMalformedKey
 		case !verification.NewVerifier().MatchEmail(p.email):
 			return errors.ErrMalformedEmail
 		}
-	case len(p.userServiceKey) > 0: // only user service key
+	case p.userServiceKey != "": // only user service key
 		if !userServiceKeyRegex.MatchString(p.key) {
 			return errors.ErrMalformedUserServiceKey
 		}
 	default: // constants.API token only
 	}
 	switch {
-	case len(p.zoneIdentifier) == 0:
+	case p.zoneIdentifier == "":
 		return errors.ErrEmptyZoneIdentifier
 	case p.ttl == 0:
 		return errors.ErrEmptyTTL
@@ -134,11 +134,11 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
 	switch {
-	case len(p.token) > 0:
+	case p.token != "":
 		headers.SetAuthBearer(request, p.token)
-	case len(p.userServiceKey) > 0:
+	case p.userServiceKey != "":
 		request.Header.Set("X-Auth-User-Service-Key", p.userServiceKey)
-	case len(p.email) > 0 && len(p.key) > 0:
+	case p.email != "" && p.key != "":
 		request.Header.Set("X-Auth-Email", p.email)
 		request.Header.Set("X-Auth-Key", p.key)
 	}

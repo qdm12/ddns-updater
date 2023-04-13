@@ -48,7 +48,7 @@ func New(data json.RawMessage, domain, host string,
 }
 
 func (p *Provider) isValid() error {
-	if len(p.token) == 0 {
+	if p.token == "" {
 		return errors.ErrEmptyToken
 	}
 	return nil
@@ -158,7 +158,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 			break
 		}
 	}
-	if len(recordID) == 0 {
+	if recordID == "" {
 		return nil, errors.ErrNotFound
 	}
 

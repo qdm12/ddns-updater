@@ -55,9 +55,9 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	switch {
-	case len(p.email) == 0:
+	case p.email == "":
 		return errors.ErrEmptyEmail
-	case len(p.password) == 0:
+	case p.password == "":
 		return errors.ErrEmptyPassword
 	case p.host == "*":
 		return errors.ErrHostWildcard

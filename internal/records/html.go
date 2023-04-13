@@ -16,10 +16,10 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 	if r.Status == constants.UPTODATE {
 		message = "no IP change for " + r.History.GetDurationSinceSuccess(now)
 	}
-	if len(message) > 0 {
+	if message != "" {
 		message = fmt.Sprintf("(%s)", message)
 	}
-	if len(r.Status) == 0 {
+	if r.Status == "" {
 		row.Status = NotAvailable
 	} else {
 		row.Status = models.HTML(fmt.Sprintf("%s %s, %s",

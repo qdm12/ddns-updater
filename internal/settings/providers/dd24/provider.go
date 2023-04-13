@@ -52,7 +52,7 @@ func New(data json.RawMessage, domain, host string,
 }
 
 func (p *Provider) isValid() error {
-	if len(p.password) == 0 {
+	if p.password == "" {
 		return errors.ErrEmptyPassword
 	}
 	return nil

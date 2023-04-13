@@ -256,7 +256,7 @@ func countryCodeToName(countryCode string) (name string) {
 		"zw": "Zimbabwe",
 	}
 	name = mapping[countryCode]
-	if len(name) == 0 {
+	if name == "" {
 		name = countryCode
 	}
 	return name

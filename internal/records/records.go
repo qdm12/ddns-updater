@@ -30,7 +30,7 @@ func New(settings settings.Settings, events []models.HistoryEvent) Record {
 
 func (r *Record) String() string {
 	status := string(r.Status)
-	if len(r.Message) > 0 {
+	if r.Message != "" {
 		status += " (" + r.Message + ")"
 	}
 	return fmt.Sprintf("%s: %s %s; %s",

@@ -49,7 +49,7 @@ func New(data json.RawMessage, domain, host string,
 }
 
 func (p *Provider) isValid() error {
-	if len(p.key) == 0 {
+	if p.key == "" {
 		return errors.ErrEmptyKey
 	}
 	return nil

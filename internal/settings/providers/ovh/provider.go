@@ -82,18 +82,18 @@ func New(data json.RawMessage, domain, host string,
 func (p *Provider) isValid() error {
 	if p.mode == "api" {
 		switch {
-		case len(p.appKey) == 0:
+		case p.appKey == "":
 			return errors.ErrEmptyAppKey
-		case len(p.consumerKey) == 0:
+		case p.consumerKey == "":
 			return errors.ErrEmptyConsumerKey
-		case len(p.appSecret) == 0:
+		case p.appSecret == "":
 			return errors.ErrEmptySecret
 		}
 	} else {
 		switch {
-		case len(p.username) == 0:
+		case p.username == "":
 			return errors.ErrEmptyUsername
-		case len(p.password) == 0:
+		case p.password == "":
 			return errors.ErrEmptyPassword
 		case p.host == "*":
 			return errors.ErrHostWildcard

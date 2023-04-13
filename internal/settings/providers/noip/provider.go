@@ -57,11 +57,11 @@ func New(data json.RawMessage, domain, host string,
 func (p *Provider) isValid() error {
 	const maxUsernameLength = 50
 	switch {
-	case len(p.username) == 0:
+	case p.username == "":
 		return errors.ErrEmptyUsername
 	case len(p.username) > maxUsernameLength:
 		return fmt.Errorf("%w: longer than 50 characters", errors.ErrMalformedUsername)
-	case len(p.password) == 0:
+	case p.password == "":
 		return errors.ErrEmptyPassword
 	case p.host == "*":
 		return errors.ErrHostWildcard

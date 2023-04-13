@@ -55,7 +55,7 @@ func (p *Provider) isValid() error {
 	switch {
 	case !verification.NewRegex().MatchEmail(p.email):
 		return errors.ErrMalformedEmail
-	case len(p.token) == 0:
+	case p.token == "":
 		return errors.ErrEmptyToken
 	}
 	return nil

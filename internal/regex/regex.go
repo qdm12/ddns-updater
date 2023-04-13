@@ -4,7 +4,7 @@ import "regexp"
 
 type Matcher struct {
 	goDaddyKey, duckDNSToken, namecheapPassword, dreamhostKey, cloudflareKey,
-	cloudflareUserServiceKey, dnsOMaticUsername, dnsOMaticPassword, gandiKey *regexp.Regexp
+	cloudflareUserServiceKey, dnsOMaticUsername, gandiKey *regexp.Regexp
 }
 
 var (
@@ -16,7 +16,6 @@ var (
 	cloudflareKey            = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
 	cloudflareUserServiceKey = regexp.MustCompile(`^v1\.0.+$`)
 	dnsOMaticUsername        = regexp.MustCompile(`^[a-zA-Z0-9@._-]{3,25}$`)
-	dnsOMaticPassword        = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{5,19}$`)
 )
 
 func NewMatcher() *Matcher {
@@ -29,7 +28,6 @@ func NewMatcher() *Matcher {
 		cloudflareKey:            cloudflareKey,
 		cloudflareUserServiceKey: cloudflareUserServiceKey,
 		dnsOMaticUsername:        dnsOMaticUsername,
-		dnsOMaticPassword:        dnsOMaticPassword,
 	}
 }
 
@@ -43,4 +41,3 @@ func (m *Matcher) CloudflareUserServiceKey(s string) bool {
 	return m.cloudflareUserServiceKey.MatchString(s)
 }
 func (m *Matcher) DNSOMaticUsername(s string) bool { return m.dnsOMaticUsername.MatchString(s) }
-func (m *Matcher) DNSOMaticPassword(s string) bool { return m.dnsOMaticPassword.MatchString(s) }

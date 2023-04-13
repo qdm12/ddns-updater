@@ -9,5 +9,4 @@ type Matcher interface {
 	CloudflareKey(s string) bool
 	CloudflareUserServiceKey(s string) bool
 	DNSOMaticUsername(s string) bool
-	DNSOMaticPassword(s string) bool
 }

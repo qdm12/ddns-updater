@@ -59,8 +59,6 @@ func (p *Provider) isValid() error {
 	switch {
 	case !p.matcher.DNSOMaticUsername(p.username):
 		return fmt.Errorf("%w: %s", errors.ErrMalformedUsername, p.username)
-	case !p.matcher.DNSOMaticPassword(p.password):
-		return errors.ErrMalformedPassword
 	case len(p.username) == 0:
 		return errors.ErrEmptyUsername
 	case len(p.password) == 0:

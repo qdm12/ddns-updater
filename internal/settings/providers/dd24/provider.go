@@ -53,7 +53,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	if p.password == "" {
-		return errors.ErrEmptyPassword
+		return fmt.Errorf("%w", errors.ErrEmptyPassword)
 	}
 	return nil
 }
@@ -135,7 +135,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	switch {
 	case strings.Contains(s, "authorization failed"):
-		return nil, errors.ErrAuth
+		return nil, fmt.Errorf("%w", errors.ErrAuth)
 	case s == "", strings.Contains(s, "success"):
 		return ip, nil
 	// TODO missing cases

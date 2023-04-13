@@ -57,9 +57,9 @@ func New(data json.RawMessage, domain, host string,
 func (p *Provider) isValid() error {
 	switch {
 	case p.username == "":
-		return errors.ErrEmptyUsername
+		return fmt.Errorf("%w", errors.ErrEmptyUsername)
 	case p.password == "":
-		return errors.ErrEmptyPassword
+		return fmt.Errorf("%w", errors.ErrEmptyPassword)
 	}
 	return nil
 }
@@ -134,17 +134,17 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	case "":
 		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
 	case constants.Nohost, constants.Notfqdn:
-		return nil, errors.ErrHostnameNotExists
+		return nil, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case constants.Badauth:
-		return nil, errors.ErrAuth
+		return nil, fmt.Errorf("%w", errors.ErrAuth)
 	case constants.Badagent:
-		return nil, errors.ErrBannedUserAgent
+		return nil, fmt.Errorf("%w", errors.ErrBannedUserAgent)
 	case constants.Abuse:
-		return nil, errors.ErrAbuse
+		return nil, fmt.Errorf("%w", errors.ErrAbuse)
 	case constants.Nineoneone:
-		return nil, errors.ErrDNSServerSide
+		return nil, fmt.Errorf("%w", errors.ErrDNSServerSide)
 	case "conflict constants.A", "conflict constants.AAAA":
-		return nil, errors.ErrConflictingRecord
+		return nil, fmt.Errorf("%w", errors.ErrConflictingRecord)
 	}
 
 	if !strings.Contains(s, "nochg") && !strings.Contains(s, "good") {
@@ -160,7 +160,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 
 	if len(ips) == 0 {
-		return nil, errors.ErrNoIPInResponse
+		return nil, fmt.Errorf("%w", errors.ErrNoIPInResponse)
 	}
 
 	newIP = net.ParseIP(ips[0])

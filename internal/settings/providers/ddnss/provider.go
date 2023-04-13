@@ -59,11 +59,11 @@ func New(data json.RawMessage, domain, host string,
 func (p *Provider) isValid() error {
 	switch {
 	case p.username == "":
-		return errors.ErrEmptyUsername
+		return fmt.Errorf("%w", errors.ErrEmptyUsername)
 	case p.password == "":
-		return errors.ErrEmptyPassword
+		return fmt.Errorf("%w", errors.ErrEmptyPassword)
 	case p.host == "*":
-		return errors.ErrHostWildcard
+		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}
 	return nil
 }
@@ -145,11 +145,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	switch {
 	case strings.Contains(s, "badysys"):
-		return nil, errors.ErrInvalidSystemParam
+		return nil, fmt.Errorf("%w", errors.ErrInvalidSystemParam)
 	case strings.Contains(s, constants.Badauth):
-		return nil, errors.ErrAuth
+		return nil, fmt.Errorf("%w", errors.ErrAuth)
 	case strings.Contains(s, constants.Notfqdn):
-		return nil, errors.ErrHostnameNotExists
+		return nil, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case strings.Contains(s, "Updated 1 hostname"):
 		return ip, nil
 	default:

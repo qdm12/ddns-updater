@@ -53,7 +53,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	if p.password == "" {
-		return errors.ErrEmptyPassword
+		return fmt.Errorf("%w", errors.ErrEmptyPassword)
 	}
 	return nil
 }
@@ -128,7 +128,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	case "":
 		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
 	case constants.Badauth:
-		return nil, errors.ErrAuth
+		return nil, fmt.Errorf("%w", errors.ErrAuth)
 	}
 
 	if !strings.Contains(s, "nochg") && !strings.Contains(s, "good") {
@@ -144,7 +144,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 
 	if len(ips) == 0 {
-		return nil, errors.ErrNoIPInResponse
+		return nil, fmt.Errorf("%w", errors.ErrNoIPInResponse)
 	}
 
 	newIP = net.ParseIP(ips[0])

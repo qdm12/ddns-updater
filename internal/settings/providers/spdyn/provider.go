@@ -62,11 +62,11 @@ func (p *Provider) isValid() error {
 	}
 	switch {
 	case p.user == "":
-		return errors.ErrEmptyUsername
+		return fmt.Errorf("%w", errors.ErrEmptyUsername)
 	case p.password == "":
-		return errors.ErrEmptyPassword
+		return fmt.Errorf("%w", errors.ErrEmptyPassword)
 	case p.host == "*":
-		return errors.ErrHostWildcard
+		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}
 	return nil
 }
@@ -153,9 +153,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	switch {
 	case isAny(bodyString, constants.Abuse, "numhost"):
-		return nil, errors.ErrAbuse
+		return nil, fmt.Errorf("%w", errors.ErrAbuse)
 	case isAny(bodyString, constants.Badauth, "!yours"):
-		return nil, errors.ErrAuth
+		return nil, fmt.Errorf("%w", errors.ErrAuth)
 	case strings.HasPrefix(bodyString, "good"):
 		return ip, nil
 	case bodyString == constants.Notfqdn:
@@ -163,7 +163,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	case strings.HasPrefix(bodyString, "nochg"):
 		return ip, nil
 	case isAny(bodyString, "nohost", "fatal"):
-		return nil, errors.ErrHostnameNotExists
+		return nil, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	default:
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, bodyString)
 	}

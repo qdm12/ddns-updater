@@ -62,7 +62,7 @@ func (p *Provider) isValid() error {
 	case !regexUsername.MatchString(p.username):
 		return fmt.Errorf("%w: %s", errors.ErrMalformedUsername, p.username)
 	case p.password == "":
-		return errors.ErrEmptyPassword
+		return fmt.Errorf("%w", errors.ErrEmptyPassword)
 	}
 	return nil
 }
@@ -148,13 +148,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	switch s {
 	case constants.Nohost, constants.Notfqdn:
-		return nil, errors.ErrHostnameNotExists
+		return nil, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case constants.Badauth:
-		return nil, errors.ErrAuth
+		return nil, fmt.Errorf("%w", errors.ErrAuth)
 	case constants.Badagent:
-		return nil, errors.ErrBannedUserAgent
+		return nil, fmt.Errorf("%w", errors.ErrBannedUserAgent)
 	case constants.Abuse:
-		return nil, errors.ErrAbuse
+		return nil, fmt.Errorf("%w", errors.ErrAbuse)
 	case "dnserr", constants.Nineoneone:
 		return nil, fmt.Errorf("%w: %s", errors.ErrDNSServerSide, s)
 	}
@@ -172,7 +172,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 
 	if len(ips) == 0 {
-		return nil, errors.ErrNoIPInResponse
+		return nil, fmt.Errorf("%w", errors.ErrNoIPInResponse)
 	}
 
 	newIP = net.ParseIP(ips[0])

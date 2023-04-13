@@ -49,7 +49,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	if p.token == "" {
-		return errors.ErrEmptyToken
+		return fmt.Errorf("%w", errors.ErrEmptyToken)
 	}
 	return nil
 }
@@ -124,7 +124,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	loweredResponse := strings.ToLower(s)
 	switch {
 	case loweredResponse == "":
-		return nil, errors.ErrNoResultReceived
+		return nil, fmt.Errorf("%w", errors.ErrNoResultReceived)
 	case strings.HasPrefix(loweredResponse, "no ip change detected"),
 		strings.HasPrefix(loweredResponse, "updated "):
 		return ip, nil

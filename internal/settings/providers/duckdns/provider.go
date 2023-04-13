@@ -53,11 +53,11 @@ var tokenRegex = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-
 
 func (p *Provider) isValid() error {
 	if !tokenRegex.MatchString(p.token) {
-		return errors.ErrMalformedToken
+		return fmt.Errorf("%w", errors.ErrMalformedToken)
 	}
 	switch p.host {
 	case "@", "*":
-		return errors.ErrHostOnlySubdomain
+		return fmt.Errorf("%w", errors.ErrHostOnlySubdomain)
 	}
 	return nil
 }
@@ -142,11 +142,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	case len(s) < minChars:
 		return nil, fmt.Errorf("%w: response %q is too short", errors.ErrUnmarshalResponse, s)
 	case s[0:minChars] == "KO":
-		return nil, errors.ErrAuth
+		return nil, fmt.Errorf("%w", errors.ErrAuth)
 	case s[0:minChars] == "OK":
 		ips := verification.NewVerifier().SearchIPv4(s)
 		if ips == nil {
-			return nil, errors.ErrNoResultReceived
+			return nil, fmt.Errorf("%w", errors.ErrNoResultReceived)
 		}
 		newIP = net.ParseIP(ips[0])
 		if newIP == nil {

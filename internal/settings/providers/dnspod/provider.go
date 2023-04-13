@@ -49,7 +49,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	if p.token == "" {
-		return errors.ErrEmptyToken
+		return fmt.Errorf("%w", errors.ErrEmptyToken)
 	}
 	return nil
 }
@@ -159,7 +159,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		}
 	}
 	if recordID == "" {
-		return nil, errors.ErrNotFound
+		return nil, fmt.Errorf("%w", errors.ErrNotFound)
 	}
 
 	u.Path = "/Record.Ddns"

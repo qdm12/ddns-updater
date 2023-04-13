@@ -77,21 +77,21 @@ func (p *Provider) isValid() error {
 	case p.key != "": // email and key must be provided
 		switch {
 		case !keyRegex.MatchString(p.key):
-			return errors.ErrMalformedKey
+			return fmt.Errorf("%w", errors.ErrMalformedKey)
 		case !verification.NewVerifier().MatchEmail(p.email):
-			return errors.ErrMalformedEmail
+			return fmt.Errorf("%w", errors.ErrMalformedEmail)
 		}
 	case p.userServiceKey != "": // only user service key
 		if !userServiceKeyRegex.MatchString(p.key) {
-			return errors.ErrMalformedUserServiceKey
+			return fmt.Errorf("%w", errors.ErrMalformedUserServiceKey)
 		}
 	default: // constants.API token only
 	}
 	switch {
 	case p.zoneIdentifier == "":
-		return errors.ErrEmptyZoneIdentifier
+		return fmt.Errorf("%w", errors.ErrEmptyZoneIdentifier)
 	case p.ttl == 0:
-		return errors.ErrEmptyTTL
+		return fmt.Errorf("%w", errors.ErrEmptyTTL)
 	}
 	return nil
 }
@@ -201,9 +201,9 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 		return "", false, fmt.Errorf("%w: %s",
 			errors.ErrUnsuccessfulResponse, strings.Join(listRecordsResponse.Errors, ","))
 	case !listRecordsResponse.Success:
-		return "", false, errors.ErrUnsuccessfulResponse
+		return "", false, fmt.Errorf("%w", errors.ErrUnsuccessfulResponse)
 	case len(listRecordsResponse.Result) == 0:
-		return "", false, errors.ErrNoResultReceived
+		return "", false, fmt.Errorf("%w", errors.ErrNoResultReceived)
 	case len(listRecordsResponse.Result) > 1:
 		return "", false, fmt.Errorf("%w: %d instead of 1",
 			errors.ErrNumberOfResultsReceived, len(listRecordsResponse.Result))

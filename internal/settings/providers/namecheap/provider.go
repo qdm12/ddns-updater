@@ -30,7 +30,7 @@ type Provider struct {
 func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	if ipVersion == ipversion.IP6 {
-		return p, errors.ErrIPv6NotSupported
+		return nil, fmt.Errorf("%w", errors.ErrIPv6NotSupported)
 	}
 	extraSettings := struct {
 		Password      string `json:"password"`
@@ -58,7 +58,7 @@ var passwordRegex = regexp.MustCompile(`^[a-f0-9]{32}$`)
 
 func (p *Provider) isValid() error {
 	if !passwordRegex.MatchString(p.password) {
-		return errors.ErrMalformedPassword
+		return fmt.Errorf("%w", errors.ErrMalformedPassword)
 	}
 	return nil
 }

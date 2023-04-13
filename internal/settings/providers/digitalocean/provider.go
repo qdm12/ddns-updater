@@ -48,7 +48,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	if p.token == "" {
-		return errors.ErrEmptyToken
+		return fmt.Errorf("%w", errors.ErrEmptyToken)
 	}
 	return nil
 }
@@ -134,9 +134,9 @@ func (p *Provider) getRecordID(ctx context.Context, recordType string, client *h
 	}
 
 	if len(result.DomainRecords) == 0 {
-		return 0, errors.ErrNotFound
+		return 0, fmt.Errorf("%w", errors.ErrNotFound)
 	} else if result.DomainRecords[0].ID == 0 {
-		return 0, errors.ErrDomainIDNotFound
+		return 0, fmt.Errorf("%w", errors.ErrDomainIDNotFound)
 	}
 
 	return result.DomainRecords[0].ID, nil

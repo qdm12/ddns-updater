@@ -58,13 +58,13 @@ func (p *Provider) isValid() error {
 	const maxUsernameLength = 50
 	switch {
 	case p.username == "":
-		return errors.ErrEmptyUsername
+		return fmt.Errorf("%w", errors.ErrEmptyUsername)
 	case len(p.username) > maxUsernameLength:
 		return fmt.Errorf("%w: longer than 50 characters", errors.ErrMalformedUsername)
 	case p.password == "":
-		return errors.ErrEmptyPassword
+		return fmt.Errorf("%w", errors.ErrEmptyPassword)
 	case p.host == "*":
-		return errors.ErrHostWildcard
+		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}
 	return nil
 }
@@ -144,19 +144,19 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	switch s {
 	case "":
-		return nil, errors.ErrNoResultReceived
+		return nil, fmt.Errorf("%w", errors.ErrNoResultReceived)
 	case constants.Nineoneone:
-		return nil, errors.ErrDNSServerSide
+		return nil, fmt.Errorf("%w", errors.ErrDNSServerSide)
 	case constants.Abuse:
-		return nil, errors.ErrAbuse
+		return nil, fmt.Errorf("%w", errors.ErrAbuse)
 	case "!donator":
-		return nil, errors.ErrFeatureUnavailable
+		return nil, fmt.Errorf("%w", errors.ErrFeatureUnavailable)
 	case constants.Badagent:
-		return nil, errors.ErrBannedUserAgent
+		return nil, fmt.Errorf("%w", errors.ErrBannedUserAgent)
 	case constants.Badauth:
-		return nil, errors.ErrAuth
+		return nil, fmt.Errorf("%w", errors.ErrAuth)
 	case constants.Nohost:
-		return nil, errors.ErrHostnameNotExists
+		return nil, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	}
 
 	if !strings.Contains(s, "nochg") && !strings.Contains(s, "good") {
@@ -172,7 +172,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 
 	if len(ips) == 0 {
-		return nil, errors.ErrNoIPInResponse
+		return nil, fmt.Errorf("%w", errors.ErrNoIPInResponse)
 	}
 
 	newIP = net.ParseIP(ips[0])

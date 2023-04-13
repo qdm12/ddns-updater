@@ -53,9 +53,9 @@ func New(data json.RawMessage, domain, host string,
 func (p *Provider) isValid() error {
 	switch {
 	case p.password == "":
-		return errors.ErrEmptyPassword
+		return fmt.Errorf("%w", errors.ErrEmptyPassword)
 	case p.host == "*":
-		return errors.ErrHostWildcard
+		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}
 	return nil
 }
@@ -131,13 +131,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	switch {
 	case strings.HasPrefix(str, constants.Notfqdn):
-		return nil, errors.ErrHostnameNotExists
+		return nil, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case strings.HasPrefix(str, constants.Abuse):
-		return nil, errors.ErrAbuse
+		return nil, fmt.Errorf("%w", errors.ErrAbuse)
 	case strings.HasPrefix(str, "badrequest"):
-		return nil, errors.ErrBadRequest
+		return nil, fmt.Errorf("%w", errors.ErrBadRequest)
 	case strings.HasPrefix(str, "constants.Badauth"):
-		return nil, errors.ErrAuth
+		return nil, fmt.Errorf("%w", errors.ErrAuth)
 	case strings.HasPrefix(str, "good"), strings.HasPrefix(str, "nochg"):
 		return ip, nil
 	default:

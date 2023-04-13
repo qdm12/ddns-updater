@@ -56,11 +56,11 @@ func New(data json.RawMessage, domain, host string,
 func (p *Provider) isValid() error {
 	switch {
 	case p.username == "":
-		return errors.ErrEmptyUsername
+		return fmt.Errorf("%w", errors.ErrEmptyUsername)
 	case p.password == "":
-		return errors.ErrEmptyPassword
+		return fmt.Errorf("%w", errors.ErrEmptyPassword)
 	case p.host == "*":
-		return errors.ErrHostWildcard
+		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}
 	return nil
 }
@@ -130,17 +130,17 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	case http.StatusNoContent: // no change
 		return ip, nil
 	case http.StatusUnauthorized:
-		return nil, errors.ErrAuth
+		return nil, fmt.Errorf("%w", errors.ErrAuth)
 	case http.StatusConflict:
-		return nil, errors.ErrZoneNotFound
+		return nil, fmt.Errorf("%w", errors.ErrZoneNotFound)
 	case http.StatusGone:
-		return nil, errors.ErrAccountInactive
+		return nil, fmt.Errorf("%w", errors.ErrAccountInactive)
 	case http.StatusLengthRequired:
 		return nil, fmt.Errorf("%w: %s", errors.ErrMalformedIPSent, ip)
 	case http.StatusPreconditionFailed:
 		return nil, fmt.Errorf("%w: %s", errors.ErrPrivateIPSent, ip)
 	case http.StatusServiceUnavailable:
-		return nil, errors.ErrDNSServerSide
+		return nil, fmt.Errorf("%w", errors.ErrDNSServerSide)
 	default:
 		return nil, fmt.Errorf("%w: %d: %s",
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
@@ -154,11 +154,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	switch {
 	case strings.HasPrefix(s, constants.Notfqdn):
-		return nil, errors.ErrHostnameNotExists
+		return nil, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case strings.HasPrefix(s, "abuse"):
-		return nil, errors.ErrAbuse
+		return nil, fmt.Errorf("%w", errors.ErrAbuse)
 	case strings.HasPrefix(s, "badrequest"):
-		return nil, errors.ErrBadRequest
+		return nil, fmt.Errorf("%w", errors.ErrBadRequest)
 	case strings.HasPrefix(s, "good"), strings.HasPrefix(s, "nochg"):
 		return ip, nil
 	default:

@@ -57,9 +57,9 @@ func New(data json.RawMessage, domain, host string,
 func (p *Provider) isValid() error {
 	switch {
 	case p.accessKeyID == "":
-		return errors.ErrEmptyAccessKeyID
+		return fmt.Errorf("%w", errors.ErrEmptyAccessKeyID)
 	case p.accessSecret == "":
-		return errors.ErrEmptyAccessKeySecret
+		return fmt.Errorf("%w", errors.ErrEmptyAccessKeySecret)
 	}
 	return nil
 }
@@ -125,7 +125,7 @@ func (p *Provider) Update(_ context.Context, _ *http.Client, ip net.IP) (newIP n
 		}
 	}
 	if recordID == "" {
-		return nil, errors.ErrRecordNotFound
+		return nil, fmt.Errorf("%w", errors.ErrRecordNotFound)
 	}
 
 	request := alidns.CreateUpdateDomainRecordRequest()

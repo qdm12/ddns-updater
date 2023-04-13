@@ -58,13 +58,13 @@ func New(data json.RawMessage, domain, host string,
 func (p *Provider) isValid() error {
 	switch {
 	case p.username == "":
-		return errors.ErrEmptyUsername
+		return fmt.Errorf("%w", errors.ErrEmptyUsername)
 	case p.password == "":
-		return errors.ErrEmptyPassword
+		return fmt.Errorf("%w", errors.ErrEmptyPassword)
 	case p.name == "":
-		return errors.ErrEmptyName
+		return fmt.Errorf("%w", errors.ErrEmptyName)
 	case p.host != "@":
-		return errors.ErrHostOnlyAt
+		return fmt.Errorf("%w", errors.ErrHostOnlyAt)
 	}
 	return nil
 }

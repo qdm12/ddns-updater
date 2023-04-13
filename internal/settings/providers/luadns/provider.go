@@ -54,9 +54,9 @@ func New(data json.RawMessage, domain, host string,
 func (p *Provider) isValid() error {
 	switch {
 	case !verification.NewRegex().MatchEmail(p.email):
-		return errors.ErrMalformedEmail
+		return fmt.Errorf("%w", errors.ErrMalformedEmail)
 	case p.token == "":
-		return errors.ErrEmptyToken
+		return fmt.Errorf("%w", errors.ErrEmptyToken)
 	}
 	return nil
 }
@@ -182,7 +182,7 @@ func (p *Provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 			return zone.ID, nil
 		}
 	}
-	return 0, errors.ErrZoneNotFound
+	return 0, fmt.Errorf("%w", errors.ErrZoneNotFound)
 }
 
 func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID int, ip net.IP) (

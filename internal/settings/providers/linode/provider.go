@@ -51,7 +51,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	if p.token == "" {
-		return errors.ErrEmptyToken
+		return fmt.Errorf("%w", errors.ErrEmptyToken)
 	}
 	return nil
 }
@@ -175,7 +175,7 @@ func (p *Provider) getDomainID(ctx context.Context, client *http.Client) (domain
 	domains := obj.Data
 	switch len(domains) {
 	case 0:
-		return 0, errors.ErrNotFound
+		return 0, fmt.Errorf("%w", errors.ErrNotFound)
 	case 1:
 	default:
 		return 0, fmt.Errorf("%w: %d records instead of 1",
@@ -183,11 +183,11 @@ func (p *Provider) getDomainID(ctx context.Context, client *http.Client) (domain
 	}
 
 	if domains[0].Status == "disabled" {
-		return 0, errors.ErrDomainDisabled
+		return 0, fmt.Errorf("%w", errors.ErrDomainDisabled)
 	}
 
 	if domains[0].ID == nil {
-		return 0, errors.ErrDomainIDNotFound
+		return 0, fmt.Errorf("%w", errors.ErrDomainIDNotFound)
 	}
 
 	return *domains[0].ID, nil
@@ -238,7 +238,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 		}
 	}
 
-	return 0, errors.ErrNotFound
+	return 0, fmt.Errorf("%w", errors.ErrNotFound)
 }
 
 func (p *Provider) createRecord(ctx context.Context, client *http.Client,

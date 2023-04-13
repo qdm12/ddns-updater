@@ -83,20 +83,20 @@ func (p *Provider) isValid() error {
 	if p.mode == "api" {
 		switch {
 		case p.appKey == "":
-			return errors.ErrEmptyAppKey
+			return fmt.Errorf("%w", errors.ErrEmptyAppKey)
 		case p.consumerKey == "":
-			return errors.ErrEmptyConsumerKey
+			return fmt.Errorf("%w", errors.ErrEmptyConsumerKey)
 		case p.appSecret == "":
-			return errors.ErrEmptySecret
+			return fmt.Errorf("%w", errors.ErrEmptySecret)
 		}
 	} else {
 		switch {
 		case p.username == "":
-			return errors.ErrEmptyUsername
+			return fmt.Errorf("%w", errors.ErrEmptyUsername)
 		case p.password == "":
-			return errors.ErrEmptyPassword
+			return fmt.Errorf("%w", errors.ErrEmptyPassword)
 		case p.host == "*":
-			return errors.ErrHostWildcard
+			return fmt.Errorf("%w", errors.ErrHostWildcard)
 		}
 	}
 	return nil
@@ -174,9 +174,9 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client, i
 
 	switch {
 	case strings.HasPrefix(s, constants.Notfqdn):
-		return nil, errors.ErrHostnameNotExists
+		return nil, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case strings.HasPrefix(s, "badrequest"):
-		return nil, errors.ErrBadRequest
+		return nil, fmt.Errorf("%w", errors.ErrBadRequest)
 	case strings.HasPrefix(s, "nochg"):
 		return ip, nil
 	case strings.HasPrefix(s, "good"):

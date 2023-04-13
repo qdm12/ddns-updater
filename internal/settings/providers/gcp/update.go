@@ -20,7 +20,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		recordType = constants.AAAA
 	}
 
-	ddnsService, err := clouddns.NewService(ctx, option.WithCredentialsJSON(p.credentials))
+	ddnsService, err := clouddns.NewService(ctx,
+		option.WithCredentialsJSON(p.credentials),
+		option.WithHTTPClient(client))
 	if err != nil {
 		return nil, fmt.Errorf("creating GCP DDNS service: %w", err)
 	}

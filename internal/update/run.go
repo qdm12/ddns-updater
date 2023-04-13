@@ -182,9 +182,9 @@ func (r *Runner) shouldUpdateRecordWithLookup(ctx context.Context, hostname stri
 	const tries = 5
 	recordIPv4, recordIPv6, err := r.lookupIPsResilient(ctx, hostname, tries)
 	if err != nil {
-		err = ctx.Err()
-		if err != nil {
-			r.logger.Warn("DNS resolution of " + hostname + ": " + err.Error())
+		ctxErr := ctx.Err()
+		if ctxErr != nil {
+			r.logger.Warn("DNS resolution of " + hostname + ": " + ctxErr.Error())
 			return false
 		}
 		r.logger.Warn("cannot DNS resolve " + hostname + " after " +

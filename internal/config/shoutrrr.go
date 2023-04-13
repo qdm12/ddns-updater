@@ -40,7 +40,8 @@ func (s *Shoutrrr) get(env params.Interface) (warnings []string, err error) {
 		s.Addresses = append(s.Addresses, gotifyShoutrrrAddress)
 	}
 
-	if _, err = shoutrrr.CreateSender(s.Addresses...); err != nil {
+	_, err = shoutrrr.CreateSender(s.Addresses...)
+	if err != nil {
 		return warnings, fmt.Errorf("for environment variable SHOUTRRR_ADDRESSES: %w", err) // validation step
 	}
 

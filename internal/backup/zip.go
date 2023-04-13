@@ -35,7 +35,8 @@ func (z *Ziper) ZipFiles(outputFilepath string, inputFilepaths ...string) error 
 	w := zip.NewWriter(f)
 	defer w.Close()
 	for _, filepath := range inputFilepaths {
-		if err := z.addFile(w, filepath); err != nil {
+		err = z.addFile(w, filepath)
+		if err != nil {
 			return err
 		}
 	}

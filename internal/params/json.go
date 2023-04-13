@@ -85,7 +85,8 @@ func (r *Reader) getSettingsFromEnv(filePath string) (
 	}
 
 	buffer := bytes.NewBuffer(nil)
-	if err := json.Indent(buffer, b, "", "  "); err != nil {
+	err = json.Indent(buffer, b, "", "  ")
+	if err != nil {
 		return allSettings, warnings, fmt.Errorf("%w: %w", errWriteConfigToFile, err)
 	}
 	const mode = fs.FileMode(0600)
@@ -110,10 +111,12 @@ func extractAllSettings(jsonBytes []byte) (
 	rawConfig := struct {
 		Settings []json.RawMessage `json:"settings"`
 	}{}
-	if err := json.Unmarshal(jsonBytes, &config); err != nil {
+	err = json.Unmarshal(jsonBytes, &config)
+	if err != nil {
 		return nil, nil, fmt.Errorf("%w: %w", errUnmarshalCommon, err)
 	}
-	if err := json.Unmarshal(jsonBytes, &rawConfig); err != nil {
+	err = json.Unmarshal(jsonBytes, &rawConfig)
+	if err != nil {
 		return nil, nil, fmt.Errorf("%w: %w", errUnmarshalRaw, err)
 	}
 

@@ -21,7 +21,8 @@ type PubIP struct {
 }
 
 func (p *PubIP) get(env params.Interface) (warnings []string, err error) {
-	if err = p.getFetchers(env); err != nil {
+	err = p.getFetchers(env)
+	if err != nil {
 		return nil, err
 	}
 
@@ -109,7 +110,8 @@ func (p *PubIP) getDNSProviders(env params.Interface) (providers []dns.Provider,
 		}
 
 		providers[i] = dns.Provider(field)
-		if err := dns.ValidateProvider(providers[i]); err != nil {
+		err = dns.ValidateProvider(providers[i])
+		if err != nil {
 			return nil, err
 		}
 	}

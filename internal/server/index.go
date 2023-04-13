@@ -12,7 +12,8 @@ func (h *handlers) index(w http.ResponseWriter, _ *http.Request) {
 		row := record.HTML(h.timeNow())
 		htmlData.Rows = append(htmlData.Rows, row)
 	}
-	if err := h.indexTemplate.ExecuteTemplate(w, "index.html", htmlData); err != nil {
+	err := h.indexTemplate.ExecuteTemplate(w, "index.html", htmlData)
+	if err != nil {
 		httpError(w, http.StatusInternalServerError, "failed generating webpage: "+err.Error())
 	}
 }

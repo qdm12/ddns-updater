@@ -192,7 +192,8 @@ func _main(ctx context.Context, env params.Interface, args []string, logger log.
 	client := &http.Client{Timeout: config.Client.Timeout}
 
 	connectivity := connectivity.NewHTTPSGetChecker(client, http.StatusOK)
-	if err := connectivity.Check(ctx, "https://github.com"); err != nil {
+	err = connectivity.Check(ctx, "https://github.com")
+	if err != nil {
 		logger.Warn(err.Error())
 	}
 
@@ -211,7 +212,8 @@ func _main(ctx context.Context, env params.Interface, args []string, logger log.
 	defer client.CloseIdleConnections()
 	db := data.NewDatabase(records, persistentDB)
 	defer func() {
-		if err := db.Close(); err != nil {
+		err := db.Close()
+		if err != nil {
 			logger.Error(err.Error())
 		}
 	}()
@@ -263,7 +265,8 @@ func _main(ctx context.Context, env params.Interface, args []string, logger log.
 
 	<-ctx.Done()
 
-	if err := shutdownGroup.Shutdown(context.Background()); err != nil {
+	err = shutdownGroup.Shutdown(context.Background())
+	if err != nil {
 		notify(err.Error())
 		return err
 	}
@@ -289,11 +292,12 @@ func backupRunLoop(ctx context.Context, done chan<- struct{}, backupPeriod time.
 	for {
 		fileName := "ddns-updater-backup-" + strconv.Itoa(int(timeNow().UnixNano())) + ".zip"
 		zipFilepath := filepath.Join(outputDir, fileName)
-		if err := ziper.ZipFiles(
+		err := ziper.ZipFiles(
 			zipFilepath,
 			filepath.Join(dataDir, "updates.json"),
 			filepath.Join(dataDir, "config.json"),
-		); err != nil {
+		)
+		if err != nil {
 			logger.Error(err.Error())
 		}
 		select {

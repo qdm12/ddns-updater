@@ -27,9 +27,10 @@ type Option func(s *settings) error
 
 func SetProvidersIP(first Provider, providers ...Provider) Option {
 	providers = append(providers, first)
-	return func(s *settings) error {
+	return func(s *settings) (err error) {
 		for _, provider := range providers {
-			if err := ValidateProvider(provider, ipversion.IP4or6); err != nil {
+			err = ValidateProvider(provider, ipversion.IP4or6)
+			if err != nil {
 				return err
 			}
 		}
@@ -40,9 +41,10 @@ func SetProvidersIP(first Provider, providers ...Provider) Option {
 
 func SetProvidersIP4(first Provider, providers ...Provider) Option {
 	providers = append(providers, first)
-	return func(s *settings) error {
+	return func(s *settings) (err error) {
 		for _, provider := range providers {
-			if err := ValidateProvider(provider, ipversion.IP4); err != nil {
+			err = ValidateProvider(provider, ipversion.IP4)
+			if err != nil {
 				return err
 			}
 		}
@@ -53,9 +55,10 @@ func SetProvidersIP4(first Provider, providers ...Provider) Option {
 
 func SetProvidersIP6(first Provider, providers ...Provider) Option {
 	providers = append(providers, first)
-	return func(s *settings) error {
+	return func(s *settings) (err error) {
 		for _, provider := range providers {
-			if err := ValidateProvider(provider, ipversion.IP6); err != nil {
+			err = ValidateProvider(provider, ipversion.IP6)
+			if err != nil {
 				return err
 			}
 		}
@@ -65,7 +68,7 @@ func SetProvidersIP6(first Provider, providers ...Provider) Option {
 }
 
 func SetTimeout(timeout time.Duration) Option {
-	return func(s *settings) error {
+	return func(s *settings) (err error) {
 		s.timeout = timeout
 		return nil
 	}

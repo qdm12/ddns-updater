@@ -31,7 +31,8 @@ func New(data json.RawMessage, domain, host string,
 	extraSettings := struct {
 		Key string `json:"key"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 	if host == "" { // TODO-v2 remove default
@@ -43,7 +44,8 @@ func New(data json.RawMessage, domain, host string,
 		ipVersion: ipVersion,
 		key:       extraSettings.Key,
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -117,12 +119,14 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 
 	// Create the record with the new IP before removing the old one if it exists.
-	if err := p.createRecord(ctx, client, ip); err != nil {
+	err = p.createRecord(ctx, client, ip)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
 	}
 
 	if oldIP != nil { // Found editable record with a different IP address, so remove it
-		if err := p.removeRecord(ctx, client, oldIP); err != nil {
+		err = p.removeRecord(ctx, client, oldIP)
+		if err != nil {
 			return nil, fmt.Errorf("%w: %w", errors.ErrRemoveRecord, err)
 		}
 	}
@@ -188,7 +192,8 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
 	}
 
 	decoder := json.NewDecoder(response.Body)
-	if err := decoder.Decode(&records); err != nil {
+	err = decoder.Decode(&records)
+	if err != nil {
 		return records, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
@@ -234,7 +239,8 @@ func (p *Provider) removeRecord(ctx context.Context, client *http.Client, ip net
 
 	var dhResponse dreamhostReponse
 	decoder := json.NewDecoder(response.Body)
-	if err := decoder.Decode(&dhResponse); err != nil {
+	err = decoder.Decode(&dhResponse)
+	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
@@ -281,7 +287,8 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 
 	var dhResponse dreamhostReponse
 	decoder := json.NewDecoder(response.Body)
-	if err := decoder.Decode(&dhResponse); err != nil {
+	err = decoder.Decode(&dhResponse)
+	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 

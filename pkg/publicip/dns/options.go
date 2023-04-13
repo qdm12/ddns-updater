@@ -18,10 +18,11 @@ func newDefaultSettings() settings {
 type Option func(s *settings) error
 
 func SetProviders(first Provider, providers ...Provider) Option {
-	return func(s *settings) error {
+	return func(s *settings) (err error) {
 		providers = append(providers, first)
 		for _, provider := range providers {
-			if err := ValidateProvider(provider); err != nil {
+			err = ValidateProvider(provider)
+			if err != nil {
 				return err
 			}
 		}
@@ -31,7 +32,7 @@ func SetProviders(first Provider, providers ...Provider) Option {
 }
 
 func SetTimeout(timeout time.Duration) Option {
-	return func(s *settings) error {
+	return func(s *settings) (err error) {
 		s.timeout = timeout
 		return nil
 	}

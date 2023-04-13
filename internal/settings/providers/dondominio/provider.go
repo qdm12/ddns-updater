@@ -33,7 +33,8 @@ func New(data json.RawMessage, domain, host string,
 		Password string `json:"password"`
 		Name     string `json:"name"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 	if len(host) == 0 {
@@ -47,7 +48,8 @@ func New(data json.RawMessage, domain, host string,
 		password:  extraSettings.Password,
 		name:      extraSettings.Name,
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -154,7 +156,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 			} `json:"gluerecords"`
 		} `json:"responseData"`
 	}
-	if err := decoder.Decode(&responseData); err != nil {
+	err = decoder.Decode(&responseData)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 

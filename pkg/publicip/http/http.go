@@ -28,7 +28,8 @@ type urlsRing struct {
 func New(client *http.Client, options ...Option) (f *Fetcher, err error) {
 	settings := newDefaultSettings()
 	for _, option := range options {
-		if err := option(&settings); err != nil {
+		err = option(&settings)
+		if err != nil {
 			return nil, err
 		}
 	}

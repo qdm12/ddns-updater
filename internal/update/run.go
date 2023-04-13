@@ -182,7 +182,8 @@ func (r *Runner) shouldUpdateRecordWithLookup(ctx context.Context, hostname stri
 	const tries = 5
 	recordIPv4, recordIPv6, err := r.lookupIPsResilient(ctx, hostname, tries)
 	if err != nil {
-		if err := ctx.Err(); err != nil {
+		err = ctx.Err()
+		if err != nil {
 			r.logger.Warn("DNS resolution of " + hostname + ": " + err.Error())
 			return false
 		}
@@ -275,7 +276,8 @@ func (r *Runner) updateNecessary(ctx context.Context, ipv6Mask net.IPMask) (erro
 			continue
 		}
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
-		if err := setInitialUpToDateStatus(r.db, id, updateIP, now); err != nil {
+		err := setInitialUpToDateStatus(r.db, id, updateIP, now)
+		if err != nil {
 			errors = append(errors, err)
 			r.logger.Error(err.Error())
 		}
@@ -284,7 +286,8 @@ func (r *Runner) updateNecessary(ctx context.Context, ipv6Mask net.IPMask) (erro
 		record := records[id]
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
 		r.logger.Info("Updating record " + record.Settings.String() + " to use " + updateIP.String())
-		if err := r.updater.Update(ctx, id, updateIP, r.timeNow()); err != nil {
+		err := r.updater.Update(ctx, id, updateIP, r.timeNow())
+		if err != nil {
 			errors = append(errors, err)
 			r.logger.Error(err.Error())
 		}

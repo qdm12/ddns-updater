@@ -36,7 +36,8 @@ func New(data json.RawMessage, domain, host string,
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 	p = &Provider{
@@ -46,7 +47,8 @@ func New(data json.RawMessage, domain, host string,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -142,7 +144,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		} `xml:"errors"`
 		IP string `xml:"IP"`
 	}
-	if err := decoder.Decode(&parsedXML); err != nil {
+	err = decoder.Decode(&parsedXML)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 

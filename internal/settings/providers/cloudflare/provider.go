@@ -44,7 +44,8 @@ func New(data json.RawMessage, domain, host string,
 		Proxied        bool   `json:"proxied"`
 		TTL            uint   `json:"ttl"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 	p = &Provider{
@@ -59,7 +60,8 @@ func New(data json.RawMessage, domain, host string,
 		proxied:        extraSettings.Proxied,
 		ttl:            extraSettings.TTL,
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -189,7 +191,8 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 			Content string `json:"content"`
 		} `json:"result"`
 	}{}
-	if err := decoder.Decode(&listRecordsResponse); err != nil {
+	err = decoder.Decode(&listRecordsResponse)
+	if err != nil {
 		return "", false, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
@@ -244,7 +247,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
-	if err := encoder.Encode(requestData); err != nil {
+	err = encoder.Encode(requestData)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
 	}
 
@@ -277,7 +281,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 			Content string `json:"content"`
 		} `json:"result"`
 	}
-	if err := decoder.Decode(&parsedJSON); err != nil {
+	err = decoder.Decode(&parsedJSON)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 

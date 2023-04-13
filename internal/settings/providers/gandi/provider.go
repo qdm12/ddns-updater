@@ -31,7 +31,8 @@ func New(data json.RawMessage, domain, host string,
 		Key string `json:"key"`
 		TTL int    `json:"ttl"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 	p = &Provider{
@@ -41,7 +42,8 @@ func New(data json.RawMessage, domain, host string,
 		key:       extraSettings.Key,
 		ttl:       extraSettings.TTL,
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -124,7 +126,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		Values: [1]string{ipStr},
 		TTL:    ttl,
 	}
-	if err := encoder.Encode(requestData); err != nil {
+	err = encoder.Encode(requestData)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
 	}
 

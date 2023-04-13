@@ -39,7 +39,8 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client,
 	}
 
 	decoder := json.NewDecoder(response.Body)
-	if err := decoder.Decode(&recordIDs); err != nil {
+	err = decoder.Decode(&recordIDs)
+	if err != nil {
 		_ = response.Body.Close()
 		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}

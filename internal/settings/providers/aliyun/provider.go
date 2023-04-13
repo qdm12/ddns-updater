@@ -32,7 +32,8 @@ func New(data json.RawMessage, domain, host string,
 		AccessSecret string `json:"access_secret"`
 		Region       string `json:"region"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 	p = &Provider{
@@ -46,7 +47,8 @@ func New(data json.RawMessage, domain, host string,
 	if extraSettings.Region != "" {
 		p.region = extraSettings.Region
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil

@@ -32,7 +32,8 @@ func New(data json.RawMessage, domain, host string,
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 	p = &Provider{
@@ -41,7 +42,8 @@ func New(data json.RawMessage, domain, host string,
 		ipVersion: ipVersion,
 		token:     extraSettings.Token,
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -110,7 +112,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		return nil, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
 	}
 
-	if err := p.updateRecord(ctx, client, domainID, recordID, ip); err != nil {
+	err = p.updateRecord(ctx, client, domainID, recordID, ip)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
 	}
 
@@ -164,7 +167,8 @@ func (p *Provider) getDomainID(ctx context.Context, client *http.Client) (domain
 			Status string `json:"status"`
 		} `json:"data"`
 	}
-	if err := decoder.Decode(&obj); err != nil {
+	err = decoder.Decode(&obj)
+	if err != nil {
 		return 0, err
 	}
 
@@ -223,7 +227,8 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 			Type string `json:"type"`
 		} `json:"data"`
 	}
-	if err := decoder.Decode(&obj); err != nil {
+	err = decoder.Decode(&obj)
+	if err != nil {
 		return 0, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
@@ -257,7 +262,8 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	}
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
-	if err := encoder.Encode(requestData); err != nil {
+	err = encoder.Encode(requestData)
+	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
 	}
 
@@ -281,7 +287,8 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 
 	var responseData domainRecord
 	decoder := json.NewDecoder(response.Body)
-	if err := decoder.Decode(&responseData); err != nil {
+	err = decoder.Decode(&responseData)
+	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
@@ -310,7 +317,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	}
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
-	if err := encoder.Encode(data); err != nil {
+	err = encoder.Encode(data)
+	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
 	}
 
@@ -334,7 +342,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	data.IP = ""
 	decoder := json.NewDecoder(response.Body)
-	if err := decoder.Decode(&data); err != nil {
+	err = decoder.Decode(&data)
+	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
@@ -354,7 +363,8 @@ func (p *Provider) getErrorMessage(body io.Reader) (message string) {
 	if err != nil {
 		return fmt.Sprintf("reading body: %s", err)
 	}
-	if err := json.Unmarshal(b, &errorObj); err != nil {
+	err = json.Unmarshal(b, &errorObj)
+	if err != nil {
 		return utils.ToSingleLine(string(b))
 	}
 	return fmt.Sprintf("%v", errorObj)

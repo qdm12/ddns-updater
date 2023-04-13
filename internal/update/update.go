@@ -39,7 +39,8 @@ func (u *Updater) Update(ctx context.Context, id uint, ip net.IP, now time.Time)
 	}
 	record.Time = now
 	record.Status = constants.UPDATING
-	if err := u.db.Update(id, record); err != nil {
+	err = u.db.Update(id, record)
+	if err != nil {
 		return err
 	}
 	record.Status = constants.FAIL

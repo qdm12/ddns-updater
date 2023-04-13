@@ -33,7 +33,8 @@ func New(data json.RawMessage, domain, host string,
 		APIKey       string `json:"api_key"`
 		TTL          uint   `json:"ttl"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 	p = &Provider{
@@ -44,7 +45,8 @@ func New(data json.RawMessage, domain, host string,
 		apiKey:       extraSettings.APIKey,
 		ttl:          extraSettings.TTL,
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -119,7 +121,8 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 	}
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
-	if err := encoder.Encode(postRecordsParams); err != nil {
+	err = encoder.Encode(postRecordsParams)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
 	}
 
@@ -146,7 +149,8 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 		} `json:"records"`
 	}
 	decoder := json.NewDecoder(response.Body)
-	if err := decoder.Decode(&responseData); err != nil {
+	err = decoder.Decode(&responseData)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
@@ -181,7 +185,8 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	}
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
-	if err := encoder.Encode(postRecordsParams); err != nil {
+	err = encoder.Encode(postRecordsParams)
+	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
 	}
 
@@ -228,7 +233,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	}
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
-	if err := encoder.Encode(postRecordsParams); err != nil {
+	err = encoder.Encode(postRecordsParams)
+	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
 	}
 
@@ -262,14 +268,16 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		return nil, err
 	}
 	if len(recordIDs) == 0 {
-		if err := p.createRecord(ctx, client, recordType, ipStr); err != nil {
+		err = p.createRecord(ctx, client, recordType, ipStr)
+		if err != nil {
 			return nil, err
 		}
 		return ip, nil
 	}
 
 	for _, recordID := range recordIDs {
-		if err := p.updateRecord(ctx, client, recordType, ipStr, recordID); err != nil {
+		err = p.updateRecord(ctx, client, recordType, ipStr, recordID)
+		if err != nil {
 			return nil, err
 		}
 	}

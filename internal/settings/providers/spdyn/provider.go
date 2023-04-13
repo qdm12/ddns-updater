@@ -36,7 +36,8 @@ func New(data json.RawMessage, domain, host string,
 		Token         string `json:"token"`
 		UseProviderIP bool   `json:"provider_ip"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 	p = &Provider{
@@ -48,7 +49,8 @@ func New(data json.RawMessage, domain, host string,
 		token:         extraSettings.Token,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil

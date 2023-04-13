@@ -149,7 +149,8 @@ func Test_fetch(t *testing.T) {
 			client := &http.Client{
 				Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
 					assert.Equal(t, tc.url, r.URL.String())
-					if err := r.Context().Err(); err != nil {
+					err := r.Context().Err()
+					if err != nil {
 						return nil, err
 					} else if tc.httpErr != nil {
 						return nil, tc.httpErr

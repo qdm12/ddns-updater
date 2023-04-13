@@ -50,7 +50,8 @@ func fetch(ctx context.Context, client *http.Client, url string, version ipversi
 		return nil, err
 	}
 
-	if err := response.Body.Close(); err != nil {
+	err = response.Body.Close()
+	if err != nil {
 		return nil, err
 	}
 

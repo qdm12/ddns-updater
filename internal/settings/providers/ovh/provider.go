@@ -48,7 +48,8 @@ func New(data json.RawMessage, domain, host string,
 		AppSecret     string `json:"app_secret"`
 		ConsumerKey   string `json:"consumer_key"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 
@@ -71,7 +72,8 @@ func New(data json.RawMessage, domain, host string,
 		consumerKey:   extraSettings.ConsumerKey,
 		timeNow:       time.Now,
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -216,18 +218,21 @@ func (p *Provider) updateWithZoneDNS(ctx context.Context, client *http.Client, i
 	}
 
 	if len(recordIDs) == 0 {
-		if err := p.createRecord(ctx, client, recordType, subDomain, ipStr, timestamp); err != nil {
+		err = p.createRecord(ctx, client, recordType, subDomain, ipStr, timestamp)
+		if err != nil {
 			return nil, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
 		}
 	} else {
 		for _, recordID := range recordIDs {
-			if err := p.updateRecord(ctx, client, recordID, ipStr, timestamp); err != nil {
+			err = p.updateRecord(ctx, client, recordID, ipStr, timestamp)
+			if err != nil {
 				return nil, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
 			}
 		}
 	}
 
-	if err := p.refresh(ctx, client, timestamp); err != nil {
+	err = p.refresh(ctx, client, timestamp)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrRefresh, err)
 	}
 

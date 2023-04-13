@@ -22,7 +22,8 @@ type Config struct {
 }
 
 func (c *Config) Get(env params.Interface) (warnings []string, err error) {
-	if err := c.Client.get(env); err != nil {
+	err = c.Client.get(env)
+	if err != nil {
 		return warnings, err
 	}
 
@@ -43,7 +44,8 @@ func (c *Config) Get(env params.Interface) (warnings []string, err error) {
 		return warnings, fmt.Errorf("reading resolver settings: %w", err)
 	}
 
-	if err := c.IPv6.get(env); err != nil {
+	err = c.IPv6.get(env)
+	if err != nil {
 		return warnings, err
 	}
 
@@ -59,11 +61,13 @@ func (c *Config) Get(env params.Interface) (warnings []string, err error) {
 		return warnings, err
 	}
 
-	if err := c.Paths.get(env); err != nil {
+	err = c.Paths.get(env)
+	if err != nil {
 		return warnings, err
 	}
 
-	if err := c.Backup.get(env); err != nil {
+	err = c.Backup.get(env)
+	if err != nil {
 		return warnings, err
 	}
 

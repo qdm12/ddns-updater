@@ -33,7 +33,8 @@ func New(data json.RawMessage, domain, host string,
 		Email string `json:"email"`
 		Token string `json:"token"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 	p = &Provider{
@@ -43,7 +44,8 @@ func New(data json.RawMessage, domain, host string,
 		email:     extraSettings.Email,
 		token:     extraSettings.Token,
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -111,7 +113,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	newRecord := record
 	newRecord.Content = ip.String()
-	if err := p.updateRecord(ctx, client, zoneID, newRecord); err != nil {
+	err = p.updateRecord(ctx, client, zoneID, newRecord)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
 	}
 	return ip, nil
@@ -170,7 +173,8 @@ func (p *Provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 	}
 	var zones []zone
 
-	if err := json.Unmarshal(b, &zones); err != nil {
+	err = json.Unmarshal(b, &zones)
+	if err != nil {
 		return 0, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 	for _, zone := range zones {
@@ -218,7 +222,8 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 	}
 	var records []luaDNSRecord
 
-	if err := json.Unmarshal(b, &records); err != nil {
+	err = json.Unmarshal(b, &records)
+	if err != nil {
 		return record, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 	recordType := constants.A
@@ -246,7 +251,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
-	if err := encoder.Encode(newRecord); err != nil {
+	err = encoder.Encode(newRecord)
+	if err != nil {
 		return err
 	}
 

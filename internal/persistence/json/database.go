@@ -39,7 +39,8 @@ func NewDatabase(dataDir string) (*Database, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := db.fileManager.WriteToFile(db.filepath, data); err != nil {
+		err = db.fileManager.WriteToFile(db.filepath, data)
+		if err != nil {
 			return nil, err
 		}
 		return &db, nil
@@ -48,10 +49,12 @@ func NewDatabase(dataDir string) (*Database, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := json.Unmarshal(data, &db.data); err != nil {
+	err = json.Unmarshal(data, &db.data)
+	if err != nil {
 		return nil, err
 	}
-	if err := db.Check(); err != nil {
+	err = db.Check()
+	if err != nil {
 		return nil, fmt.Errorf("%s validation error: %w", db.filepath, err)
 	}
 	return &db, nil

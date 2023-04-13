@@ -30,7 +30,8 @@ func New(data json.RawMessage, domain, host string,
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 	p = &Provider{
@@ -39,7 +40,8 @@ func New(data json.RawMessage, domain, host string,
 		ipVersion: ipVersion,
 		token:     extraSettings.Token,
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -139,7 +141,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 			Line  string `json:"line"`
 		} `json:"records"`
 	}
-	if err := decoder.Decode(&recordResp); err != nil {
+	err = decoder.Decode(&recordResp)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 

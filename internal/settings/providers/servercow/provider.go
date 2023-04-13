@@ -37,7 +37,8 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		TTL           uint   `json:"ttl"`
 		UseProviderIP bool   `json:"provider_ip"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 
@@ -50,7 +51,8 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 		domain:        extraSettings.Domain,
 		ttl:           extraSettings.TTL,
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -132,7 +134,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
-	if err := encoder.Encode(requestData); err != nil {
+	err = encoder.Encode(requestData)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
 	}
 
@@ -163,7 +166,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		Error   string `json:"error"`
 	}
 
-	if err := decoder.Decode(&parsedJSON); err != nil {
+	err = decoder.Decode(&parsedJSON)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 

@@ -158,7 +158,8 @@ func Test_fetcher_ip(t *testing.T) {
 		return &http.Client{
 			Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
 				assert.Equal(t, expectedURL, r.URL.String())
-				if err := r.Context().Err(); err != nil {
+				err := r.Context().Err()
+				if err != nil {
 					return nil, err
 				}
 				if httpErr != nil {

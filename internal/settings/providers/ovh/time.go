@@ -67,11 +67,13 @@ func (p *Provider) getOVHTime(ctx context.Context, client *http.Client) (ovhTime
 	decoder.UseNumber() // from OVH's Go library, not sure why though
 
 	var unixTimestamp int64
-	if err := decoder.Decode(&unixTimestamp); err != nil {
+	err = decoder.Decode(&unixTimestamp)
+	if err != nil {
 		return ovhTime, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
-	if err := response.Body.Close(); err != nil {
+	err = response.Body.Close()
+	if err != nil {
 		return ovhTime, err
 	}
 

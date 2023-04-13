@@ -29,7 +29,8 @@ func New(data json.RawMessage, domain, host string,
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
-	if err := json.Unmarshal(data, &extraSettings); err != nil {
+	err = json.Unmarshal(data, &extraSettings)
+	if err != nil {
 		return nil, err
 	}
 	p = &Provider{
@@ -38,7 +39,8 @@ func New(data json.RawMessage, domain, host string,
 		ipVersion: ipVersion,
 		token:     extraSettings.Token,
 	}
-	if err := p.isValid(); err != nil {
+	err = p.isValid()
+	if err != nil {
 		return nil, err
 	}
 	return p, nil
@@ -126,7 +128,8 @@ func (p *Provider) getRecordID(ctx context.Context, recordType string, client *h
 			ID int `json:"id"`
 		} `json:"domain_records"`
 	}
-	if err = decoder.Decode(&result); err != nil {
+	err = decoder.Decode(&result)
+	if err != nil {
 		return 0, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
@@ -167,7 +170,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		Name: p.host,
 		Data: ip.String(),
 	}
-	if err := encoder.Encode(requestData); err != nil {
+	err = encoder.Encode(requestData)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
 	}
 
@@ -194,7 +198,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 			Data string `json:"data"`
 		} `json:"domain_record"`
 	}
-	if err := decoder.Decode(&responseData); err != nil {
+	err = decoder.Decode(&responseData)
+	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 

@@ -3,6 +3,7 @@ package aliyun
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -103,7 +104,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 
 	recordID, err := p.getRecordID(ctx, client, recordType)
-	if err != nil {
+	if stderrors.Is(err, errors.ErrRecordNotFound) {
+		recordID, err = p.createRecord(ctx, client, ip)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
+		}
+	} else if err != nil {
 		return nil, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
 	}
 

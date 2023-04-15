@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -41,6 +42,23 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusNotFound:
+		return "", fmt.Errorf("%w", errors.ErrRecordNotFound)
+	case http.StatusBadRequest:
+		bodyBytes, err := io.ReadAll(response.Body)
+		if err != nil {
+			return "", fmt.Errorf("reading response body: %w", err)
+		}
+
+		var data struct {
+			Code string `json:"Code"`
+		}
+		err = json.Unmarshal(bodyBytes, &data)
+		if err != nil || data.Code != "InvalidDomainName.NoExist" {
+			return "", fmt.Errorf("%w: %d: %s",
+				errors.ErrBadHTTPStatus, response.StatusCode,
+				utils.BodyToSingleLine(response.Body))
+		}
+
 		return "", fmt.Errorf("%w", errors.ErrRecordNotFound)
 	default:
 		return "", fmt.Errorf("%w: %d: %s",

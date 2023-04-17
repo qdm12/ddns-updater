@@ -13,7 +13,6 @@
       "host": "@",
       "access_key_id": "your access_key_id",
       "access_secret": "your access_secret",
-      "region": "your region",
       "ip_version": "ipv4"
     }
   ]
@@ -30,6 +29,5 @@
 ### Optional parameters
 
 - `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
-- `"region"` is your region, which defaults to `cn-hangzhou` if not set.
 
 ## Domain setup

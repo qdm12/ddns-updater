@@ -1,4 +1,4 @@
-# OpenDNS
+# INWX
 
 ## Configuration
 
@@ -8,7 +8,7 @@
 {
   "settings": [
     {
-      "provider": "dyn",
+      "provider": "inwx",
       "domain": "domain.com",
       "host": "@",
       "username": "username",
@@ -20,6 +20,7 @@
 ```
 
 ### Compulsory parameters
+
 - `"domain"`
 - `"host"` is your host and can be a subdomain or `"@"`
 - `"username"`

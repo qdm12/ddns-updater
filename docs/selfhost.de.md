@@ -13,6 +13,7 @@
       "host": "@",
       "username": "username",
       "password": "password",
+      "provider_ip": true,
       "ip_version": "ipv4"
     }
   ]
@@ -25,6 +26,7 @@
 - `"host"` is your host and can be a subdomain or `"@"`
 - `"username"` is your DynDNS username
 - `"password"` is your DynDNS password
+- `"provider_ip'`
 
 ### Optional parameters
 

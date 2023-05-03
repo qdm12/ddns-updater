@@ -14,6 +14,7 @@
           "username": "servercow_username",
           "password": "servercow_password",
           "ttl": 600,
+          "provider_ip": true,
           "ip_version": "ipv4"
       }
   ]
@@ -26,6 +27,7 @@
 - `"host"` is your host and can be `""`, a subdomain or `"*"` generally
 - `"username"` is the username for your DNS API User
 - `"password"` is the password for your DNS API User
+- `"provider_ip"`
 
 ### Optional parameters
 

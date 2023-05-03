@@ -82,7 +82,7 @@ func (p *Provider) isValid() error {
 			return fmt.Errorf("%w", errors.ErrMalformedEmail)
 		}
 	case p.userServiceKey != "": // only user service key
-		if !userServiceKeyRegex.MatchString(p.key) {
+		if !userServiceKeyRegex.MatchString(p.userServiceKey) {
 			return fmt.Errorf("%w", errors.ErrMalformedUserServiceKey)
 		}
 	default: // constants.API token only

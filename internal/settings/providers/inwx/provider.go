@@ -101,7 +101,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		Host:   "dyndns.inwx.com",
 		Path:   "/nic/update",
 	}
-	var values url.Values
+	values := url.Values{}
 	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
 	if ip.To4() != nil {
 		values.Set("myip", ip.String())

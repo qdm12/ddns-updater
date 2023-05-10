@@ -57,6 +57,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
   - INWX
   - Linode
   - LuaDNS
+  - Name.com
   - Namecheap
   - Netcup
   - NoIP
@@ -184,6 +185,7 @@ Check the documentation for your DNS provider:
 - [INWX](https://github.com/qdm12/ddns-updater/blob/master/docs/inwx.md)
 - [Linode](https://github.com/qdm12/ddns-updater/blob/master/docs/linode.md)
 - [LuaDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/luadns.md)
+- [Name.com](https://github.com/qdm12/ddns-updater/blob/master/docs/name.com.md)
 - [Namecheap](https://github.com/qdm12/ddns-updater/blob/master/docs/namecheap.md)
 - [Netcup](https://github.com/qdm12/ddns-updater/blob/master/docs/netcup.md)
 - [NoIP](https://github.com/qdm12/ddns-updater/blob/master/docs/noip.md)

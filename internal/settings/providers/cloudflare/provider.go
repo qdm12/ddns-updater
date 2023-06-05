@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -158,6 +159,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 		Host:   "api.cloudflare.com",
 		Path:   fmt.Sprintf("/client/v4/zones/%s/dns_records", p.zoneIdentifier),
 	}
+
 	values := url.Values{}
 	values.Set("type", recordType)
 	values.Set("name", utils.BuildURLQueryHostname(p.host, p.domain))
@@ -213,15 +215,103 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 	return listRecordsResponse.Result[0].ID, false, nil
 }
 
+func (p *Provider) CreateRecord(ctx context.Context, client *http.Client, ip net.IP) (recordID string, err error) {
+	recordType := constants.A
+
+	if ip.To4() == nil {
+		recordType = constants.AAAA
+	}
+
+	u := url.URL{
+		Scheme: "https",
+		Host:   "api.cloudflare.com",
+		Path:   fmt.Sprintf("/client/v4/zones/%s/dns_records", p.zoneIdentifier),
+	}
+
+	requestData := struct {
+		Type    string `json:"type"`    // constants.A or constants.AAAA depending on ip address given
+		Name    string `json:"name"`    // DNS record name i.e. example.com
+		Content string `json:"content"` // ip address
+		Proxied bool   `json:"proxied"` // whether the record is receiving the performance and security benefits of Cloudflare
+		TTL     uint   `json:"ttl"`
+	}{
+		Type:    recordType,
+		Name:    utils.BuildURLQueryHostname(p.host, p.domain),
+		Content: ip.String(),
+		Proxied: p.proxied,
+		TTL:     p.ttl,
+	}
+
+	buffer := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buffer)
+	err = encoder.Encode(requestData)
+
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
+	if err != nil {
+		return "", err
+	}
+
+	p.setHeaders(request)
+
+	response, err := client.Do(request)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode > http.StatusUnsupportedMediaType {
+		return "", fmt.Errorf("%w: %d: %s",
+			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+	}
+
+	decoder := json.NewDecoder(response.Body)
+	var parsedJSON struct {
+		Success bool `json:"success"`
+		Errors  []struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		} `json:"errors"`
+		Result struct {
+			ID string `json:"id"`
+		} `json:"result"`
+	}
+	err = decoder.Decode(&parsedJSON)
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+	}
+
+	if !parsedJSON.Success {
+		var errStr string
+		for _, e := range parsedJSON.Errors {
+			errStr += fmt.Sprintf("error %d: %s; ", e.Code, e.Message)
+		}
+		return "", fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, errStr)
+	}
+
+	return parsedJSON.Result.ID, nil
+}
+
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
 	recordType := constants.A
 	if ip.To4() == nil {
 		recordType = constants.AAAA
 	}
+
 	identifier, upToDate, err := p.getRecordID(ctx, client, ip)
-	if err != nil {
+
+	switch {
+	case stderrors.Is(err, errors.ErrNoResultReceived):
+		identifier, err = p.CreateRecord(ctx, client, ip)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
+		}
+	case err != nil:
 		return nil, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
-	} else if upToDate {
+	case upToDate:
 		return ip, nil
 	}
 

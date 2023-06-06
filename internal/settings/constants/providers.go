@@ -18,6 +18,7 @@ const (
 	Dyn          models.Provider = "dyn"
 	Dynu         models.Provider = "dynu"
 	DynV6        models.Provider = "dynv6"
+	EasyDNS      models.Provider = "easydns"
 	FreeDNS      models.Provider = "freedns"
 	Gandi        models.Provider = "gandi"
 	GCP          models.Provider = "gcp"

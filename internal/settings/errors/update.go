@@ -22,6 +22,7 @@ var (
 	ErrNoIPInResponse          = errors.New("no IP address in response")
 	ErrNoResultReceived        = errors.New("no result received")
 	ErrNotFound                = errors.New("not found")
+	ErrNoService               = errors.New("no service")
 	ErrNumberOfResultsReceived = errors.New("wrong number of results received")
 	ErrPrivateIPSent           = errors.New("private IP cannot be routed")
 	ErrRecordNotEditable       = errors.New("record is not editable") // Dreamhost

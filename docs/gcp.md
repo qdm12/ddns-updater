@@ -8,7 +8,7 @@
 {
   "settings": [
     {
-      "provider": "gpc",
+      "provider": "gcp",
       "project": "my-project-id",
       "zone": "zone",
       "credentials": {

@@ -11,6 +11,7 @@
       "provider": "infomaniak",
       "domain": "domain.com",
       "host": "@",
+      "username": "username",
       "password": "password",
       "ip_version": "ipv4",
       "provider_ip": true

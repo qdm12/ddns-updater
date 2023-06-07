@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
-
-	"github.com/qdm12/golibs/files"
 )
 
 type Database struct {
-	data        dataModel
-	filepath    string
-	fileManager files.FileManager
+	data     dataModel
+	filepath string
 	sync.RWMutex
 }
 
@@ -25,39 +25,52 @@ func (db *Database) Close() error {
 
 // NewDatabase opens or creates the JSON file database.
 func NewDatabase(dataDir string) (*Database, error) {
-	db := Database{
-		filepath:    dataDir + "/updates.json",
-		fileManager: files.NewFileManager(),
-	}
-	exists, err := db.fileManager.FileExists(db.filepath)
+	filePath := filepath.Join(dataDir, "updates.json")
+
+	file, err := os.Open(filePath)
 	if err != nil {
-		return nil, err
+		if !errors.Is(err, os.ErrNotExist) {
+			return nil, fmt.Errorf("reading file: %w", err)
+		}
+		const perm fs.FileMode = 0700
+		err = os.MkdirAll(filepath.Dir(filePath), perm)
+		if err != nil {
+			return nil, fmt.Errorf("creating data directory: %w", err)
+		}
+		return &Database{filepath: filePath}, nil
 	}
 
-	if !exists {
-		data, err := json.Marshal(db.data)
-		if err != nil {
-			return nil, err
-		}
-		err = db.fileManager.WriteToFile(db.filepath, data)
-		if err != nil {
-			return nil, err
-		}
-		return &db, nil
-	}
-	data, err := db.fileManager.ReadFile(db.filepath)
+	stat, err := file.Stat()
 	if err != nil {
-		return nil, err
+		_ = file.Close()
+		return nil, fmt.Errorf("stating file: %w", err)
+	} else if stat.Size() == 0 { // empty file
+		_ = file.Close()
+		return &Database{filepath: filePath}, nil
 	}
-	err = json.Unmarshal(data, &db.data)
+
+	decoder := json.NewDecoder(file)
+	var data dataModel
+	err = decoder.Decode(&data)
 	if err != nil {
-		return nil, err
+		_ = file.Close()
+		return nil, fmt.Errorf("decoding data from file: %w", err)
 	}
-	err = db.Check()
+
+	err = file.Close()
 	if err != nil {
-		return nil, fmt.Errorf("%s validation error: %w", db.filepath, err)
+		return nil, fmt.Errorf("closing database file: %w", err)
 	}
-	return &db, nil
+
+	err = checkData(data)
+	if err != nil {
+		return nil, fmt.Errorf("%s validation error: %w", filePath, err)
+	}
+
+	return &Database{
+		data:     data,
+		filepath: filePath,
+	}, nil
 }
 
 var (
@@ -68,8 +81,8 @@ var (
 	ErrIPTimeEmpty         = errors.New("time of IP is empty")
 )
 
-func (db *Database) Check() error {
-	for _, record := range db.data.Records {
+func checkData(data dataModel) error {
+	for _, record := range data.Records {
 		switch {
 		case record.Domain == "":
 			return fmt.Errorf("%w: for record %s", ErrDomainEmpty, record)
@@ -96,9 +109,23 @@ func (db *Database) Check() error {
 }
 
 func (db *Database) write() error {
-	data, err := json.MarshalIndent(db.data, "", "  ")
+	const createPerms fs.FileMode = 0600
+	file, err := os.OpenFile(db.filepath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, createPerms)
 	if err != nil {
-		return err
+		return fmt.Errorf("opening file: %w", err)
 	}
-	return db.fileManager.WriteToFile(db.filepath, data)
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	err = encoder.Encode(db.data)
+	if err != nil {
+		_ = file.Close()
+		return fmt.Errorf("encoding data to file: %w", err)
+	}
+
+	err = file.Close()
+	if err != nil {
+		return fmt.Errorf("closing database file: %w", err)
+	}
+	return nil
 }

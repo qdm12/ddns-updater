@@ -8,7 +8,7 @@
 {
   "settings": [
     {
-      "provider": "dyn",
+      "provider": "opendns",
       "domain": "domain.com",
       "host": "@",
       "username": "username",

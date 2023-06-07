@@ -3,7 +3,7 @@ module github.com/qdm12/ddns-updater
 go 1.20
 
 require (
-	github.com/breml/rootcerts v0.2.0
+	github.com/breml/rootcerts v0.2.11
 	github.com/containrrr/shoutrrr v0.5.1
 	github.com/go-chi/chi v1.5.4
 	github.com/golang/mock v1.6.0

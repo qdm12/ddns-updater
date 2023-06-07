@@ -11,7 +11,9 @@
       "provider": "dnsomatic",
       "domain": "domain.com",
       "host": "@",
-      "token": "yourtoken",
+      "username": "username",
+      "password": "password",
+      "provider_ip": true,
       "ip_version": "ipv4"
     }
   ]
@@ -24,6 +26,7 @@
 - `"host"` is your host and can be a subdomain or `"@"` or `"*"`
 - `"username"`
 - `"password"`
+- `"provider_ip"`
 
 ### Optional parameters
 

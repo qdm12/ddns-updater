@@ -66,15 +66,12 @@ ENV \
     DATADIR=/updater/data \
     RESOLVER_ADDRESS= \
     RESOLVER_TIMEOUT=5s \
-
     # Web UI
     LISTENING_PORT=8000 \
     ROOT_URL=/ \
-
     # Backup
     BACKUP_PERIOD=0 \
     BACKUP_DIRECTORY=/updater/data \
-
     # Other
     LOG_LEVEL=info \
     LOG_CALLER=hidden \

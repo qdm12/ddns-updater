@@ -5,8 +5,6 @@ services:
     build: .
     volumes:
       - ../:/workspace
-      # Docker
-      - ~/.docker:/root/.docker:z
       # Docker socket to access Docker server
       - /var/run/docker.sock:/var/run/docker.sock
       # SSH directory for Linux, OSX and WSL
@@ -15,11 +13,9 @@ services:
       # from /mnt/ssh to ~/.ssh to fix permissions.
       - ~/.ssh:/mnt/ssh
       # Shell history persistence
-      - ~/.zsh_history:/root/.zsh_history:z
+      - ~/.zsh_history:/root/.zsh_history
       # Git config
-      - ~/.gitconfig:/root/.gitconfig:z
-      # Kubernetes
-      - ~/.kube:/root/.kube:z
+      - ~/.gitconfig:/root/.gitconfig
     environment:
       - TZ=
     cap_add:

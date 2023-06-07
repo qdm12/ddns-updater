@@ -22,7 +22,6 @@ It works on Linux, Windows and OSX.
     Note that the development container will create the empty directories `~/.docker`, `~/.ssh` and `~/.kube` if you don't have them.
 
 1. **For Docker on OSX or Windows without WSL**: ensure your home directory `~` is accessible by Docker.
-1. **For Docker on Windows without WSL:** if you want to use SSH keys, bind mount your host `~/.ssh` to `/tmp/.ssh` instead of `~/.ssh` by changing the `volumes` section in the [docker-compose.yml](docker-compose.yml).
 1. Open the command palette in Visual Studio Code (CTRL+SHIFT+P).
 1. Select `Remote-Containers: Open Folder in Container...` and choose the project directory.
 

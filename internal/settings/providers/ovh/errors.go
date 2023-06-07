@@ -12,7 +12,7 @@ import (
 func extractAPIError(response *http.Response) (err error) {
 	decoder := json.NewDecoder(response.Body)
 	var apiError struct {
-		Message string
+		Message string `json:"Message"`
 	}
 	err = decoder.Decode(&apiError)
 	if err != nil {

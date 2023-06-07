@@ -71,8 +71,8 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 		DomainRecords struct {
 			Record []struct {
 				RecordID string `json:"RecordId"`
-			}
-		}
+			} `json:"Record"`
+		} `json:"DomainRecords"`
 	}
 	err = decoder.Decode(&data)
 	if err != nil {

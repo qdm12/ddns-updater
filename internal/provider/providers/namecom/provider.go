@@ -102,13 +102,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	recordID, err := p.getRecordID(ctx, client, recordType)
 
-	if err == nil && recordID > 0 {
-		err = p.updateRecord(ctx, client, recordID, ip)
-		if err != nil {
-			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
-		}
-	}
-
 	if stderrors.Is(err, errors.ErrRecordNotFound) {
 		err = p.createRecord(ctx, client, ip)
 		if err != nil {
@@ -116,6 +109,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		}
 	} else if err != nil {
 		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
+	}
+
+	err = p.updateRecord(ctx, client, recordID, ip)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
 	}
 
 	return ip, nil

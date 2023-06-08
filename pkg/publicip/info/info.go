@@ -8,8 +8,6 @@ import (
 	"net"
 	"net/http"
 	"sync"
-
-	"github.com/qdm12/golibs/crypto/random/sources/maphash"
 )
 
 type Info struct {
@@ -36,7 +34,7 @@ func New(client *http.Client, options ...Option) (info *Info, err error) {
 	}
 
 	// fast & thread safe random generator
-	generator := rand.New(maphash.New()) //nolint:gosec
+	generator := rand.New(&mapHashSource{}) //nolint:gosec
 
 	return &Info{
 		client:    client,

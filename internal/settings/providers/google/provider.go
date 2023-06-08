@@ -16,7 +16,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
-	"github.com/qdm12/golibs/verification"
 )
 
 type Provider struct {
@@ -151,22 +150,19 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
 
-	var ips []string
-	verifier := verification.NewVerifier()
+	var ips []net.IP
 	if ip.To4() != nil {
-		ips = verifier.SearchIPv4(s)
+		ips = utils.FindIPv4Addresses(s)
 	} else {
-		ips = verifier.SearchIPv6(s)
+		ips = utils.FindIPv6Addresses(s)
 	}
 
 	if len(ips) == 0 {
 		return nil, fmt.Errorf("%w", errors.ErrNoIPInResponse)
 	}
 
-	newIP = net.ParseIP(ips[0])
-	if newIP == nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ips[0])
-	} else if !p.useProviderIP && !ip.Equal(newIP) {
+	newIP = ips[0]
+	if !p.useProviderIP && !ip.Equal(newIP) {
 		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 	}
 	return newIP, nil

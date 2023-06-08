@@ -18,7 +18,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
-	"github.com/qdm12/golibs/verification"
 )
 
 type Provider struct {
@@ -79,7 +78,7 @@ func (p *Provider) isValid() error {
 		switch {
 		case !keyRegex.MatchString(p.key):
 			return fmt.Errorf("%w", errors.ErrMalformedKey)
-		case !verification.NewVerifier().MatchEmail(p.email):
+		case !utils.MatchEmail(p.email):
 			return fmt.Errorf("%w", errors.ErrMalformedEmail)
 		}
 	case p.userServiceKey != "": // only user service key

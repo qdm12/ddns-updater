@@ -16,7 +16,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
-	"github.com/qdm12/golibs/verification"
 )
 
 type Provider struct {
@@ -53,7 +52,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	switch {
-	case !verification.NewRegex().MatchEmail(p.email):
+	case !utils.MatchEmail(p.email):
 		return fmt.Errorf("%w", errors.ErrMalformedEmail)
 	case p.token == "":
 		return fmt.Errorf("%w", errors.ErrEmptyToken)

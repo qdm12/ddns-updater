@@ -28,7 +28,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/server"
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
-	"github.com/qdm12/golibs/connectivity"
 	"github.com/qdm12/golibs/params"
 	"github.com/qdm12/goshutdown"
 	"github.com/qdm12/gosplash"
@@ -191,8 +190,7 @@ func _main(ctx context.Context, env params.Interface, args []string, logger log.
 
 	client := &http.Client{Timeout: config.Client.Timeout}
 
-	connectivity := connectivity.NewHTTPSGetChecker(client, http.StatusOK)
-	err = connectivity.Check(ctx, "https://github.com")
+	err = health.CheckHTTP(ctx, client)
 	if err != nil {
 		logger.Warn(err.Error())
 	}

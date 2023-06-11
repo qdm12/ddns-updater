@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -29,8 +29,13 @@ var ErrUnhealthy = errors.New("program is unhealthy")
 
 // Query sends an HTTP request to the other instance of
 // the program, and to its internal healthcheck server.
-func (c *Client) Query(ctx context.Context, port uint16) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://127.0.0.1:"+strconv.Itoa(int(port)), nil)
+func (c *Client) Query(ctx context.Context, listeningAddress string) error {
+	_, port, err := net.SplitHostPort(listeningAddress)
+	if err != nil {
+		return fmt.Errorf("splitting host and port from address: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://127.0.0.1:"+port, nil)
 	if err != nil {
 		return err
 	}

@@ -8,7 +8,7 @@ require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/golang/mock v1.6.0
 	github.com/miekg/dns v1.1.54
-	github.com/qdm12/golibs v0.0.0-20210822203818-5c568b0777b6
+	github.com/qdm12/gosettings v0.3.0
 	github.com/qdm12/goshutdown v0.3.0
 	github.com/qdm12/gosplash v0.1.0
 	github.com/qdm12/log v0.1.0
@@ -30,6 +30,7 @@ require (
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
+	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783 // indirect

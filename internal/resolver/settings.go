@@ -3,8 +3,11 @@ package resolver
 import (
 	"errors"
 	"fmt"
-	"net"
+	"os"
 	"time"
+
+	"github.com/qdm12/gosettings"
+	"github.com/qdm12/gosettings/validate"
 )
 
 type Settings struct {
@@ -13,34 +16,26 @@ type Settings struct {
 }
 
 func (s *Settings) SetDefaults() {
-	if s.Address == nil {
-		s.Address = new(string)
-	}
+	s.Address = gosettings.DefaultPointer(s.Address, "")
+	const defaultTimeout = 5 * time.Second
+	s.Timeout = gosettings.DefaultNumber(s.Timeout, defaultTimeout)
+}
 
-	if s.Timeout == 0 {
-		const defaultTimeout = 5 * time.Second
-		s.Timeout = defaultTimeout
-	}
+func (s Settings) MergeWith(other Settings) (merged Settings) {
+	merged.Address = gosettings.MergeWithPointer(s.Address, other.Address)
+	merged.Timeout = gosettings.MergeWithNumber(s.Timeout, other.Timeout)
+	return merged
 }
 
 var (
-	ErrAddressHostEmpty = errors.New("address host is empty")
-	ErrAddressPortEmpty = errors.New("address port is empty")
-	ErrTimeoutTooLow    = errors.New("timeout is too low")
+	ErrTimeoutTooLow = errors.New("timeout is too low")
 )
 
-func (s *Settings) Validate() (err error) {
+func (s Settings) Validate() (err error) {
 	if *s.Address != "" {
-		host, port, err := net.SplitHostPort(*s.Address)
+		err = validate.ListeningAddress(*s.Address, os.Getuid())
 		if err != nil {
 			return fmt.Errorf("splitting host and port from address: %w", err)
-		}
-
-		switch {
-		case host == "":
-			return fmt.Errorf("%w: in %s", ErrAddressHostEmpty, *s.Address)
-		case port == "":
-			return fmt.Errorf("%w: in %s", ErrAddressPortEmpty, *s.Address)
 		}
 	}
 

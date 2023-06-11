@@ -1,4 +1,4 @@
-package config
+package env
 
 import (
 	"errors"
@@ -6,24 +6,21 @@ import (
 	"net"
 	"strings"
 
-	"github.com/qdm12/golibs/params"
+	"github.com/qdm12/ddns-updater/internal/config/settings"
 )
 
-type IPv6 struct {
-	Mask net.IPMask
-}
-
-func (i *IPv6) get(env params.Interface) (err error) {
-	maskStr, err := env.Get("IPV6_PREFIX", params.Default("/128"))
-	if err != nil {
-		return fmt.Errorf("%w: for environment variable IPV6_PREFIX", err)
-	}
-	i.Mask, err = ipv6DecimalPrefixToMask(maskStr)
-	if err != nil {
-		return fmt.Errorf("%w: for environment variable IPV6_PREFIX", err)
+func (s *Source) readIPv6() (settings settings.IPv6, err error) {
+	maskStr := s.env.String("IPV6_MASK")
+	if maskStr == "" {
+		return settings, nil
 	}
 
-	return nil
+	settings.Mask, err = ipv6DecimalPrefixToMask(maskStr)
+	if err != nil {
+		return settings, fmt.Errorf("%w: for environment variable IPV6_PREFIX", err)
+	}
+
+	return settings, nil
 }
 
 var ErrParsePrefix = errors.New("cannot parse IP prefix")

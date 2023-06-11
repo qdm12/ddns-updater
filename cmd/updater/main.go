@@ -17,7 +17,8 @@ import (
 	_ "github.com/breml/rootcerts"
 	"github.com/containrrr/shoutrrr"
 	"github.com/qdm12/ddns-updater/internal/backup"
-	"github.com/qdm12/ddns-updater/internal/config"
+	globsettings "github.com/qdm12/ddns-updater/internal/config/settings"
+	"github.com/qdm12/ddns-updater/internal/config/sources/env"
 	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/health"
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -28,7 +29,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/server"
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
-	"github.com/qdm12/golibs/params"
 	"github.com/qdm12/goshutdown"
 	"github.com/qdm12/gosplash"
 	"github.com/qdm12/log"
@@ -47,8 +47,8 @@ func main() {
 		Commit:    commit,
 		BuildDate: buildDate,
 	}
-	env := params.New()
 	logger := log.New()
+	env := env.New(logger)
 
 	ctx := context.Background()
 	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
@@ -95,22 +95,25 @@ var (
 	errShoutrrrSetup = errors.New("failed setting up Shoutrrr")
 )
 
-func _main(ctx context.Context, env params.Interface, args []string, logger log.LoggerInterface,
+func _main(ctx context.Context, settingsSource SettingsSource, args []string, logger log.LoggerInterface,
 	buildInfo models.BuildInformation, timeNow func() time.Time) (err error) {
 	if health.IsClientMode(args) {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the
 		// long running instance of the program about its status
-		client := health.NewClient()
-		var healthConfig config.Health
-		_, err := healthConfig.Get(env)
+
+		healthSettings := settingsSource.ReadHealth()
+		healthSettings.SetDefaults()
+		err = healthSettings.Validate()
 		if err != nil {
-			return err
+			return fmt.Errorf("health settings: %w", err)
 		}
-		return client.Query(ctx, healthConfig.Port)
+
+		client := health.NewClient()
+		return client.Query(ctx, *healthSettings.ServerAddress)
 	}
 
-	announcementExp, err := time.Parse(time.RFC3339, "2021-07-22T00:00:00Z")
+	announcementExp, err := time.Parse(time.RFC3339, "2023-06-30T00:00:00Z")
 	if err != nil {
 		return err
 	}
@@ -121,7 +124,7 @@ func _main(ctx context.Context, env params.Interface, args []string, logger log.
 		Version:      buildInfo.Version,
 		Commit:       buildInfo.Commit,
 		BuildDate:    buildInfo.BuildDate,
-		Announcement: "",
+		Announcement: "Environment variables parsing was changed on 12 June, please report any issue you might have",
 		AnnounceExp:  announcementExp,
 		// Sponsor information
 		PaypalUser:    "qmcgaw",
@@ -131,18 +134,19 @@ func _main(ctx context.Context, env params.Interface, args []string, logger log.
 		fmt.Println(line)
 	}
 
-	var config config.Config
-	warnings, err := config.Get(env)
-	for _, warning := range warnings {
-		logger.Warn(warning)
-	}
+	config, err := settingsSource.Read()
 	if err != nil {
-		return err
+		return fmt.Errorf("reading settings: %w", err)
+	}
+	config.SetDefaults()
+	err = config.Validate()
+	if err != nil {
+		return fmt.Errorf("settings validation: %w", err)
 	}
 
 	// Setup logger
-	options := []log.Option{log.SetLevel(config.Logger.Level)}
-	if config.Logger.Caller {
+	options := []log.Option{log.SetLevel(*config.Logger.Level)}
+	if *config.Logger.Caller {
 		options = append(options, log.SetCallerFile(true), log.SetCallerLine(true))
 	}
 	logger.Patch(options...)
@@ -161,14 +165,15 @@ func _main(ctx context.Context, env params.Interface, args []string, logger log.
 		}
 	}
 
-	persistentDB, err := persistence.NewDatabase(config.Paths.DataDir)
+	persistentDB, err := persistence.NewDatabase(*config.Paths.DataDir)
 	if err != nil {
 		notify(err.Error())
 		return err
 	}
 
 	jsonReader := jsonparams.NewReader(logger)
-	settings, warnings, err := jsonReader.JSONSettings(config.Paths.JSON)
+	jsonFilepath := filepath.Join(*config.Paths.DataDir, "config.json")
+	settings, warnings, err := jsonReader.JSONSettings(jsonFilepath)
 	for _, w := range warnings {
 		logger.Warn(w)
 		notify(w)
@@ -216,9 +221,17 @@ func _main(ctx context.Context, env params.Interface, args []string, logger log.
 		}
 	}()
 
-	config.PubIP.HTTPSettings.Client = client
+	httpSettings := publicip.HTTPSettings{
+		Enabled: *config.PubIP.HTTPEnabled,
+		Client:  client,
+		Options: config.PubIP.ToHTTPOptions(),
+	}
+	dnsSettings := publicip.DNSSettings{
+		Enabled: *config.PubIP.HTTPEnabled,
+		Options: config.PubIP.ToDNSPOptions(),
+	}
 
-	ipGetter, err := publicip.NewFetcher(config.PubIP.DNSSettings, config.PubIP.HTTPSettings)
+	ipGetter, err := publicip.NewFetcher(dnsSettings, httpSettings)
 	if err != nil {
 		return err
 	}
@@ -241,22 +254,22 @@ func _main(ctx context.Context, env params.Interface, args []string, logger log.
 
 	isHealthy := health.MakeIsHealthy(db, resolver)
 	healthLogger := logger.New(log.SetComponent("healthcheck server"))
-	healthServer := health.NewServer(config.Health.ServerAddress,
+	healthServer := health.NewServer(*config.Health.ServerAddress,
 		healthLogger, isHealthy)
 	healthServerHandler, healthServerCtx, healthServerDone := goshutdown.NewGoRoutineHandler("health server")
 	go healthServer.Run(healthServerCtx, healthServerDone)
 
-	address := ":" + strconv.Itoa(int(config.Server.Port))
+	address := ":" + fmt.Sprint(*config.Server.Port)
 	serverLogger := logger.New(log.SetComponent("http server"))
-	server := server.New(ctx, address, config.Server.RootURL, db, serverLogger, runner)
+	server := server.New(ctx, address, *config.Server.RootURL, db, serverLogger, runner)
 	serverHandler, serverCtx, serverDone := goshutdown.NewGoRoutineHandler("server")
 	go server.Run(serverCtx, serverDone)
 	notify("Launched with " + strconv.Itoa(len(records)) + " records to watch")
 
 	backupHandler, backupCtx, backupDone := goshutdown.NewGoRoutineHandler("backup")
 	backupLogger := logger.New(log.SetComponent("backup"))
-	go backupRunLoop(backupCtx, backupDone, config.Backup.Period, config.Paths.DataDir, config.Backup.Directory,
-		backupLogger, timeNow)
+	go backupRunLoop(backupCtx, backupDone, *config.Backup.Period, *config.Paths.DataDir,
+		*config.Backup.Directory, backupLogger, timeNow)
 
 	shutdownGroup := goshutdown.NewGroupHandler("")
 	shutdownGroup.Add(runnerHandler, healthServerHandler, serverHandler, backupHandler)
@@ -306,4 +319,9 @@ func backupRunLoop(ctx context.Context, done chan<- struct{}, backupPeriod time.
 			return
 		}
 	}
+}
+
+type SettingsSource interface {
+	Read() (settings globsettings.Settings, err error)
+	ReadHealth() (settings globsettings.Health)
 }

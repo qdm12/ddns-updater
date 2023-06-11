@@ -13,7 +13,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
-	"github.com/qdm12/golibs/params"
 )
 
 type commonSettings struct {
@@ -68,10 +67,8 @@ func (r *Reader) getSettingsFromFile(filePath string) (
 // If the settings are valid, they are written to the filePath.
 func (r *Reader) getSettingsFromEnv(filePath string) (
 	allSettings []settings.Settings, warnings []string, err error) {
-	s, err := r.env.Get("CONFIG", params.CaseSensitiveValue())
-	if err != nil {
-		return nil, nil, fmt.Errorf("%w: for environment variable CONFIG", err)
-	} else if s == "" {
+	s := os.Getenv("CONFIG")
+	if s == "" {
 		return nil, nil, nil
 	}
 	r.logger.Info("reading JSON config from environment variable CONFIG")

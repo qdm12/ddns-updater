@@ -156,6 +156,7 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 		return fmt.Errorf("%w: %w", errShoutrrrSetup, err)
 	}
 	notify := func(message string) {
+		logger.Debugf("notifying Shoutrrr: %s", message)
 		errs := sender.Send(message, &config.Shoutrrr.Params)
 		for i, err := range errs {
 			if err != nil {

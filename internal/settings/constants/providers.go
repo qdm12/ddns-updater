@@ -58,6 +58,7 @@ func ProviderChoices() []models.Provider {
 		Dyn,
 		Dynu,
 		DynV6,
+		EasyDNS,
 		FreeDNS,
 		Gandi,
 		GCP,

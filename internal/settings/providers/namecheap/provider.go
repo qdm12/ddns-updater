@@ -163,7 +163,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	if newIP == nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, parsedXML.IP)
 	}
-	if ip != nil && !ip.Equal(newIP) {
+	if !p.useProviderIP && !ip.Equal(newIP) {
 		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 	}
 	return newIP, nil

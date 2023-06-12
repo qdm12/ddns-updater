@@ -148,7 +148,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 			return nil, fmt.Errorf("%w", errors.ErrNoIPInResponse)
 		}
 		newIP = ips[0]
-		if ip != nil && !newIP.Equal(ip) {
+		if !p.useProviderIP && !newIP.Equal(ip) {
 			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
 		}
 		return newIP, nil

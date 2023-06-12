@@ -137,7 +137,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 			newIP = net.ParseIP(s[5:])
 			if newIP == nil {
 				return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, s)
-			} else if ip != nil && !ip.Equal(newIP) {
+			} else if !p.useProviderIP && !ip.Equal(newIP) {
 				return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP)
 			}
 			return newIP, nil
@@ -145,7 +145,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 			newIP = net.ParseIP(s[6:])
 			if newIP == nil {
 				return nil, fmt.Errorf("%w: in response %q", errors.ErrNoResultReceived, s)
-			} else if ip != nil && !ip.Equal(newIP) {
+			} else if !p.useProviderIP && !ip.Equal(newIP) {
 				return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP)
 			}
 			return newIP, nil

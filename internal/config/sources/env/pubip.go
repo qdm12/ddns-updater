@@ -51,16 +51,17 @@ func getFetchers(env env.Env) (http, dns *bool, err error) {
 		return nil, nil, nil
 	}
 
+	http, dns = new(bool), new(bool)
 	fields := strings.Split(s, ",")
 	for i, field := range fields {
 		switch strings.ToLower(field) {
 		case "all":
-			http = ptrTo(true)
-			dns = ptrTo(true)
+			*http = true
+			*dns = true
 		case "http":
-			http = ptrTo(true)
+			*http = true
 		case "dns":
-			dns = ptrTo(true)
+			*dns = true
 		default:
 			return nil, nil, fmt.Errorf(
 				"%w: %q at position %d of %d",

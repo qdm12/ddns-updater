@@ -12,7 +12,9 @@ type IPv6 struct {
 
 func (i *IPv6) setDefaults() {
 	const ipv6Bits = 8 * net.IPv6len
-	i.Mask = net.CIDRMask(ipv6Bits, ipv6Bits)
+	if i.Mask == nil {
+		i.Mask = net.CIDRMask(ipv6Bits, ipv6Bits)
+	}
 }
 
 func (i IPv6) mergeWith(other IPv6) (merged IPv6) {

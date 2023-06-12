@@ -169,7 +169,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		ips = utils.FindIPv6Addresses(s)
 	}
 
-	if len(ips) == 0 {
+	if !p.useProviderIP && len(ips) == 0 {
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrNoIPInResponse)
 	}
 

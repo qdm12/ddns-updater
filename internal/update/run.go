@@ -94,8 +94,7 @@ func (r *Runner) getNewIPs(ctx context.Context, doIP, doIPv4, doIPv6 bool, ipv6M
 		ip, err = tryAndRepeatGettingIP(ctx, r.ipGetter.IP, r.logger, ipversion.IP4or6)
 		if err != nil {
 			errors = append(errors, err)
-		}
-		if ip.To4() == nil {
+		} else if ip.To4() == nil {
 			ip = ip.Mask(ipv6Mask)
 		}
 	}
@@ -109,8 +108,9 @@ func (r *Runner) getNewIPs(ctx context.Context, doIP, doIPv4, doIPv6 bool, ipv6M
 		ipv6, err = tryAndRepeatGettingIP(ctx, r.ipGetter.IP6, r.logger, ipversion.IP6)
 		if err != nil {
 			errors = append(errors, err)
+		} else {
+			ipv6 = ipv6.Mask(ipv6Mask)
 		}
-		ipv6 = ipv6.Mask(ipv6Mask)
 	}
 	return ip, ipv4, ipv6, errors
 }

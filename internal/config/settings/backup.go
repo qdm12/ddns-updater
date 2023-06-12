@@ -32,6 +32,9 @@ func (b Backup) String() string {
 }
 
 func (b Backup) toLinesNode() *gotree.Node {
+	if *b.Period == 0 {
+		return gotree.New("Backup: disabled")
+	}
 	node := gotree.New("Backup")
 	node.Appendf("Period: %s", b.Period)
 	node.Appendf("Directory: %s", *b.Directory)

@@ -215,7 +215,7 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 		Options: config.PubIP.ToHTTPOptions(),
 	}
 	dnsSettings := publicip.DNSSettings{
-		Enabled: *config.PubIP.HTTPEnabled,
+		Enabled: *config.PubIP.DNSEnabled,
 		Options: config.PubIP.ToDNSPOptions(),
 	}
 

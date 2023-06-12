@@ -14,7 +14,7 @@ func Test_Settings_String(t *testing.T) {
 
 	s := defaultSettings.String()
 
-	const expected = `Settings
+	const expected = `Settings summary:
 ├── HTTP client
 |   └── Timeout: 10s
 ├── Update

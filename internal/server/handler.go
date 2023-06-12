@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"net/http"
+	"strings"
 	"text/template"
 	"time"
 
@@ -40,6 +41,7 @@ func newHandler(ctx context.Context, rootURL string,
 	router := chi.NewRouter()
 
 	router.Use(middleware.Logger)
+	rootURL = strings.TrimSuffix(rootURL, "/")
 
 	router.Get(rootURL+"/", handlers.index)
 

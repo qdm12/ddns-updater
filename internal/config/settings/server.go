@@ -10,18 +10,18 @@ import (
 
 type Server struct {
 	Port    *uint16
-	RootURL *string
+	RootURL string
 }
 
 func (s *Server) setDefaults() {
 	const defaultPort = 8000
 	s.Port = gosettings.DefaultPointer(s.Port, defaultPort)
-	s.RootURL = gosettings.DefaultPointer(s.RootURL, "")
+	s.RootURL = gosettings.DefaultString(s.RootURL, "/")
 }
 
 func (s Server) mergeWith(other Server) (merged Server) {
 	merged.Port = gosettings.MergeWithPointer(s.Port, other.Port)
-	merged.RootURL = gosettings.MergeWithPointer(s.RootURL, other.RootURL)
+	merged.RootURL = gosettings.MergeWithString(s.RootURL, other.RootURL)
 	return merged
 }
 

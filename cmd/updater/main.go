@@ -262,7 +262,7 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 
 	address := ":" + fmt.Sprint(*config.Server.Port)
 	serverLogger := logger.New(log.SetComponent("http server"))
-	server := server.New(ctx, address, *config.Server.RootURL, db, serverLogger, runner)
+	server := server.New(ctx, address, config.Server.RootURL, db, serverLogger, runner)
 	serverHandler, serverCtx, serverDone := goshutdown.NewGoRoutineHandler("server")
 	go server.Run(serverCtx, serverDone)
 	notify("Launched with " + strconv.Itoa(len(records)) + " records to watch")

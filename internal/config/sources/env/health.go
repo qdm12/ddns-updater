@@ -5,6 +5,6 @@ import (
 )
 
 func (s *Source) ReadHealth() (settings settings.Health) {
-	settings.ServerAddress = s.env.Get("HTTP_TIMEOUT")
+	settings.ServerAddress = s.env.Get("HEALTH_SERVER_ADDRESS")
 	return settings
 }

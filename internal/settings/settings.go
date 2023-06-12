@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
@@ -56,7 +56,7 @@ type Settings interface {
 	HTML() models.HTMLRow
 	Proxied() bool
 	IPVersion() ipversion.IPVersion
-	Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error)
+	Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error)
 }
 
 var ErrProviderUnknown = errors.New("unknown provider")

@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -88,7 +88,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "njal.la",
@@ -97,7 +97,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	values := url.Values{}
 	values.Set("h", utils.BuildURLQueryHostname(p.host, p.domain))
 	values.Set("k", p.key)
-	updatingIP6 := ip.To4() == nil
+	updatingIP6 := ip.Is6()
 	if p.useProviderIP {
 		values.Set("auto", "")
 	} else {
@@ -111,13 +111,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
@@ -131,30 +131,31 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 	err = decoder.Decode(&respBody)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	switch response.StatusCode {
 	case http.StatusOK:
 		if respBody.Message != "record updated" {
-			return nil, fmt.Errorf("%w: message received: %s", errors.ErrUnknownResponse, respBody.Message)
+			return netip.Addr{}, fmt.Errorf("%w: message received: %s", errors.ErrUnknownResponse, respBody.Message)
 		}
 		ipString := respBody.Value.A
 		if updatingIP6 {
 			ipString = respBody.Value.AAAA
 		}
-		newIP = net.ParseIP(ipString)
-		if newIP == nil {
-			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ipString)
-		} else if !p.useProviderIP && !ip.Equal(newIP) {
-			return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
+		newIP, err = netip.ParseAddr(ipString)
+		if err != nil {
+			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+		} else if !p.useProviderIP && ip.Compare(newIP) != 0 {
+			return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
+				errors.ErrIPReceivedMismatch, ip, newIP)
 		}
 		return newIP, nil
 	case http.StatusUnauthorized:
-		return nil, fmt.Errorf("%w: %s", errors.ErrAuth, respBody.Message)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrAuth, respBody.Message)
 	case http.StatusInternalServerError:
-		return nil, fmt.Errorf("%w: %s", errors.ErrBadRequest, respBody.Message)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrBadRequest, respBody.Message)
 	}
 
-	return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, respBody.Message)
+	return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, respBody.Message)
 }

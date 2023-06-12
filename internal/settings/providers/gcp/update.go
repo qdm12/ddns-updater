@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
 	ddnserrors "github.com/qdm12/ddns-updater/internal/settings/errors"
@@ -14,9 +14,9 @@ import (
 	"google.golang.org/api/option"
 )
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 
@@ -24,7 +24,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		option.WithCredentialsJSON(p.credentials),
 		option.WithHTTPClient(client))
 	if err != nil {
-		return nil, fmt.Errorf("creating GCP DDNS service: %w", err)
+		return netip.Addr{}, fmt.Errorf("creating GCP DDNS service: %w", err)
 	}
 	rrSetsService := clouddns.NewResourceRecordSetsService(ddnsService)
 
@@ -36,7 +36,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		if errors.Is(err, ddnserrors.ErrNotFound) {
 			rrSetFound = false // not finding the record is fine
 		} else {
-			return nil, fmt.Errorf("getting record resource set: %w", err)
+			return netip.Addr{}, fmt.Errorf("getting record resource set: %w", err)
 		}
 	}
 
@@ -50,14 +50,14 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	if !rrSetFound {
 		err = p.createRecord(rrSetsService, fqdn, recordType, ip)
 		if err != nil {
-			return nil, fmt.Errorf("creating record: %w", err)
+			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 		}
 		return ip, nil
 	}
 
 	err = p.updateRecord(rrSetsService, fqdn, recordType, ip)
 	if err != nil {
-		return nil, fmt.Errorf("updating record: %w", err)
+		return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 	}
 
 	return ip, nil
@@ -79,7 +79,7 @@ func (p *Provider) getResourceRecordSet(rrSetsService *clouddns.ResourceRecordSe
 }
 
 func (p *Provider) createRecord(rrSetsService *clouddns.ResourceRecordSetsService,
-	fqdn, recordType string, ip net.IP) (err error) {
+	fqdn, recordType string, ip netip.Addr) (err error) {
 	rrSet := &clouddns.ResourceRecordSet{
 		Name:    fqdn,
 		Rrdatas: []string{ip.String()},
@@ -91,7 +91,7 @@ func (p *Provider) createRecord(rrSetsService *clouddns.ResourceRecordSetsServic
 }
 
 func (p *Provider) updateRecord(rrSetsService *clouddns.ResourceRecordSetsService,
-	fqdn, recordType string, ip net.IP) (err error) {
+	fqdn, recordType string, ip netip.Addr) (err error) {
 	rrSet := &clouddns.ResourceRecordSet{
 		Name:    fqdn,
 		Rrdatas: []string{ip.String()},

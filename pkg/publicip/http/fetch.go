@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"regexp"
 	"strings"
 
@@ -26,33 +26,33 @@ var (
 )
 
 func fetch(ctx context.Context, client *http.Client, url string, version ipversion.IPVersion) (
-	publicIP net.IP, err error) {
+	publicIP netip.Addr, err error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusForbidden, http.StatusTooManyRequests:
-		return nil, fmt.Errorf("%w: %d (%s)", ErrBanned,
+		return netip.Addr{}, fmt.Errorf("%w: %d (%s)", ErrBanned,
 			response.StatusCode, bodyToSingleLine(response.Body))
 	}
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 
 	err = response.Body.Close()
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 
 	s := string(b)
@@ -69,39 +69,39 @@ func fetch(ctx context.Context, client *http.Client, url string, version ipversi
 		case len(ipv6Strings) == 1:
 			ipString = ipv6Strings[0]
 		case len(ipv4Strings) > 1:
-			return nil, fmt.Errorf("%w: found %d IPv4 addresses instead of 1",
+			return netip.Addr{}, fmt.Errorf("%w: found %d IPv4 addresses instead of 1",
 				ErrTooManyIPs, len(ipv4Strings))
 		case len(ipv6Strings) > 1:
-			return nil, fmt.Errorf("%w: found %d IPv6 addresses instead of 1",
+			return netip.Addr{}, fmt.Errorf("%w: found %d IPv6 addresses instead of 1",
 				ErrTooManyIPs, len(ipv6Strings))
 		default:
-			return nil, fmt.Errorf("%w: from %q", ErrNoIPFound, url)
+			return netip.Addr{}, fmt.Errorf("%w: from %q", ErrNoIPFound, url)
 		}
 	case ipversion.IP4:
 		switch len(ipv4Strings) {
 		case 0:
-			return nil, fmt.Errorf("%w: from %q for version %s", ErrNoIPFound, url, version)
+			return netip.Addr{}, fmt.Errorf("%w: from %q for version %s", ErrNoIPFound, url, version)
 		case 1:
 			ipString = ipv4Strings[0]
 		default:
-			return nil, fmt.Errorf("%w: found %d IPv4 addresses instead of 1",
+			return netip.Addr{}, fmt.Errorf("%w: found %d IPv4 addresses instead of 1",
 				ErrTooManyIPs, len(ipv4Strings))
 		}
 	case ipversion.IP6:
 		switch len(ipv6Strings) {
 		case 0:
-			return nil, fmt.Errorf("%w: from %q for version %s", ErrNoIPFound, url, version)
+			return netip.Addr{}, fmt.Errorf("%w: from %q for version %s", ErrNoIPFound, url, version)
 		case 1:
 			ipString = ipv6Strings[0]
 		default:
-			return nil, fmt.Errorf("%w: found %d IPv6 addresses instead of 1",
+			return netip.Addr{}, fmt.Errorf("%w: found %d IPv6 addresses instead of 1",
 				ErrTooManyIPs, len(ipv6Strings))
 		}
 	}
 
-	publicIP = net.ParseIP(ipString)
-	if publicIP == nil {
-		return nil, fmt.Errorf("%w: %s", ErrIPMalformed, ipString)
+	publicIP, err = netip.ParseAddr(ipString)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("%w: %w", ErrIPMalformed, err)
 	}
 
 	return publicIP, nil

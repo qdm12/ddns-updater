@@ -1,14 +1,14 @@
 package json
 
 import (
-	"net"
+	"net/netip"
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 )
 
 // StoreNewIP stores a new IP address for a certain domain and host.
-func (db *Database) StoreNewIP(domain, host string, ip net.IP, t time.Time) (err error) {
+func (db *Database) StoreNewIP(domain, host string, ip netip.Addr, t time.Time) (err error) {
 	db.Lock()
 	defer db.Unlock()
 	for i, record := range db.data.Records {

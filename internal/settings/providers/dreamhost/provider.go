@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"regexp"
 
@@ -93,25 +93,25 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 
 	records, err := p.getRecords(ctx, client)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrListRecords, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrListRecords, err)
 	}
 
-	var oldIP net.IP
+	var oldIP netip.Addr
 	for _, data := range records.Data {
 		if data.Type == recordType && data.Record == utils.BuildURLQueryHostname(p.host, p.domain) {
 			if data.Editable == "0" {
-				return nil, fmt.Errorf("%w", errors.ErrRecordNotEditable)
+				return netip.Addr{}, fmt.Errorf("%w", errors.ErrRecordNotEditable)
 			}
-			oldIP = net.ParseIP(data.Value)
-			if ip.Equal(oldIP) { // constants.Success, nothing to change
+			oldIP, err = netip.ParseAddr(data.Value)
+			if err == nil && ip.Compare(oldIP) == 0 { // constants.Success, nothing to change
 				return ip, nil
 			}
 			break
@@ -121,13 +121,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	// Create the record with the new IP before removing the old one if it exists.
 	err = p.createRecord(ctx, client, ip)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
 	}
 
-	if oldIP != nil { // Found editable record with a different IP address, so remove it
+	if oldIP.IsValid() { // Found editable record with a different IP address, so remove it
 		err = p.removeRecord(ctx, client, oldIP)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %w", errors.ErrRemoveRecord, err)
+			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrRemoveRecord, err)
 		}
 	}
 
@@ -203,9 +203,9 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
 	return records, nil
 }
 
-func (p *Provider) removeRecord(ctx context.Context, client *http.Client, ip net.IP) error { //nolint:dupl
+func (p *Provider) removeRecord(ctx context.Context, client *http.Client, ip netip.Addr) error { //nolint:dupl
 	recordType := constants.A
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 
@@ -251,9 +251,9 @@ func (p *Provider) removeRecord(ctx context.Context, client *http.Client, ip net
 	return nil
 }
 
-func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net.IP) error { //nolint:dupl
+func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip netip.Addr) error { //nolint:dupl
 	recordType := constants.A
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 

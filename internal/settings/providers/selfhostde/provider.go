@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"strings"
 
@@ -98,7 +98,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{
 		Scheme: "https",
 		User:   url.UserPassword(p.username, p.password),
@@ -114,13 +114,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
@@ -130,38 +130,38 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	case http.StatusNoContent: // no change
 		return ip, nil
 	case http.StatusUnauthorized:
-		return nil, fmt.Errorf("%w", errors.ErrAuth)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	case http.StatusConflict:
-		return nil, fmt.Errorf("%w", errors.ErrZoneNotFound)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrZoneNotFound)
 	case http.StatusGone:
-		return nil, fmt.Errorf("%w", errors.ErrAccountInactive)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAccountInactive)
 	case http.StatusLengthRequired:
-		return nil, fmt.Errorf("%w: %s", errors.ErrMalformedIPSent, ip)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrMalformedIPSent, ip)
 	case http.StatusPreconditionFailed:
-		return nil, fmt.Errorf("%w: %s", errors.ErrPrivateIPSent, ip)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrPrivateIPSent, ip)
 	case http.StatusServiceUnavailable:
-		return nil, fmt.Errorf("%w", errors.ErrDNSServerSide)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrDNSServerSide)
 	default:
-		return nil, fmt.Errorf("%w: %d: %s",
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
 	switch {
 	case strings.HasPrefix(s, constants.Notfqdn):
-		return nil, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case strings.HasPrefix(s, "abuse"):
-		return nil, fmt.Errorf("%w", errors.ErrAbuse)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAbuse)
 	case strings.HasPrefix(s, "badrequest"):
-		return nil, fmt.Errorf("%w", errors.ErrBadRequest)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBadRequest)
 	case strings.HasPrefix(s, "good"), strings.HasPrefix(s, "nochg"):
 		return ip, nil
 	default:
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
 }

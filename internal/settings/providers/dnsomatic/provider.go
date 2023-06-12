@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"regexp"
 	"strings"
@@ -99,7 +99,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	// Multiple hosts can be updated in one query, see https://www.dnsomatic.com/docs/api
 	u := url.URL{
 		Scheme: "https",
@@ -124,58 +124,59 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s",
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrBadHTTPStatus, response.StatusCode, s)
 	}
 
 	switch s {
 	case constants.Nohost, constants.Notfqdn:
-		return nil, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case constants.Badauth:
-		return nil, fmt.Errorf("%w", errors.ErrAuth)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	case constants.Badagent:
-		return nil, fmt.Errorf("%w", errors.ErrBannedUserAgent)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBannedUserAgent)
 	case constants.Abuse:
-		return nil, fmt.Errorf("%w", errors.ErrAbuse)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAbuse)
 	case "dnserr", constants.Nineoneone:
-		return nil, fmt.Errorf("%w: %s", errors.ErrDNSServerSide, s)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrDNSServerSide, s)
 	}
 
 	if !strings.Contains(s, "nochg") && !strings.Contains(s, "good") {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
 
-	var ips []net.IP
-	if ip.To4() != nil {
+	var ips []netip.Addr
+	if ip.Is4() {
 		ips = utils.FindIPv4Addresses(s)
 	} else {
 		ips = utils.FindIPv6Addresses(s)
 	}
 
 	if len(ips) == 0 {
-		return nil, fmt.Errorf("%w", errors.ErrNoIPInResponse)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrNoIPInResponse)
 	}
 
 	newIP = ips[0]
-	if !p.useProviderIP && !ip.Equal(newIP) {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
+	if !p.useProviderIP && ip.Compare(newIP) != 0 {
+		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
+			errors.ErrIPReceivedMismatch, ip, newIP)
 	}
 	return newIP, nil
 }

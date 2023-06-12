@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"net"
+	"net/netip"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,7 +12,7 @@ func Test_FindIPv4Addresses(t *testing.T) {
 
 	testCases := map[string]struct {
 		text      string
-		addresses []net.IP
+		addresses []netip.Addr
 	}{
 		"empty_string": {},
 		"no_address": {
@@ -20,15 +20,15 @@ func Test_FindIPv4Addresses(t *testing.T) {
 		},
 		"single_address_exact": {
 			text:      "192.168.1.5",
-			addresses: []net.IP{net.IPv4(192, 168, 1, 5)},
+			addresses: []netip.Addr{netip.AddrFrom4([4]byte{192, 168, 1, 5})},
 		},
 		"multiple_in_text": {
 			text:      "sd 192.168.1.5 1.5 1.3.5.4",
-			addresses: []net.IP{net.IPv4(192, 168, 1, 5), net.IPv4(1, 3, 5, 4)},
+			addresses: []netip.Addr{netip.AddrFrom4([4]byte{192, 168, 1, 5}), netip.AddrFrom4([4]byte{1, 3, 5, 4})},
 		},
 		"longer_than_normal_ip": {
 			text:      "0.0.0.0.0",
-			addresses: []net.IP{net.IPv4(0, 0, 0, 0)},
+			addresses: []netip.Addr{netip.AddrFrom4([4]byte{0, 0, 0, 0})},
 		},
 	}
 	for name, testCase := range testCases {
@@ -47,7 +47,7 @@ func Test_FindIPv6Addresses(t *testing.T) {
 
 	testCases := map[string]struct {
 		text      string
-		addresses []net.IP
+		addresses []netip.Addr
 	}{
 		"empty_string": {},
 		"no_address": {
@@ -58,13 +58,13 @@ func Test_FindIPv6Addresses(t *testing.T) {
 		},
 		"single_address_exact": {
 			text:      "::1",
-			addresses: []net.IP{net.ParseIP("::1")},
+			addresses: []netip.Addr{netip.MustParseAddr("::1")},
 		},
 		"multiple_in_text": {
 			text: "2001:0db8:85a3:0000:0000:8a2e:0370:7334 sdas ::1",
-			addresses: []net.IP{
-				net.ParseIP("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
-				net.ParseIP("::1"),
+			addresses: []netip.Addr{
+				netip.MustParseAddr("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
+				netip.MustParseAddr("::1"),
 			},
 		},
 	}

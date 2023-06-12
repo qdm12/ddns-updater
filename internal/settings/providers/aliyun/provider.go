@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	stderrors "errors"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
@@ -96,10 +96,10 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	// Documentation at https://api.aliyun.com/
 	recordType := constants.A
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 
@@ -107,15 +107,15 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	if stderrors.Is(err, errors.ErrRecordNotFound) {
 		recordID, err = p.createRecord(ctx, client, ip)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
+			return newIP, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
 		}
 	} else if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
+		return newIP, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
 	}
 
 	err = p.updateRecord(ctx, client, recordID, ip)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
+		return newIP, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
 	}
 
 	return ip, nil

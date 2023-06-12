@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
@@ -32,7 +32,7 @@ func NewUpdater(db Database, client *http.Client, notify notifyFunc, logger Debu
 	}
 }
 
-func (u *Updater) Update(ctx context.Context, id uint, ip net.IP, now time.Time) (err error) {
+func (u *Updater) Update(ctx context.Context, id uint, ip netip.Addr, now time.Time) (err error) {
 	record, err := u.db.Select(id)
 	if err != nil {
 		return err

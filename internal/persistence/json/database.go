@@ -96,7 +96,7 @@ func checkData(data dataModel) error {
 			}
 			t = event.Time
 			switch {
-			case event.IP == nil:
+			case !event.IP.IsValid():
 				return fmt.Errorf("%w: IP %d of %d for record %s",
 					ErrIPEmpty, i+1, len(record.Events), record)
 			case event.Time.IsZero():

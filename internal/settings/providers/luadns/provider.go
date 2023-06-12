@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -99,22 +99,22 @@ func (p *Provider) setHeaders(request *http.Request) {
 }
 
 // Using https://www.luadns.com/api.html
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	zoneID, err := p.getZoneID(ctx, client)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrGetZoneID, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrGetZoneID, err)
 	}
 
 	record, err := p.getRecord(ctx, client, zoneID, ip)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrGetRecordInZone, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrGetRecordInZone, err)
 	}
 
 	newRecord := record
 	newRecord.Content = ip.String()
 	err = p.updateRecord(ctx, client, zoneID, newRecord)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
 	}
 	return ip, nil
 }
@@ -184,7 +184,7 @@ func (p *Provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 	return 0, fmt.Errorf("%w", errors.ErrZoneNotFound)
 }
 
-func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID int, ip net.IP) (
+func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID int, ip netip.Addr) (
 	record luaDNSRecord, err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -226,7 +226,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 		return record, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 	recordType := constants.A
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 	recordName := utils.BuildURLQueryHostname(p.host, p.domain) + "."
@@ -288,7 +288,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	}
 
 	if updatedRecord.Content != newRecord.Content {
-		return fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, updatedRecord.Content)
+		return fmt.Errorf("%w: sent ip %s to update but received %s",
+			errors.ErrIPReceivedMismatch, newRecord.Content, updatedRecord.Content)
 	}
 	return nil
 }

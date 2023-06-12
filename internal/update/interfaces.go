@@ -3,19 +3,20 @@ package update
 import (
 	"context"
 	"net"
+	"net/netip"
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
 type PublicIPFetcher interface {
-	IP(ctx context.Context) (net.IP, error)
-	IP4(ctx context.Context) (net.IP, error)
-	IP6(ctx context.Context) (net.IP, error)
+	IP(ctx context.Context) (netip.Addr, error)
+	IP4(ctx context.Context) (netip.Addr, error)
+	IP6(ctx context.Context) (netip.Addr, error)
 }
 
 type UpdaterInterface interface {
-	Update(ctx context.Context, recordID uint, ip net.IP, now time.Time) (err error)
+	Update(ctx context.Context, recordID uint, ip netip.Addr, now time.Time) (err error)
 }
 
 type Database interface {

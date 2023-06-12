@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
@@ -14,9 +14,9 @@ import (
 )
 
 func (p *Provider) createRecord(ctx context.Context,
-	client *http.Client, ip net.IP) (recordID string, err error) {
+	client *http.Client, ip netip.Addr) (recordID string, err error) {
 	recordType := constants.A
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 

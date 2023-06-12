@@ -7,8 +7,8 @@ import (
 	goerrors "errors"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"strconv"
 
@@ -90,14 +90,14 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 // Using https://www.linode.com/docs/api/domains/
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	domainID, err := p.getDomainID(ctx, client)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrGetDomainID, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrGetDomainID, err)
 	}
 
 	recordType := constants.A
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 
@@ -105,16 +105,16 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	if goerrors.Is(err, errors.ErrNotFound) {
 		err := p.createRecord(ctx, client, domainID, recordType, ip)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
+			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
 		}
 		return ip, nil
 	} else if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
 	}
 
 	err = p.updateRecord(ctx, client, domainID, recordID, ip)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
 	}
 
 	return ip, nil
@@ -242,7 +242,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 }
 
 func (p *Provider) createRecord(ctx context.Context, client *http.Client,
-	domainID int, recordType string, ip net.IP) (err error) {
+	domainID int, recordType string, ip netip.Addr) (err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.linode.com",
@@ -292,18 +292,19 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
-	newIP := net.ParseIP(responseData.IP)
-	if newIP == nil {
-		return fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, responseData.IP)
-	} else if !newIP.Equal(ip) {
-		return fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
+	newIP, err := netip.ParseAddr(responseData.IP)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+	} else if newIP.Compare(ip) != 0 {
+		return fmt.Errorf("%w: sent ip %s to update but received %s",
+			errors.ErrIPReceivedMismatch, ip, newIP)
 	}
 
 	return nil
 }
 
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
-	domainID, recordID int, ip net.IP) (err error) {
+	domainID, recordID int, ip netip.Addr) (err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.linode.com",
@@ -347,11 +348,12 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
-	newIP := net.ParseIP(data.IP)
-	if newIP == nil {
-		return fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, data.IP)
-	} else if !newIP.Equal(ip) {
-		return fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
+	newIP, err := netip.ParseAddr(data.IP)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+	} else if newIP.Compare(ip) != 0 {
+		return fmt.Errorf("%w: sent ip %s to update but received %s",
+			errors.ErrIPReceivedMismatch, ip, newIP)
 	}
 
 	return nil

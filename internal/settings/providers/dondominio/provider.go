@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"strings"
 
@@ -108,7 +108,7 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetAccept(request, "application/json")
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "simple-api.dondominio.net",
@@ -118,7 +118,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	values.Set("apipasswd", p.password)
 	values.Set("domain", p.domain)
 	values.Set("name", p.name)
-	isIPv4 := ip.To4() != nil
+	isIPv4 := ip.Is4()
 	if isIPv4 {
 		values.Set("ipv4", ip.String())
 	} else {
@@ -129,18 +129,18 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s",
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
@@ -158,22 +158,23 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 	err = decoder.Decode(&responseData)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if !responseData.Success {
-		return nil, fmt.Errorf("%w: %s (error code %d)",
+		return netip.Addr{}, fmt.Errorf("%w: %s (error code %d)",
 			errors.ErrUnsuccessfulResponse, responseData.ErrorCodeMessage, responseData.ErrorCode)
 	}
 	ipString := responseData.ResponseData.GlueRecords[0].IPv4
 	if !isIPv4 {
 		ipString = responseData.ResponseData.GlueRecords[0].IPv6
 	}
-	newIP = net.ParseIP(ipString)
-	if newIP == nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, ipString)
-	} else if !ip.Equal(newIP) {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
+	newIP, err = netip.ParseAddr(ipString)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+	} else if ip.Compare(newIP) != 0 {
+		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
+			errors.ErrIPReceivedMismatch, ip, newIP)
 	}
 	return newIP, nil
 }

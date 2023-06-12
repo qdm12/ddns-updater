@@ -2,16 +2,16 @@ package update
 
 import (
 	"context"
-	"net"
+	"net/netip"
 	"strconv"
 
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-type getIPFunc func(ctx context.Context) (ip net.IP, err error)
+type getIPFunc func(ctx context.Context) (ip netip.Addr, err error)
 
 func tryAndRepeatGettingIP(ctx context.Context, getIPFunc getIPFunc,
-	logger Logger, version ipversion.IPVersion) (ip net.IP, err error) {
+	logger Logger, version ipversion.IPVersion) (ip netip.Addr, err error) {
 	const tries = 3
 	logMessagePrefix := "obtaining " + version.String() + " address"
 	for try := 0; try < tries; try++ {

@@ -3,16 +3,16 @@ package publicip
 import (
 	"context"
 	"errors"
-	"net"
+	"net/netip"
 
 	"github.com/qdm12/ddns-updater/pkg/publicip/dns"
 	"github.com/qdm12/ddns-updater/pkg/publicip/http"
 )
 
 type ipFetcher interface {
-	IP(ctx context.Context) (ip net.IP, err error)
-	IP4(ctx context.Context) (ipv4 net.IP, err error)
-	IP6(ctx context.Context) (ipv6 net.IP, err error)
+	IP(ctx context.Context) (ip netip.Addr, err error)
+	IP4(ctx context.Context) (ipv4 netip.Addr, err error)
+	IP6(ctx context.Context) (ipv6 netip.Addr, err error)
 }
 
 type Fetcher struct {
@@ -58,14 +58,14 @@ func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f *Fetcher,
 	return fetcher, nil
 }
 
-func (f *Fetcher) IP(ctx context.Context) (ip net.IP, err error) {
+func (f *Fetcher) IP(ctx context.Context) (ip netip.Addr, err error) {
 	return f.getSubFetcher().IP(ctx)
 }
 
-func (f *Fetcher) IP4(ctx context.Context) (ipv4 net.IP, err error) {
+func (f *Fetcher) IP4(ctx context.Context) (ipv4 netip.Addr, err error) {
 	return f.getSubFetcher().IP4(ctx)
 }
 
-func (f *Fetcher) IP6(ctx context.Context) (ipv6 net.IP, err error) {
+func (f *Fetcher) IP6(ctx context.Context) (ipv6 netip.Addr, err error) {
 	return f.getSubFetcher().IP6(ctx)
 }

@@ -3,8 +3,8 @@ package aliyun
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/settings/constants"
@@ -13,9 +13,9 @@ import (
 )
 
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
-	recordID string, ip net.IP) (err error) {
+	recordID string, ip netip.Addr) (err error) {
 	recordType := constants.A
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 

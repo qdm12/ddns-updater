@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/netip"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
@@ -30,23 +31,35 @@ func isHealthy(db AllSelecter, resolver LookupIPer) (err error) {
 		} else if record.Settings.Proxied() {
 			continue
 		}
+
 		hostname := record.Settings.BuildDomainName()
-		lookedUpIPs, err := resolver.LookupIP(context.Background(), "ip", hostname)
+
+		currentIP := record.History.GetCurrentIP()
+		if !currentIP.IsValid() {
+			return fmt.Errorf("%w: for hostname %s", ErrRecordIPNotSet, hostname)
+		}
+
+		lookedUpNetIPs, err := resolver.LookupIP(context.Background(), "ip", hostname)
 		if err != nil {
 			return err
 		}
-		currentIP := record.History.GetCurrentIP()
-		if currentIP == nil {
-			return fmt.Errorf("%w: for hostname %s", ErrRecordIPNotSet, hostname)
-		}
+
 		found := false
-		lookedUpIPsString := make([]string, len(lookedUpIPs))
-		for i, lookedUpIP := range lookedUpIPs {
-			lookedUpIPsString[i] = lookedUpIP.String()
-			if lookedUpIP.Equal(currentIP) {
+		lookedUpIPsString := make([]string, len(lookedUpNetIPs))
+		for i, netIP := range lookedUpNetIPs {
+			var ip netip.Addr
+			switch {
+			case netIP == nil:
+			case netIP.To4() != nil:
+				ip = netip.AddrFrom4([4]byte(netIP.To4()))
+			default: // IPv6
+				ip = netip.AddrFrom16([16]byte(netIP.To16()))
+			}
+			if ip.Compare(currentIP) == 0 {
 				found = true
 				break
 			}
+			lookedUpIPsString[i] = ip.String()
 		}
 		if !found {
 			return fmt.Errorf("%w: %s instead of %s for %s",

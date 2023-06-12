@@ -3,7 +3,7 @@ package dns
 import (
 	"context"
 	"errors"
-	"net"
+	"net/netip"
 	"testing"
 	"time"
 
@@ -39,7 +39,7 @@ func Test_fetch(t *testing.T) {
 	testCases := map[string]struct {
 		response    *dns.Msg
 		exchangeErr error
-		publicIP    net.IP
+		publicIP    netip.Addr
 		err         error
 	}{
 		"success": {
@@ -50,7 +50,7 @@ func Test_fetch(t *testing.T) {
 					},
 				},
 			},
-			publicIP: net.IP{55, 55, 55, 55},
+			publicIP: netip.AddrFrom4([4]byte{55, 55, 55, 55}),
 		},
 		"exchange error": {
 			exchangeErr: errors.New("dummy"),
@@ -92,7 +92,7 @@ func Test_fetch(t *testing.T) {
 					Txt: []string{"invalid"},
 				}},
 			},
-			err: errors.New(`IP address malformed: "invalid"`),
+			err: errors.New(`IP address malformed: ParseAddr("invalid"): unable to parse IP`),
 		},
 	}
 
@@ -118,7 +118,7 @@ func Test_fetch(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			if !testCase.publicIP.Equal(publicIP) {
+			if testCase.publicIP.Compare(publicIP) != 0 {
 				t.Errorf("IP address mismatch: expected %s and got %s", testCase.publicIP, publicIP)
 			}
 		})

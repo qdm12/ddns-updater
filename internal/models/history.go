@@ -2,7 +2,7 @@ package models
 
 import (
 	"fmt"
-	"net"
+	"net/netip"
 	"strings"
 	"time"
 )
@@ -12,17 +12,17 @@ import (
 type History []HistoryEvent // current and previous ips
 
 type HistoryEvent struct { // current and previous ips
-	IP   net.IP    `json:"ip"`
-	Time time.Time `json:"time"`
+	IP   netip.Addr `json:"ip"`
+	Time time.Time  `json:"time"`
 }
 
 // GetPreviousIPs returns an antichronological list of previous
 // IP addresses if there is any.
-func (h History) GetPreviousIPs() []net.IP {
+func (h History) GetPreviousIPs() []netip.Addr {
 	if len(h) <= 1 {
 		return nil
 	}
-	IPs := make([]net.IP, len(h)-1)
+	IPs := make([]netip.Addr, len(h)-1)
 	const two = 2
 	for i := len(h) - two; i >= 0; i-- {
 		IPs[i] = h[i].IP
@@ -31,9 +31,9 @@ func (h History) GetPreviousIPs() []net.IP {
 }
 
 // GetCurrentIP returns the current IP address (latest in history).
-func (h History) GetCurrentIP() net.IP {
+func (h History) GetCurrentIP() netip.Addr {
 	if len(h) < 1 {
-		return nil
+		return netip.Addr{}
 	}
 	return h[len(h)-1].IP
 }
@@ -66,7 +66,7 @@ func (h History) GetDurationSinceSuccess(now time.Time) string {
 
 func (h History) String() (s string) {
 	currentIP := h.GetCurrentIP()
-	if currentIP == nil {
+	if !currentIP.IsValid() {
 		return ""
 	}
 	successTime := h[len(h)-1].Time

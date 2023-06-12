@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"testing"
 	"time"
 
@@ -19,7 +19,7 @@ func Test_fetcher_IP(t *testing.T) {
 	ctx := context.Background()
 	const url = "c"
 	httpBytes := []byte(`55.55.55.55`)
-	expectedPublicIP := net.IP{55, 55, 55, 55}
+	expectedPublicIP := netip.AddrFrom4([4]byte{55, 55, 55, 55})
 
 	client := &http.Client{
 		Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
@@ -51,7 +51,7 @@ func Test_fetcher_IP(t *testing.T) {
 	publicIP, err := initialFetcher.IP(ctx)
 
 	assert.NoError(t, err)
-	if !expectedPublicIP.Equal(publicIP) {
+	if expectedPublicIP.Compare(publicIP) != 0 {
 		t.Errorf("IP address mismatch: expected %s and got %s", expectedPublicIP, publicIP)
 	}
 	assert.Equal(t, expectedFetcher, initialFetcher)
@@ -63,7 +63,7 @@ func Test_fetcher_IP4(t *testing.T) {
 	ctx := context.Background()
 	const url = "c"
 	httpBytes := []byte(`55.55.55.55`)
-	expectedPublicIP := net.IP{55, 55, 55, 55}
+	expectedPublicIP := netip.AddrFrom4([4]byte{55, 55, 55, 55})
 
 	client := &http.Client{
 		Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
@@ -95,7 +95,7 @@ func Test_fetcher_IP4(t *testing.T) {
 	publicIP, err := initialFetcher.IP4(ctx)
 
 	assert.NoError(t, err)
-	if !expectedPublicIP.Equal(publicIP) {
+	if expectedPublicIP.Compare(publicIP) != 0 {
 		t.Errorf("IP address mismatch: expected %s and got %s", expectedPublicIP, publicIP)
 	}
 	assert.Equal(t, expectedFetcher, initialFetcher)
@@ -107,10 +107,9 @@ func Test_fetcher_IP6(t *testing.T) {
 	ctx := context.Background()
 	const url = "c"
 	httpBytes := []byte(`::1`)
-	expectedPublicIP := net.IP{
-		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1,
-	}
+	expectedPublicIP := netip.AddrFrom16([16]byte{
+		0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 1})
 
 	client := &http.Client{
 		Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
@@ -142,7 +141,7 @@ func Test_fetcher_IP6(t *testing.T) {
 	publicIP, err := initialFetcher.IP6(ctx)
 
 	assert.NoError(t, err)
-	if !expectedPublicIP.Equal(publicIP) {
+	if expectedPublicIP.Compare(publicIP) != 0 {
 		t.Errorf("IP address mismatch: expected %s and got %s", expectedPublicIP, publicIP)
 	}
 	assert.Equal(t, expectedFetcher, initialFetcher)
@@ -176,7 +175,7 @@ func Test_fetcher_ip(t *testing.T) {
 	testCases := map[string]struct {
 		initialFetcher *Fetcher
 		ctx            context.Context
-		publicIP       net.IP
+		publicIP       netip.Addr
 		err            error
 		errMessage     string
 		finalFetcher   *Fetcher // client is ignored when comparing the two
@@ -191,7 +190,7 @@ func Test_fetcher_ip(t *testing.T) {
 					urls:  []string{"a", "b"},
 				},
 			},
-			publicIP: net.IP{55, 55, 55, 55},
+			publicIP: netip.AddrFrom4([4]byte{55, 55, 55, 55}),
 			finalFetcher: &Fetcher{
 				timeout: time.Hour,
 				ip4or6: &urlsRing{
@@ -210,7 +209,7 @@ func Test_fetcher_ip(t *testing.T) {
 					urls:  []string{"a", "b"},
 				},
 			},
-			publicIP: net.IP{55, 55, 55, 55},
+			publicIP: netip.AddrFrom4([4]byte{55, 55, 55, 55}),
 			finalFetcher: &Fetcher{
 				timeout: time.Hour,
 				ip4or6: &urlsRing{
@@ -276,7 +275,7 @@ func Test_fetcher_ip(t *testing.T) {
 					banned: map[int]string{1: "banned"},
 				},
 			},
-			publicIP: net.IP{55, 55, 55, 55},
+			publicIP: netip.AddrFrom4([4]byte{55, 55, 55, 55}),
 		},
 		"all banned": {
 			ctx: context.Background(),
@@ -335,7 +334,7 @@ func Test_fetcher_ip(t *testing.T) {
 				assert.EqualError(t, err, testCase.errMessage)
 			}
 
-			if !testCase.publicIP.Equal(publicIP) {
+			if testCase.publicIP.Compare(publicIP) != 0 {
 				t.Errorf("IP address mismatch: expected %s and got %s", testCase.publicIP, publicIP)
 			}
 

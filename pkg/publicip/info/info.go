@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"net"
 	"net/http"
+	"net/netip"
 	"sync"
 )
 
@@ -47,7 +47,7 @@ func New(client *http.Client, options ...Option) (info *Info, err error) {
 // Get finds IP information for the given IP address using one of
 // the ip data provider picked at random. A `nil` IP address can be
 // given to signal to fetch information on the current public IP address.
-func (i *Info) Get(ctx context.Context, ip net.IP) (result Result, err error) {
+func (i *Info) Get(ctx context.Context, ip netip.Addr) (result Result, err error) {
 	if len(i.providers) == 1 {
 		return i.providers[0].get(ctx, ip)
 	}
@@ -80,7 +80,7 @@ func (i *Info) Get(ctx context.Context, ip net.IP) (result Result, err error) {
 // GetMultiple finds IP information for the given IP addresses, each using
 // one of the ip data provider picked at random. It returns a slice of results
 // matching the order of the IP addresses given as argument.
-func (i *Info) GetMultiple(ctx context.Context, ips []net.IP) (results []Result, err error) {
+func (i *Info) GetMultiple(ctx context.Context, ips []netip.Addr) (results []Result, err error) {
 	type resultWithError struct {
 		index  int
 		result Result
@@ -92,7 +92,7 @@ func (i *Info) GetMultiple(ctx context.Context, ips []net.IP) (results []Result,
 	channel := make(chan resultWithError)
 
 	for index, ip := range ips {
-		go func(ctx context.Context, index int, ip net.IP) {
+		go func(ctx context.Context, index int, ip netip.Addr) {
 			result := resultWithError{
 				index: index,
 			}

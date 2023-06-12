@@ -28,7 +28,7 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 			time.Since(r.Time).Round(time.Second).String()+" ago"))
 	}
 	currentIP := r.History.GetCurrentIP()
-	if currentIP != nil {
+	if currentIP.IsValid() {
 		row.CurrentIP = models.HTML(`<a href="https://ipinfo.io/"` + currentIP.String() + `\>` + currentIP.String() + "</a>")
 	} else {
 		row.CurrentIP = NotAvailable

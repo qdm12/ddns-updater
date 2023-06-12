@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -96,14 +96,10 @@ func (p *Provider) setHeaders(request *http.Request) {
 	request.Header.Set("X-Api-Key", p.key)
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A
-	var ipStr string
-	if ip.To4() == nil { // IPv6
+	if ip.Is6() {
 		recordType = constants.AAAA
-		ipStr = ip.To16().String()
-	} else {
-		ipStr = ip.To4().String()
 	}
 
 	u := url.URL{
@@ -123,28 +119,28 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		Values [1]string `json:"rrset_values"`
 		TTL    int       `json:"rrset_ttl"`
 	}{
-		Values: [1]string{ipStr},
+		Values: [1]string{ip.Unmap().String()},
 		TTL:    ttl,
 	}
 	err = encoder.Encode(requestData)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("%w: %d: %s",
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 

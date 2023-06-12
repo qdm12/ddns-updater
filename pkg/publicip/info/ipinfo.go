@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 )
 
 func newIpinfo(client *http.Client) *ipinfo {
@@ -18,12 +18,12 @@ type ipinfo struct {
 	client *http.Client
 }
 
-func (p *ipinfo) get(ctx context.Context, ip net.IP) (
+func (p *ipinfo) get(ctx context.Context, ip netip.Addr) (
 	result Result, err error) {
 	result.Source = string(Ipinfo)
 
 	url := "https://ipinfo.io/"
-	if ip != nil {
+	if ip.IsValid() {
 		url += ip.String()
 	}
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -51,10 +51,10 @@ func (p *ipinfo) get(ctx context.Context, ip net.IP) (
 
 	decoder := json.NewDecoder(response.Body)
 	var data struct {
-		IP      net.IP `json:"ip"`
-		Region  string `json:"region"`
-		Country string `json:"country"`
-		City    string `json:"city"`
+		IP      netip.Addr `json:"ip"`
+		Region  string     `json:"region"`
+		Country string     `json:"country"`
+		City    string     `json:"city"`
 	}
 	err = decoder.Decode(&data)
 	if err != nil {

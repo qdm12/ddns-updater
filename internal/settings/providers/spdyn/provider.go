@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"strings"
 
@@ -104,7 +104,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	// see https://wiki.securepoint.de/SPDyn/Variablen
 	u := url.URL{
 		Scheme: "https",
@@ -130,42 +130,42 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 	bodyString := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s",
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.ToSingleLine(bodyString))
 	}
 
 	switch {
 	case isAny(bodyString, constants.Abuse, "numhost"):
-		return nil, fmt.Errorf("%w", errors.ErrAbuse)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAbuse)
 	case isAny(bodyString, constants.Badauth, "!yours"):
-		return nil, fmt.Errorf("%w", errors.ErrAuth)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	case strings.HasPrefix(bodyString, "good"):
 		return ip, nil
 	case bodyString == constants.Notfqdn:
-		return nil, fmt.Errorf("%w: not fqdn", errors.ErrBadRequest)
+		return netip.Addr{}, fmt.Errorf("%w: not fqdn", errors.ErrBadRequest)
 	case strings.HasPrefix(bodyString, "nochg"):
 		return ip, nil
 	case isAny(bodyString, "nohost", "fatal"):
-		return nil, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	default:
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, bodyString)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, bodyString)
 	}
 }
 

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"strings"
 
@@ -98,7 +98,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "infomaniak.com",
@@ -114,19 +114,19 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
@@ -134,34 +134,36 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	case http.StatusOK:
 		switch {
 		case strings.HasPrefix(s, "good "):
-			newIP = net.ParseIP(s[5:])
-			if newIP == nil {
-				return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, s)
-			} else if !p.useProviderIP && !ip.Equal(newIP) {
-				return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP)
+			newIP, err = netip.ParseAddr(s[5:])
+			if err != nil {
+				return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+			} else if !p.useProviderIP && ip.Compare(newIP) != 0 {
+				return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
+					errors.ErrIPReceivedMismatch, ip, newIP)
 			}
 			return newIP, nil
 		case strings.HasPrefix(s, "nochg "):
-			newIP = net.ParseIP(s[6:])
-			if newIP == nil {
-				return nil, fmt.Errorf("%w: in response %q", errors.ErrNoResultReceived, s)
-			} else if !p.useProviderIP && !ip.Equal(newIP) {
-				return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP)
+			newIP, err = netip.ParseAddr(s[6:])
+			if err != nil {
+				return netip.Addr{}, fmt.Errorf("%w: in response %q", errors.ErrNoResultReceived, s)
+			} else if !p.useProviderIP && ip.Compare(newIP) != 0 {
+				return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
+					errors.ErrIPReceivedMismatch, ip, newIP)
 			}
 			return newIP, nil
 		default:
-			return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+			return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 		}
 	case http.StatusBadRequest:
 		switch s {
 		case constants.Nohost:
-			return nil, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+			return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 		case constants.Badauth:
-			return nil, fmt.Errorf("%w", errors.ErrAuth)
+			return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 		default:
-			return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
+			return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
 		}
 	default:
-		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
 	}
 }

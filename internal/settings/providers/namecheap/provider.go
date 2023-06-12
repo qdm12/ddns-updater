@@ -6,8 +6,8 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"regexp"
 
@@ -101,7 +101,7 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetAccept(request, "application/xml")
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dynamicdns.park-your-domain.com",
@@ -118,18 +118,18 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s",
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
@@ -146,11 +146,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 	err = decoder.Decode(&parsedXML)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if parsedXML.Errors.Error != "" {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, parsedXML.Errors.Error)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, parsedXML.Errors.Error)
 	}
 
 	if parsedXML.IP == "" {
@@ -159,12 +159,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		return newIP, nil
 	}
 
-	newIP = net.ParseIP(parsedXML.IP)
-	if newIP == nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, parsedXML.IP)
-	}
-	if !p.useProviderIP && !ip.Equal(newIP) {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
+	newIP, err = netip.ParseAddr(parsedXML.IP)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+	} else if !p.useProviderIP && ip.Compare(newIP) != 0 {
+		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
+			errors.ErrIPReceivedMismatch, ip, newIP)
 	}
 	return newIP, nil
 }

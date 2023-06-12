@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
+	"net/netip"
 
 	"github.com/miekg/dns"
 )
@@ -18,7 +18,7 @@ var (
 )
 
 func fetch(ctx context.Context, client Client, providerData providerData) (
-	publicIP net.IP, err error) {
+	publicIP netip.Addr, err error) {
 	message := &dns.Msg{
 		MsgHdr: dns.MsgHdr{
 			Opcode: dns.OpcodeQuery,
@@ -34,34 +34,34 @@ func fetch(ctx context.Context, client Client, providerData providerData) (
 
 	r, _, err := client.ExchangeContext(ctx, message, providerData.nameserver)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 
 	L := len(r.Answer)
 	if L == 0 {
-		return nil, ErrNoTXTRecordFound
+		return netip.Addr{}, fmt.Errorf("%w", ErrNoTXTRecordFound)
 	} else if L > 1 {
-		return nil, fmt.Errorf("%w: %d instead of 1", ErrTooManyAnswers, L)
+		return netip.Addr{}, fmt.Errorf("%w: %d instead of 1", ErrTooManyAnswers, L)
 	}
 
 	answer := r.Answer[0]
 	txt, ok := answer.(*dns.TXT)
 	if !ok {
-		return nil, fmt.Errorf("%w: %T instead of *dns.TXT",
+		return netip.Addr{}, fmt.Errorf("%w: %T instead of *dns.TXT",
 			ErrInvalidAnswerType, answer)
 	}
 
 	L = len(txt.Txt)
 	if L == 0 {
-		return nil, ErrNoTXTRecordFound
+		return netip.Addr{}, fmt.Errorf("%w", ErrNoTXTRecordFound)
 	} else if L > 1 {
-		return nil, fmt.Errorf("%w: %d instead of 1", ErrTooManyTXTRecords, L)
+		return netip.Addr{}, fmt.Errorf("%w: %d instead of 1", ErrTooManyTXTRecords, L)
 	}
 	ipString := txt.Txt[0]
 
-	publicIP = net.ParseIP(ipString)
-	if publicIP == nil {
-		return nil, fmt.Errorf("%w: %q", ErrIPMalformed, ipString)
+	publicIP, err = netip.ParseAddr(ipString)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("%w: %w", ErrIPMalformed, err)
 	}
 
 	return publicIP, nil

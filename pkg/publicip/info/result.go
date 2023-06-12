@@ -1,9 +1,9 @@
 package info
 
-import "net"
+import "net/netip"
 
 type Result struct {
-	IP      net.IP
+	IP      netip.Addr
 	Country *string
 	Region  *string
 	City    *string

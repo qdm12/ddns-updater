@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -93,9 +93,9 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 	u := url.URL{
@@ -116,18 +116,18 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s",
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
@@ -143,14 +143,14 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 	err = decoder.Decode(&recordResp)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	var recordID, recordLine string
 	for _, record := range recordResp.Records {
 		if record.Type == recordType && record.Name == p.host {
-			receivedIP := net.ParseIP(record.Value)
-			if ip.Equal(receivedIP) {
+			receivedIP, err := netip.ParseAddr(record.Value)
+			if err == nil && ip.Compare(receivedIP) == 0 {
 				return ip, nil
 			}
 			recordID = record.ID
@@ -159,7 +159,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		}
 	}
 	if recordID == "" {
-		return nil, fmt.Errorf("%w", errors.ErrNotFound)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrNotFound)
 	}
 
 	u.Path = "/Record.Ddns"
@@ -176,24 +176,24 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	request, err = http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	p.setHeaders(request)
 
 	response, err = client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s",
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("reading response body: %w", err)
+		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 
 	var ddnsResp struct {
@@ -205,15 +205,16 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 	err = json.Unmarshal(data, &ddnsResp)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	ipStr := ddnsResp.Record.Value
-	receivedIP := net.ParseIP(ipStr)
-	if receivedIP == nil {
-		return nil, fmt.Errorf("%w: %s from JSON data: %s", errors.ErrIPReceivedMalformed, ipStr, data)
-	} else if !ip.Equal(receivedIP) {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, receivedIP.String())
+	receivedIP, err := netip.ParseAddr(ipStr)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+	} else if ip.Compare(receivedIP) != 0 {
+		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
+			errors.ErrIPReceivedMismatch, ip, newIP)
 	}
 	return ip, nil
 }

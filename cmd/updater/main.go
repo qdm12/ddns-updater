@@ -243,7 +243,7 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 
 	updater := update.NewUpdater(db, client, notify, logger)
 	runner := update.NewRunner(db, updater, ipGetter, config.Update.Period,
-		config.IPv6.Mask, config.Update.Cooldown, logger, resolver, timeNow)
+		config.IPv6.MaskBits, config.Update.Cooldown, logger, resolver, timeNow)
 
 	runnerHandler, runnerCtx, runnerDone := goshutdown.NewGoRoutineHandler("runner")
 	go runner.Run(runnerCtx, runnerDone)

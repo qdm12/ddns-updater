@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"strings"
 
@@ -104,9 +104,9 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 	u := url.URL{
@@ -136,12 +136,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	encoder := json.NewEncoder(buffer)
 	err = encoder.Encode(requestData)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	headers.SetContentType(request, "application/json")
 	headers.SetXAuthUsername(request, p.username)
@@ -150,12 +150,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode > http.StatusUnsupportedMediaType {
-		return nil, fmt.Errorf("%w: %d: %s",
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
@@ -168,11 +168,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	err = decoder.Decode(&parsedJSON)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if parsedJSON.Message != "ok" {
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, parsedJSON.Error)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, parsedJSON.Error)
 	}
 
 	return ip, nil

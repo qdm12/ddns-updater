@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 )
 
 type Provider string
@@ -32,7 +32,7 @@ func ValidateProvider(provider Provider) error {
 }
 
 type provider interface {
-	get(ctx context.Context, ip net.IP) (result Result, err error)
+	get(ctx context.Context, ip netip.Addr) (result Result, err error)
 }
 
 func newProvider(providerName Provider, client *http.Client) provider { //nolint:ireturn

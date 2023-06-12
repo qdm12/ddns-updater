@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	stderrors "errors"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"regexp"
 	"strings"
@@ -146,10 +146,10 @@ func (p *Provider) setHeaders(request *http.Request) {
 
 // Obtain domain ID.
 // See https://api.cloudflare.com/#dns-records-for-a-zone-list-dns-records.
-func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP net.IP) (
+func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP netip.Addr) (
 	identifier string, upToDate bool, err error) {
 	recordType := constants.A
-	if newIP.To4() == nil {
+	if newIP.Is6() {
 		recordType = constants.AAAA
 	}
 
@@ -214,10 +214,10 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 	return listRecordsResponse.Result[0].ID, false, nil
 }
 
-func (p *Provider) CreateRecord(ctx context.Context, client *http.Client, ip net.IP) (recordID string, err error) {
+func (p *Provider) CreateRecord(ctx context.Context, client *http.Client, ip netip.Addr) (recordID string, err error) {
 	recordType := constants.A
 
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 
@@ -294,9 +294,9 @@ func (p *Provider) CreateRecord(ctx context.Context, client *http.Client, ip net
 	return parsedJSON.Result.ID, nil
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 
@@ -306,10 +306,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	case stderrors.Is(err, errors.ErrNoResultReceived):
 		identifier, err = p.CreateRecord(ctx, client, ip)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
+			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
 		}
 	case err != nil:
-		return nil, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
 	case upToDate:
 		return ip, nil
 	}
@@ -338,24 +338,24 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	encoder := json.NewEncoder(buffer)
 	err = encoder.Encode(requestData)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 
 	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode > http.StatusUnsupportedMediaType {
-		return nil, fmt.Errorf("%w: %d: %s",
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
@@ -372,7 +372,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 	err = decoder.Decode(&parsedJSON)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	if !parsedJSON.Success {
@@ -380,14 +380,15 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		for _, e := range parsedJSON.Errors {
 			errStr += fmt.Sprintf("error %d: %s; ", e.Code, e.Message)
 		}
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, errStr)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, errStr)
 	}
 
-	newIP = net.ParseIP(parsedJSON.Result.Content)
-	if newIP == nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, parsedJSON.Result.Content)
-	} else if !newIP.Equal(ip) {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP.String())
+	newIP, err = netip.ParseAddr(parsedJSON.Result.Content)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+	} else if newIP.Compare(ip) != 0 {
+		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
+			errors.ErrIPReceivedMismatch, ip, newIP)
 	}
 	return newIP, nil
 }

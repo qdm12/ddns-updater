@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -257,20 +257,20 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	return nil
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A
-	if ip.To4() == nil { // IPv6
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 	ipStr := ip.String()
 	recordIDs, err := p.getRecordIDs(ctx, client, recordType)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	if len(recordIDs) == 0 {
 		err = p.createRecord(ctx, client, recordType, ipStr)
 		if err != nil {
-			return nil, err
+			return netip.Addr{}, err
 		}
 		return ip, nil
 	}
@@ -278,7 +278,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	for _, recordID := range recordIDs {
 		err = p.updateRecord(ctx, client, recordType, ipStr, recordID)
 		if err != nil {
-			return nil, err
+			return netip.Addr{}, err
 		}
 	}
 

@@ -1,8 +1,7 @@
 package utils
 
 import (
-	"fmt"
-	"net"
+	"net/netip"
 	"regexp"
 )
 
@@ -16,29 +15,26 @@ func MatchEmail(email string) bool {
 	return regexEmail.MatchString(email)
 }
 
-func FindIPv4Addresses(text string) (addresses []net.IP) {
+func FindIPv4Addresses(text string) (addresses []netip.Addr) {
 	const n = -1
 	ipv4Strings := regexIPv4.FindAllString(text, n)
 	return mustParseIPAddresses(ipv4Strings)
 }
 
-func FindIPv6Addresses(text string) (addresses []net.IP) {
+func FindIPv6Addresses(text string) (addresses []netip.Addr) {
 	const n = -1
 	ipv6Strings := regexIPv6.FindAllString(text, n)
 	return mustParseIPAddresses(ipv6Strings)
 }
 
-func mustParseIPAddresses(ipStrings []string) (addresses []net.IP) {
+func mustParseIPAddresses(ipStrings []string) (addresses []netip.Addr) {
 	if len(ipStrings) == 0 {
 		return nil
 	}
 
-	addresses = make([]net.IP, len(ipStrings))
+	addresses = make([]netip.Addr, len(ipStrings))
 	for i, ipString := range ipStrings {
-		addresses[i] = net.ParseIP(ipString)
-		if addresses[i] == nil {
-			panic(fmt.Sprintf("invalid IP address: %q", ipString))
-		}
+		addresses[i] = netip.MustParseAddr(ipString)
 	}
 
 	return addresses

@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"regexp"
 
@@ -103,9 +103,9 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetAccept(request, "application/json")
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A
-	if ip.To4() == nil {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 	type goDaddyPutBody struct {
@@ -124,18 +124,18 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 	err = encoder.Encode(requestData)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
@@ -145,7 +145,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 
 	err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
@@ -154,7 +154,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 	}
 	jsonErr := json.Unmarshal(b, &parsedJSON)
 	if jsonErr != nil || parsedJSON.Message == "" {
-		return nil, fmt.Errorf("%w: %s", err, utils.ToSingleLine(string(b)))
+		return netip.Addr{}, fmt.Errorf("%w: %s", err, utils.ToSingleLine(string(b)))
 	}
-	return nil, fmt.Errorf("%w: %s", err, parsedJSON.Message)
+	return netip.Addr{}, fmt.Errorf("%w: %s", err, parsedJSON.Message)
 }

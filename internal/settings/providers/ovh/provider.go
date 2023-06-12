@@ -6,8 +6,8 @@ import (
 	stderrors "errors"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"strings"
 	"time"
@@ -135,7 +135,8 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
+	ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{
 		Scheme: "https",
 		User:   url.UserPassword(p.username, p.password),
@@ -152,37 +153,37 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client, i
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
 	}
 	headers.SetUserAgent(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
 	}
 
 	switch {
 	case strings.HasPrefix(s, constants.Notfqdn):
-		return nil, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case strings.HasPrefix(s, "badrequest"):
-		return nil, fmt.Errorf("%w", errors.ErrBadRequest)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBadRequest)
 	case strings.HasPrefix(s, "nochg"):
 		return ip, nil
 	case strings.HasPrefix(s, "good"):
 		return ip, nil
 	default:
-		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
 }
 
@@ -191,15 +192,12 @@ var (
 	ErrRefresh         = stderrors.New("cannot refresh records")
 )
 
-func (p *Provider) updateWithZoneDNS(ctx context.Context, client *http.Client, ip net.IP) (
-	newIP net.IP, err error) {
+func (p *Provider) updateWithZoneDNS(ctx context.Context, client *http.Client, ip netip.Addr) (
+	newIP netip.Addr, err error) {
+	ipStr := ip.Unmap().String()
 	recordType := constants.A
-	var ipStr string
-	if ip.To4() == nil { // IPv6
+	if ip.Is6() {
 		recordType = constants.AAAA
-		ipStr = ip.To16().String()
-	} else {
-		ipStr = ip.To4().String()
 	}
 	// subDomain filter of the ovh api expect an empty string to get @ record
 	subDomain := p.host
@@ -209,37 +207,37 @@ func (p *Provider) updateWithZoneDNS(ctx context.Context, client *http.Client, i
 
 	timestamp, err := p.getAdjustedUnixTimestamp(ctx, client)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrGetAdjustedTime, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", ErrGetAdjustedTime, err)
 	}
 
 	recordIDs, err := p.getRecords(ctx, client, recordType, subDomain, timestamp)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrListRecords, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrListRecords, err)
 	}
 
 	if len(recordIDs) == 0 {
 		err = p.createRecord(ctx, client, recordType, subDomain, ipStr, timestamp)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
+			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
 		}
 	} else {
 		for _, recordID := range recordIDs {
 			err = p.updateRecord(ctx, client, recordID, ipStr, timestamp)
 			if err != nil {
-				return nil, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
+				return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
 			}
 		}
 	}
 
 	err = p.refresh(ctx, client, timestamp)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrRefresh, err)
+		return netip.Addr{}, fmt.Errorf("%w: %w", ErrRefresh, err)
 	}
 
 	return ip, nil
 }
 
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (newIP net.IP, err error) {
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	if p.mode != "api" {
 		return p.updateWithDynHost(ctx, client, ip)
 	}

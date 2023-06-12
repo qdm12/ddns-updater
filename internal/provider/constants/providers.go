@@ -41,6 +41,7 @@ const (
 	Spdyn        models.Provider = "spdyn"
 	Strato       models.Provider = "strato"
 	Variomedia   models.Provider = "variomedia"
+	Zoneedit     models.Provider = "zoneedit"
 )
 
 func ProviderChoices() []models.Provider {
@@ -80,5 +81,6 @@ func ProviderChoices() []models.Provider {
 		Spdyn,
 		Strato,
 		Variomedia,
+		Zoneedit,
 	}
 }

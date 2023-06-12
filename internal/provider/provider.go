@@ -47,6 +47,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/spdyn"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/strato"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/variomedia"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/zoneedit"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -141,6 +142,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, host string
 		return strato.New(data, domain, host, ipVersion)
 	case constants.Variomedia:
 		return variomedia.New(data, domain, host, ipVersion)
+	case constants.Zoneedit:
+		return zoneedit.New(data, domain, host, ipVersion)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrProviderUnknown, providerName)
 	}

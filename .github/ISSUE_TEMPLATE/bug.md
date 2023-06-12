@@ -1,7 +1,7 @@
 ---
 name: Bug
 about: Report a bug
-title: 'Bug: ...'
+title: 'Bug: FILL THIS TEXT OR ISSUE WILL BE CLOSED'
 labels: ":bug: bug"
 
 ---

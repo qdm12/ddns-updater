@@ -1,7 +1,7 @@
 ---
 name: Feature request
 about: Suggest a feature to add to this project
-title: 'Feature request: ...'
+title: 'Feature request: FILL THIS TEXT OR ISSUE WILL BE CLOSED'
 labels: ":bulb: feature request"
 
 ---

@@ -11,6 +11,7 @@ require (
 	github.com/qdm12/gosettings v0.3.0
 	github.com/qdm12/goshutdown v0.3.0
 	github.com/qdm12/gosplash v0.1.0
+	github.com/qdm12/gotree v0.2.0
 	github.com/qdm12/log v0.1.0
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/api v0.102.0

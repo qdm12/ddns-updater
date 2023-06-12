@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/qdm12/gosettings"
+	"github.com/qdm12/gotree"
 )
 
 type Backup struct {
@@ -24,4 +25,15 @@ func (b Backup) mergeWith(other Backup) (merged Backup) {
 
 func (b Backup) Validate() (err error) {
 	return nil
+}
+
+func (b Backup) String() string {
+	return b.toLinesNode().String()
+}
+
+func (b Backup) toLinesNode() *gotree.Node {
+	node := gotree.New("Backup")
+	node.Appendf("Period: %s", b.Period)
+	node.Appendf("Directory: %s", *b.Directory)
+	return node
 }

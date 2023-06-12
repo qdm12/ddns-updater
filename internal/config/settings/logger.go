@@ -2,6 +2,7 @@ package settings
 
 import (
 	"github.com/qdm12/gosettings"
+	"github.com/qdm12/gotree"
 	"github.com/qdm12/log"
 )
 
@@ -23,4 +24,15 @@ func (l Logger) mergeWith(other Logger) (merged Logger) {
 
 func (l Logger) Validate() (err error) {
 	return nil
+}
+
+func (l Logger) String() string {
+	return l.toLinesNode().String()
+}
+
+func (l Logger) toLinesNode() *gotree.Node {
+	node := gotree.New("Logger")
+	node.Appendf("Caller: %s", gosettings.BoolToYesNo(l.Caller))
+	node.Appendf("Level: %s", *l.Level)
+	return node
 }

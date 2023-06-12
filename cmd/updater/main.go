@@ -151,6 +151,8 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 	}
 	logger.Patch(options...)
 
+	logger.Info(config.String())
+
 	sender, err := shoutrrr.CreateSender(config.Shoutrrr.Addresses...)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errShoutrrrSetup, err)

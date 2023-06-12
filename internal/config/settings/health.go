@@ -6,6 +6,7 @@ import (
 
 	"github.com/qdm12/gosettings"
 	"github.com/qdm12/gosettings/validate"
+	"github.com/qdm12/gotree"
 )
 
 type Health struct {
@@ -28,4 +29,14 @@ func (h Health) Validate() (err error) {
 	}
 
 	return nil
+}
+
+func (h Health) String() string {
+	return h.toLinesNode().String()
+}
+
+func (h Health) toLinesNode() *gotree.Node {
+	node := gotree.New("Health")
+	node.Appendf("Server listening address: %s", *h.ServerAddress)
+	return node
 }

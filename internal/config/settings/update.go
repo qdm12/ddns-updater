@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/qdm12/gosettings"
+	"github.com/qdm12/gotree"
 )
 
 type Update struct {
@@ -26,4 +27,15 @@ func (u Update) mergeWith(other Update) (merged Update) {
 
 func (u Update) Validate() (err error) {
 	return nil
+}
+
+func (u Update) String() string {
+	return u.toLinesNode().String()
+}
+
+func (u Update) toLinesNode() *gotree.Node {
+	node := gotree.New("Update")
+	node.Appendf("Period: %s", u.Period)
+	node.Appendf("Cooldown: %s", u.Cooldown)
+	return node
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/qdm12/ddns-updater/internal/resolver"
+	"github.com/qdm12/gotree"
 )
 
 type Settings struct {
@@ -75,4 +76,24 @@ func (s Settings) Validate() (err error) {
 	}
 
 	return nil
+}
+
+func (s Settings) String() string {
+	return s.toLinesNode().String()
+}
+
+func (s Settings) toLinesNode() *gotree.Node {
+	node := gotree.New("Settings")
+	node.AppendNode(s.Client.toLinesNode())
+	node.AppendNode(s.Update.toLinesNode())
+	node.AppendNode(s.PubIP.toLinesNode())
+	node.AppendNode(s.Resolver.ToLinesNode())
+	node.AppendNode(s.IPv6.toLinesNode())
+	node.AppendNode(s.Server.toLinesNode())
+	node.AppendNode(s.Health.toLinesNode())
+	node.AppendNode(s.Paths.toLinesNode())
+	node.AppendNode(s.Backup.toLinesNode())
+	node.AppendNode(s.Logger.toLinesNode())
+	node.AppendNode(s.Shoutrrr.toLinesNode())
+	return node
 }

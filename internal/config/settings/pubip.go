@@ -11,6 +11,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/gosettings"
 	"github.com/qdm12/gosettings/validate"
+	"github.com/qdm12/gotree"
 )
 
 type PubIP struct {
@@ -67,6 +68,43 @@ func (p PubIP) Validate() (err error) {
 	}
 
 	return nil
+}
+
+func (p *PubIP) String() string {
+	return p.toLinesNode().String()
+}
+
+func (p *PubIP) toLinesNode() (node *gotree.Node) {
+	node = gotree.New("Public IP fetching")
+
+	node.Appendf("HTTP enabled: %s", gosettings.BoolToYesNo(p.HTTPEnabled))
+	if *p.HTTPEnabled {
+		childNode := node.Appendf("HTTP IP providers")
+		for _, provider := range p.HTTPIPProviders {
+			childNode.Appendf(provider)
+		}
+
+		childNode = node.Appendf("HTTP IPv4 providers")
+		for _, provider := range p.HTTPIPv4Providers {
+			childNode.Appendf(provider)
+		}
+
+		childNode = node.Appendf("HTTP IPv6 providers")
+		for _, provider := range p.HTTPIPv6Providers {
+			childNode.Appendf(provider)
+		}
+	}
+
+	node.Appendf("DNS enabled: %s", gosettings.BoolToYesNo(p.DNSEnabled))
+	if *p.DNSEnabled {
+		node.Appendf("DNS timeout: %s", p.DNSTimeout)
+		childNode := node.Appendf("DNS providers")
+		for _, provider := range p.DNSProviders {
+			childNode.Appendf(provider)
+		}
+	}
+
+	return node
 }
 
 // ToHTTPOptions assumes the settings have been validated.

@@ -6,6 +6,7 @@ import (
 
 	"github.com/qdm12/gosettings"
 	"github.com/qdm12/gosettings/validate"
+	"github.com/qdm12/gotree"
 )
 
 type Server struct {
@@ -35,4 +36,15 @@ func (s Server) Validate() (err error) {
 	// TODO validate RootURL
 
 	return nil
+}
+
+func (s Server) String() string {
+	return s.toLinesNode().String()
+}
+
+func (s Server) toLinesNode() *gotree.Node {
+	node := gotree.New("Server")
+	node.Appendf("Port: %d", *s.Port)
+	node.Appendf("Root URL: %s", s.RootURL)
+	return node
 }

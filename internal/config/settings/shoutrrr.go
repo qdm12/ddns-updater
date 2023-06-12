@@ -6,6 +6,7 @@ import (
 	"github.com/containrrr/shoutrrr"
 	"github.com/containrrr/shoutrrr/pkg/types"
 	"github.com/qdm12/gosettings"
+	"github.com/qdm12/gotree"
 )
 
 type Shoutrrr struct {
@@ -36,4 +37,27 @@ func (s Shoutrrr) Validate() (err error) {
 		return fmt.Errorf("shoutrrr addresses: %w", err)
 	}
 	return nil
+}
+
+func (s Shoutrrr) String() string {
+	return s.toLinesNode().String()
+}
+
+func (s Shoutrrr) toLinesNode() *gotree.Node {
+	if len(s.Addresses) == 0 {
+		return nil // no address means shoutrrr is disabled
+	}
+
+	node := gotree.New("Shoutrrr")
+	childNode := node.Appendf("Addresses")
+	for _, address := range s.Addresses {
+		childNode.Appendf(address)
+	}
+
+	childNode = node.Appendf("Parameters")
+	for key, value := range s.Params {
+		childNode.Appendf("%s=%s", key, value)
+	}
+
+	return node
 }

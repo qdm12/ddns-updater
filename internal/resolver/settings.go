@@ -8,6 +8,7 @@ import (
 
 	"github.com/qdm12/gosettings"
 	"github.com/qdm12/gosettings/validate"
+	"github.com/qdm12/gotree"
 )
 
 type Settings struct {
@@ -46,4 +47,19 @@ func (s Settings) Validate() (err error) {
 	}
 
 	return nil
+}
+
+func (s Settings) String() string {
+	return s.ToLinesNode().String()
+}
+
+func (s Settings) ToLinesNode() *gotree.Node {
+	if *s.Address == "" {
+		return gotree.New("Resolver: use Go default resolver")
+	}
+
+	node := gotree.New("Resolver")
+	node.Appendf("Address: %s", *s.Address)
+	node.Appendf("Timeout: %s", s.Timeout)
+	return node
 }

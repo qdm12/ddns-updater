@@ -6,6 +6,7 @@ import (
 	"net/netip"
 
 	"github.com/qdm12/gosettings"
+	"github.com/qdm12/gotree"
 )
 
 type IPv6 struct {
@@ -35,4 +36,14 @@ func (i IPv6) Validate() (err error) {
 	}
 
 	return nil
+}
+
+func (i IPv6) String() string {
+	return i.toLinesNode().String()
+}
+
+func (i IPv6) toLinesNode() *gotree.Node {
+	node := gotree.New("IPv6")
+	node.Appendf("Mask bits: %d", i.MaskBits)
+	return node
 }

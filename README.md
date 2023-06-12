@@ -171,6 +171,7 @@ Check the documentation for your DNS provider:
 - [DynDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/dyndns.md)
 - [Dynu](https://github.com/qdm12/ddns-updater/blob/master/docs/dynu.md)
 - [DynV6](https://github.com/qdm12/ddns-updater/blob/master/docs/dynv6.md)
+- [EasyDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/easydns.md)
 - [FreeDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/freedns.md)
 - [Gandi](https://github.com/qdm12/ddns-updater/blob/master/docs/gandi.md)
 - [GCP](https://github.com/qdm12/ddns-updater/blob/master/docs/gcp.md)

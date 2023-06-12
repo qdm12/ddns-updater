@@ -1,4 +1,4 @@
-# NoIP
+# EasyDNS
 
 ## Configuration
 

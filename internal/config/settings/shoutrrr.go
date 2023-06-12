@@ -14,9 +14,11 @@ type Shoutrrr struct {
 }
 
 func (s *Shoutrrr) setDefaults() {
-	s.Addresses = []string{}
-	s.Params = types.Params{
-		"title": "DDNS Updater",
+	s.Addresses = gosettings.DefaultSlice(s.Addresses, []string{})
+	if s.Params == nil {
+		s.Params = types.Params{
+			"title": "DDNS Updater",
+		}
 	}
 }
 

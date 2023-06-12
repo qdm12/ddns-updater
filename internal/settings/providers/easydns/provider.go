@@ -59,8 +59,6 @@ func (p *Provider) isValid() error {
 		return fmt.Errorf("%w", errors.ErrEmptyUsername)
 	case p.token == "":
 		return fmt.Errorf("%w", errors.ErrEmptyToken)
-	case p.host == "*":
-		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}
 	return nil
 }
@@ -110,6 +108,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
 	if !p.useProviderIP {
 		values.Set("myip", ip.String())
+	}
+	if p.host == "*" {
+		values.Set("wildcard", "ON")
 	}
 	u.RawQuery = values.Encode()
 

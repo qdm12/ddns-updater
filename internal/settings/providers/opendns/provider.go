@@ -137,11 +137,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip net.IP) (
 		return nil, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
 	responseIPString := strings.TrimPrefix(s, "good ")
-	responseIP := net.ParseIP(responseIPString)
-	if responseIP == nil {
+	newIP = net.ParseIP(responseIPString)
+	if newIP == nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, responseIPString)
 	} else if !newIP.Equal(ip) {
-		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, responseIP)
+		return nil, fmt.Errorf("%w: %s", errors.ErrIPReceivedMismatch, newIP)
 	}
 	return ip, nil
 }

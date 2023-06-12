@@ -1,4 +1,4 @@
-package settings
+package shoutrrr
 
 import (
 	"fmt"
@@ -9,29 +9,32 @@ import (
 	"github.com/qdm12/gotree"
 )
 
-type Shoutrrr struct {
+type Settings struct {
 	Addresses []string
 	Params    types.Params
+	Logger    Erroer
 }
 
-func (s *Shoutrrr) setDefaults() {
+func (s *Settings) SetDefaults() {
 	s.Addresses = gosettings.DefaultSlice(s.Addresses, []string{})
 	if s.Params == nil {
 		s.Params = types.Params{
 			"title": "DDNS Updater",
 		}
 	}
+	s.Logger = gosettings.DefaultInterface(s.Logger, &noopLogger{})
 }
 
-func (s Shoutrrr) mergeWith(other Shoutrrr) (merged Shoutrrr) {
+func (s Settings) MergeWith(other Settings) (merged Settings) {
 	merged.Addresses = gosettings.MergeWithSlice(s.Addresses, other.Addresses)
 	if s.Params == nil {
 		merged.Params = other.Params
 	}
+	merged.Logger = gosettings.MergeWithInterface(s.Logger, other.Logger)
 	return merged
 }
 
-func (s Shoutrrr) Validate() (err error) {
+func (s Settings) Validate() (err error) {
 	_, err = shoutrrr.CreateSender(s.Addresses...)
 	if err != nil {
 		return fmt.Errorf("shoutrrr addresses: %w", err)
@@ -39,11 +42,11 @@ func (s Shoutrrr) Validate() (err error) {
 	return nil
 }
 
-func (s Shoutrrr) String() string {
-	return s.toLinesNode().String()
+func (s Settings) String() string {
+	return s.ToLinesNode().String()
 }
 
-func (s Shoutrrr) toLinesNode() *gotree.Node {
+func (s Settings) ToLinesNode() *gotree.Node {
 	if len(s.Addresses) == 0 {
 		return nil // no address means shoutrrr is disabled
 	}
@@ -61,3 +64,7 @@ func (s Shoutrrr) toLinesNode() *gotree.Node {
 
 	return node
 }
+
+type noopLogger struct{}
+
+func (l noopLogger) Error(_ string) {}

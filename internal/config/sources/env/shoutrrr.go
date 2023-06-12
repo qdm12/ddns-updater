@@ -6,11 +6,11 @@ import (
 	"path"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/config/settings"
+	"github.com/qdm12/ddns-updater/internal/shoutrrr"
 	"github.com/qdm12/gosettings/sources/env"
 )
 
-func (s *Source) readShoutrrr() (settings settings.Shoutrrr, err error) {
+func (s *Source) readShoutrrr() (settings shoutrrr.Settings, err error) {
 	settings.Addresses = s.env.CSV("SHOUTRRR_ADDRESSES", env.ForceLowercase(false))
 
 	// Retro-compatibility: GOTIFY_URL and GOTIFY_TOKEN

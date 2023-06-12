@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/qdm12/ddns-updater/internal/resolver"
+	"github.com/qdm12/ddns-updater/internal/shoutrrr"
 	"github.com/qdm12/gotree"
 )
 
@@ -18,7 +19,7 @@ type Settings struct {
 	Paths    Paths
 	Backup   Backup
 	Logger   Logger
-	Shoutrrr Shoutrrr
+	Shoutrrr shoutrrr.Settings
 }
 
 func (s *Settings) SetDefaults() {
@@ -32,7 +33,7 @@ func (s *Settings) SetDefaults() {
 	s.Paths.setDefaults()
 	s.Backup.setDefaults()
 	s.Logger.setDefaults()
-	s.Shoutrrr.setDefaults()
+	s.Shoutrrr.SetDefaults()
 }
 
 func (s Settings) MergeWith(other Settings) (merged Settings) {
@@ -46,7 +47,7 @@ func (s Settings) MergeWith(other Settings) (merged Settings) {
 	merged.Paths = s.Paths.mergeWith(other.Paths)
 	merged.Backup = s.Backup.mergeWith(other.Backup)
 	merged.Logger = s.Logger.mergeWith(other.Logger)
-	merged.Shoutrrr = s.Shoutrrr.mergeWith(other.Shoutrrr)
+	merged.Shoutrrr = s.Shoutrrr.MergeWith(other.Shoutrrr)
 	return merged
 }
 
@@ -83,7 +84,7 @@ func (s Settings) String() string {
 }
 
 func (s Settings) toLinesNode() *gotree.Node {
-	node := gotree.New("Settings")
+	node := gotree.New("Settings summary:")
 	node.AppendNode(s.Client.toLinesNode())
 	node.AppendNode(s.Update.toLinesNode())
 	node.AppendNode(s.PubIP.toLinesNode())
@@ -94,6 +95,6 @@ func (s Settings) toLinesNode() *gotree.Node {
 	node.AppendNode(s.Paths.toLinesNode())
 	node.AppendNode(s.Backup.toLinesNode())
 	node.AppendNode(s.Logger.toLinesNode())
-	node.AppendNode(s.Shoutrrr.toLinesNode())
+	node.AppendNode(s.Shoutrrr.ToLinesNode())
 	return node
 }

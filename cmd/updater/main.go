@@ -2,20 +2,17 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 	_ "time/tzdata"
 
 	_ "github.com/breml/rootcerts"
-	"github.com/containrrr/shoutrrr"
 	"github.com/qdm12/ddns-updater/internal/backup"
 	globsettings "github.com/qdm12/ddns-updater/internal/config/settings"
 	"github.com/qdm12/ddns-updater/internal/config/sources/env"
@@ -27,6 +24,7 @@ import (
 	recordslib "github.com/qdm12/ddns-updater/internal/records"
 	"github.com/qdm12/ddns-updater/internal/resolver"
 	"github.com/qdm12/ddns-updater/internal/server"
+	"github.com/qdm12/ddns-updater/internal/shoutrrr"
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
 	"github.com/qdm12/goshutdown"
@@ -91,10 +89,6 @@ func main() {
 	os.Exit(1)
 }
 
-var (
-	errShoutrrrSetup = errors.New("failed setting up Shoutrrr")
-)
-
 func _main(ctx context.Context, settingsSource SettingsSource, args []string, logger log.LoggerInterface,
 	buildInfo models.BuildInformation, timeNow func() time.Time) (err error) {
 	if health.IsClientMode(args) {
@@ -153,24 +147,15 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 
 	logger.Info(config.String())
 
-	sender, err := shoutrrr.CreateSender(config.Shoutrrr.Addresses...)
+	config.Shoutrrr.Logger = logger.New(log.SetComponent("shoutrrr"))
+	shoutrrrClient, err := shoutrrr.New(config.Shoutrrr)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errShoutrrrSetup, err)
-	}
-	notify := func(message string) {
-		logger.Debugf("notifying Shoutrrr: %s", message)
-		errs := sender.Send(message, &config.Shoutrrr.Params)
-		for i, err := range errs {
-			if err != nil {
-				destination := strings.Split(config.Shoutrrr.Addresses[i], ":")[0]
-				logger.Error(destination + ": " + err.Error())
-			}
-		}
+		return fmt.Errorf("setting up Shoutrrr: %w", err)
 	}
 
 	persistentDB, err := persistence.NewDatabase(*config.Paths.DataDir)
 	if err != nil {
-		notify(err.Error())
+		shoutrrrClient.Notify(err.Error())
 		return err
 	}
 
@@ -179,10 +164,10 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 	settings, warnings, err := jsonReader.JSONSettings(jsonFilepath)
 	for _, w := range warnings {
 		logger.Warn(w)
-		notify(w)
+		shoutrrrClient.Notify(w)
 	}
 	if err != nil {
-		notify(err.Error())
+		shoutrrrClient.Notify(err.Error())
 		return err
 	}
 
@@ -209,7 +194,7 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 			s.Domain() + " host " + s.Host())
 		events, err := persistentDB.GetEvents(s.Domain(), s.Host())
 		if err != nil {
-			notify(err.Error())
+			shoutrrrClient.Notify(err.Error())
 			return err
 		}
 		records[i] = recordslib.New(s, events)
@@ -244,7 +229,7 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 		return fmt.Errorf("creating resolver: %w", err)
 	}
 
-	updater := update.NewUpdater(db, client, notify, logger)
+	updater := update.NewUpdater(db, client, shoutrrrClient, logger)
 	runner := update.NewRunner(db, updater, ipGetter, config.Update.Period,
 		config.IPv6.MaskBits, config.Update.Cooldown, logger, resolver, timeNow)
 
@@ -267,7 +252,7 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 	server := server.New(ctx, address, config.Server.RootURL, db, serverLogger, runner)
 	serverHandler, serverCtx, serverDone := goshutdown.NewGoRoutineHandler("server")
 	go server.Run(serverCtx, serverDone)
-	notify("Launched with " + strconv.Itoa(len(records)) + " records to watch")
+	shoutrrrClient.Notify("Launched with " + strconv.Itoa(len(records)) + " records to watch")
 
 	backupHandler, backupCtx, backupDone := goshutdown.NewGoRoutineHandler("backup")
 	backupLogger := logger.New(log.SetComponent("backup"))
@@ -281,7 +266,7 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 
 	err = shutdownGroup.Shutdown(context.Background())
 	if err != nil {
-		notify(err.Error())
+		shoutrrrClient.Notify(err.Error())
 		return err
 	}
 	return nil

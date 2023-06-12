@@ -29,6 +29,10 @@ type LookupIPer interface {
 	LookupIP(ctx context.Context, network, host string) (ips []net.IP, err error)
 }
 
+type ShoutrrrClient interface {
+	Notify(message string)
+}
+
 type Logger interface {
 	DebugLogger
 	Info(s string)

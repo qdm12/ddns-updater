@@ -14,21 +14,19 @@ import (
 )
 
 type Updater struct {
-	db     Database
-	client *http.Client
-	notify notifyFunc
-	logger DebugLogger
+	db             Database
+	client         *http.Client
+	shoutrrrClient ShoutrrrClient
+	logger         DebugLogger
 }
 
-type notifyFunc func(message string)
-
-func NewUpdater(db Database, client *http.Client, notify notifyFunc, logger DebugLogger) *Updater {
+func NewUpdater(db Database, client *http.Client, shoutrrrClient ShoutrrrClient, logger DebugLogger) *Updater {
 	client = makeLogClient(client, logger)
 	return &Updater{
-		db:     db,
-		client: client,
-		notify: notify,
-		logger: logger,
+		db:             db,
+		client:         client,
+		shoutrrrClient: shoutrrrClient,
+		logger:         logger,
 	}
 }
 
@@ -53,7 +51,7 @@ func (u *Updater) Update(ctx context.Context, id uint, ip netip.Addr, now time.T
 			domainName := record.Settings.BuildDomainName()
 			message := domainName + ": " + record.Message +
 				", no more updates will be attempted for an hour"
-			u.notify(message)
+			u.shoutrrrClient.Notify(message)
 			err = fmt.Errorf("%w: for domain %s, no more update will be attempted for 1h", err, domainName)
 		} else {
 			record.LastBan = nil // clear a previous ban
@@ -69,6 +67,6 @@ func (u *Updater) Update(ctx context.Context, id uint, ip netip.Addr, now time.T
 		IP:   newIP,
 		Time: now,
 	})
-	u.notify(record.Settings.BuildDomainName() + " " + record.Message)
+	u.shoutrrrClient.Notify(record.Settings.BuildDomainName() + " " + record.Message)
 	return u.db.Update(id, record) // persists some data if needed (i.e new IP)
 }

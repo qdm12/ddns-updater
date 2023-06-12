@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Source) readIPv6() (settings settings.IPv6, err error) {
-	maskStr := s.env.String("IPV6_MASK")
+	maskStr := s.env.String("IPV6_PREFIX")
 	if maskStr == "" {
 		return settings, nil
 	}

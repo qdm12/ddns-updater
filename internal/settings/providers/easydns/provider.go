@@ -1,4 +1,4 @@
-package noip
+package easydns
 
 import (
 	"context"
@@ -58,7 +58,7 @@ func (p *Provider) isValid() error {
 	case p.username == "":
 		return fmt.Errorf("%w", errors.ErrEmptyUsername)
 	case p.token == "":
-		return fmt.Errorf("%w", errors.ErrEmptyPassword)
+		return fmt.Errorf("%w", errors.ErrEmptyToken)
 	case p.host == "*":
 		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}

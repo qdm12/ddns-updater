@@ -2,7 +2,7 @@
 name: Help
 about: Ask for help
 title: 'Help: FILL THIS TEXT OR ISSUE WILL BE CLOSED'
-labels: ":pray: help wanted"
+labels:
 
 ---
 

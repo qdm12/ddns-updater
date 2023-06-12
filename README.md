@@ -46,6 +46,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
   - DuckDNS
   - DynDNS
   - Dynu
+  - EasyDNS
   - FreeDNS
   - Gandi
   - GCP

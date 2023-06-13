@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package http
@@ -16,7 +17,7 @@ func Test_integration(t *testing.T) {
 
 	client := &http.Client{}
 
-	fetcher, err := New(client, SetProvidersIP(Opendns))
+	fetcher, err := New(client, SetProvidersIP(Google))
 	require.NoError(t, err)
 
 	ctx := context.Background()

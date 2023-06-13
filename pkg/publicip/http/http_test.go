@@ -39,7 +39,7 @@ func Test_New(t *testing.T) {
 		},
 		"with options": {
 			options: []Option{
-				SetProvidersIP(Opendns),
+				SetProvidersIP(Google),
 				SetProvidersIP4(Ipify),
 				SetProvidersIP6(Ipify),
 				SetTimeout(time.Second),
@@ -49,7 +49,7 @@ func Test_New(t *testing.T) {
 				timeout: time.Second,
 				ip4or6: &urlsRing{
 					banned: map[int]string{},
-					urls:   []string{"https://diagnostic.opendns.com/myip"},
+					urls:   []string{"https://domains.google.com/checkip"},
 				},
 				ip4: &urlsRing{
 					banned: map[int]string{},

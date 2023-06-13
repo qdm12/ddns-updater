@@ -237,7 +237,6 @@ This allows you not to be blocked for making too many requests.
 You can otherwise customize it with the following:
 
 - `PUBLICIP_HTTP_PROVIDERS` gets your public IPv4 or IPv6 address. It can be one or more of the following:
-  - `opendns` using [https://diagnostic.opendns.com/myip](https://diagnostic.opendns.com/myip)
   - `ifconfig` using [https://ifconfig.io/ip](https://ifconfig.io/ip)
   - `ipinfo` using [https://ipinfo.io/ip](https://ipinfo.io/ip)
   - `ddnss` using [https://ddnss.de/meineip.php](https://ddnss.de/meineip.php)

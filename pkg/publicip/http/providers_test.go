@@ -19,7 +19,7 @@ func Test_ListProvidersForVersion(t *testing.T) {
 	}{
 		"ip4or6": {
 			version:   ipversion.IP4or6,
-			providers: []Provider{Google, Ifconfig, Ipinfo, Opendns},
+			providers: []Provider{Google, Ifconfig, Ipinfo},
 		},
 		"ip4": {
 			version:   ipversion.IP4,

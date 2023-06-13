@@ -17,7 +17,6 @@ const (
 	Ipify    Provider = "ipify"
 	Ipinfo   Provider = "ipinfo"
 	Noip     Provider = "noip"
-	Opendns  Provider = "opendns"
 )
 
 func ListProviders() []Provider {
@@ -27,7 +26,6 @@ func ListProviders() []Provider {
 		Ipify,
 		Ipinfo,
 		Noip,
-		Opendns,
 	}
 }
 
@@ -90,8 +88,6 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 			url = "https://ifconfig.io/ip"
 		case Ipinfo:
 			url = "https://ipinfo.io/ip"
-		case Opendns:
-			url = "https://diagnostic.opendns.com/myip"
 		}
 	}
 

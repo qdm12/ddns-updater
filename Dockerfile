@@ -49,14 +49,14 @@ RUN git init && \
 
 FROM --platform=$BUILDPLATFORM base AS build
 ARG VERSION=unknown
-ARG BUILD_DATE="an unknown date"
+ARG CREATED="an unknown date"
 ARG COMMIT=unknown
 ARG TARGETPLATFORM
 RUN GOARCH="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -field arch)" \
     GOARM="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -field arm)" \
     go build -trimpath -ldflags="-s -w \
     -X 'main.version=$VERSION' \
-    -X 'main.buildDate=$BUILD_DATE' \
+    -X 'main.created=$CREATED' \
     -X 'main.commit=$COMMIT' \
     " -o app cmd/updater/main.go
 
@@ -94,12 +94,12 @@ ENV \
     SHOUTRRR_ADDRESSES= \
     TZ=
 ARG VERSION=unknown
-ARG BUILD_DATE="an unknown date"
+ARG CREATED="an unknown date"
 ARG COMMIT=unknown
 LABEL \
     org.opencontainers.image.authors="quentin.mcgaw@gmail.com" \
     org.opencontainers.image.version=$VERSION \
-    org.opencontainers.image.created=$BUILD_DATE \
+    org.opencontainers.image.created=$CREATED \
     org.opencontainers.image.revision=$COMMIT \
     org.opencontainers.image.url="https://github.com/qdm12/ddns-updater" \
     org.opencontainers.image.documentation="https://github.com/qdm12/ddns-updater" \

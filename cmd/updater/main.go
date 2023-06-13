@@ -34,16 +34,16 @@ import (
 
 //nolint:gochecknoglobals
 var (
-	version   = "unknown"
-	commit    = "unknown"
-	buildDate = "an unknown date"
+	version = "unknown"
+	commit  = "unknown"
+	created = "an unknown date"
 )
 
 func main() {
 	buildInfo := models.BuildInformation{
-		Version:   version,
-		Commit:    commit,
-		BuildDate: buildDate,
+		Version: version,
+		Commit:  commit,
+		Created: created,
 	}
 	logger := log.New()
 	env := env.New(logger)
@@ -117,7 +117,7 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 		Emails:       []string{"quentin.mcgaw@gmail.com"},
 		Version:      buildInfo.Version,
 		Commit:       buildInfo.Commit,
-		BuildDate:    buildInfo.BuildDate,
+		BuildDate:    buildInfo.Created,
 		Announcement: "Environment variables parsing was changed on 12 June, please report any issue you might have",
 		AnnounceExp:  announcementExp,
 		// Sponsor information

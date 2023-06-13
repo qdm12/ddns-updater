@@ -321,7 +321,7 @@ You can use optional build arguments with `--build-arg KEY=VALUE` from the table
 | `UID` | `1000` | User ID running the container |
 | `GID` | `1000` | User group ID running the container |
 | `VERSION` | `unknown` | Version of the program and Docker image |
-| `BUILD_DATE` | `an unknown date` | Build date of the program and Docker image |
+| `CREATED` | `an unknown date` | Build date of the program and Docker image |
 | `COMMIT` | `unknown` | Commit hash of the program and Docker image |
 
 ## Development and contributing

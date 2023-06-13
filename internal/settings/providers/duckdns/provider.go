@@ -15,6 +15,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
+	"github.com/qdm12/ddns-updater/pkg/ipextract"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -143,7 +144,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case s[0:minChars] == "KO":
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	case s[0:minChars] == "OK":
-		ips := utils.FindIPv4Addresses(s)
+		ips := ipextract.IPv4(s)
 		if len(ips) == 0 {
 			return netip.Addr{}, fmt.Errorf("%w", errors.ErrNoIPInResponse)
 		}

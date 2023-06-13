@@ -15,6 +15,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/settings/errors"
 	"github.com/qdm12/ddns-updater/internal/settings/headers"
 	"github.com/qdm12/ddns-updater/internal/settings/utils"
+	"github.com/qdm12/ddns-updater/pkg/ipextract"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -164,9 +165,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	var ips []netip.Addr
 	if ip.Is4() {
-		ips = utils.FindIPv4Addresses(s)
+		ips = ipextract.IPv4(s)
 	} else {
-		ips = utils.FindIPv6Addresses(s)
+		ips = ipextract.IPv6(s)
 	}
 
 	if !p.useProviderIP && len(ips) == 0 {

@@ -254,6 +254,7 @@ You can otherwise customize it with the following:
 - `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see #136). It can be one or more of the following:
   - `google`
   - `cloudflare`
+  - `opendns`
 
 ### Host firewall
 

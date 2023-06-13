@@ -55,6 +55,7 @@ func Test_data(t *testing.T) {
 				nameserver: "ns1.google.com:53",
 				fqdn:       "o-o.myaddr.l.google.com.",
 				class:      dns.ClassINET,
+				qType:      dns.Type(dns.TypeTXT),
 			},
 		},
 		"cloudflare": {
@@ -63,6 +64,16 @@ func Test_data(t *testing.T) {
 				nameserver: "one.one.one.one:53",
 				fqdn:       "whoami.cloudflare.",
 				class:      dns.ClassCHAOS,
+				qType:      dns.Type(dns.TypeTXT),
+			},
+		},
+		"opendns": {
+			provider: OpenDNS,
+			data: providerData{
+				nameserver: "resolver1.opendns.com:53",
+				fqdn:       "myip.opendns.com.",
+				class:      dns.ClassINET,
+				qType:      dns.Type(dns.TypeANY),
 			},
 		},
 		"invalid provider": {

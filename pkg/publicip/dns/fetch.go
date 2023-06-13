@@ -10,15 +10,15 @@ import (
 )
 
 var (
-	ErrNoTXTRecordFound  = errors.New("no TXT record found")
-	ErrTooManyAnswers    = errors.New("too many answers")
-	ErrInvalidAnswerType = errors.New("invalid answer type")
-	ErrTooManyTXTRecords = errors.New("too many TXT records")
-	ErrIPMalformed       = errors.New("IP address malformed")
+	ErrAnswerNotReceived      = errors.New("response answer not received")
+	ErrAnswerTypeMismatch     = errors.New("answer type is not expected")
+	ErrAnswerTypeNotSupported = errors.New("answer type not supported")
+	ErrRecordEmpty            = errors.New("record is empty")
+	ErrIPMalformed            = errors.New("IP address malformed")
 )
 
 func fetch(ctx context.Context, client Client, providerData providerData) (
-	publicIP netip.Addr, err error) {
+	publicIPs []netip.Addr, err error) {
 	message := &dns.Msg{
 		MsgHdr: dns.MsgHdr{
 			Opcode: dns.OpcodeQuery,
@@ -26,7 +26,7 @@ func fetch(ctx context.Context, client Client, providerData providerData) (
 		Question: []dns.Question{
 			{
 				Name:   providerData.fqdn,
-				Qtype:  dns.TypeTXT,
+				Qtype:  uint16(providerData.qType),
 				Qclass: uint16(providerData.class),
 			},
 		},
@@ -34,35 +34,109 @@ func fetch(ctx context.Context, client Client, providerData providerData) (
 
 	r, _, err := client.ExchangeContext(ctx, message, providerData.nameserver)
 	if err != nil {
-		return netip.Addr{}, err
+		return nil, err
 	}
 
-	L := len(r.Answer)
-	if L == 0 {
-		return netip.Addr{}, fmt.Errorf("%w", ErrNoTXTRecordFound)
-	} else if L > 1 {
-		return netip.Addr{}, fmt.Errorf("%w: %d instead of 1", ErrTooManyAnswers, L)
+	if len(r.Answer) == 0 {
+		return nil, fmt.Errorf("%w", ErrAnswerNotReceived)
 	}
 
-	answer := r.Answer[0]
-	txt, ok := answer.(*dns.TXT)
+	publicIPs = make([]netip.Addr, 0, len(r.Answer))
+	for _, answer := range r.Answer {
+		var publicIP netip.Addr
+		switch uint16(providerData.qType) {
+		case dns.TypeTXT:
+			publicIP, err = handleAnswerTXT(answer)
+		case dns.TypeANY:
+			publicIP, err = handleAnswerANY(answer)
+		default:
+			return nil, fmt.Errorf("%w: %s",
+				ErrAnswerTypeNotSupported, dns.TypeToString[uint16(providerData.qType)])
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("handling %s answer: %w",
+				providerData.qType.String(), err)
+		}
+
+		publicIPs = append(publicIPs, publicIP)
+	}
+
+	return publicIPs, nil
+}
+
+var (
+	ErrTooManyTXTRecords = errors.New("too many TXT records")
+)
+
+func handleAnswerTXT(answer dns.RR) (publicIP netip.Addr, err error) {
+	answerTXT, ok := answer.(*dns.TXT)
 	if !ok {
 		return netip.Addr{}, fmt.Errorf("%w: %T instead of *dns.TXT",
-			ErrInvalidAnswerType, answer)
+			ErrAnswerTypeMismatch, answer)
 	}
 
-	L = len(txt.Txt)
-	if L == 0 {
-		return netip.Addr{}, fmt.Errorf("%w", ErrNoTXTRecordFound)
-	} else if L > 1 {
-		return netip.Addr{}, fmt.Errorf("%w: %d instead of 1", ErrTooManyTXTRecords, L)
+	switch len(answerTXT.Txt) {
+	case 0:
+		return netip.Addr{}, fmt.Errorf("%w", ErrRecordEmpty)
+	case 1:
+	default:
+		return netip.Addr{}, fmt.Errorf("%w: %d instead of 1",
+			ErrTooManyTXTRecords, len(answerTXT.Txt))
 	}
-	ipString := txt.Txt[0]
 
-	publicIP, err = netip.ParseAddr(ipString)
+	publicIP, err = netip.ParseAddr(answerTXT.Txt[0])
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("%w: %w", ErrIPMalformed, err)
 	}
 
 	return publicIP, nil
+}
+
+func handleAnswerANY(answer dns.RR) (publicIP netip.Addr, err error) {
+	rrType := answer.Header().Rrtype
+	switch rrType {
+	case dns.TypeA:
+		publicIP, err = handleAnswerA(answer)
+	case dns.TypeAAAA:
+		publicIP, err = handleAnswerAAAA(answer)
+	default:
+		return netip.Addr{}, fmt.Errorf("%w: %s",
+			ErrAnswerTypeMismatch, dns.TypeToString[rrType])
+	}
+
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("handling %s answer: %w",
+			dns.TypeToString[rrType], err)
+	}
+
+	return publicIP, nil
+}
+
+func handleAnswerA(answer dns.RR) (publicIP netip.Addr, err error) {
+	answerA, ok := answer.(*dns.A)
+	if !ok {
+		return netip.Addr{}, fmt.Errorf("%w: %T instead of *dns.A",
+			ErrAnswerTypeMismatch, answer)
+	}
+
+	if len(answerA.A) == 0 {
+		return netip.Addr{}, fmt.Errorf("%w", ErrRecordEmpty)
+	}
+
+	return netip.AddrFrom4([4]byte(answerA.A)), nil
+}
+
+func handleAnswerAAAA(answer dns.RR) (publicIP netip.Addr, err error) {
+	answerAAAA, ok := answer.(*dns.AAAA)
+	if !ok {
+		return netip.Addr{}, fmt.Errorf("%w: %T instead of *dns.AAAA",
+			ErrAnswerTypeMismatch, answer)
+	}
+
+	if len(answerAAAA.AAAA) == 0 {
+		return netip.Addr{}, fmt.Errorf("%w", ErrRecordEmpty)
+	}
+
+	return netip.AddrFrom16([16]byte(answerAAAA.AAAA)), nil
 }

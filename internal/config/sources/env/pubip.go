@@ -34,12 +34,14 @@ func (s *Source) readPubIP() (settings settings.PubIP, err error) {
 	}
 
 	// Retro-compatibility for now defunct opendns http provider for ipv4 or ipv6
-	httpIPProvidersTemp := make([]string, len(settings.HTTPIPProviders))
-	copy(httpIPProvidersTemp, settings.HTTPIPProviders)
-	settings.HTTPIPProviders = make([]string, 0, len(settings.HTTPIPProviders))
-	for _, provider := range httpIPProvidersTemp {
-		if provider != "opendns" {
-			settings.HTTPIPProviders = append(settings.HTTPIPProviders, provider)
+	if len(settings.HTTPIPProviders) > 0 { // check to avoid transforming `nil` to `[]`
+		httpIPProvidersTemp := make([]string, len(settings.HTTPIPProviders))
+		copy(httpIPProvidersTemp, settings.HTTPIPProviders)
+		settings.HTTPIPProviders = make([]string, 0, len(settings.HTTPIPProviders))
+		for _, provider := range httpIPProvidersTemp {
+			if provider != "opendns" {
+				settings.HTTPIPProviders = append(settings.HTTPIPProviders, provider)
+			}
 		}
 	}
 

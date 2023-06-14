@@ -11,4 +11,5 @@ var (
 	ErrListRecords     = errors.New("cannot list records")       // Dreamhost
 	ErrRemoveRecord    = errors.New("cannot remove record")      // Dreamhost
 	ErrUpdateRecord    = errors.New("cannot update record")
+	ErrSessionIsEmpty  = errors.New("session received is empty") // Netcup
 )

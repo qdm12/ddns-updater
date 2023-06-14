@@ -6,6 +6,7 @@ var (
 	ErrCredentialsNotSet       = errors.New("credentials are not set")
 	ErrEmptyAPIKey             = errors.New("empty API key")
 	ErrEmptyAppKey             = errors.New("empty app key")
+	ErrEmptyCustomerNumber     = errors.New("empty customer number")
 	ErrEmptyConsumerKey        = errors.New("empty consumer key")
 	ErrEmptyEmail              = errors.New("empty email")
 	ErrEmptyKey                = errors.New("empty key")

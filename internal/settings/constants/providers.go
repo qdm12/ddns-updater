@@ -30,6 +30,7 @@ const (
 	Linode       models.Provider = "linode"
 	LuaDNS       models.Provider = "luadns"
 	Namecheap    models.Provider = "namecheap"
+	Netcup       models.Provider = "netcup"
 	Njalla       models.Provider = "njalla"
 	NoIP         models.Provider = "noip"
 	OpenDNS      models.Provider = "opendns"

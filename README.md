@@ -58,6 +58,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
   - Linode
   - LuaDNS
   - Namecheap
+  - Netcup
   - NoIP
   - Njalla
   - OpenDNS
@@ -183,6 +184,7 @@ Check the documentation for your DNS provider:
 - [Linode](https://github.com/qdm12/ddns-updater/blob/master/docs/linode.md)
 - [LuaDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/luadns.md)
 - [Namecheap](https://github.com/qdm12/ddns-updater/blob/master/docs/namecheap.md)
+- [Netcup](https://github.com/qdm12/ddns-updater/blob/master/docs/netcup.md)
 - [NoIP](https://github.com/qdm12/ddns-updater/blob/master/docs/noip.md)
 - [Njalla](https://github.com/qdm12/ddns-updater/blob/master/docs/njalla.md)
 - [OpenDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/opendns.md)

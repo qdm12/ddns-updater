@@ -104,6 +104,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
 		}
+
+		return ip, nil
 	} else if err != nil {
 		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
 	}

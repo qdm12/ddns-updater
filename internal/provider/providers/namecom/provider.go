@@ -20,44 +20,41 @@ type Provider struct {
 	host      string
 	ipVersion ipversion.IPVersion
 	username  string
-	password  string
-	ttl       int
+	token     string
+	ttl       *uint32
 }
 
 func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-		TTL      int    `json:"ttl"`
+		Username string  `json:"username"`
+		Token    string  `json:"token"`
+		TTL      *uint32 `json:"ttl,omitempty"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
 		return nil, err
 	}
-	p = &Provider{
+
+	const minTTL = 300
+	switch {
+	case extraSettings.Username == "":
+		return nil, fmt.Errorf("%w", errors.ErrEmptyUsername)
+	case extraSettings.Token == "":
+		return nil, fmt.Errorf("%w", errors.ErrEmptyPassword)
+	case extraSettings.TTL != nil && *extraSettings.TTL < minTTL:
+		return nil, fmt.Errorf("%w: %d must be at least %d",
+			errors.ErrTTLTooLow, *extraSettings.TTL, minTTL)
+	}
+
+	return &Provider{
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
 		username:  extraSettings.Username,
-		password:  extraSettings.Password,
+		token:     extraSettings.Token,
 		ttl:       extraSettings.TTL,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
-}
-
-func (p *Provider) isValid() error {
-	switch {
-	case p.username == "":
-		return fmt.Errorf("%w", errors.ErrEmptyUsername)
-	case p.password == "":
-		return fmt.Errorf("%w", errors.ErrEmptyPassword)
-	}
-	return nil
+	}, nil
 }
 
 func (p *Provider) String() string {

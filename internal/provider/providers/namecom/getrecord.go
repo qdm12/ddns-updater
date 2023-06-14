@@ -8,7 +8,6 @@ import (
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
-	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
 func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
@@ -17,7 +16,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 		Scheme: "https",
 		Host:   "api.name.com",
 		Path:   fmt.Sprintf("/v4/domains/%s/records", p.domain),
-		User:   url.UserPassword(p.username, p.password),
+		User:   url.UserPassword(p.username, p.token),
 	}
 
 	// by default GET request will return 1000 records.
@@ -25,6 +24,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	if err != nil {
 		return 0, fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
 	}
+	setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -35,11 +35,9 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusNotFound:
-		return 0, fmt.Errorf("%w", errors.ErrDomainIDNotFound)
+		return 0, fmt.Errorf("%w", errors.ErrDomainNotFound)
 	default:
-		return 0, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode,
-			utils.BodyToSingleLine(response.Body))
+		return 0, parseErrorResponse(response)
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -61,5 +59,6 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 		}
 	}
 
-	return 0, fmt.Errorf("%w", errors.ErrRecordNotFound)
+	return 0, fmt.Errorf("%w: in %d record(s)",
+		errors.ErrRecordNotFound, len(data.Records))
 }

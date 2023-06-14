@@ -11,7 +11,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
-	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
 func (p *Provider) createRecord(ctx context.Context, client *http.Client,
@@ -25,14 +24,14 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 		Scheme: "https",
 		Host:   "api.name.com",
 		Path:   fmt.Sprintf("/v4/domains/%s/records", p.domain),
-		User:   url.UserPassword(p.username, p.password),
+		User:   url.UserPassword(p.username, p.token),
 	}
 
 	postRecordsParams := struct {
-		Host   string `json:"host"`
-		Type   string `json:"type"`
-		Answer string `json:"answer"`
-		TTL    int    `json:"ttl"`
+		Host   string  `json:"host"`
+		Type   string  `json:"type"`
+		Answer string  `json:"answer"`
+		TTL    *uint32 `json:"ttl,omitempty"`
 	}{
 		Host:   p.host,
 		Type:   recordType,
@@ -49,6 +48,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
 	}
+	setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -56,11 +56,10 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode,
-			utils.BodyToSingleLine(response.Body))
+	switch response.StatusCode {
+	case http.StatusOK, http.StatusCreated:
+		return verifySuccessResponseBody(response.Body, ip)
+	default:
+		return parseErrorResponse(response)
 	}
-
-	return nil
 }

@@ -12,6 +12,7 @@ var (
 	ErrConflictingRecord       = errors.New("conflicting record")
 	ErrDNSServerSide           = errors.New("server side DNS error")
 	ErrDomainDisabled          = errors.New("record disabled")
+	ErrDomainNotFound          = errors.New("domain not found")
 	ErrDomainIDNotFound        = errors.New("ID not found in domain record")
 	ErrFeatureUnavailable      = errors.New("feature is not available to the user")
 	ErrHostnameNotExists       = errors.New("hostname does not exist")

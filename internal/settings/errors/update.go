@@ -1,4 +1,4 @@
-package errors //nolint:dupl
+package errors
 
 import "errors"
 

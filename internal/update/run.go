@@ -84,7 +84,7 @@ func (r *Runner) lookupIPs(ctx context.Context, hostname string) (
 
 func doIPVersion(records []librecords.Record) (doIP, doIPv4, doIPv6 bool) {
 	for _, record := range records {
-		switch record.Settings.IPVersion() {
+		switch record.Provider.IPVersion() {
 		case ipversion.IP4or6:
 			doIP = true
 		case ipversion.IP4:
@@ -144,14 +144,14 @@ func (r *Runner) shouldUpdateRecord(ctx context.Context, record librecords.Recor
 	isWithinBanPeriod := record.LastBan != nil && now.Sub(*record.LastBan) < time.Hour
 	isWithinCooldown := now.Sub(record.History.GetSuccessTime()) < r.cooldown
 	if isWithinBanPeriod || isWithinCooldown {
-		domain := record.Settings.BuildDomainName()
+		domain := record.Provider.BuildDomainName()
 		r.logger.Debug("record " + domain + " is within ban period or cooldown period, skipping update")
 		return false
 	}
 
-	hostname := record.Settings.BuildDomainName()
-	ipVersion := record.Settings.IPVersion()
-	if record.Settings.Proxied() {
+	hostname := record.Provider.BuildDomainName()
+	ipVersion := record.Provider.IPVersion()
+	if record.Provider.Proxied() {
 		lastIP := record.History.GetCurrentIP() // can be nil
 		return r.shouldUpdateRecordNoLookup(hostname, ipVersion, lastIP, ip, ipv4, ipv6)
 	}
@@ -287,7 +287,7 @@ func (r *Runner) updateNecessary(ctx context.Context, ipv6MaskBits uint8) (error
 		if requireUpdate || record.Status != constants.UNSET {
 			continue
 		}
-		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
+		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Provider.IPVersion())
 		err := setInitialUpToDateStatus(r.db, id, updateIP, now)
 		if err != nil {
 			errors = append(errors, err)
@@ -296,8 +296,8 @@ func (r *Runner) updateNecessary(ctx context.Context, ipv6MaskBits uint8) (error
 	}
 	for id := range recordIDs {
 		record := records[id]
-		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Settings.IPVersion())
-		r.logger.Info("Updating record " + record.Settings.String() + " to use " + updateIP.String())
+		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Provider.IPVersion())
+		r.logger.Info("Updating record " + record.Provider.String() + " to use " + updateIP.String())
 		err := r.updater.Update(ctx, id, updateIP, r.timeNow())
 		if err != nil {
 			errors = append(errors, err)

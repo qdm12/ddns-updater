@@ -10,7 +10,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
-	settingserrors "github.com/qdm12/ddns-updater/internal/settings/errors"
+	settingserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 type Updater struct {
@@ -42,13 +42,13 @@ func (u *Updater) Update(ctx context.Context, id uint, ip netip.Addr, now time.T
 		return err
 	}
 	record.Status = constants.FAIL
-	newIP, err := record.Settings.Update(ctx, u.client, ip)
+	newIP, err := record.Provider.Update(ctx, u.client, ip)
 	if err != nil {
 		record.Message = err.Error()
 		if errors.Is(err, settingserrors.ErrAbuse) {
 			lastBan := time.Unix(now.Unix(), 0)
 			record.LastBan = &lastBan
-			domainName := record.Settings.BuildDomainName()
+			domainName := record.Provider.BuildDomainName()
 			message := domainName + ": " + record.Message +
 				", no more updates will be attempted for an hour"
 			u.shoutrrrClient.Notify(message)
@@ -67,6 +67,6 @@ func (u *Updater) Update(ctx context.Context, id uint, ip netip.Addr, now time.T
 		IP:   newIP,
 		Time: now,
 	})
-	u.shoutrrrClient.Notify(record.Settings.BuildDomainName() + " " + record.Message)
+	u.shoutrrrClient.Notify(record.Provider.BuildDomainName() + " " + record.Message)
 	return u.db.Update(id, record) // persists some data if needed (i.e new IP)
 }

@@ -23,8 +23,8 @@ func (db *Database) Update(id uint, record records.Record) (err error) {
 	// new IP address added
 	if newCount > currentCount {
 		if err := db.persistentDB.StoreNewIP(
-			record.Settings.Domain(),
-			record.Settings.Host(),
+			record.Provider.Domain(),
+			record.Provider.Host(),
 			record.History.GetCurrentIP(),
 			record.History.GetSuccessTime(),
 		); err != nil {

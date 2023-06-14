@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
-	"github.com/qdm12/ddns-updater/internal/settings"
-	"github.com/qdm12/ddns-updater/internal/settings/constants"
+	"github.com/qdm12/ddns-updater/internal/provider"
+	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -25,22 +25,23 @@ type commonSettings struct {
 	Delay    *uint64 `json:"delay,omitempty"`
 }
 
-// JSONSettings obtain the update settings from the JSON content, first trying from the environment variable CONFIG
-// and then from the file config.json.
-func (r *Reader) JSONSettings(filePath string) (
-	allSettings []settings.Settings, warnings []string, err error) {
-	allSettings, warnings, err = r.getSettingsFromEnv(filePath)
-	if allSettings != nil || warnings != nil || err != nil {
-		return allSettings, warnings, err
+// JSONProviders obtain the update settings from the JSON content,
+// first trying from the environment variable CONFIG and then from
+// the file config.json.
+func (r *Reader) JSONProviders(filePath string) (
+	providers []provider.Provider, warnings []string, err error) {
+	providers, warnings, err = r.getProvidersFromEnv(filePath)
+	if providers != nil || warnings != nil || err != nil {
+		return providers, warnings, err
 	}
-	return r.getSettingsFromFile(filePath)
+	return r.getProvidersFromFile(filePath)
 }
 
 var errWriteConfigToFile = errors.New("cannot write configuration to file")
 
-// getSettingsFromFile obtain the update settings from config.json.
-func (r *Reader) getSettingsFromFile(filePath string) (
-	allSettings []settings.Settings, warnings []string, err error) {
+// getProvidersFromFile obtain the update settings from config.json.
+func (r *Reader) getProvidersFromFile(filePath string) (
+	providers []provider.Provider, warnings []string, err error) {
 	r.logger.Info("reading JSON config from file " + filePath)
 	bytes, err := r.readFile(filePath)
 	if err != nil {
@@ -63,10 +64,10 @@ func (r *Reader) getSettingsFromFile(filePath string) (
 	return extractAllSettings(bytes)
 }
 
-// getSettingsFromEnv obtain the update settings from the environment variable CONFIG.
+// getProvidersFromEnv obtain the update settings from the environment variable CONFIG.
 // If the settings are valid, they are written to the filePath.
-func (r *Reader) getSettingsFromEnv(filePath string) (
-	allSettings []settings.Settings, warnings []string, err error) {
+func (r *Reader) getProvidersFromEnv(filePath string) (
+	providers []provider.Provider, warnings []string, err error) {
 	s := os.Getenv("CONFIG")
 	if s == "" {
 		return nil, nil, nil
@@ -76,23 +77,23 @@ func (r *Reader) getSettingsFromEnv(filePath string) (
 
 	b := []byte(s)
 
-	allSettings, warnings, err = extractAllSettings(b)
+	providers, warnings, err = extractAllSettings(b)
 	if err != nil {
-		return allSettings, warnings, fmt.Errorf("configuration given: %w", err)
+		return providers, warnings, fmt.Errorf("configuration given: %w", err)
 	}
 
 	buffer := bytes.NewBuffer(nil)
 	err = json.Indent(buffer, b, "", "  ")
 	if err != nil {
-		return allSettings, warnings, fmt.Errorf("%w: %w", errWriteConfigToFile, err)
+		return providers, warnings, fmt.Errorf("%w: %w", errWriteConfigToFile, err)
 	}
 	const mode = fs.FileMode(0600)
 	err = r.writeFile(filePath, buffer.Bytes(), mode)
 	if err != nil {
-		return allSettings, warnings, fmt.Errorf("%w: %w", errWriteConfigToFile, err)
+		return providers, warnings, fmt.Errorf("%w: %w", errWriteConfigToFile, err)
 	}
 
-	return allSettings, warnings, nil
+	return providers, warnings, nil
 }
 
 var (
@@ -101,7 +102,7 @@ var (
 )
 
 func extractAllSettings(jsonBytes []byte) (
-	allSettings []settings.Settings, warnings []string, err error) {
+	allProviders []provider.Provider, warnings []string, err error) {
 	config := struct {
 		CommonSettings []commonSettings `json:"settings"`
 	}{}
@@ -118,21 +119,21 @@ func extractAllSettings(jsonBytes []byte) (
 	}
 
 	for i, common := range config.CommonSettings {
-		newSettings, newWarnings, err := makeSettingsFromObject(common, rawConfig.Settings[i])
+		newProvider, newWarnings, err := makeSettingsFromObject(common, rawConfig.Settings[i])
 		warnings = append(warnings, newWarnings...)
 		if err != nil {
 			return nil, warnings, err
 		}
-		allSettings = append(allSettings, newSettings...)
+		allProviders = append(allProviders, newProvider...)
 	}
 
-	return allSettings, warnings, nil
+	return allProviders, warnings, nil
 }
 
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) (
-	settingsSlice []settings.Settings, warnings []string, err error) {
-	provider := models.Provider(common.Provider)
-	if provider == constants.DuckDNS { // only hosts, no domain
+	providers []provider.Provider, warnings []string, err error) {
+	providerName := models.Provider(common.Provider)
+	if providerName == constants.DuckDNS { // only hosts, no domain
 		if common.Domain != "" { // retro compatibility
 			if common.Host == "" {
 				common.Host = strings.TrimSuffix(common.Domain, ".duckdns.org")
@@ -156,13 +157,13 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) 
 		return nil, nil, err
 	}
 
-	settingsSlice = make([]settings.Settings, len(hosts))
+	providers = make([]provider.Provider, len(hosts))
 	for i, host := range hosts {
-		settingsSlice[i], err = settings.New(provider, rawSettings, common.Domain,
+		providers[i], err = provider.New(providerName, rawSettings, common.Domain,
 			host, ipVersion)
 		if err != nil {
 			return nil, warnings, err
 		}
 	}
-	return settingsSlice, warnings, nil
+	return providers, warnings, nil
 }

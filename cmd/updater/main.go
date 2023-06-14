@@ -161,7 +161,7 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 
 	jsonReader := jsonparams.NewReader(logger)
 	jsonFilepath := filepath.Join(*config.Paths.DataDir, "config.json")
-	settings, warnings, err := jsonReader.JSONSettings(jsonFilepath)
+	providers, warnings, err := jsonReader.JSONProviders(jsonFilepath)
 	for _, w := range warnings {
 		logger.Warn(w)
 		shoutrrrClient.Notify(w)
@@ -171,14 +171,14 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 		return err
 	}
 
-	L := len(settings)
+	L := len(providers)
 	switch L {
 	case 0:
 		logger.Warn("Found no setting to update record")
 	case 1:
 		logger.Info("Found single setting to update record")
 	default:
-		logger.Info("Found " + fmt.Sprint(len(settings)) + " settings to update records")
+		logger.Info("Found " + fmt.Sprint(len(providers)) + " settings to update records")
 	}
 
 	client := &http.Client{Timeout: config.Client.Timeout}
@@ -188,8 +188,8 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 		logger.Warn(err.Error())
 	}
 
-	records := make([]recordslib.Record, len(settings))
-	for i, s := range settings {
+	records := make([]recordslib.Record, len(providers))
+	for i, s := range providers {
 		logger.Info("Reading history from database: domain " +
 			s.Domain() + " host " + s.Host())
 		events, err := persistentDB.GetEvents(s.Domain(), s.Host())

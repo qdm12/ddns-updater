@@ -11,7 +11,7 @@ import (
 
 func (r *Record) HTML(now time.Time) models.HTMLRow {
 	const NotAvailable = "N/A"
-	row := r.Settings.HTML()
+	row := r.Provider.HTML()
 	message := r.Message
 	if r.Status == constants.UPTODATE {
 		message = "no IP change for " + r.History.GetDurationSinceSuccess(now)

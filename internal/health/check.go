@@ -28,11 +28,11 @@ func isHealthy(db AllSelecter, resolver LookupIPer) (err error) {
 	for _, record := range records {
 		if record.Status == constants.FAIL {
 			return fmt.Errorf("%w: %s", ErrRecordUpdateFailed, record.String())
-		} else if record.Settings.Proxied() {
+		} else if record.Provider.Proxied() {
 			continue
 		}
 
-		hostname := record.Settings.BuildDomainName()
+		hostname := record.Provider.BuildDomainName()
 
 		currentIP := record.History.GetCurrentIP()
 		if !currentIP.IsValid() {

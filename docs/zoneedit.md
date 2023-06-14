@@ -2,6 +2,12 @@
 
 ## Configuration
 
+⚠️ zoneedit.com for some reason requires at least a 10 minutes period between update request sent.
+
+DDNS-Updater only sends update requests when it detects your domain name IP address mismatches your current public IP address,
+so it should be fine in most cases since this happens rarely (in hours/days). But in case it happens and you want to avoid this,
+set the environment variable as `PERIOD=11m` to check your public IP address and update every 11 minutes only.
+
 ### Example
 
 ```json

@@ -116,7 +116,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
-		return netip.Addr{}, err
+		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 
@@ -176,7 +176,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	request, err = http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
-		return netip.Addr{}, err
+		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 

@@ -22,7 +22,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	// by default GET request will return 1000 records.
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return 0, fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
+		return 0, fmt.Errorf("creating http request: %w", err)
 	}
 	setHeaders(request)
 

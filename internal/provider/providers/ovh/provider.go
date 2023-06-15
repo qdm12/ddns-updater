@@ -153,7 +153,7 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
+		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
 	}
 	headers.SetUserAgent(request)
 

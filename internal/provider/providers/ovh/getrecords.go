@@ -24,7 +24,7 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client,
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
+		return nil, fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaderCommon(request.Header)
 	p.setHeaderAuth(request.Header, timestamp, request.Method, request.URL, nil)

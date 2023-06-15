@@ -30,7 +30,7 @@ func doJSONHTTP(ctx context.Context, client *http.Client,
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpointURL.String(), buffer)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
+		return fmt.Errorf("creating http request: %w", err)
 	}
 	headers.SetUserAgent(request)
 

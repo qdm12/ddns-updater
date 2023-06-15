@@ -34,7 +34,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
+		return fmt.Errorf("creating http request: %w", err)
 	}
 	request.Header.Add("Content-Type", "application/json;charset=utf-8")
 	p.setHeaderCommon(request.Header)

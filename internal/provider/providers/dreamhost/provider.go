@@ -176,7 +176,7 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return records, err
+		return records, fmt.Errorf("creating http request: %w", err)
 	}
 	headers.SetUserAgent(request)
 
@@ -222,7 +222,7 @@ func (p *Provider) removeRecord(ctx context.Context, client *http.Client, ip net
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating http request: %w", err)
 	}
 	headers.SetUserAgent(request)
 
@@ -270,7 +270,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating http request: %w", err)
 	}
 	headers.SetUserAgent(request)
 

@@ -37,7 +37,7 @@ func (p *Provider) createRecord(ctx context.Context,
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
+		return "", fmt.Errorf("creating http request: %w", err)
 	}
 
 	response, err := client.Do(request)

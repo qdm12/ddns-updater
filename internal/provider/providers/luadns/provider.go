@@ -142,7 +142,7 @@ func (p *Provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("creating http request: %w", err)
 	}
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmaip.com")
@@ -195,7 +195,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return record, err
+		return record, fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 
@@ -257,7 +257,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 

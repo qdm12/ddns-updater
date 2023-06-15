@@ -128,7 +128,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 
@@ -192,7 +192,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
+		return fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 
@@ -240,7 +240,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
+		return fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 

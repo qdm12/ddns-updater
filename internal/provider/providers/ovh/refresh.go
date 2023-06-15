@@ -18,7 +18,7 @@ func (p *Provider) refresh(ctx context.Context, client *http.Client, timestamp i
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), nil)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrBadRequest, err)
+		return fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaderCommon(request.Header)
 	p.setHeaderAuth(request.Header, timestamp, request.Method, request.URL, nil)

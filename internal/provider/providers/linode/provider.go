@@ -142,7 +142,7 @@ func (p *Provider) getDomainID(ctx context.Context, client *http.Client) (domain
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 	headers.SetOauth(request, "domains:read_only")
@@ -203,7 +203,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 	headers.SetOauth(request, "domains:read_only")
@@ -269,7 +269,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 	headers.SetOauth(request, "domains:read_write")
@@ -325,7 +325,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 	headers.SetOauth(request, "domains:read_write")

@@ -36,6 +36,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/linode"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/luadns"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/namecheap"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/namecom"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/netcup"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/njalla"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/noip"
@@ -120,6 +121,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, host string
 		return luadns.New(data, domain, host, ipVersion)
 	case constants.Namecheap:
 		return namecheap.New(data, domain, host, ipVersion)
+	case constants.NameCom:
+		return namecom.New(data, domain, host, ipVersion)
 	case constants.Netcup:
 		return netcup.New(data, domain, host, ipVersion)
 	case constants.Njalla:

@@ -18,6 +18,7 @@ var (
 	ErrEmptyAccessKeyID        = errors.New("empty access key id")
 	ErrEmptyAccessKeySecret    = errors.New("empty key secret")
 	ErrEmptyTTL                = errors.New("TTL is not set")
+	ErrTTLTooLow               = errors.New("TTL is too low")
 	ErrEmptyUsername           = errors.New("empty username")
 	ErrEmptyZoneIdentifier     = errors.New("empty zone identifier")
 	ErrEmptyHost               = errors.New("host cannot be empty")

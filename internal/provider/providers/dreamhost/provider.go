@@ -14,7 +14,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
-	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -178,7 +177,7 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
 	if err != nil {
 		return records, fmt.Errorf("creating http request: %w", err)
 	}
-	headers.SetUserAgent(request)
+	setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -224,7 +223,7 @@ func (p *Provider) removeRecord(ctx context.Context, client *http.Client, ip net
 	if err != nil {
 		return fmt.Errorf("creating http request: %w", err)
 	}
-	headers.SetUserAgent(request)
+	setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -272,7 +271,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	if err != nil {
 		return fmt.Errorf("creating http request: %w", err)
 	}
-	headers.SetUserAgent(request)
+	setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

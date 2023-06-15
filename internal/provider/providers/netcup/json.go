@@ -33,6 +33,8 @@ func doJSONHTTP(ctx context.Context, client *http.Client,
 		return fmt.Errorf("creating http request: %w", err)
 	}
 	headers.SetUserAgent(request)
+	headers.SetContentType(request, "application/json")
+	headers.SetAccept(request, "application/json")
 
 	httpResponse, err := client.Do(request)
 	if err != nil {

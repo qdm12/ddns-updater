@@ -114,6 +114,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
 	}
 	headers.SetUserAgent(request)
+	headers.SetAccept(request, "application/json")
 
 	response, err := client.Do(request)
 	if err != nil {

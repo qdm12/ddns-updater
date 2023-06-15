@@ -95,7 +95,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) setHeaders(request *http.Request) {
+func setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
@@ -130,7 +130,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 	if err != nil {
 		return nil, fmt.Errorf("creating http request: %w", err)
 	}
-	p.setHeaders(request)
+	setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -194,7 +194,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	if err != nil {
 		return fmt.Errorf("creating http request: %w", err)
 	}
-	p.setHeaders(request)
+	setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -242,7 +242,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	if err != nil {
 		return fmt.Errorf("creating http request: %w", err)
 	}
-	p.setHeaders(request)
+	setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

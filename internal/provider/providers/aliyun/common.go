@@ -4,8 +4,11 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"fmt"
+	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/qdm12/ddns-updater/internal/provider/headers"
 )
 
 func newURLValues(accessKeyID string) (values url.Values) {
@@ -22,4 +25,9 @@ func newURLValues(accessKeyID string) (values url.Values) {
 	values.Set("SignatureVersion", "1.0")
 	values.Set("SignatureNonce", fmt.Sprint(randInt64))
 	return values
+}
+
+func setHeaders(request *http.Request) {
+	headers.SetUserAgent(request)
+	headers.SetAccept(request, "application/json")
 }

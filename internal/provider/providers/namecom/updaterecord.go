@@ -11,6 +11,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	"github.com/qdm12/ddns-updater/internal/provider/headers"
 )
 
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
@@ -49,6 +50,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 		return fmt.Errorf("creating http request: %w", err)
 	}
 	setHeaders(request)
+	headers.SetContentType(request, "application/json")
 
 	response, err := client.Do(request)
 	if err != nil {

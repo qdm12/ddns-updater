@@ -86,9 +86,8 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) setHeaders(request *http.Request) {
+func (p *Provider) setCommonHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
-	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
 	headers.SetAuthBearer(request, p.token)
 }
@@ -109,7 +108,7 @@ func (p *Provider) getRecordID(ctx context.Context, recordType string, client *h
 	if err != nil {
 		return 0, fmt.Errorf("creating http request: %w", err)
 	}
-	p.setHeaders(request)
+	p.setCommonHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -179,7 +178,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
 	}
-	p.setHeaders(request)
+	p.setCommonHeaders(request)
+	headers.SetContentType(request, "application/json")
 
 	response, err := client.Do(request)
 	if err != nil {

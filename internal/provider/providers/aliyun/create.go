@@ -39,6 +39,7 @@ func (p *Provider) createRecord(ctx context.Context,
 	if err != nil {
 		return "", fmt.Errorf("creating http request: %w", err)
 	}
+	setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

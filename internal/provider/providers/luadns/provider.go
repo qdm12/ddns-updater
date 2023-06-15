@@ -93,7 +93,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) setHeaders(request *http.Request) {
+func setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetAccept(request, "application/json")
 }
@@ -144,8 +144,7 @@ func (p *Provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 	if err != nil {
 		return 0, fmt.Errorf("creating http request: %w", err)
 	}
-	request.Header.Set("Accept", "application/json")
-	request.Header.Set("User-Agent", "DDNS-Updater quentin.mcgaw@gmaip.com")
+	setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -197,7 +196,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 	if err != nil {
 		return record, fmt.Errorf("creating http request: %w", err)
 	}
-	p.setHeaders(request)
+	setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -259,7 +258,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	if err != nil {
 		return fmt.Errorf("creating http request: %w", err)
 	}
-	p.setHeaders(request)
+	setHeaders(request)
+	headers.SetContentType(request, "application/json")
 
 	response, err := client.Do(request)
 	if err != nil {

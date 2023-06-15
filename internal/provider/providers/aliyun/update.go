@@ -38,6 +38,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	if err != nil {
 		return fmt.Errorf("creating http request: %w", err)
 	}
+	setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

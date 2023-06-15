@@ -144,6 +144,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
 	}
 	headers.SetContentType(request, "application/json")
+	headers.SetAccept(request, "application/json")
 	headers.SetXAuthUsername(request, p.username)
 	headers.SetXAuthPassword(request, p.password)
 	headers.SetUserAgent(request)

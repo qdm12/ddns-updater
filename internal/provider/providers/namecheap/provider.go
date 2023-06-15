@@ -96,7 +96,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func (p *Provider) setHeaders(request *http.Request) {
+func setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetAccept(request, "application/xml")
 }
@@ -120,7 +120,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
 	}
-	p.setHeaders(request)
+	setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {

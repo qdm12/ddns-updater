@@ -1,4 +1,4 @@
-package namecom
+package dreamhost
 
 import (
 	"net/http"
@@ -7,6 +7,6 @@ import (
 )
 
 func setHeaders(request *http.Request) {
-	headers.SetAccept(request, "application/json")
 	headers.SetUserAgent(request)
+	headers.SetAccept(request, "application/json")
 }

@@ -56,9 +56,9 @@ func New(data json.RawMessage, domain, host string,
 func (p *Provider) isValid() error {
 	switch {
 	case p.accessKeyID == "":
-		return fmt.Errorf("%w", errors.ErrEmptyAccessKeyID)
+		return fmt.Errorf("%w", errors.ErrAccessKeyIDNotSet)
 	case p.accessSecret == "":
-		return fmt.Errorf("%w", errors.ErrEmptyAccessKeySecret)
+		return fmt.Errorf("%w", errors.ErrAccessKeySecretNotSet)
 	}
 	return nil
 }

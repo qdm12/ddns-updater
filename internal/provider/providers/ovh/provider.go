@@ -83,18 +83,18 @@ func (p *Provider) isValid() error {
 	if p.mode == "api" {
 		switch {
 		case p.appKey == "":
-			return fmt.Errorf("%w", errors.ErrEmptyAppKey)
+			return fmt.Errorf("%w", errors.ErrAppKeyNotSet)
 		case p.consumerKey == "":
-			return fmt.Errorf("%w", errors.ErrEmptyConsumerKey)
+			return fmt.Errorf("%w", errors.ErrConsumerKeyNotSet)
 		case p.appSecret == "":
-			return fmt.Errorf("%w", errors.ErrEmptySecret)
+			return fmt.Errorf("%w", errors.ErrSecretNotSet)
 		}
 	} else {
 		switch {
 		case p.username == "":
-			return fmt.Errorf("%w", errors.ErrEmptyUsername)
+			return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 		case p.password == "":
-			return fmt.Errorf("%w", errors.ErrEmptyPassword)
+			return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 		case p.host == "*":
 			return fmt.Errorf("%w", errors.ErrHostWildcard)
 		}

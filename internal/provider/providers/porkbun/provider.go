@@ -55,9 +55,9 @@ func New(data json.RawMessage, domain, host string,
 func (p *Provider) isValid() error {
 	switch {
 	case p.apiKey == "":
-		return fmt.Errorf("%w", errors.ErrEmptyAPIKey)
+		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
 	case p.secretAPIKey == "":
-		return fmt.Errorf("%w", errors.ErrEmptyAPISecret)
+		return fmt.Errorf("%w", errors.ErrAPISecretNotSet)
 	}
 	return nil
 }

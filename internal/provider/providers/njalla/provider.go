@@ -50,7 +50,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	if p.key == "" {
-		return fmt.Errorf("%w", errors.ErrEmptyKey)
+		return fmt.Errorf("%w", errors.ErrKeyNotSet)
 	}
 	return nil
 }

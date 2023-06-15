@@ -54,7 +54,7 @@ var tokenRegex = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-
 func (p *Provider) isValid() error {
 	if !tokenRegex.MatchString(p.token) {
 		return fmt.Errorf("%w: token %q does not match regex %q",
-			errors.ErrMalformedToken, p.token, tokenRegex)
+			errors.ErrTokenNotValid, p.token, tokenRegex)
 	}
 	switch p.host {
 	case "@", "*":

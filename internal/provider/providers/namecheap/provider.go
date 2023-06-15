@@ -59,7 +59,7 @@ var passwordRegex = regexp.MustCompile(`^[a-f0-9]{32}$`)
 func (p *Provider) isValid() error {
 	if !passwordRegex.MatchString(p.password) {
 		return fmt.Errorf("%w: password %q does not match regex %q",
-			errors.ErrMalformedPassword, p.password, passwordRegex)
+			errors.ErrPasswordNotValid, p.password, passwordRegex)
 	}
 	return nil
 }

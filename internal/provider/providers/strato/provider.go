@@ -53,7 +53,7 @@ func New(data json.RawMessage, domain, host string,
 func (p *Provider) isValid() error {
 	switch {
 	case p.password == "":
-		return fmt.Errorf("%w", errors.ErrEmptyPassword)
+		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	case p.host == "*":
 		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}

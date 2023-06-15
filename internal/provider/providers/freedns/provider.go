@@ -49,7 +49,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	if p.token == "" {
-		return fmt.Errorf("%w", errors.ErrEmptyToken)
+		return fmt.Errorf("%w", errors.ErrTokenNotSet)
 	}
 	return nil
 }

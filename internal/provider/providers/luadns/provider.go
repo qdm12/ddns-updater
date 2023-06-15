@@ -59,9 +59,9 @@ func (p *Provider) isValid() error {
 	switch {
 	case !regexEmail.MatchString(p.email):
 		return fmt.Errorf("%w: email %q does not match regex %s",
-			errors.ErrMalformedEmail, p.email, regexEmail)
+			errors.ErrEmailNotValid, p.email, regexEmail)
 	case p.token == "":
-		return fmt.Errorf("%w", errors.ErrEmptyToken)
+		return fmt.Errorf("%w", errors.ErrTokenNotSet)
 	}
 	return nil
 }

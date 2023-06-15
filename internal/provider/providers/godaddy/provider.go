@@ -57,9 +57,9 @@ func (p *Provider) isValid() error {
 	switch {
 	case !keyRegex.MatchString(p.key):
 		return fmt.Errorf("%w: key %q does not match regex %s",
-			errors.ErrMalformedKey, p.key, keyRegex)
+			errors.ErrKeyNotValid, p.key, keyRegex)
 	case p.secret == "":
-		return fmt.Errorf("%w", errors.ErrEmptySecret)
+		return fmt.Errorf("%w", errors.ErrSecretNotSet)
 	}
 	return nil
 }

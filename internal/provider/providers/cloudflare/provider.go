@@ -79,23 +79,23 @@ func (p *Provider) isValid() error {
 		switch {
 		case !keyRegex.MatchString(p.key):
 			return fmt.Errorf("%w: key %q does not match regex %q",
-				errors.ErrMalformedKey, p.key, keyRegex)
+				errors.ErrKeyNotValid, p.key, keyRegex)
 		case !regexEmail.MatchString(p.email):
 			return fmt.Errorf("%w: email %q does not match regex %q",
-				errors.ErrMalformedEmail, p.email, regexEmail)
+				errors.ErrEmailNotValid, p.email, regexEmail)
 		}
 	case p.userServiceKey != "": // only user service key
 		if !userServiceKeyRegex.MatchString(p.userServiceKey) {
 			return fmt.Errorf("%w: %q does not match regex %q",
-				errors.ErrMalformedUserServiceKey, p.userServiceKey, userServiceKeyRegex)
+				errors.ErrUserServiceKeyNotValid, p.userServiceKey, userServiceKeyRegex)
 		}
 	default: // constants.API token only
 	}
 	switch {
 	case p.zoneIdentifier == "":
-		return fmt.Errorf("%w", errors.ErrEmptyZoneIdentifier)
+		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
 	case p.ttl == 0:
-		return fmt.Errorf("%w", errors.ErrEmptyTTL)
+		return fmt.Errorf("%w", errors.ErrTTLNotSet)
 	}
 	return nil
 }

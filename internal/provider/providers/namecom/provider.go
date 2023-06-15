@@ -39,9 +39,9 @@ func New(data json.RawMessage, domain, host string,
 	const minTTL = 300
 	switch {
 	case extraSettings.Username == "":
-		return nil, fmt.Errorf("%w", errors.ErrEmptyUsername)
+		return nil, fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case extraSettings.Token == "":
-		return nil, fmt.Errorf("%w", errors.ErrEmptyPassword)
+		return nil, fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	case extraSettings.TTL != nil && *extraSettings.TTL < minTTL:
 		return nil, fmt.Errorf("%w: %d must be at least %d",
 			errors.ErrTTLTooLow, *extraSettings.TTL, minTTL)

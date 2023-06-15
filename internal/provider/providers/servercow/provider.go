@@ -61,9 +61,9 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 func (p *Provider) isValid() error {
 	switch {
 	case p.username == "":
-		return fmt.Errorf("%w", errors.ErrEmptyUsername)
+		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case p.password == "":
-		return fmt.Errorf("%w", errors.ErrEmptyPassword)
+		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	}
 	if strings.Contains(p.host, "*") {
 		return fmt.Errorf("%w", errors.ErrHostWildcard)

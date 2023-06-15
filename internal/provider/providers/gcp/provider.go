@@ -56,7 +56,7 @@ func (p *Provider) isValid() error {
 	}
 
 	if p.zone == "" {
-		return fmt.Errorf("%w", ddnserrors.ErrEmptyZoneIdentifier)
+		return fmt.Errorf("%w", ddnserrors.ErrZoneIdentifierNotSet)
 	}
 
 	if len(p.credentials) == 0 {

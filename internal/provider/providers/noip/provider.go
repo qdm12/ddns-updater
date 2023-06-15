@@ -58,11 +58,11 @@ func (p *Provider) isValid() error {
 	const maxUsernameLength = 50
 	switch {
 	case p.username == "":
-		return fmt.Errorf("%w", errors.ErrEmptyUsername)
+		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case len(p.username) > maxUsernameLength:
-		return fmt.Errorf("%w: longer than 50 characters", errors.ErrMalformedUsername)
+		return fmt.Errorf("%w: longer than 50 characters", errors.ErrUsernameNotValid)
 	case p.password == "":
-		return fmt.Errorf("%w", errors.ErrEmptyPassword)
+		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	case p.host == "*":
 		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}

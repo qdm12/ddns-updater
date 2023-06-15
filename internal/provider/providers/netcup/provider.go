@@ -55,11 +55,11 @@ func New(data json.RawMessage, domain, host string,
 func (p *Provider) isValid() error {
 	switch {
 	case p.customerNumber == "":
-		return fmt.Errorf("%w", errors.ErrEmptyCustomerNumber)
+		return fmt.Errorf("%w", errors.ErrCustomerNumberNotSet)
 	case p.apiKey == "":
-		return fmt.Errorf("%w", errors.ErrEmptyAPIKey)
+		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
 	case p.password == "":
-		return fmt.Errorf("%w", errors.ErrEmptyPassword)
+		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	case p.host == "*":
 		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}

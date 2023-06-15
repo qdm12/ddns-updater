@@ -62,9 +62,9 @@ func (p *Provider) isValid() error {
 	}
 	switch {
 	case p.user == "":
-		return fmt.Errorf("%w", errors.ErrEmptyUsername)
+		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case p.password == "":
-		return fmt.Errorf("%w", errors.ErrEmptyPassword)
+		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	case p.host == "*":
 		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}

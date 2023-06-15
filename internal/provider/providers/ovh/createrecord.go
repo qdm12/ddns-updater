@@ -42,7 +42,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 
 	response, err := client.Do(request)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrUnsuccessfulResponse, err)
+		return fmt.Errorf("doing http request: %w", err)
 	}
 
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {

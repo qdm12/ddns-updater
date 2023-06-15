@@ -129,7 +129,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	response, err := client.Do(request)
 	if err != nil {
-		return netip.Addr{}, err
+		return netip.Addr{}, fmt.Errorf("doing http request: %w", err)
 	}
 	defer response.Body.Close()
 

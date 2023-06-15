@@ -159,7 +159,7 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
 
 	response, err := client.Do(request)
 	if err != nil {
-		return netip.Addr{}, err
+		return netip.Addr{}, fmt.Errorf("doing http request: %w", err)
 	}
 	defer response.Body.Close()
 

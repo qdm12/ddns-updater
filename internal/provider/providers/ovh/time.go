@@ -56,7 +56,7 @@ func (p *Provider) getOVHTime(ctx context.Context, client *http.Client) (ovhTime
 
 	response, err := client.Do(request)
 	if err != nil {
-		return ovhTime, err
+		return ovhTime, fmt.Errorf("doing http request: %w", err)
 	}
 
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {

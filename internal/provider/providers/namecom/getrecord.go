@@ -28,7 +28,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 
 	response, err := client.Do(request)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("doing http request: %w", err)
 	}
 	defer response.Body.Close()
 

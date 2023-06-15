@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 func (p *Provider) refresh(ctx context.Context, client *http.Client, timestamp int64) (err error) {
@@ -25,7 +23,7 @@ func (p *Provider) refresh(ctx context.Context, client *http.Client, timestamp i
 
 	response, err := client.Do(request)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrUnsuccessfulResponse, err)
+		return fmt.Errorf("doing http request: %w", err)
 	}
 
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {

@@ -38,7 +38,7 @@ func doJSONHTTP(ctx context.Context, client *http.Client,
 
 	httpResponse, err := client.Do(request)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrUnsuccessfulResponse, err)
+		return fmt.Errorf("doing http request: %w", err)
 	}
 
 	var commonResponse struct {

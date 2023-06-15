@@ -154,7 +154,7 @@ func (p *Provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 
 	response, err := client.Do(request)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("doing http request: %w", err)
 	}
 	defer response.Body.Close()
 
@@ -206,7 +206,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 
 	response, err := client.Do(request)
 	if err != nil {
-		return record, err
+		return record, fmt.Errorf("doing http request: %w", err)
 	}
 	defer response.Body.Close()
 
@@ -269,7 +269,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	response, err := client.Do(request)
 	if err != nil {
-		return err
+		return fmt.Errorf("doing http request: %w", err)
 	}
 	defer response.Body.Close()
 

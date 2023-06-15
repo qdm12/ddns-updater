@@ -134,7 +134,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnsuccessfulResponse, err)
+		return nil, fmt.Errorf("doing http request: %w", err)
 	}
 	defer response.Body.Close()
 
@@ -198,7 +198,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 
 	response, err := client.Do(request)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrUnsuccessfulResponse, err)
+		return fmt.Errorf("doing http request: %w", err)
 	}
 	defer response.Body.Close()
 
@@ -246,7 +246,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	response, err := client.Do(request)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrUnsuccessfulResponse, err)
+		return fmt.Errorf("doing http request: %w", err)
 	}
 	defer response.Body.Close()
 

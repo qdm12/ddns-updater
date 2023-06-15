@@ -31,7 +31,7 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client,
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnsuccessfulResponse, err)
+		return nil, fmt.Errorf("doing http request: %w", err)
 	}
 
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {

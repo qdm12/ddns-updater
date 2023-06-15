@@ -105,7 +105,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("verbose", "true")
 	values.Set("domains", p.host)
 	values.Set("token", p.token)
-	u.RawQuery = values.Encode()
 	if !p.useProviderIP {
 		if ip.Is6() {
 			values.Set("ip6", ip.String())
@@ -113,6 +112,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 			values.Set("ip", ip.String())
 		}
 	}
+	u.RawQuery = values.Encode()
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {

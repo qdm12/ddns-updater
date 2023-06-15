@@ -54,7 +54,8 @@ var keyRegex = regexp.MustCompile(`^[a-zA-Z0-9]{16}$`)
 
 func (p *Provider) isValid() error {
 	if !keyRegex.MatchString(p.key) {
-		return fmt.Errorf("%w: %s", errors.ErrMalformedKey, p.key)
+		return fmt.Errorf("%w: key %q does not match regex %s",
+			errors.ErrMalformedKey, p.key, keyRegex)
 	}
 	return nil
 }

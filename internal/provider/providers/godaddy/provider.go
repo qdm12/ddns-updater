@@ -56,7 +56,8 @@ var keyRegex = regexp.MustCompile(`^[A-Za-z0-9]{8,14}\_[A-Za-z0-9]{21,22}$`)
 func (p *Provider) isValid() error {
 	switch {
 	case !keyRegex.MatchString(p.key):
-		return fmt.Errorf("%w", errors.ErrMalformedKey)
+		return fmt.Errorf("%w: key %q does not match regex %s",
+			errors.ErrMalformedKey, p.key, keyRegex)
 	case p.secret == "":
 		return fmt.Errorf("%w", errors.ErrEmptySecret)
 	}

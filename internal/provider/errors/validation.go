@@ -21,7 +21,6 @@ var (
 	ErrTTLTooLow               = errors.New("TTL is too low")
 	ErrEmptyUsername           = errors.New("empty username")
 	ErrEmptyZoneIdentifier     = errors.New("empty zone identifier")
-	ErrEmptyHost               = errors.New("host cannot be empty")
 	ErrGCPProjectNotSet        = errors.New("GCP project is not set")
 	ErrHostOnlyAt              = errors.New(`host can only be "@"`)
 	ErrHostOnlySubdomain       = errors.New("host can only be a subdomain")

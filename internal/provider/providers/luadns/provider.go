@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"regexp"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -50,10 +51,15 @@ func New(data json.RawMessage, domain, host string,
 	return p, nil
 }
 
+var (
+	regexEmail = regexp.MustCompile(`[a-zA-Z0-9-_.+]+@[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,10}`)
+)
+
 func (p *Provider) isValid() error {
 	switch {
-	case !utils.MatchEmail(p.email):
-		return fmt.Errorf("%w", errors.ErrMalformedEmail)
+	case !regexEmail.MatchString(p.email):
+		return fmt.Errorf("%w: email %q does not match regex %s",
+			errors.ErrMalformedEmail, p.email, regexEmail)
 	case p.token == "":
 		return fmt.Errorf("%w", errors.ErrEmptyToken)
 	}

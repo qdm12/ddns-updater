@@ -70,6 +70,7 @@ func New(data json.RawMessage, domain, host string,
 var (
 	keyRegex            = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
 	userServiceKeyRegex = regexp.MustCompile(`^v1\.0.+$`)
+	regexEmail          = regexp.MustCompile(`[a-zA-Z0-9-_.+]+@[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,10}`)
 )
 
 func (p *Provider) isValid() error {
@@ -77,13 +78,16 @@ func (p *Provider) isValid() error {
 	case p.key != "": // email and key must be provided
 		switch {
 		case !keyRegex.MatchString(p.key):
-			return fmt.Errorf("%w", errors.ErrMalformedKey)
-		case !utils.MatchEmail(p.email):
-			return fmt.Errorf("%w", errors.ErrMalformedEmail)
+			return fmt.Errorf("%w: key %q does not match regex %q",
+				errors.ErrMalformedKey, p.key, keyRegex)
+		case !regexEmail.MatchString(p.email):
+			return fmt.Errorf("%w: email %q does not match regex %q",
+				errors.ErrMalformedEmail, p.email, regexEmail)
 		}
 	case p.userServiceKey != "": // only user service key
 		if !userServiceKeyRegex.MatchString(p.userServiceKey) {
-			return fmt.Errorf("%w", errors.ErrMalformedUserServiceKey)
+			return fmt.Errorf("%w: %q does not match regex %q",
+				errors.ErrMalformedUserServiceKey, p.userServiceKey, userServiceKeyRegex)
 		}
 	default: // constants.API token only
 	}

@@ -52,15 +52,15 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	if p.project == "" {
-		return ddnserrors.ErrGCPProjectNotSet
+		return fmt.Errorf("%w", ddnserrors.ErrGCPProjectNotSet)
 	}
 
 	if p.zone == "" {
-		return ddnserrors.ErrEmptyZoneIdentifier
+		return fmt.Errorf("%w", ddnserrors.ErrEmptyZoneIdentifier)
 	}
 
 	if len(p.credentials) == 0 {
-		return ddnserrors.ErrCredentialsNotSet
+		return fmt.Errorf("%w", ddnserrors.ErrCredentialsNotSet)
 	}
 
 	return nil

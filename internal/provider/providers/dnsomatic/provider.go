@@ -60,7 +60,8 @@ var regexUsername = regexp.MustCompile(`^[a-zA-Z0-9@._-]{3,25}$`)
 func (p *Provider) isValid() error {
 	switch {
 	case !regexUsername.MatchString(p.username):
-		return fmt.Errorf("%w: %s", errors.ErrMalformedUsername, p.username)
+		return fmt.Errorf("%w: username %q does not match regex %q",
+			errors.ErrMalformedUsername, p.username, regexUsername)
 	case p.password == "":
 		return fmt.Errorf("%w", errors.ErrEmptyPassword)
 	}

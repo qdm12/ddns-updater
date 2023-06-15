@@ -107,15 +107,15 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	if stderrors.Is(err, errors.ErrRecordNotFound) {
 		recordID, err = p.createRecord(ctx, client, ip)
 		if err != nil {
-			return newIP, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
+			return newIP, fmt.Errorf("creating record: %w", err)
 		}
 	} else if err != nil {
-		return newIP, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
+		return newIP, fmt.Errorf("getting record id: %w", err)
 	}
 
 	err = p.updateRecord(ctx, client, recordID, ip)
 	if err != nil {
-		return newIP, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
+		return newIP, fmt.Errorf("updating record: %w", err)
 	}
 
 	return ip, nil

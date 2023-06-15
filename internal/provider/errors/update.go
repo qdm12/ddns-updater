@@ -34,4 +34,5 @@ var (
 	ErrUnmarshalResponse       = errors.New("cannot unmarshal update response")
 	ErrUnsuccessfulResponse    = errors.New("unsuccessful response")
 	ErrZoneNotFound            = errors.New("zone not found") // LuaDNS
+	ErrSessionIsEmpty          = errors.New("session received is empty")
 )

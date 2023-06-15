@@ -306,10 +306,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case stderrors.Is(err, errors.ErrNoResultReceived):
 		identifier, err = p.CreateRecord(ctx, client, ip)
 		if err != nil {
-			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
+			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 		}
 	case err != nil:
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
+		return netip.Addr{}, fmt.Errorf("getting record id: %w", err)
 	case upToDate:
 		return ip, nil
 	}

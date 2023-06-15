@@ -149,7 +149,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	recordID, err := p.getRecordID(ctx, recordType, client)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
+		return netip.Addr{}, fmt.Errorf("getting record id: %w", err)
 	}
 
 	u := url.URL{

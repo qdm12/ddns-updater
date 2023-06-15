@@ -100,7 +100,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	records, err := p.getRecords(ctx, client)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrListRecords, err)
+		return netip.Addr{}, fmt.Errorf("listing records: %w", err)
 	}
 
 	var oldIP netip.Addr
@@ -120,13 +120,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	// Create the record with the new IP before removing the old one if it exists.
 	err = p.createRecord(ctx, client, ip)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
+		return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 	}
 
 	if oldIP.IsValid() { // Found editable record with a different IP address, so remove it
 		err = p.removeRecord(ctx, client, oldIP)
 		if err != nil {
-			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrRemoveRecord, err)
+			return netip.Addr{}, fmt.Errorf("removing record: %w", err)
 		}
 	}
 

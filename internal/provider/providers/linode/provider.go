@@ -93,7 +93,7 @@ func (p *Provider) HTML() models.HTMLRow {
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	domainID, err := p.getDomainID(ctx, client)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrGetDomainID, err)
+		return netip.Addr{}, fmt.Errorf("getting domain id: %w", err)
 	}
 
 	recordType := constants.A
@@ -105,16 +105,16 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	if goerrors.Is(err, errors.ErrNotFound) {
 		err := p.createRecord(ctx, client, domainID, recordType, ip)
 		if err != nil {
-			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
+			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 		}
 		return ip, nil
 	} else if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrGetRecordID, err)
+		return netip.Addr{}, fmt.Errorf("getting record id: %w", err)
 	}
 
 	err = p.updateRecord(ctx, client, domainID, recordID, ip)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
+		return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 	}
 
 	return ip, nil

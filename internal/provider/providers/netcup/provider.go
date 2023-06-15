@@ -120,7 +120,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	updateResponse, err := p.updateDNSRecords(ctx, client, session, updateRecordSet)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
+		return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 	}
 
 	found := false

@@ -212,19 +212,19 @@ func (p *Provider) updateWithZoneDNS(ctx context.Context, client *http.Client, i
 
 	recordIDs, err := p.getRecords(ctx, client, recordType, subDomain, timestamp)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrListRecords, err)
+		return netip.Addr{}, fmt.Errorf("listing records: %w", err)
 	}
 
 	if len(recordIDs) == 0 {
 		err = p.createRecord(ctx, client, recordType, subDomain, ipStr, timestamp)
 		if err != nil {
-			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrCreateRecord, err)
+			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 		}
 	} else {
 		for _, recordID := range recordIDs {
 			err = p.updateRecord(ctx, client, recordID, ipStr, timestamp)
 			if err != nil {
-				return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
+				return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 			}
 		}
 	}

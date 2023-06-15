@@ -102,19 +102,19 @@ func setHeaders(request *http.Request) {
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	zoneID, err := p.getZoneID(ctx, client)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrGetZoneID, err)
+		return netip.Addr{}, fmt.Errorf("getting zone id: %w", err)
 	}
 
 	record, err := p.getRecord(ctx, client, zoneID, ip)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrGetRecordInZone, err)
+		return netip.Addr{}, fmt.Errorf("getting record: %w", err)
 	}
 
 	newRecord := record
 	newRecord.Content = ip.String()
 	err = p.updateRecord(ctx, client, zoneID, newRecord)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUpdateRecord, err)
+		return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 	}
 	return ip, nil
 }

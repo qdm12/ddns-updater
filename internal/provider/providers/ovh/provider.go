@@ -3,7 +3,6 @@ package ovh
 import (
 	"context"
 	"encoding/json"
-	stderrors "errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -187,11 +186,6 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
 	}
 }
 
-var (
-	ErrGetAdjustedTime = stderrors.New("cannot obtain adjusted time from OVH")
-	ErrRefresh         = stderrors.New("cannot refresh records")
-)
-
 func (p *Provider) updateWithZoneDNS(ctx context.Context, client *http.Client, ip netip.Addr) (
 	newIP netip.Addr, err error) {
 	ipStr := ip.Unmap().String()
@@ -207,7 +201,7 @@ func (p *Provider) updateWithZoneDNS(ctx context.Context, client *http.Client, i
 
 	timestamp, err := p.getAdjustedUnixTimestamp(ctx, client)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", ErrGetAdjustedTime, err)
+		return netip.Addr{}, fmt.Errorf("obtain adjusted time from OVH: %w", err)
 	}
 
 	recordIDs, err := p.getRecords(ctx, client, recordType, subDomain, timestamp)
@@ -231,7 +225,7 @@ func (p *Provider) updateWithZoneDNS(ctx context.Context, client *http.Client, i
 
 	err = p.refresh(ctx, client, timestamp)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", ErrRefresh, err)
+		return netip.Addr{}, fmt.Errorf("refreshing records: %w", err)
 	}
 
 	return ip, nil

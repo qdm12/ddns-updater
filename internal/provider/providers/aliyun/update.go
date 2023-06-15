@@ -50,7 +50,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	case http.StatusOK:
 	default:
 		return fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode,
+			errors.ErrHTTPStatusNotValid, response.StatusCode,
 			utils.BodyToSingleLine(response.Body))
 	}
 

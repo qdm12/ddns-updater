@@ -134,18 +134,18 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.ToSingleLine(s))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	switch {
 	case strings.Contains(s, "badysys"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrInvalidSystemParam)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrSystemParamNotValid)
 	case strings.Contains(s, constants.Badauth):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	case strings.Contains(s, constants.Notfqdn):

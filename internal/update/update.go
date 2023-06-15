@@ -45,7 +45,7 @@ func (u *Updater) Update(ctx context.Context, id uint, ip netip.Addr, now time.T
 	newIP, err := record.Provider.Update(ctx, u.client, ip)
 	if err != nil {
 		record.Message = err.Error()
-		if errors.Is(err, settingserrors.ErrAbuse) {
+		if errors.Is(err, settingserrors.ErrBannedAbuse) {
 			lastBan := time.Unix(now.Unix(), 0)
 			record.LastBan = &lastBan
 			domainName := record.Provider.BuildDomainName()

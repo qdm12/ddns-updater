@@ -141,13 +141,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.ToSingleLine(s))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	switch {
@@ -156,7 +156,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case strings.Contains(s, constants.Notfqdn):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case strings.Contains(s, constants.Abuse):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAbuse)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBannedAbuse)
 	case strings.Contains(s, "good"):
 		return ip, nil
 	case strings.Contains(s, "nochg"): // Updated but not changed

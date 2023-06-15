@@ -131,21 +131,22 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid,
+			response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	switch s {
 	case "":
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrNoResultReceived)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoResult)
 	case constants.Nineoneone:
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrDNSServerSide)
 	case constants.Abuse:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAbuse)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBannedAbuse)
 	case "!donator":
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrFeatureUnavailable)
 	case constants.Badagent:
@@ -166,7 +167,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	if len(ips) == 0 {
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrNoIPInResponse)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoIP)
 	}
 
 	newIP = ips[0]

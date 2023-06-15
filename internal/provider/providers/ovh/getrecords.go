@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 func (p *Provider) getRecords(ctx context.Context, client *http.Client,
@@ -42,7 +40,7 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client,
 	err = decoder.Decode(&recordIDs)
 	if err != nil {
 		_ = response.Body.Close()
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	_ = response.Body.Close()

@@ -136,7 +136,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	encoder := json.NewEncoder(buffer)
 	err = encoder.Encode(requestData)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
+		return netip.Addr{}, fmt.Errorf("json encoding request data: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
@@ -157,7 +157,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	if response.StatusCode > http.StatusUnsupportedMediaType {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -169,11 +169,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	err = decoder.Decode(&parsedJSON)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	if parsedJSON.Message != "ok" {
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, parsedJSON.Error)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, parsedJSON.Error)
 	}
 
 	return ip, nil

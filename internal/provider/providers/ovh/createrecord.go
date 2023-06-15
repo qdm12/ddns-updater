@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 func (p *Provider) createRecord(ctx context.Context, client *http.Client,
@@ -29,7 +27,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	}
 	bodyBytes, err := json.Marshal(postRecordsParams)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
+		return fmt.Errorf("json encoding request data: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBuffer(bodyBytes))

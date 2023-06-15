@@ -121,19 +121,19 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 	str := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, str)
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, str)
 	}
 
 	switch {
 	case strings.HasPrefix(str, constants.Notfqdn):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case strings.HasPrefix(str, constants.Abuse):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAbuse)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBannedAbuse)
 	case strings.HasPrefix(str, "badrequest"):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBadRequest)
 	case strings.HasPrefix(str, "constants.Badauth"):

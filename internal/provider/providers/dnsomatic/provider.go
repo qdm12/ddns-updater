@@ -138,13 +138,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, s)
+			errors.ErrHTTPStatusNotValid, response.StatusCode, s)
 	}
 
 	switch s {
@@ -155,7 +155,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case constants.Badagent:
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBannedUserAgent)
 	case constants.Abuse:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAbuse)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBannedAbuse)
 	case "dnserr", constants.Nineoneone:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrDNSServerSide, s)
 	}
@@ -172,7 +172,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	if len(ips) == 0 {
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrNoIPInResponse)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoIP)
 	}
 
 	newIP = ips[0]

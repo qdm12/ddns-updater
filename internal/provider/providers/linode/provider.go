@@ -102,7 +102,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	recordID, err := p.getRecordID(ctx, client, domainID, recordType)
-	if goerrors.Is(err, errors.ErrNotFound) {
+	if goerrors.Is(err, errors.ErrRecordNotFound) {
 		err := p.createRecord(ctx, client, domainID, recordType, ip)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
@@ -155,7 +155,7 @@ func (p *Provider) getDomainID(ctx context.Context, client *http.Client) (domain
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
+		err = fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
 		return 0, fmt.Errorf("%w: %s", err, p.getErrorMessage(response.Body))
 	}
 
@@ -175,11 +175,11 @@ func (p *Provider) getDomainID(ctx context.Context, client *http.Client) (domain
 	domains := obj.Data
 	switch len(domains) {
 	case 0:
-		return 0, fmt.Errorf("%w", errors.ErrNotFound)
+		return 0, fmt.Errorf("%w", errors.ErrDomainIDNotFound)
 	case 1:
 	default:
 		return 0, fmt.Errorf("%w: %d records instead of 1",
-			errors.ErrNumberOfResultsReceived, len(domains))
+			errors.ErrResultsCountReceived, len(domains))
 	}
 
 	if domains[0].Status == "disabled" {
@@ -215,7 +215,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
+		err = fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
 		return 0, fmt.Errorf("%w: %s", err, p.getErrorMessage(response.Body))
 	}
 
@@ -229,7 +229,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	}
 	err = decoder.Decode(&obj)
 	if err != nil {
-		return 0, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return 0, fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	for _, domainRecord := range obj.Data {
@@ -238,7 +238,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 		}
 	}
 
-	return 0, fmt.Errorf("%w", errors.ErrNotFound)
+	return 0, fmt.Errorf("%w", errors.ErrRecordNotFound)
 }
 
 func (p *Provider) createRecord(ctx context.Context, client *http.Client,
@@ -264,7 +264,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	encoder := json.NewEncoder(buffer)
 	err = encoder.Encode(requestData)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
+		return fmt.Errorf("json encoding request data: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
@@ -281,7 +281,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
+		err = fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
 		return fmt.Errorf("%w: %s", err, p.getErrorMessage(response.Body))
 	}
 
@@ -289,7 +289,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&responseData)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	newIP, err := netip.ParseAddr(responseData.IP)
@@ -320,7 +320,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	encoder := json.NewEncoder(buffer)
 	err = encoder.Encode(data)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
+		return fmt.Errorf("json encoding request data: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
@@ -337,7 +337,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
+		err = fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
 		return fmt.Errorf("%w: %s", err, p.getErrorMessage(response.Body))
 	}
 
@@ -345,7 +345,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&data)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	newIP, err := netip.ParseAddr(data.IP)

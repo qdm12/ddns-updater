@@ -56,14 +56,14 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 		err = json.Unmarshal(bodyBytes, &data)
 		if err != nil || data.Code != "InvalidDomainName.NoExist" {
 			return "", fmt.Errorf("%w: %d: %s",
-				errors.ErrBadHTTPStatus, response.StatusCode,
+				errors.ErrHTTPStatusNotValid, response.StatusCode,
 				utils.BodyToSingleLine(response.Body))
 		}
 
 		return "", fmt.Errorf("%w", errors.ErrRecordNotFound)
 	default:
 		return "", fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode,
+			errors.ErrHTTPStatusNotValid, response.StatusCode,
 			utils.BodyToSingleLine(response.Body))
 	}
 
@@ -77,7 +77,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	}
 	err = decoder.Decode(&data)
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return "", fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	switch len(data.DomainRecords.Record) {
@@ -86,7 +86,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	case 1:
 	default:
 		return "", fmt.Errorf("%w: %d records found instead of 1",
-			errors.ErrNumberOfResultsReceived, len(data.DomainRecords.Record))
+			errors.ErrResultsCountReceived, len(data.DomainRecords.Record))
 	}
 
 	return data.DomainRecords.Record[0].RecordID, nil

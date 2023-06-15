@@ -117,7 +117,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	err = encoder.Encode(requestData)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
+		return netip.Addr{}, fmt.Errorf("json encoding request data: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
@@ -137,7 +137,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	if response.StatusCode != http.StatusCreated {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	return ip, nil

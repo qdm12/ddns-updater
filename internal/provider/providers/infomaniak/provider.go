@@ -126,7 +126,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 	s := string(b)
 
@@ -145,7 +145,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		case strings.HasPrefix(s, "nochg "):
 			newIP, err = netip.ParseAddr(s[6:])
 			if err != nil {
-				return netip.Addr{}, fmt.Errorf("%w: in response %q", errors.ErrNoResultReceived, s)
+				return netip.Addr{}, fmt.Errorf("%w: in response %q", errors.ErrReceivedNoResult, s)
 			} else if !p.useProviderIP && ip.Compare(newIP) != 0 {
 				return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
 					errors.ErrIPReceivedMismatch, ip, newIP)
@@ -161,9 +161,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		case constants.Badauth:
 			return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 		default:
-			return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
+			return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)
 		}
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)
 	}
 }

@@ -19,7 +19,7 @@ func extractAPIError(response *http.Response) (err error) {
 		b, err := io.ReadAll(response.Body)
 		if err != nil {
 			_ = response.Body.Close()
-			return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+			return fmt.Errorf("reading response body: %w", err)
 		}
 		apiError.Message = string(b)
 	}
@@ -28,5 +28,5 @@ func extractAPIError(response *http.Response) (err error) {
 	_ = response.Body.Close()
 
 	return fmt.Errorf("%w: %s: %s: for query ID: %s",
-		errors.ErrBadHTTPStatus, response.Status, apiError.Message, queryID)
+		errors.ErrHTTPStatusNotValid, response.Status, apiError.Message, queryID)
 }

@@ -113,18 +113,18 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)
 	}
 
 	loweredResponse := strings.ToLower(s)
 	switch {
 	case loweredResponse == "":
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrNoResultReceived)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoResult)
 	case strings.HasPrefix(loweredResponse, "no ip change detected"),
 		strings.HasPrefix(loweredResponse, "updated "):
 		return ip, nil

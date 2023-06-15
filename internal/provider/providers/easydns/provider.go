@@ -128,24 +128,24 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus,
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid,
 			response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	switch {
 	case s == "":
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrNoResultReceived)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoResult)
 	case strings.Contains(s, "NO_SERVICE"):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrNoService)
 	case strings.Contains(s, "NO_ACCESS"):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	case strings.Contains(s, "ILLEGAL_INPUT"), strings.Contains(s, "TOO_SOON"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAbuse)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBannedAbuse)
 	case strings.Contains(s, "NO_ERROR"), strings.Contains(s, "OK"):
 		return ip, nil
 	default:

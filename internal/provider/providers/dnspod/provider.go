@@ -128,7 +128,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	if response.StatusCode != http.StatusOK {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -143,7 +143,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	err = decoder.Decode(&recordResp)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	var recordID, recordLine string
@@ -159,7 +159,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		}
 	}
 	if recordID == "" {
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrNotFound)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrRecordNotFound)
 	}
 
 	u.Path = "/Record.Ddns"
@@ -188,7 +188,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	if response.StatusCode != http.StatusOK {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	data, err := io.ReadAll(response.Body)
@@ -205,7 +205,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	err = json.Unmarshal(data, &ddnsResp)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	ipStr := ddnsResp.Record.Value

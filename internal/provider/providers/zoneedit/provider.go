@@ -129,12 +129,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus,
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid,
 			response.StatusCode, utils.ToSingleLine(s))
 	}
 
@@ -155,13 +155,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		}
 		return newIP, nil
 	case s == "":
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrNoResultReceived)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoResult)
 	case strings.Contains(s, `error code="702"`),
 		strings.Contains(s, "minimum 600 seconds between requests"):
-		return netip.Addr{}, fmt.Errorf("%w: zoneedit requires 10 minutes between each request", errors.ErrAbuse)
+		return netip.Addr{}, fmt.Errorf("%w: zoneedit requires 10 minutes between each request", errors.ErrBannedAbuse)
 	case strings.Contains(s, `error code="709"`),
 		strings.Contains(s, "invalid hostname"):
-		return netip.Addr{}, fmt.Errorf("%w: invalid request sent", errors.ErrAbuse)
+		return netip.Addr{}, fmt.Errorf("%w: invalid request sent", errors.ErrBannedAbuse)
 	case strings.Contains(s, `error code="708"`),
 		strings.Contains(s, "failed login"):
 		return netip.Addr{}, fmt.Errorf("%w: for user %s", errors.ErrAuth, p.username)

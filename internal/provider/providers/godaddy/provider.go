@@ -118,7 +118,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	err = encoder.Encode(requestData)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
+		return netip.Addr{}, fmt.Errorf("json encoding request data: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
@@ -142,10 +142,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 
-	err = fmt.Errorf("%w: %d", errors.ErrBadHTTPStatus, response.StatusCode)
+	err = fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
 	var parsedJSON struct {
 		Message string `json:"message"`
 	}

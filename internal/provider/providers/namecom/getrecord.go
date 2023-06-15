@@ -50,7 +50,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	}
 	err = decoder.Decode(&data)
 	if err != nil {
-		return 0, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return 0, fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	for _, record := range data.Records {

@@ -131,7 +131,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	if response.StatusCode != http.StatusOK {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := xml.NewDecoder(response.Body)
@@ -147,11 +147,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	err = decoder.Decode(&parsedXML)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("xml decoding response body: %w", err)
 	}
 
 	if parsedXML.Errors.Error != "" {
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, parsedXML.Errors.Error)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, parsedXML.Errors.Error)
 	}
 
 	if parsedXML.IP == "" {

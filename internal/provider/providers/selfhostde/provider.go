@@ -136,19 +136,19 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case http.StatusGone:
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAccountInactive)
 	case http.StatusLengthRequired:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrMalformedIPSent, ip)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrIPSentMalformed, ip)
 	case http.StatusPreconditionFailed:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrPrivateIPSent, ip)
 	case http.StatusServiceUnavailable:
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrDNSServerSide)
 	default:
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 	s := string(b)
 
@@ -156,7 +156,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case strings.HasPrefix(s, constants.Notfqdn):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case strings.HasPrefix(s, "abuse"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAbuse)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBannedAbuse)
 	case strings.HasPrefix(s, "badrequest"):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBadRequest)
 	case strings.HasPrefix(s, "good"), strings.HasPrefix(s, "nochg"):

@@ -33,7 +33,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	recordResourceSet, err := p.getResourceRecordSet(rrSetsService, fqdn, recordType)
 	rrSetFound := true
 	if err != nil {
-		if errors.Is(err, ddnserrors.ErrNotFound) {
+		if errors.Is(err, ddnserrors.ErrRecordResourceSetNotFound) {
 			rrSetFound = false // not finding the record is fine
 		} else {
 			return netip.Addr{}, fmt.Errorf("getting record resource set: %w", err)
@@ -70,7 +70,7 @@ func (p *Provider) getResourceRecordSet(rrSetsService *clouddns.ResourceRecordSe
 	if err != nil {
 		googleAPIError := new(googleapi.Error)
 		if errors.As(err, &googleAPIError) && googleAPIError.Code == http.StatusNotFound {
-			return nil, fmt.Errorf("%w: %w", ddnserrors.ErrNotFound, err)
+			return nil, fmt.Errorf("%w: %w", ddnserrors.ErrRecordResourceSetNotFound, err)
 		}
 		return nil, err
 	}

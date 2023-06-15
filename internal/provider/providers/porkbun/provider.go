@@ -123,7 +123,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 	encoder := json.NewEncoder(buffer)
 	err = encoder.Encode(postRecordsParams)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
+		return nil, fmt.Errorf("json encoding request data: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
@@ -140,7 +140,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	var responseData struct {
@@ -151,7 +151,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&responseData)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return nil, fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	for _, record := range responseData.Records {
@@ -187,7 +187,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	encoder := json.NewEncoder(buffer)
 	err = encoder.Encode(postRecordsParams)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
+		return fmt.Errorf("json encoding request data: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
@@ -204,7 +204,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 	return nil
 }
@@ -235,7 +235,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	encoder := json.NewEncoder(buffer)
 	err = encoder.Encode(postRecordsParams)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
+		return fmt.Errorf("json encoding request data: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
@@ -252,7 +252,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 	return nil
 }

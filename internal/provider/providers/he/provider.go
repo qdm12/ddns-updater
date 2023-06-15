@@ -120,13 +120,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	b, err := io.ReadAll(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 	s := string(b)
 
 	switch s {
 	case "":
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrBadHTTPStatus, response.StatusCode, s)
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)
 	case constants.Badauth:
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	}
@@ -143,7 +143,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	if len(ips) == 0 {
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrNoIPInResponse)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoIP)
 	}
 
 	newIP = ips[0]

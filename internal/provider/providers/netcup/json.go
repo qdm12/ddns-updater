@@ -25,7 +25,7 @@ func doJSONHTTP(ctx context.Context, client *http.Client,
 	encoder := json.NewEncoder(buffer)
 	err = encoder.Encode(jsonRequestBody)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
+		return fmt.Errorf("json encoding request data: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpointURL.String(), buffer)
@@ -61,13 +61,13 @@ func doJSONHTTP(ctx context.Context, client *http.Client,
 	}
 
 	if commonResponse.Status == "error" {
-		return fmt.Errorf("%w: %s (status %d)", errors.ErrBadHTTPStatus,
+		return fmt.Errorf("%w: %s (status %d)", errors.ErrHTTPStatusNotValid,
 			commonResponse.ShortMessage, commonResponse.StatusCode)
 	}
 
 	err = json.Unmarshal(commonResponse.ResponseData, jsonResponseDataTarget)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	return nil

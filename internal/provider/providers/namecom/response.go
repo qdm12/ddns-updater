@@ -19,7 +19,7 @@ func parseErrorResponse(response *http.Response) (err error) {
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&errorResponse)
 	if err != nil {
-		return fmt.Errorf("for error response: %w: %w", errors.ErrUnmarshalResponse, err)
+		return fmt.Errorf("json decoding error message from response body: %w", err)
 	}
 
 	switch strings.ToLower(errorResponse.Message) {
@@ -42,7 +42,7 @@ func verifySuccessResponseBody(responseBody io.ReadCloser, sentIP netip.Addr) (e
 	}
 	err = decoder.Decode(&responseData)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	receivedIP, err := netip.ParseAddr(responseData.Answer)

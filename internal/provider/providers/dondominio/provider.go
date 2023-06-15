@@ -137,7 +137,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	if response.StatusCode != http.StatusOK {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -154,12 +154,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	err = decoder.Decode(&responseData)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	if !responseData.Success {
 		return netip.Addr{}, fmt.Errorf("%w: %s (error code %d)",
-			errors.ErrUnsuccessfulResponse, responseData.ErrorCodeMessage, responseData.ErrorCode)
+			errors.ErrUnsuccessful, responseData.ErrorCodeMessage, responseData.ErrorCode)
 	}
 	ipString := responseData.ResponseData.GlueRecords[0].IPv4
 	if !isIPv4 {

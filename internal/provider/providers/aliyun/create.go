@@ -49,7 +49,7 @@ func (p *Provider) createRecord(ctx context.Context,
 
 	if response.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode,
+			errors.ErrHTTPStatusNotValid, response.StatusCode,
 			utils.BodyToSingleLine(response.Body))
 	}
 
@@ -59,7 +59,7 @@ func (p *Provider) createRecord(ctx context.Context,
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&data)
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return "", fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	return data.RecordID, nil

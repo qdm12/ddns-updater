@@ -188,17 +188,17 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
 
 	if response.StatusCode != http.StatusOK {
 		return records, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&records)
 	if err != nil {
-		return records, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return records, fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	if records.Result != constants.Success {
-		return records, fmt.Errorf("%w: %s", errors.ErrUnsuccessfulResponse, records.Result)
+		return records, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, records.Result)
 	}
 	return records, nil
 }
@@ -234,19 +234,19 @@ func (p *Provider) removeRecord(ctx context.Context, client *http.Client, ip net
 
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	var dhResponse dreamhostReponse
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&dhResponse)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	if dhResponse.Result != constants.Success { // this should not happen
 		return fmt.Errorf("%w: %s - %s",
-			errors.ErrUnsuccessfulResponse, dhResponse.Result, dhResponse.Data)
+			errors.ErrUnsuccessful, dhResponse.Result, dhResponse.Data)
 	}
 	return nil
 }
@@ -282,19 +282,19 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	var dhResponse dreamhostReponse
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&dhResponse)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	if dhResponse.Result != constants.Success {
 		return fmt.Errorf("%w: %s - %s",
-			errors.ErrUnsuccessfulResponse, dhResponse.Result, dhResponse.Data)
+			errors.ErrUnsuccessful, dhResponse.Result, dhResponse.Data)
 	}
 	return nil
 }

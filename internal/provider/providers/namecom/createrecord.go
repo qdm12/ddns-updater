@@ -10,7 +10,6 @@ import (
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 )
 
@@ -42,7 +41,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 
 	bodyBytes, err := json.Marshal(postRecordsParams)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrRequestMarshal, err)
+		return fmt.Errorf("json encoding request data: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewBuffer(bodyBytes))

@@ -118,7 +118,7 @@ func (p *Provider) getRecordID(ctx context.Context, recordType string, client *h
 
 	if response.StatusCode != http.StatusOK {
 		return 0, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -129,11 +129,11 @@ func (p *Provider) getRecordID(ctx context.Context, recordType string, client *h
 	}
 	err = decoder.Decode(&result)
 	if err != nil {
-		return 0, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return 0, fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	if len(result.DomainRecords) == 0 {
-		return 0, fmt.Errorf("%w", errors.ErrNotFound)
+		return 0, fmt.Errorf("%w", errors.ErrReceivedNoResult)
 	} else if result.DomainRecords[0].ID == 0 {
 		return 0, fmt.Errorf("%w", errors.ErrDomainIDNotFound)
 	}
@@ -171,7 +171,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	err = encoder.Encode(requestData)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrRequestEncode, err)
+		return netip.Addr{}, fmt.Errorf("json encoding request data: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
@@ -189,7 +189,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	if response.StatusCode != http.StatusOK {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrBadHTTPStatus, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -200,7 +200,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	err = decoder.Decode(&responseData)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrUnmarshalResponse, err)
+		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	newIP, err = netip.ParseAddr(responseData.DomainRecord.Data)

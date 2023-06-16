@@ -11,6 +11,7 @@ What is Kustomize?
 ## Basic install on Kubernetes
 
 Requierments:
+
 * Kubernetes Cluster e.g. [k3s](https://k3s.io/)
 
 How To:
@@ -19,11 +20,11 @@ How To:
 
 2. Clone the Repo
 
-``git clone https://github.com/qdm12/ddns-updater.git`` 
+``git clone https://github.com/qdm12/ddns-updater.git``
 
 3. Swtich Directory
 
-``cd ddns-updater/k8s/base`` 
+``cd ddns-updater/k8s/base``
 
 4. Change the config to your needs in the [*secret-config.yaml*](base/secret-config.yaml) as described in the [Documentation](/README.md#configuration).
 
@@ -35,19 +36,19 @@ How To:
 
 `kubectl port-forward svc/ddns-updater 8000:8080`
 
-7. Open the ddns-updater-UI: **http://localhost:8000**
+7. Open the ddns-updater-UI: **<http://localhost:8000>**
 
 If this do not work feel free to open an [issue](https://github.com/qdm12/ddns-updater/issues/new/choose).
 
-## Advanced Install 
+## Advanced Install
 
 ### Overlays
 
 This folder also contains kustomize overlays which can extend the basic install.
 
-- [with-ingress](overlay/with-ingress/) - Basic **HTTP** Ingress ressource
+* [with-ingress](overlay/with-ingress/) - Basic **HTTP** Ingress ressource
 
-- [with-ingress-cert-manager](overlay/with-ingress-cert-manager/) - Basic **HTTPS** Ingress ressource which uses [cert-manager](https://github.com/cert-manager/cert-manager) to create certificates.
+* [with-ingress-cert-manager](overlay/with-ingress-cert-manager/) - Basic **HTTPS** Ingress ressource which uses [cert-manager](https://github.com/cert-manager/cert-manager) to create certificates.
 
 To install with the overlay **just change dirctory in the overlay folder you want to install** and hit `kubectl apply -k .` .
 

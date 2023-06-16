@@ -7,5 +7,5 @@ spec:
     app: ddns-updater
   type: ClusterIP
   ports:
-  - port: 8080
-    targetPort: 8000
+    - port: 8080
+      targetPort: 8000

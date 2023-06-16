@@ -14,10 +14,10 @@ spec:
         app: ddns
     spec:
       containers:
-      - name: ddns
-        image: qmcgaw/ddns-updater:latest
-        envFrom:
-          - secretRef:
-              name: ddns-updater-config
-        ports:
-          - containerPort: 8000
+        - name: ddns
+          image: qmcgaw/ddns-updater:latest
+          envFrom:
+            - secretRef:
+                name: ddns-updater-config
+          ports:
+            - containerPort: 8000

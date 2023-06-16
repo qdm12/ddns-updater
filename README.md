@@ -144,7 +144,7 @@ You can update the image with `docker pull qmcgaw/ddns-updater`. Other [Docker i
 
 #### Kubernetes
 
-If you want to run the ddns-updater on Kubernetes check the [K8s-folder](/k8s) for an installation guide and examples.
+Check out the [k8s directory](k8s) for an installation guide and examples.
 
 ### GHCR
 

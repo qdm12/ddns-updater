@@ -20,21 +20,29 @@ How To:
 
 2. Clone the Repo
 
-``git clone https://github.com/qdm12/ddns-updater.git``
+    ```sh
+    git clone https://github.com/qdm12/ddns-updater.git
+    ```
 
 3. Swtich Directory
 
-``cd ddns-updater/k8s/base``
+    ```sh
+    cd ddns-updater/k8s/base
+    ```
 
 4. Change the config to your needs in the [*secret-config.yaml*](base/secret-config.yaml) as described in the [Documentation](/README.md#configuration).
 
 5. Apply the Manifest with [kubectl](https://kubernetes.io/docs/reference/kubectl/)
 
-`kubectl apply -k .`
+    ```sh
+    kubectl apply -k .
+    ```
 
 6. Connect the the UI using a kubectl [port-forward](https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/)
 
-`kubectl port-forward svc/ddns-updater 8000:8080`
+    ```sh
+    kubectl port-forward svc/ddns-updater 8000:8080
+    ```
 
 7. Open the ddns-updater-UI: **<http://localhost:8000>**
 

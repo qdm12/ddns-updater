@@ -10,6 +10,7 @@ import (
 
 type Source struct {
 	env              env.Env
+	warner           Warner
 	handleDeprecated func(deprecatedKey, currentKey string)
 }
 
@@ -20,6 +21,7 @@ func New(warner Warner) *Source {
 	}
 	return &Source{
 		env:              *env.New(os.Environ(), handleDeprecated),
+		warner:           warner,
 		handleDeprecated: handleDeprecated,
 	}
 }

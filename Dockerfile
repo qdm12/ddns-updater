@@ -92,6 +92,7 @@ ENV \
     LOG_LEVEL=info \
     LOG_CALLER=hidden \
     SHOUTRRR_ADDRESSES= \
+    SHOUTRRR_DEFAULT_TITLE="DDNS Updater" \
     TZ=
 ARG VERSION=unknown
 ARG CREATED="an unknown date"

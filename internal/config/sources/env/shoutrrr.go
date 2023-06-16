@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 	"path"
-	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/shoutrrr"
 	"github.com/qdm12/gosettings/sources/env"
@@ -28,17 +27,13 @@ func (s *Source) readShoutrrr() (settings shoutrrr.Settings, err error) {
 		settings.Addresses = append(settings.Addresses, gotifyShoutrrrAddress)
 	}
 
-	paramsCSV := s.env.Get("SHOUTRRR_PARAMS", env.ForceLowercase(false))
-	if paramsCSV != nil {
-		keyValuePairs := strings.Split(*paramsCSV, ",")
-		settings.Params = make(map[string]string, len(keyValuePairs))
-		for _, keyValuePair := range keyValuePairs {
-			fields := strings.Split(keyValuePair, "=")
-			key, value := fields[0], fields[1]
-			settings.Params[key] = value
-		}
+	// Retro-compatibility
+	shoutrrrParamsCSV := s.env.Get("SHOUTRRR_PARAMS")
+	if shoutrrrParamsCSV != nil {
+		s.warner.Warnf("SHOUTRRR_PARAMS is disabled, you can use SHOUTRRR_TITLE and SHOUTRRR_ADDRESSES")
 	}
 
+	settings.DefaultTitle = s.env.String("SHOUTRRR_DEFAULT_TITLE", env.ForceLowercase(false))
 	return settings, nil
 }
 

@@ -4,32 +4,25 @@ import (
 	"fmt"
 
 	"github.com/containrrr/shoutrrr"
-	"github.com/containrrr/shoutrrr/pkg/types"
 	"github.com/qdm12/gosettings"
 	"github.com/qdm12/gotree"
 )
 
 type Settings struct {
-	Addresses []string
-	Params    types.Params
-	Logger    Erroer
+	Addresses    []string
+	DefaultTitle string
+	Logger       Erroer
 }
 
 func (s *Settings) SetDefaults() {
 	s.Addresses = gosettings.DefaultSlice(s.Addresses, []string{})
-	if s.Params == nil {
-		s.Params = types.Params{
-			"title": "DDNS Updater",
-		}
-	}
+	s.DefaultTitle = gosettings.DefaultString(s.DefaultTitle, "DDNS Updater")
 	s.Logger = gosettings.DefaultInterface(s.Logger, &noopLogger{})
 }
 
 func (s Settings) MergeWith(other Settings) (merged Settings) {
 	merged.Addresses = gosettings.MergeWithSlice(s.Addresses, other.Addresses)
-	if s.Params == nil {
-		merged.Params = other.Params
-	}
+	merged.DefaultTitle = gosettings.MergeWithString(s.DefaultTitle, other.DefaultTitle)
 	merged.Logger = gosettings.MergeWithInterface(s.Logger, other.Logger)
 	return merged
 }
@@ -52,14 +45,11 @@ func (s Settings) ToLinesNode() *gotree.Node {
 	}
 
 	node := gotree.New("Shoutrrr")
+	node.Appendf("Default title: %s", s.DefaultTitle)
+
 	childNode := node.Appendf("Addresses")
 	for _, address := range s.Addresses {
 		childNode.Appendf(address)
-	}
-
-	childNode = node.Appendf("Parameters")
-	for key, value := range s.Params {
-		childNode.Appendf("%s=%s", key, value)
 	}
 
 	return node

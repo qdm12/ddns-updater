@@ -22,14 +22,14 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 	if r.Status == "" {
 		row.Status = NotAvailable
 	} else {
-		row.Status = models.HTML(fmt.Sprintf("%s %s, %s",
+		row.Status = fmt.Sprintf("%s %s, %s",
 			convertStatus(r.Status),
 			message,
-			time.Since(r.Time).Round(time.Second).String()+" ago"))
+			time.Since(r.Time).Round(time.Second).String()+" ago")
 	}
 	currentIP := r.History.GetCurrentIP()
 	if currentIP.IsValid() {
-		row.CurrentIP = models.HTML(`<a href="https://ipinfo.io/"` + currentIP.String() + `\>` + currentIP.String() + "</a>")
+		row.CurrentIP = `<a href="https://ipinfo.io/"` + currentIP.String() + `\>` + currentIP.String() + "</a>"
 	} else {
 		row.CurrentIP = NotAvailable
 	}
@@ -45,12 +45,12 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 			}
 			previousIPsStr = append(previousIPsStr, previousIP.String())
 		}
-		row.PreviousIPs = models.HTML(strings.Join(previousIPsStr, ", "))
+		row.PreviousIPs = strings.Join(previousIPsStr, ", ")
 	}
 	return row
 }
 
-func convertStatus(status models.Status) models.HTML {
+func convertStatus(status models.Status) string {
 	switch status {
 	case constants.SUCCESS:
 		return `<font color="green"><b>Success</b></font>`

@@ -90,10 +90,10 @@ func (p *Provider) BuildDomainName() string {
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    models.HTML(fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName())),
-		Host:      models.HTML(p.Host()),
+		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
+		Host:      p.Host(),
 		Provider:  "<a href=\"https://opendns.com/\">Opendns DNS</a>",
-		IPVersion: models.HTML(p.ipVersion.String()),
+		IPVersion: p.ipVersion.String(),
 	}
 }
 

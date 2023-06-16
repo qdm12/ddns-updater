@@ -21,7 +21,7 @@ func (s *Source) readUpdatePeriod() (period time.Duration, err error) {
 	// Retro-compatibility: DELAY variable name
 	delayStringPtr := s.env.Get("DELAY")
 	if delayStringPtr != nil {
-		s.handleDeprecated("DELAY", "UPDATE_PERIOD")
+		s.handleDeprecated("DELAY", "PERIOD")
 		// Retro-compatibility: integer only, treated as seconds
 		delayInt, err := strconv.Atoi(*delayStringPtr)
 		if err == nil {
@@ -31,5 +31,5 @@ func (s *Source) readUpdatePeriod() (period time.Duration, err error) {
 		return time.ParseDuration(*delayStringPtr)
 	}
 
-	return s.env.Duration("UPDATE_PERIOD")
+	return s.env.Duration("PERIOD")
 }

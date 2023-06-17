@@ -117,7 +117,7 @@ func handleAnswerANY(answer dns.RR) (publicIP netip.Addr, err error) {
 		publicIP, err = handleAnswerAAAA(answer)
 	default:
 		return netip.Addr{}, fmt.Errorf("%w: %s",
-			ErrAnswerTypeMismatch, dns.TypeToString[rrType])
+			ErrAnswerTypeNotSupported, dns.TypeToString[rrType])
 	}
 
 	if err != nil {

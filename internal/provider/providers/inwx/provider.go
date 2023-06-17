@@ -133,7 +133,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)
 	}
 
-	if !strings.HasPrefix(s, "good") || !strings.HasPrefix(s, "nochg") {
+	if !strings.HasPrefix(s, "good") && !strings.HasPrefix(s, "nochg") {
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
 

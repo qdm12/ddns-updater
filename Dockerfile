@@ -29,6 +29,8 @@ FROM --platform=$BUILDPLATFORM base AS test
 # - we set CGO_ENABLED=1 to have it enabled
 # - we installed g++ to support the race detector
 ENV CGO_ENABLED=1
+COPY readme/ ./readme/
+COPY README.md ./README.md
 ENTRYPOINT go test -race -coverpkg=./... -coverprofile=coverage.txt -covermode=atomic ./...
 
 FROM --platform=$BUILDPLATFORM base AS lint

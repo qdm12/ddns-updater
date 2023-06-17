@@ -4,9 +4,9 @@
 .vscode
 docs
 readme
+!readme/*.go
 .gitignore
 config.json
 docker-compose.yml
 LICENSE
-README.md
 ui/favicon.svg

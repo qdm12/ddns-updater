@@ -80,7 +80,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
 - Persistence with a JSON file *updates.json* to store old IP addresses with change times for each record
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
-- Send notifications with [**Shoutrrr**](https://containrrr.dev/shoutrrr/services/overview/) using `SHOUTRRR_ADDRESSES`
+- Send notifications with [**Shoutrrr**](https://containrrr.dev/shoutrrr/0.7/services/overview/) using `SHOUTRRR_ADDRESSES`
 - Compatible with `amd64`, `386`, `arm64`, `armv7`, `armv6`, `s390x`, `ppc64le`, `riscv64` CPU architectures.
 
 ## Setup

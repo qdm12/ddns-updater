@@ -30,7 +30,7 @@ func Test_Settings_String(t *testing.T) {
 |   |   └── all
 |   ├── DNS enabled: yes
 |   ├── DNS timeout: 3s
-|   └── DNS providers
+|   └── DNS over TLS providers
 |       └── all
 ├── Resolver: use Go default resolver
 ├── IPv6

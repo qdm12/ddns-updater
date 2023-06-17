@@ -46,6 +46,18 @@ func (s *Source) readPubIP() (settings settings.PubIP, err error) {
 	}
 
 	settings.DNSProviders = s.env.CSV("PUBLICIP_DNS_PROVIDERS")
+
+	// Retro-compatibility
+	for i, provider := range settings.DNSProviders {
+		if provider == "google" {
+			s.warner.Warnf("dns provider google will be ignored " +
+				"since it is no longer supported, " +
+				"see https://github.com/qdm12/ddns-updater/issues/492")
+			settings.DNSProviders[i] = settings.DNSProviders[len(settings.DNSProviders)-1]
+			settings.DNSProviders = settings.DNSProviders[:len(settings.DNSProviders)-1]
+		}
+	}
+
 	settings.DNSTimeout, err = s.env.Duration("PUBLICIP_DNS_TIMEOUT")
 	if err != nil {
 		return settings, err

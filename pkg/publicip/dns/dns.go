@@ -1,16 +1,10 @@
 package dns
 
-import (
-	"net"
-
-	"github.com/miekg/dns"
-)
+import "time"
 
 type Fetcher struct {
 	ring    ring
-	client  Client
-	client4 Client
-	client6 Client
+	timeout time.Duration
 }
 
 type ring struct {
@@ -28,29 +22,11 @@ func New(options ...Option) (f *Fetcher, err error) {
 		}
 	}
 
-	dialer := &net.Dialer{
-		Timeout: settings.timeout,
-	}
-
 	return &Fetcher{
 		ring: ring{
 			counter:   new(uint32),
 			providers: settings.providers,
 		},
-		client: &dns.Client{
-			Net:     "udp",
-			Dialer:  dialer,
-			Timeout: settings.timeout,
-		},
-		client4: &dns.Client{
-			Net:     "udp4",
-			Dialer:  dialer,
-			Timeout: settings.timeout,
-		},
-		client6: &dns.Client{
-			Net:     "udp6",
-			Dialer:  dialer,
-			Timeout: settings.timeout,
-		},
+		timeout: settings.timeout,
 	}, nil
 }

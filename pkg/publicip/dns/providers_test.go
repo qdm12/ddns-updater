@@ -2,6 +2,7 @@ package dns
 
 import (
 	"errors"
+	"net/netip"
 	"testing"
 
 	"github.com/miekg/dns"
@@ -17,7 +18,7 @@ func Test_ValidateProvider(t *testing.T) {
 		err      error
 	}{
 		"valid provider": {
-			provider: Google,
+			provider: Cloudflare,
 		},
 		"invalid provider": {
 			provider: Provider("invalid"),
@@ -49,31 +50,28 @@ func Test_data(t *testing.T) {
 		data         providerData
 		panicMessage string
 	}{
-		"google": {
-			provider: Google,
-			data: providerData{
-				nameserver: "ns1.google.com:53",
-				fqdn:       "o-o.myaddr.l.google.com.",
-				class:      dns.ClassINET,
-				qType:      dns.Type(dns.TypeTXT),
-			},
-		},
 		"cloudflare": {
 			provider: Cloudflare,
 			data: providerData{
-				nameserver: "one.one.one.one:53",
-				fqdn:       "whoami.cloudflare.",
-				class:      dns.ClassCHAOS,
-				qType:      dns.Type(dns.TypeTXT),
+				Address: "1dot1dot1dot1.cloudflare-dns.com",
+				IPv4:    netip.AddrFrom4([4]byte{1, 1, 1, 1}),
+				IPv6:    netip.AddrFrom16([16]byte{0x26, 0x6, 0x47, 0x0, 0x47, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x11, 0x11}), //nolint:lll
+				TLSName: "cloudflare-dns.com",
+				fqdn:    "whoami.cloudflare.",
+				class:   dns.ClassCHAOS,
+				qType:   dns.Type(dns.TypeTXT),
 			},
 		},
 		"opendns": {
 			provider: OpenDNS,
 			data: providerData{
-				nameserver: "resolver1.opendns.com:53",
-				fqdn:       "myip.opendns.com.",
-				class:      dns.ClassINET,
-				qType:      dns.Type(dns.TypeANY),
+				Address: "dns.opendns.com",
+				IPv4:    netip.AddrFrom4([4]byte{208, 67, 222, 222}),
+				IPv6:    netip.AddrFrom16([16]byte{0x26, 0x20, 0x1, 0x19, 0x0, 0x35, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x35}), //nolint:lll
+				TLSName: "dns.opendns.com",
+				fqdn:    "myip.opendns.com.",
+				class:   dns.ClassINET,
+				qType:   dns.Type(dns.TypeANY),
 			},
 		},
 		"invalid provider": {

@@ -31,18 +31,18 @@ func Test_SetProviders(t *testing.T) {
 			initialSettings: settings{
 				providers: []Provider{Cloudflare},
 			},
-			providers: []Provider{Google},
+			providers: []Provider{OpenDNS},
 			expectedSettings: settings{
-				providers: []Provider{Google},
+				providers: []Provider{OpenDNS},
 			},
 		},
-		"Google and Cloudflare": {
+		"OpenDNS and Cloudflare": {
 			initialSettings: settings{
 				providers: []Provider{Cloudflare},
 			},
-			providers: []Provider{Google, Cloudflare},
+			providers: []Provider{OpenDNS, Cloudflare},
 			expectedSettings: settings{
-				providers: []Provider{Cloudflare, Google},
+				providers: []Provider{Cloudflare, OpenDNS},
 			},
 		},
 		"invalid provider": {

@@ -14,7 +14,7 @@ import (
 func Test_integration(t *testing.T) {
 	t.Parallel()
 
-	fetcher, err := New(SetProviders(Google, Cloudflare, OpenDNS))
+	fetcher, err := New(SetProviders(Cloudflare, OpenDNS))
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -27,12 +27,7 @@ func Test_integration(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, publicIP2)
 
-	publicIP3, err := fetcher.IP4(ctx)
-	require.NoError(t, err)
-	assert.NotNil(t, publicIP2)
-
-	assert.Equal(t, publicIP1, publicIP2)
-	assert.Equal(t, publicIP1, publicIP3)
+	assert.Equal(t, publicIP1.String(), publicIP2.String())
 
 	t.Logf("Public IP is %s", publicIP1)
 }

@@ -107,7 +107,7 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 		return client.Query(ctx, *healthSettings.ServerAddress)
 	}
 
-	announcementExp, err := time.Parse(time.RFC3339, "2023-06-30T00:00:00Z")
+	announcementExp, err := time.Parse(time.RFC3339, "2023-07-15T00:00:00Z")
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 		Version:      buildInfo.Version,
 		Commit:       buildInfo.Commit,
 		BuildDate:    buildInfo.Created,
-		Announcement: "Environment variables parsing was changed on 12 June, please report any issue you might have",
+		Announcement: "Public IP dns provider GOOGLE, see https://github.com/qdm12/ddns-updater/issues/492",
 		AnnounceExp:  announcementExp,
 		// Sponsor information
 		PaypalUser:    "qmcgaw",

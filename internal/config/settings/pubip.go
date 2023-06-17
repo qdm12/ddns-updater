@@ -98,7 +98,7 @@ func (p *PubIP) toLinesNode() (node *gotree.Node) {
 	node.Appendf("DNS enabled: %s", gosettings.BoolToYesNo(p.DNSEnabled))
 	if *p.DNSEnabled {
 		node.Appendf("DNS timeout: %s", p.DNSTimeout)
-		childNode := node.Appendf("DNS providers")
+		childNode := node.Appendf("DNS over TLS providers")
 		for _, provider := range p.DNSProviders {
 			childNode.Appendf(provider)
 		}

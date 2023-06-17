@@ -16,7 +16,4 @@ func Test_New(t *testing.T) {
 
 	assert.NotNil(t, impl.ring.counter)
 	assert.NotEmpty(t, impl.ring.providers)
-	assert.NotNil(t, impl.client)
-	assert.NotNil(t, impl.client4)
-	assert.NotNil(t, impl.client6)
 }

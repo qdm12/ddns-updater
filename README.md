@@ -255,7 +255,6 @@ You can otherwise customize it with the following:
   - `noip` using [http://ip1.dynupdate6.no-ip.com](http://ip1.dynupdate6.no-ip.com)
   - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
 - `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see #136). It can be one or more of the following:
-  - `google`
   - `cloudflare`
   - `opendns`
 

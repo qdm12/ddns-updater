@@ -38,6 +38,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
   - Cloudflare
   - DD24
   - DDNSS.de
+  - deSEC
   - DigitalOcean
   - DonDominio
   - DNSOMatic
@@ -164,6 +165,7 @@ Check the documentation for your DNS provider:
 - [Aliyun](https://github.com/qdm12/ddns-updater/blob/master/docs/aliyun.md)
 - [Cloudflare](https://github.com/qdm12/ddns-updater/blob/master/docs/cloudflare.md)
 - [DDNSS.de](https://github.com/qdm12/ddns-updater/blob/master/docs/ddnss.de.md)
+- [deSEC](https://github.com/qdm12/ddns-updater/blob/master/docs/desec.md)
 - [DigitalOcean](https://github.com/qdm12/ddns-updater/blob/master/docs/digitalocean.md)
 - [DD24](https://github.com/qdm12/ddns-updater/blob/master/docs/domaindiscount24.md)
 - [DonDominio](https://github.com/qdm12/ddns-updater/blob/master/docs/dondominio.md)

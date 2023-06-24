@@ -15,6 +15,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/cloudflare"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/dd24"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/ddnss"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/desec"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/digitalocean"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/dnsomatic"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/dnspod"
@@ -79,6 +80,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, host string
 		return dd24.New(data, domain, host, ipVersion)
 	case constants.DdnssDe:
 		return ddnss.New(data, domain, host, ipVersion)
+	case constants.DeSEC:
+		return desec.New(data, domain, host, ipVersion)
 	case constants.DigitalOcean:
 		return digitalocean.New(data, domain, host, ipVersion)
 	case constants.DNSOMatic:

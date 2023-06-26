@@ -33,6 +33,9 @@
 ## Domain setup
 
 ### Web
-[https://desec.io/domains](https://desec.io/domains)
+
+[desec.io/domains](https://desec.io/domains)
+
 ### API
-[https://desec.readthedocs.io/en/latest/dns/domains.html](https://desec.readthedocs.io/en/latest/dns/domains.html)
+
+[desec.readthedocs.io/en/latest/dns/domains](https://desec.readthedocs.io/en/latest/dns/domains.html)

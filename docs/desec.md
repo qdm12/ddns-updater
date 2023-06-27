@@ -35,7 +35,3 @@
 ### Web
 
 [desec.io/domains](https://desec.io/domains)
-
-### API
-
-[desec.readthedocs.io/en/latest/dns/domains](https://desec.readthedocs.io/en/latest/dns/domains.html)

@@ -132,7 +132,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case http.StatusNotFound:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrHostnameNotExists, utils.ToSingleLine(s))
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid,
+			response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	switch {

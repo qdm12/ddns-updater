@@ -32,6 +32,4 @@
 
 ## Domain setup
 
-### Web
-
 [desec.io/domains](https://desec.io/domains)

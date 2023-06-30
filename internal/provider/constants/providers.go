@@ -9,6 +9,7 @@ const (
 	Cloudflare   models.Provider = "cloudflare"
 	Dd24         models.Provider = "dd24"
 	DdnssDe      models.Provider = "ddnss"
+	DeSEC        models.Provider = "desec"
 	DigitalOcean models.Provider = "digitalocean"
 	DNSOMatic    models.Provider = "dnsomatic"
 	DNSPod       models.Provider = "dnspod"
@@ -52,6 +53,7 @@ func ProviderChoices() []models.Provider {
 		Cloudflare,
 		Dd24,
 		DdnssDe,
+		DeSEC,
 		DigitalOcean,
 		DNSOMatic,
 		DNSPod,

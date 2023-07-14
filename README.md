@@ -54,6 +54,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
   - GoDaddy
   - Google
   - He.net
+  - Hetzner
   - Infomaniak
   - INWX
   - Linode

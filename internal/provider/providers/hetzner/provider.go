@@ -10,7 +10,6 @@ import (
 	"net/netip"
 	"net/url"
 	"regexp"
-	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -97,6 +96,10 @@ func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
 }
 
+func (p *Provider) Proxied() bool {
+	return false
+}
+
 func (p *Provider) BuildDomainName() string {
 	return utils.BuildDomainName(p.host, p.domain)
 }
@@ -132,10 +135,13 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dns.hetzner.com",
-		Path:   fmt.Sprintf("/api/v1/records?zone_id=%s&name=%s&type=%s", p.zoneIdentifier, p.host, recordType),
+		Path:   "/api/v1/records",
 	}
 
 	values := url.Values{}
+	values.Set("zone_id", p.zoneIdentifier)
+	values.Set("name", p.host)
+	values.Set("type", recordType)
 	values.Set("page", "1")
 	values.Set("per_page", "1")
 	u.RawQuery = values.Encode()
@@ -159,12 +165,10 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 
 	decoder := json.NewDecoder(response.Body)
 	listRecordsResponse := struct {
-		Success bool     `json:"success"`
-		Errors  []string `json:"errors"`
-		Result  []struct {
+		Records []struct {
 			ID    string `json:"id"`
 			Value string `json:"value"`
-		} `json:"result"`
+		} `json:"records"`
 	}{}
 	err = decoder.Decode(&listRecordsResponse)
 	if err != nil {
@@ -172,20 +176,15 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 	}
 
 	switch {
-	case len(listRecordsResponse.Errors) > 0:
-		return "", false, fmt.Errorf("%w: %s",
-			errors.ErrUnsuccessful, strings.Join(listRecordsResponse.Errors, ","))
-	case !listRecordsResponse.Success:
-		return "", false, fmt.Errorf("%w", errors.ErrUnsuccessful)
-	case len(listRecordsResponse.Result) == 0:
+	case len(listRecordsResponse.Records) == 0:
 		return "", false, fmt.Errorf("%w", errors.ErrReceivedNoResult)
-	case len(listRecordsResponse.Result) > 1:
+	case len(listRecordsResponse.Records) > 1:
 		return "", false, fmt.Errorf("%w: %d instead of 1",
-			errors.ErrResultsCountReceived, len(listRecordsResponse.Result))
-	case listRecordsResponse.Result[0].Value == newIP.String(): // up to date
+			errors.ErrResultsCountReceived, len(listRecordsResponse.Records))
+	case listRecordsResponse.Records[0].Value == newIP.String(): // up to date
 		return "", true, nil
 	}
-	return listRecordsResponse.Result[0].ID, false, nil
+	return listRecordsResponse.Records[0].ID, false, nil
 }
 
 func (p *Provider) CreateRecord(ctx context.Context, client *http.Client, ip netip.Addr) (recordID string, err error) {
@@ -205,11 +204,11 @@ func (p *Provider) CreateRecord(ctx context.Context, client *http.Client, ip net
 		Type           string `json:"type"`  // constants.A or constants.AAAA depending on ip address given
 		Name           string `json:"name"`  // DNS record name i.e. example.com
 		Value          string `json:"value"` // ip address
-		ZoneIdentifier string `json:"zone_identifier"`
+		ZoneIdentifier string `json:"zone_id"`
 		TTL            uint   `json:"ttl"`
 	}{
 		Type:           recordType,
-		Name:           utils.BuildURLQueryHostname(p.host, p.domain),
+		Name:           p.host,
 		Value:          ip.String(),
 		ZoneIdentifier: p.zoneIdentifier,
 		TTL:            p.ttl,
@@ -242,29 +241,16 @@ func (p *Provider) CreateRecord(ctx context.Context, client *http.Client, ip net
 
 	decoder := json.NewDecoder(response.Body)
 	var parsedJSON struct {
-		Success bool `json:"success"`
-		Errors  []struct {
-			Code    int    `json:"code"`
-			Message string `json:"message"`
-		} `json:"errors"`
-		Result struct {
+		Record struct {
 			ID string `json:"id"`
-		} `json:"result"`
+		} `json:"record"`
 	}
 	err = decoder.Decode(&parsedJSON)
 	if err != nil {
 		return "", fmt.Errorf("json decoding response body: %w", err)
 	}
 
-	if !parsedJSON.Success {
-		var errStr string
-		for _, e := range parsedJSON.Errors {
-			errStr += fmt.Sprintf("error %d: %s; ", e.Code, e.Message)
-		}
-		return "", fmt.Errorf("%w: %s", errors.ErrUnsuccessful, errStr)
-	}
-
-	return parsedJSON.Result.ID, nil
+	return parsedJSON.Record.ID, nil
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
@@ -294,15 +280,17 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	requestData := struct {
-		Type  string `json:"type"`  // constants.A or constants.AAAA depending on ip address given
-		Name  string `json:"name"`  // DNS record name i.e. example.com
-		Value string `json:"value"` // ip address
-		TTL   uint   `json:"ttl"`
+		Type           string `json:"type"`  // constants.A or constants.AAAA depending on ip address given
+		Name           string `json:"name"`  // DNS record name i.e. example.com
+		Value          string `json:"value"` // ip address
+		ZoneIdentifier string `json:"zone_id"`
+		TTL            uint   `json:"ttl"`
 	}{
-		Type:  recordType,
-		Name:  utils.BuildURLQueryHostname(p.host, p.domain),
-		Value: ip.String(),
-		TTL:   p.ttl,
+		Type:           recordType,
+		Name:           p.host,
+		Value:          ip.String(),
+		ZoneIdentifier: p.zoneIdentifier,
+		TTL:            p.ttl,
 	}
 
 	buffer := bytes.NewBuffer(nil)
@@ -332,29 +320,16 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	decoder := json.NewDecoder(response.Body)
 	var parsedJSON struct {
-		Success bool `json:"success"`
-		Errors  []struct {
-			Code    int    `json:"code"`
-			Message string `json:"message"`
-		} `json:"errors"`
-		Result struct {
+		Record struct {
 			Value string `json:"value"`
-		} `json:"result"`
+		} `json:"record"`
 	}
 	err = decoder.Decode(&parsedJSON)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
 	}
 
-	if !parsedJSON.Success {
-		var errStr string
-		for _, e := range parsedJSON.Errors {
-			errStr += fmt.Sprintf("error %d: %s; ", e.Code, e.Message)
-		}
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, errStr)
-	}
-
-	newIP, err = netip.ParseAddr(parsedJSON.Result.Value)
+	newIP, err = netip.ParseAddr(parsedJSON.Record.Value)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
 	} else if newIP.Compare(ip) != 0 {

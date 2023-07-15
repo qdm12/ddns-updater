@@ -66,7 +66,7 @@ func (p *Provider) isValid() error {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.host, constants.Infomaniak, p.ipVersion)
+	return utils.ToString(p.domain, p.host, constants.NowDNS, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
@@ -105,13 +105,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/update",
 		User:   url.UserPassword(p.username, p.password),
 	}
+
 	values := url.Values{}
 	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
 	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()
-
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
@@ -133,8 +133,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	switch response.StatusCode {
 	case http.StatusOK:
 		switch {
-		case strings.HasPrefix(s, "good "):
-			newIP, err = netip.ParseAddr(s[5:])
+		case strings.Contains(s, "good"):
+			fmt.Println("GOOD!")
+			newIP, err = netip.ParseAddr(ip.String())
 			if err != nil {
 				return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
 			} else if !p.useProviderIP && ip.Compare(newIP) != 0 {
@@ -142,8 +143,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 					errors.ErrIPReceivedMismatch, ip, newIP)
 			}
 			return newIP, nil
-		case strings.HasPrefix(s, "nochg "):
-			newIP, err = netip.ParseAddr(s[6:])
+		case strings.Contains(s, "nochg"):
+			fmt.Println(s)
+			newIP, err = netip.ParseAddr(ip.String())
 			if err != nil {
 				return netip.Addr{}, fmt.Errorf("%w: in response %q", errors.ErrReceivedNoResult, s)
 			} else if !p.useProviderIP && ip.Compare(newIP) != 0 {

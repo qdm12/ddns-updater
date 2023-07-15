@@ -2,6 +2,9 @@ module github.com/qdm12/ddns-updater
 
 go 1.20
 
+//required for local testing. Linter will not build the docker container with it in place though. 
+//replace github.com/qdm12/ddns-updater/internal/provider/providers/nowdns => ./internal/provider/providers/nowdns
+
 require (
 	github.com/breml/rootcerts v0.2.11
 	github.com/containrrr/shoutrrr v0.7.0

@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/netip"
 
-	"github.com/cyberaustin/ddns-updater/internal/provider/providers/nowdns"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/aliyun"
@@ -42,7 +41,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/netcup"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/njalla"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/noip"
-	"github.com/cyberaustin/ddns-updater/internal/provider/providers/nowdns"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/nowdns"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/opendns"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/ovh"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/porkbun"
@@ -134,6 +133,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, host string
 		return njalla.New(data, domain, host, ipVersion)
 	case constants.NoIP:
 		return noip.New(data, domain, host, ipVersion)
+	case constants.NowDNS:
+		return nowdns.New(data, domain, host, ipVersion)
 	case constants.OpenDNS:
 		return opendns.New(data, domain, host, ipVersion)
 	case constants.OVH:

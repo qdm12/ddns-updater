@@ -62,6 +62,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
   - Namecheap
   - Netcup
   - NoIP
+  - Now-DNS
   - Njalla
   - OpenDNS
   - OVH
@@ -191,6 +192,7 @@ Check the documentation for your DNS provider:
 - [Namecheap](https://github.com/qdm12/ddns-updater/blob/master/docs/namecheap.md)
 - [Netcup](https://github.com/qdm12/ddns-updater/blob/master/docs/netcup.md)
 - [NoIP](https://github.com/qdm12/ddns-updater/blob/master/docs/noip.md)
+- [Now-DNS](https://github.com/qdm12/ddns-updater/blob/master/docs/nowdns.md)
 - [Njalla](https://github.com/qdm12/ddns-updater/blob/master/docs/njalla.md)
 - [OpenDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/opendns.md)
 - [OVH](https://github.com/qdm12/ddns-updater/blob/master/docs/ovh.md)

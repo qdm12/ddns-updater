@@ -134,7 +134,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case http.StatusOK:
 		switch {
 		case strings.Contains(s, "good"):
-			fmt.Println("GOOD!")
 			newIP, err = netip.ParseAddr(ip.String())
 			if err != nil {
 				return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
@@ -142,9 +141,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 				return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
 					errors.ErrIPReceivedMismatch, ip, newIP)
 			}
-			return newIP, nil
+			return ip, nil
 		case strings.Contains(s, "nochg"):
-			fmt.Println(s)
 			newIP, err = netip.ParseAddr(ip.String())
 			if err != nil {
 				return netip.Addr{}, fmt.Errorf("%w: in response %q", errors.ErrReceivedNoResult, s)
@@ -152,7 +150,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 				return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
 					errors.ErrIPReceivedMismatch, ip, newIP)
 			}
-			return newIP, nil
+			return ip, nil
 		default:
 			return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 		}
@@ -163,7 +161,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		case constants.Badauth:
 			return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 		default:
-			return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)
+			return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 		}
 	default:
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)

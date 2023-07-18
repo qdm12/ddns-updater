@@ -79,6 +79,7 @@ func ProviderChoices() []models.Provider {
 		NameCom,
 		Njalla,
 		NoIP,
+		NowDNS,
 		OpenDNS,
 		OVH,
 		Porkbun,

@@ -53,7 +53,7 @@ FROM --platform=$BUILDPLATFORM base AS build
 ARG VERSION=unknown
 ARG CREATED="an unknown date"
 ARG COMMIT=unknown
-ARG TARGETPLATFORM="linux/amd64"
+ARG TARGETPLATFORM
 RUN GOARCH="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -field arch)" \
     GOARM="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -field arm)" \
     go build -trimpath -ldflags="-s -w \

@@ -40,7 +40,7 @@ func New(data json.RawMessage, domain, host string,
 	}
 	p = &Provider{
 		domain:        domain,
-		host:          host,
+		host:          "@",
 		ipVersion:     ipVersion,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,

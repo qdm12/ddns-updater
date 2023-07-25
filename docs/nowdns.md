@@ -10,7 +10,6 @@
     {
       "provider": "nowdns",
       "domain": "domain.com",
-      "host": "@",
       "username": "username",
       "password": "password",
     }
@@ -20,7 +19,6 @@
 
 ### Compulsory parameters
 
-- `"domain"` your domain name
-- `"host"` leave it set to `"@"`
+- `"domain"` your full domain name (FQDN)
 - `"username"` your email address
 - `"password"`

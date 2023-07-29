@@ -198,9 +198,9 @@ func (p *Provider) CreateRecord(ctx context.Context, client *http.Client, ip net
 	}
 
 	requestData := struct {
-		Type           string `json:"type"`  // constants.A or constants.AAAA depending on ip address given
-		Name           string `json:"name"`  // DNS record name i.e. example.com
-		Value          string `json:"value"` // ip address
+		Type           string `json:"type"` 
+		Name           string `json:"name"` 
+		Value          string `json:"value"`
 		ZoneIdentifier string `json:"zone_id"`
 		TTL            uint   `json:"ttl"`
 	}{

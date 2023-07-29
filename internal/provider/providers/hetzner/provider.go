@@ -66,9 +66,8 @@ var (
 
 func (p *Provider) isValid() error {
 	switch {
-	case p.key != "": // key must be provided
-		switch {
-		case !keyRegex.MatchString(p.key):
+	case p.key != "":
+		if !keyRegex.MatchString(p.key) {
 			return fmt.Errorf("%w: key %q does not match regex %q",
 				errors.ErrKeyNotValid, p.key, keyRegex)
 		}
@@ -117,8 +116,7 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
-	switch {
-	case p.token != "":
+	if p.token != "" {
 		request.Header.Set("Auth-API-Token", p.token)
 	}
 }
@@ -167,7 +165,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 	listRecordsResponse := struct {
 		Records []struct {
 			ID    string `json:"id"`
-			Value string `json:"value"`
+			Value netip.Addr `json:"value"`
 		} `json:"records"`
 	}{}
 	err = decoder.Decode(&listRecordsResponse)
@@ -189,7 +187,6 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 
 func (p *Provider) CreateRecord(ctx context.Context, client *http.Client, ip netip.Addr) (recordID string, err error) {
 	recordType := constants.A
-
 	if ip.Is6() {
 		recordType = constants.AAAA
 	}
@@ -201,9 +198,9 @@ func (p *Provider) CreateRecord(ctx context.Context, client *http.Client, ip net
 	}
 
 	requestData := struct {
-		Type           string `json:"type"`  // constants.A or constants.AAAA depending on ip address given
-		Name           string `json:"name"`  // DNS record name i.e. example.com
-		Value          string `json:"value"` // ip address
+		Type           string `json:"type"` 
+		Name           string `json:"name"` 
+		Value          string `json:"value"`
 		ZoneIdentifier string `json:"zone_id"`
 		TTL            uint   `json:"ttl"`
 	}{
@@ -284,9 +281,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	requestData := struct {
-		Type           string `json:"type"`  // constants.A or constants.AAAA depending on ip address given
-		Name           string `json:"name"`  // DNS record name i.e. example.com
-		Value          string `json:"value"` // ip address
+		Type           string `json:"type"`
+		Name           string `json:"name"`
+		Value          string `json:"value"`
 		ZoneIdentifier string `json:"zone_id"`
 		TTL            uint   `json:"ttl"`
 	}{

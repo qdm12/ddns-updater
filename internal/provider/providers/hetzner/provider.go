@@ -50,6 +50,9 @@ func New(data json.RawMessage, domain, host string,
 		zoneIdentifier: extraSettings.ZoneIdentifier,
 		ttl:            extraSettings.TTL,
 	}
+	if p.ttl == 0 {
+		p.ttl = 1
+	}
 	err = p.isValid()
 	if err != nil {
 		return nil, err
@@ -71,11 +74,8 @@ func (p *Provider) isValid() error {
 		}
 	default: // constants.API token only
 	}
-	switch {
-	case p.zoneIdentifier == "":
+	if p.zoneIdentifier == "" {
 		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
-	case p.ttl == 0:
-		return fmt.Errorf("%w", errors.ErrTTLNotSet)
 	}
 	return nil
 }

@@ -187,7 +187,6 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 
 func (p *Provider) CreateRecord(ctx context.Context, client *http.Client, ip netip.Addr) (recordID string, err error) {
 	recordType := constants.A
-
 	if ip.Is6() {
 		recordType = constants.AAAA
 	}

@@ -250,6 +250,10 @@ func (p *Provider) CreateRecord(ctx context.Context, client *http.Client, ip net
 		return "", fmt.Errorf("json decoding response body: %w", err)
 	}
 
+	if !parsedJSON.Record.ID {
+		return "", fmt.Errorf("%w: %s", errors.ErrUnsuccessful, "error: empty response without id")
+	}
+
 	return parsedJSON.Record.ID, nil
 }
 

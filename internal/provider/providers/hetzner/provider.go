@@ -119,7 +119,7 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetAccept(request, "application/json")
 	switch {
 	case p.token != "":
-		headers.SetAuthAPIToken(request, p.token)
+		request.Header.Set("Auth-API-Token", p.token)
 	}
 }
 

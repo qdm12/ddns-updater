@@ -14,10 +14,6 @@ func SetAccept(request *http.Request, acceptContent string) {
 	request.Header.Set("Accept", acceptContent)
 }
 
-func SetAuthAPIToken(request *http.Request, token string) {
-	request.Header.Set("Auth-API-Token", token)
-}
-
 func SetAuthBearer(request *http.Request, token string) {
 	request.Header.Set("Authorization", "Bearer "+token)
 }

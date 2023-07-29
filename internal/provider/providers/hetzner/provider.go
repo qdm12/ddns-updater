@@ -23,7 +23,6 @@ type Provider struct {
 	domain         string
 	host           string
 	ipVersion      ipversion.IPVersion
-	key            string
 	token          string
 	zoneIdentifier string
 	ttl            uint
@@ -32,7 +31,6 @@ type Provider struct {
 func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
-		Key            string `json:"key"`
 		Token          string `json:"token"`
 		ZoneIdentifier string `json:"zone_identifier"`
 		TTL            uint   `json:"ttl"`
@@ -45,7 +43,6 @@ func New(data json.RawMessage, domain, host string,
 		domain:         domain,
 		host:           host,
 		ipVersion:      ipVersion,
-		key:            extraSettings.Key,
 		token:          extraSettings.Token,
 		zoneIdentifier: extraSettings.ZoneIdentifier,
 		ttl:            extraSettings.TTL,
@@ -60,19 +57,7 @@ func New(data json.RawMessage, domain, host string,
 	return p, nil
 }
 
-var (
-	keyRegex = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
-)
-
 func (p *Provider) isValid() error {
-	switch {
-	case p.key != "":
-		if !keyRegex.MatchString(p.key) {
-			return fmt.Errorf("%w: key %q does not match regex %q",
-				errors.ErrKeyNotValid, p.key, keyRegex)
-		}
-	default: // constants.API token only
-	}
 	if p.zoneIdentifier == "" {
 		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
 	}

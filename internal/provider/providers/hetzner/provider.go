@@ -165,7 +165,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 	listRecordsResponse := struct {
 		Records []struct {
 			ID    string `json:"id"`
-			Value string `json:"value"`
+			Value netip.Addr `json:"value"`
 		} `json:"records"`
 	}{}
 	err = decoder.Decode(&listRecordsResponse)

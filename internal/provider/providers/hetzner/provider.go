@@ -164,10 +164,10 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 	case len(listRecordsResponse.Records) > 1:
 		return "", false, fmt.Errorf("%w: %d instead of 1",
 			errors.ErrResultsCountReceived, len(listRecordsResponse.Records))
-	case listRecordsResponse.Records[0].Value == newIP.String(): // up to date
-		return "", true, nil
 	}
-	return listRecordsResponse.Records[0].ID, false, nil
+	identifier = listRecordsResponse.Records[0].ID
+	upToDate = listRecordsResponse.Records[0].Value == newIP.String()
+	return identifier, upToDate, nil
 }
 
 func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip netip.Addr) (recordID string, err error) {

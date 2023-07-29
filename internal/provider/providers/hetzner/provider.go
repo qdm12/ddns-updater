@@ -116,8 +116,7 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
-	switch {
-	case p.token != "":
+	if p.token != "" {
 		headers.SetAuthAPIToken(request, p.token)
 	}
 }

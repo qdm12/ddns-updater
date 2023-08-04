@@ -20,14 +20,13 @@ import (
 
 type Provider struct {
 	domain        string
-	host          string
 	ipVersion     ipversion.IPVersion
 	username      string
 	password      string
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string,
+func New(data json.RawMessage, domain string,
 	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
@@ -40,7 +39,6 @@ func New(data json.RawMessage, domain, host string,
 	}
 	p = &Provider{
 		domain:        domain,
-		host:          "@",
 		ipVersion:     ipVersion,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
@@ -64,7 +62,7 @@ func (p *Provider) isValid() error {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.host, constants.NowDNS, p.ipVersion)
+	return utils.ToString(p.domain, "@", constants.NowDNS, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
@@ -72,7 +70,7 @@ func (p *Provider) Domain() string {
 }
 
 func (p *Provider) Host() string {
-	return p.host
+	return "@"
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -84,7 +82,7 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return p.domain
 }
 
 func (p *Provider) HTML() models.HTMLRow {
@@ -105,7 +103,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	values := url.Values{}
-	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
+	values.Set("hostname", p.domain)
 	if !p.useProviderIP {
 		values.Set("myip", ip.String())
 	}

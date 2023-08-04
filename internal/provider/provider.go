@@ -134,7 +134,7 @@ func New(providerName models.Provider, data json.RawMessage, domain, host string
 	case constants.NoIP:
 		return noip.New(data, domain, host, ipVersion)
 	case constants.NowDNS:
-		return nowdns.New(data, domain, host, ipVersion)
+		return nowdns.New(data, domain, ipVersion)
 	case constants.OpenDNS:
 		return opendns.New(data, domain, host, ipVersion)
 	case constants.OVH:

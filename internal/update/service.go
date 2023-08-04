@@ -172,19 +172,19 @@ func (r *Runner) shouldUpdateRecordNoLookup(hostname string, ipVersion ipversion
 	case ipversion.IP4:
 		if ipv4.IsValid() && ipv4.Compare(lastIP) != 0 {
 			r.logger.Info("Last IPv4 address stored for " + hostname +
-				" is " + lastIP.String() + " and your IPv4 address is " + ip.String())
+				" is " + lastIP.String() + " and your IPv4 address is " + ipv4.String())
 			return true
 		}
 		r.logger.Debug("Last IPv4 address stored for " + hostname + " is " +
-			lastIP.String() + " and your IPv4 address is " + ip.String() + ", skipping update")
+			lastIP.String() + " and your IPv4 address is " + ipv4.String() + ", skipping update")
 	case ipversion.IP6:
 		if ipv6.IsValid() && ipv6.Compare(lastIP) != 0 {
 			r.logger.Info("Last IPv6 address stored for " + hostname +
-				" is " + lastIP.String() + " and your IPv6 address is " + ip.String())
+				" is " + lastIP.String() + " and your IPv6 address is " + ipv6.String())
 			return true
 		}
 		r.logger.Debug("Last IPv6 address stored for " + hostname + " is " +
-			lastIP.String() + " and your IPv6 address is " + ip.String() + ", skipping update")
+			lastIP.String() + " and your IPv6 address is " + ipv6.String() + ", skipping update")
 	}
 	return false
 }

@@ -35,6 +35,7 @@ const (
 	Netcup       models.Provider = "netcup"
 	Njalla       models.Provider = "njalla"
 	NoIP         models.Provider = "noip"
+	NowDNS       models.Provider = "nowdns"
 	OpenDNS      models.Provider = "opendns"
 	OVH          models.Provider = "ovh"
 	Porkbun      models.Provider = "porkbun"
@@ -78,6 +79,7 @@ func ProviderChoices() []models.Provider {
 		NameCom,
 		Njalla,
 		NoIP,
+		NowDNS,
 		OpenDNS,
 		OVH,
 		Porkbun,

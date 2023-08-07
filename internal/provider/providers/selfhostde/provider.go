@@ -66,7 +66,7 @@ func (p *Provider) isValid() error {
 }
 
 func (p *Provider) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Selfhost.de]", p.domain, p.host)
+	return utils.ToString(p.domain, p.host, constants.SelfhostDe, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

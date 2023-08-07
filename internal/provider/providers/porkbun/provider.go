@@ -63,7 +63,7 @@ func (p *Provider) isValid() error {
 }
 
 func (p *Provider) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: Porkbun]", p.domain, p.host)
+	return utils.ToString(p.domain, p.host, constants.Porkbun, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

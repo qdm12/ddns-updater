@@ -121,7 +121,7 @@ func (r *Runner) getNewIPs(ctx context.Context, doIP, doIPv4, doIPv6 bool, ipv6M
 		if err != nil {
 			errors = append(errors, err)
 		} else {
-			ip = mustMaskIPv6(ip, ipv6MaskBits)
+			ipv6 = mustMaskIPv6(ipv6, ipv6MaskBits)
 		}
 	}
 	return ip, ipv4, ipv6, errors

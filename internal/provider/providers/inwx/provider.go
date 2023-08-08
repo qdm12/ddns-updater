@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
@@ -62,7 +63,7 @@ func (p *Provider) isValid() error {
 }
 
 func (p *Provider) String() string {
-	return fmt.Sprintf("[domain: %s | host: %s | provider: INWX]", p.domain, p.host)
+	return utils.ToString(p.domain, p.host, constants.INWX, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

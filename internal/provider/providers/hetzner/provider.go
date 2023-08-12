@@ -106,7 +106,6 @@ func (p *Provider) setHeaders(request *http.Request) {
 	}
 }
 
-// Obtain domain ID.
 // See https://dns.hetzner.com/api-docs#operation/GetZones.
 func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP netip.Addr) (
 	identifier string, upToDate bool, err error) {

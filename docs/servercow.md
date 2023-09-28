@@ -21,7 +21,7 @@
 }
 ```
 
-### Compulsury parameters
+### Compulsory parameters
 
 - `"domain"`
 - `"host"` is your host and can be `""`, a subdomain or `"*"` generally

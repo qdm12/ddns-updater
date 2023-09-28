@@ -212,7 +212,7 @@ Note that:
 
 | Environment variable | Default | Description |
 | --- | --- | --- |
-| `CONFIG` | | One line JSON object containing the entire config (takes precendence over config.json file) if specified |
+| `CONFIG` | | One line JSON object containing the entire config (takes precedence over config.json file) if specified |
 | `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
 | `IPV6_PREFIX` | `/128` | IPv6 prefix used to mask your public IPv6 address and your record IPv6 address. Ranges from `/0` to `/128` depending on your ISP. |
 | `PUBLICIP_FETCHERS` | `all` | Comma separated fetcher types to obtain the public IP address from `http` and `dns` |

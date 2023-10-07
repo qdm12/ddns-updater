@@ -57,7 +57,7 @@ func New(data json.RawMessage, _, _ string,
 var hostRegex = regexp.MustCompile(`^[a-zA-Z]{2,}$`)
 
 func (p *Provider) authenticate() (*routeros.Client, error) {
-	return routeros.Dial(p.routerIP, p.username, p.password)
+	return routeros.Dial(fmt.Sprintf("%s:8728", p.routerIP), p.username, p.password)
 }
 
 type AddressListItem struct {
@@ -125,7 +125,7 @@ func (p *Provider) isValid() error {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.Domain(), p.addressList, constants.Namecheap, p.ipVersion)
+	return utils.ToString(p.Domain(), p.addressList, constants.Mikrotik, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

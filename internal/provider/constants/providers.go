@@ -30,6 +30,7 @@ const (
 	INWX         models.Provider = "inwx"
 	Linode       models.Provider = "linode"
 	LuaDNS       models.Provider = "luadns"
+	Mikrotik     models.Provider = "mikrotik"
 	Namecheap    models.Provider = "namecheap"
 	NameCom      models.Provider = "name.com"
 	Netcup       models.Provider = "netcup"

@@ -188,6 +188,7 @@ Check the documentation for your DNS provider:
 - [INWX](https://github.com/qdm12/ddns-updater/blob/master/docs/inwx.md)
 - [Linode](https://github.com/qdm12/ddns-updater/blob/master/docs/linode.md)
 - [LuaDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/luadns.md)
+- [Mikrotik](https://github.com/qdm12/ddns-updater/blob/master/docs/mikrotik.md)
 - [Name.com](https://github.com/qdm12/ddns-updater/blob/master/docs/name.com.md)
 - [Namecheap](https://github.com/qdm12/ddns-updater/blob/master/docs/namecheap.md)
 - [Netcup](https://github.com/qdm12/ddns-updater/blob/master/docs/netcup.md)

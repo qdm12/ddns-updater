@@ -3,7 +3,6 @@ package mikrotik
 import (
 	"context"
 	"encoding/json"
-	builtinErrors "errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -15,10 +14,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
-)
-
-var (
-	ErrorAddressListNotFound = builtinErrors.New("address list not found")
 )
 
 type Provider struct {

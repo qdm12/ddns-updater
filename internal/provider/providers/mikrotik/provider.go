@@ -162,15 +162,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	id, _, err := p.getListIdAndValue()
-	if err != nil {
-		if builtinErrors.Is(err, ErrorAddressListNotFound) { // Address list not found, create it
-			err = p.addListValue(p.addressList, ip.String())
-			if err != nil {
-				return netip.Addr{}, err
-			}
-		} else { // Some other error, abort
+	if builtinErrors.Is(err, ErrorAddressListNotFound) { // Address list not found, create it
+		err = p.addListValue(p.addressList, ip.String())
+		if err != nil {
 			return netip.Addr{}, err
 		}
+	} else if err != nil { // Some other error, abort
+		return netip.Addr{}, err
 	} else { // Address list found, update value
 		err = p.setListValue(id, ip.String())
 		if err != nil {

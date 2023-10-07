@@ -21,8 +21,8 @@
 
 ### Parameters
 
-- `"host"` is the name of the address list
 - `"router_ip"` is the IP address of your router
+- `"address_list"` is the name of the address list
 - `"username"` is the username to authenticate with
 - `"password"` is the user's password
 

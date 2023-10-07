@@ -71,13 +71,16 @@ func (i *AddressListItem) found() bool {
 }
 
 func (p *Provider) getListIDAndValue() (item *AddressListItem, err error) {
-	resp, err := p.client.Run("/ip/firewall/address-list/print", queryParam("disabled", "false"), queryParam("list", p.addressList))
+	resp, err := p.client.Run("/ip/firewall/address-list/print",
+		queryParam("disabled", "false"), queryParam("list", p.addressList))
 	if err != nil {
 		return &AddressListItem{}, err
 	}
 
 	if len(resp.Re) > 1 {
-		return &AddressListItem{}, fmt.Errorf("%w: more than one item in the address list, please remove extra entries", errors.ErrConflictingRecord)
+		return &AddressListItem{},
+			fmt.Errorf("%w: more than one item in the address list, please remove extra entries",
+				errors.ErrConflictingRecord)
 	}
 
 	if len(resp.Re) == 0 {

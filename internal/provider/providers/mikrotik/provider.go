@@ -18,6 +18,7 @@ import (
 
 type Provider struct {
 	domain      string
+	host        string
 	ipVersion   ipversion.IPVersion
 	routerIP    string
 	username    string
@@ -26,7 +27,7 @@ type Provider struct {
 	client      *routeros.Client
 }
 
-func New(data json.RawMessage, domain, _ string,
+func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	if ipVersion == ipversion.IP6 {
 		return nil, fmt.Errorf("%w", errors.ErrIPv6NotSupported)
@@ -43,6 +44,7 @@ func New(data json.RawMessage, domain, _ string,
 	}
 	p = &Provider{
 		domain:      domain,
+		host:        host,
 		ipVersion:   ipVersion,
 		routerIP:    extraSettings.RouterIP,
 		username:    extraSettings.Username,
@@ -135,7 +137,7 @@ func (p *Provider) Domain() string {
 }
 
 func (p *Provider) Host() string {
-	return p.addressList
+	return p.host
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -147,14 +149,14 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return "N/A"
+	return utils.BuildDomainName(p.Host(), p.Domain())
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    p.Domain(),
 		Host:      p.addressList,
-		Provider:  fmt.Sprintf("<a href=\"http://%s\">Web Config</a>", p.routerIP),
+		Provider:  fmt.Sprintf("<a href=\"http://%s\">Mikrotik</a>", p.routerIP),
 		IPVersion: p.ipVersion.String(),
 	}
 }
@@ -179,6 +181,7 @@ func (p *Provider) Update(_ context.Context, _ *http.Client, ip netip.Addr) (new
 			return netip.Addr{}, err
 		}
 	case listItem.Address == ip.String():
+		println("here")
 		return ip, nil
 	default:
 		err = p.setListValue(listItem.ID, ip.String())

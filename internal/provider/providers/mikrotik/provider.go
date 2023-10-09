@@ -181,7 +181,6 @@ func (p *Provider) Update(_ context.Context, _ *http.Client, ip netip.Addr) (new
 			return netip.Addr{}, err
 		}
 	case listItem.Address == ip.String():
-		println("here")
 		return ip, nil
 	default:
 		err = p.setListValue(listItem.ID, ip.String())

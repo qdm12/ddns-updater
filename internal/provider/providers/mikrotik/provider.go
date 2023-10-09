@@ -17,6 +17,7 @@ import (
 )
 
 type Provider struct {
+	domain      string
 	ipVersion   ipversion.IPVersion
 	routerIP    string
 	username    string
@@ -25,7 +26,7 @@ type Provider struct {
 	client      *routeros.Client
 }
 
-func New(data json.RawMessage, _, _ string,
+func New(data json.RawMessage, domain, _ string,
 	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	if ipVersion == ipversion.IP6 {
 		return nil, fmt.Errorf("%w", errors.ErrIPv6NotSupported)
@@ -41,6 +42,7 @@ func New(data json.RawMessage, _, _ string,
 		return nil, err
 	}
 	p = &Provider{
+		domain:      domain,
 		ipVersion:   ipVersion,
 		routerIP:    extraSettings.RouterIP,
 		username:    extraSettings.Username,
@@ -129,7 +131,7 @@ func (p *Provider) String() string {
 }
 
 func (p *Provider) Domain() string {
-	return "N/A"
+	return p.domain
 }
 
 func (p *Provider) Host() string {

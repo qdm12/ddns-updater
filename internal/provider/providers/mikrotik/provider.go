@@ -170,13 +170,16 @@ func (p *Provider) Update(_ context.Context, _ *http.Client, ip netip.Addr) (new
 		return netip.Addr{}, fmt.Errorf("%w: unable to retrieve address list items", errors.ErrUnsuccessful)
 	}
 
-	if listItem.found() {
-		err = p.setListValue(listItem.ID, ip.String())
+	switch {
+	case !listItem.found():
+		err = p.addListValue(p.addressList, ip.String())
 		if err != nil {
 			return netip.Addr{}, err
 		}
-	} else {
-		err = p.addListValue(p.addressList, ip.String())
+	case listItem.Address == ip.String():
+		return ip, nil
+	default:
+		err = p.setListValue(listItem.ID, ip.String())
 		if err != nil {
 			return netip.Addr{}, err
 		}

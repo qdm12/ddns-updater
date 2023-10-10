@@ -23,7 +23,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dns.hetzner.com",
-		Path:   fmt.Sprintf("/api/v1/records"),
+		Path:   "/api/v1/records",
 	}
 
 	requestData := struct {

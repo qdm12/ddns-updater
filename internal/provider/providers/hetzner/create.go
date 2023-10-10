@@ -60,9 +60,10 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode > http.StatusUnsupportedMediaType {
+	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode,
+			utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)

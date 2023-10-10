@@ -61,9 +61,10 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode > http.StatusUnsupportedMediaType {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+	if response.StatusCode != http.StatusOK {
+		return ip, fmt.Errorf("%w: %d: %s",
+			errors.ErrHTTPStatusNotValid, response.StatusCode,
+			utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)

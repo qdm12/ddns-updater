@@ -54,8 +54,11 @@ func New(data json.RawMessage, domain, host string,
 }
 
 func (p *Provider) isValid() error {
-	if p.zoneIdentifier == "" {
+	switch {
+	case p.zoneIdentifier == "":
 		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
+	case p.token == "":
+		return fmt.Errorf("%w", errors.ErrTokenNotSet)
 	}
 	return nil
 }

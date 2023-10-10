@@ -14,10 +14,10 @@ import (
 )
 
 // See https://dns.hetzner.com/api-docs#operation/GetZones.
-func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP netip.Addr) (
+func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip netip.Addr) (
 	identifier string, upToDate bool, err error) {
 	recordType := constants.A
-	if newIP.Is6() {
+	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 
@@ -72,6 +72,6 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 			errors.ErrResultsCountReceived, len(listRecordsResponse.Records))
 	}
 	identifier = listRecordsResponse.Records[0].ID
-	upToDate = listRecordsResponse.Records[0].Value.Compare(newIP) == 0
+	upToDate = listRecordsResponse.Records[0].Value.Compare(ip) == 0
 	return identifier, upToDate, nil
 }

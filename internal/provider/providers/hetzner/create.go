@@ -77,7 +77,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	}
 
 	if parsedJSON.Record.ID == "" {
-		return fmt.Errorf("%w: %s", errors.ErrUnsuccessful, "error: empty response without id")
+		return fmt.Errorf("%w", errors.ErrReceivedNoResult)
 	}
 
 	return nil

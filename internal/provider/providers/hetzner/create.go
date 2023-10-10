@@ -69,12 +69,17 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	decoder := json.NewDecoder(response.Body)
 	var parsedJSON struct {
 		Record struct {
-			ID string `json:"id"`
+			ID    string     `json:"id"`
+			Value netip.Addr `json:"value"`
 		} `json:"record"`
 	}
 	err = decoder.Decode(&parsedJSON)
+	newIP := parsedJSON.Record.Value
 	if err != nil {
 		return fmt.Errorf("json decoding response body: %w", err)
+	} else if newIP.Compare(ip) != 0 {
+		return fmt.Errorf("%w: sent ip %s to update but received %s",
+			errors.ErrIPReceivedMismatch, ip, newIP)
 	}
 
 	if parsedJSON.Record.ID == "" {

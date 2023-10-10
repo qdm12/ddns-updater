@@ -10,7 +10,5 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
-	if p.token != "" {
-		request.Header.Set("Auth-API-Token", p.token)
-	}
+	request.Header.Set("Auth-API-Token", p.token)
 }

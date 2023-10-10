@@ -70,7 +70,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	decoder := json.NewDecoder(response.Body)
 	var parsedJSON struct {
 		Record struct {
-			Value string `json:"value"`
+			Value netip.Addr `json:"value"`
 		} `json:"record"`
 	}
 	err = decoder.Decode(&parsedJSON)
@@ -78,7 +78,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
 	}
 
-	newIP, err = netip.ParseAddr(parsedJSON.Record.Value)
+	newIP = parsedJSON.Record.Value
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
 	} else if newIP.Compare(ip) != 0 {

@@ -72,6 +72,6 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 			errors.ErrResultsCountReceived, len(listRecordsResponse.Records))
 	}
 	identifier = listRecordsResponse.Records[0].ID
-	upToDate = listRecordsResponse.Records[0].Value.String() == newIP.String()
+	upToDate = listRecordsResponse.Records[0].Value.Compare(newIP) == 0
 	return identifier, upToDate, nil
 }

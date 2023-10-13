@@ -108,7 +108,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("domains", p.host)
 	values.Set("token", p.token)
 	if !p.useProviderIP {
-		values.Set("ip", ip.String())
+		if ip.Is6() {
+			values.Set("ip6", ip.String())
+		} else {
+			values.Set("ip", ip.String())
+		}
 	}
 	u.RawQuery = values.Encode()
 

@@ -109,7 +109,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("token", p.token)
 	if !p.useProviderIP {
 		if ip.Is6() {
-			values.Set("ip6", ip.String())
+			values.Set("ipv6", ip.String())
 		} else {
 			values.Set("ip", ip.String())
 		}

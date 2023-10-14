@@ -146,10 +146,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case s[0:minChars] == "KO":
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	case s[0:minChars] == "OK":
+		var ips []netip.Addr
 		if ip.Is6() {
-			ips := ipextract.IPv6(s)
+			ips = ipextract.IPv6(s)
 		} else {
-		        ips := ipextract.IPv4(s)
+			ips = ipextract.IPv4(s)
 		}
 		if len(ips) == 0 {
 			return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoIP)

@@ -113,6 +113,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		} else {
 			values.Set("ipv6", ip.String())
 		}
+	} else {
+		if isIPv4 {
+			values.Set("ipv4", "auto")
+		} else {
+			values.Set("ipv6", "auto")
+		}
 	}
 	u.RawQuery = values.Encode()
 

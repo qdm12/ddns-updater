@@ -47,7 +47,11 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip neti
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
+	switch response.StatusCode {
+	case http.StatusOK:
+	case http.StatusNotFound:
+		return "", false, fmt.Errorf("%w", errors.ErrReceivedNoResult)
+	default:
 		return "", false, fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}

@@ -55,7 +55,7 @@ func New(data json.RawMessage, domain, host string,
 	return p, nil
 }
 
-var regexUsername = regexp.MustCompile(`^[a-zA-Z0-9@._-]{3,25}$`)
+var regexUsername = regexp.MustCompile(`^[a-zA-Z0-9+@._-]{3,25}$`)
 
 func (p *Provider) isValid() error {
 	switch {

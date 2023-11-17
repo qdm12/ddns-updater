@@ -107,18 +107,14 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values := url.Values{}
 	values.Set("token", p.token)
 	values.Set("zone", utils.BuildURLQueryHostname(p.host, p.domain))
-	if !p.useProviderIP {
-		if isIPv4 {
-			values.Set("ipv4", ip.String())
-		} else {
-			values.Set("ipv6", ip.String())
-		}
+	ipValue := ip.String()
+	if p.useProviderIP {
+		ipValue = "auto"
+	}
+	if isIPv4 {
+		values.Set("ipv4", ipValue)
 	} else {
-		if isIPv4 {
-			values.Set("ipv4", "auto")
-		} else {
-			values.Set("ipv6", "auto")
-		}
+		values.Set("ipv6", ipValue)
 	}
 	u.RawQuery = values.Encode()
 

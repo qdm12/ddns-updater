@@ -32,6 +32,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/godaddy"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/google"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/he"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/hetzner"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/infomaniak"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/inwx"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/linode"
@@ -115,6 +116,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, host string
 		return google.New(data, domain, host, ipVersion)
 	case constants.HE:
 		return he.New(data, domain, host, ipVersion)
+	case constants.Hetzner:
+		return hetzner.New(data, domain, host, ipVersion)
 	case constants.Infomaniak:
 		return infomaniak.New(data, domain, host, ipVersion)
 	case constants.INWX:

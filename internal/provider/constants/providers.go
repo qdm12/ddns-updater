@@ -26,6 +26,7 @@ const (
 	GoDaddy      models.Provider = "godaddy"
 	Google       models.Provider = "google"
 	HE           models.Provider = "he"
+	Hetzner      models.Provider = "hetzner"
 	Infomaniak   models.Provider = "infomaniak"
 	INWX         models.Provider = "inwx"
 	Linode       models.Provider = "linode"
@@ -71,6 +72,7 @@ func ProviderChoices() []models.Provider {
 		GoDaddy,
 		Google,
 		HE,
+		Hetzner,
 		Infomaniak,
 		INWX,
 		Linode,

@@ -22,14 +22,16 @@ type Provider struct {
 	host      string
 	ttl       int
 	ipVersion ipversion.IPVersion
-	key       string
+	token     string // Allows for the use of Gandi's Personal Access Tokens instead of API Key (Deprecated)
+	key       string // If Access Token not provided, API key may be used instead
 }
 
 func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
-		Key string `json:"key"`
-		TTL int    `json:"ttl"`
+		Token string `json:"token"`
+		Key   string `json:"key"`
+		TTL   int    `json:"ttl"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -39,6 +41,7 @@ func New(data json.RawMessage, domain, host string,
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
+		token:     extraSettings.Token,
 		key:       extraSettings.Key,
 		ttl:       extraSettings.TTL,
 	}
@@ -50,10 +53,14 @@ func New(data json.RawMessage, domain, host string,
 }
 
 func (p *Provider) isValid() error {
-	if p.key == "" {
-		return fmt.Errorf("%w", errors.ErrKeyNotSet)
+	if p.key == "" && p.token == "" { // checks if both API Key and Token are not set
+		return fmt.Errorf("%w This one", errors.ErrKeyNotSet)
 	}
 	return nil
+}
+
+func (p *Provider) AccessTokenValid() bool { // returns true if a Personal Access Token is provided
+	return p.token != ""
 }
 
 func (p *Provider) String() string {
@@ -127,7 +134,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
-	request.Header.Set("X-Api-Key", p.key)
+	if p.AccessTokenValid() { // Sets the authorization header with the Access Token if provided
+		request.Header.Set("Authorization", "Bearer "+p.token)
+	} else { // If no Access Token Provided, uses the API key instead
+		request.Header.Set("X-Api-Key", p.key)
+	}
 
 	response, err := client.Do(request)
 	if err != nil {

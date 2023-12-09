@@ -14,6 +14,7 @@ This provider uses Gandi v5 API
       "domain": "domain.com",
       "host": "@",
       "key": "key",
+      "token": "token",
       "ttl": 3600,
       "ip_version": "ipv4"
     }
@@ -25,7 +26,8 @@ This provider uses Gandi v5 API
 
 - `"domain"`
 - `"host"` which can be a subdomain, `@` or a wildcard `*`
-- `"key"`
+- Either a Gandi API Key `"key"` or Gandi Personal Access Token `"token"` must be provided.
+- If both a `"key"` and `"token"` are provided, the `"token"` will be used.
 
 ### Optional parameters
 

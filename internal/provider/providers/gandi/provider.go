@@ -54,7 +54,7 @@ func New(data json.RawMessage, domain, host string,
 
 func (p *Provider) isValid() error {
 	if p.key == "" && p.token == "" { // checks if both API Key and Token are not set
-		return fmt.Errorf("%w This one", errors.ErrKeyNotSet)
+		return fmt.Errorf("%w", errors.ErrKeyNotSet)
 	}
 	return nil
 }

@@ -10,6 +10,7 @@ The Manifests have additional [Kustomize](https://kustomize.io/) overlays, which
     curl -O https://raw.githubusercontent.com/qdm12/ddns-updater/master/k8s/base/deployment.yaml
     curl -O https://raw.githubusercontent.com/qdm12/ddns-updater/master/k8s/base/secret-config.yaml
     curl -O https://raw.githubusercontent.com/qdm12/ddns-updater/master/k8s/base/service.yaml
+    curl -O https://raw.githubusercontent.com/qdm12/ddns-updater/master/k8s/base/kustomization.yaml
     ```
 
 1. Modify `secret-config.yaml` as described in the [project readme](../README#configuration)
@@ -22,10 +23,10 @@ The Manifests have additional [Kustomize](https://kustomize.io/) overlays, which
 1. Connect the the web UI with a [kubectl port-forward](https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/)
 
     ```sh
-    kubectl port-forward svc/ddns-updater 8000:8080
+    kubectl port-forward svc/ddns-updater 8080:80
     ```
 
-The web UI should now be available at [http://localhost:8000](http://localhost:8000).
+The web UI should now be available at [http://localhost:8080](http://localhost:8080).
 
 ## Advanced usage
 

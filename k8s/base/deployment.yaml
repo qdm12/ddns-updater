@@ -7,11 +7,11 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: ddns
+      app: ddns-updater
   template:
     metadata:
       labels:
-        app: ddns
+        app: ddns-updater
     spec:
       containers:
         - name: ddns

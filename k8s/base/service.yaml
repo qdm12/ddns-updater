@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ddns-updater
+spec:
+  selector:
+    app: ddns-updater
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000

@@ -191,8 +191,10 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 	records := make([]recordslib.Record, len(providers))
 	for i, provider := range providers {
 		logger.Info("Reading history from database: domain " +
-			provider.Domain() + " host " + provider.Host())
-		events, err := persistentDB.GetEvents(provider.Domain(), provider.Host())
+			provider.Domain() + " host " + provider.Host() +
+			" " + provider.IPVersion().String())
+		events, err := persistentDB.GetEvents(provider.Domain(),
+			provider.Host(), provider.IPVersion())
 		if err != nil {
 			shoutrrrClient.Notify(err.Error())
 			return err

@@ -189,15 +189,15 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 	}
 
 	records := make([]recordslib.Record, len(providers))
-	for i, s := range providers {
+	for i, provider := range providers {
 		logger.Info("Reading history from database: domain " +
-			s.Domain() + " host " + s.Host())
-		events, err := persistentDB.GetEvents(s.Domain(), s.Host())
+			provider.Domain() + " host " + provider.Host())
+		events, err := persistentDB.GetEvents(provider.Domain(), provider.Host())
 		if err != nil {
 			shoutrrrClient.Notify(err.Error())
 			return err
 		}
-		records[i] = recordslib.New(s, events)
+		records[i] = recordslib.New(provider, events)
 	}
 
 	defer client.CloseIdleConnections()

@@ -11,23 +11,29 @@ import (
 func (db *Database) StoreNewIP(domain, host string, ip netip.Addr, t time.Time) (err error) {
 	db.Lock()
 	defer db.Unlock()
+
+	targetIndex := -1
 	for i, record := range db.data.Records {
 		if record.Domain == domain && record.Host == host {
-			db.data.Records[i].Events = append(db.data.Records[i].Events, models.HistoryEvent{
-				IP:   ip,
-				Time: t,
-			})
-			return db.write()
+			targetIndex = i
+			break
 		}
 	}
-	db.data.Records = append(db.data.Records, record{
-		Domain: domain,
-		Host:   host,
-		Events: []models.HistoryEvent{{
-			IP:   ip,
-			Time: t,
-		}},
-	})
+
+	recordNotFound := targetIndex == -1
+	if recordNotFound {
+		db.data.Records = append(db.data.Records, record{
+			Domain: domain,
+			Host:   host,
+		})
+		targetIndex = len(db.data.Records) - 1
+	}
+
+	event := models.HistoryEvent{
+		IP:   ip,
+		Time: t,
+	}
+	db.data.Records[targetIndex].Events = append(db.data.Records[targetIndex].Events, event)
 	return db.write()
 }
 

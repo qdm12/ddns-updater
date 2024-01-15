@@ -73,6 +73,7 @@ ENV \
     # Core
     CONFIG= \
     PERIOD=5m \
+    IPV6_PREFIX=/128 \
     UPDATE_COOLDOWN_PERIOD=5m \
     PUBLICIP_FETCHERS=all \
     PUBLICIP_HTTP_PROVIDERS=all \
@@ -94,8 +95,9 @@ ENV \
     LOG_LEVEL=info \
     LOG_CALLER=hidden \
     SHOUTRRR_ADDRESSES= \
-    SHOUTRRR_DEFAULT_TITLE="DDNS Updater" \
-    TZ=
+    TZ= \
+    HEALTH_SERVER_ADDRESS=127.0.0.1:9999 \
+    HEALTH_HEALTHCHECKSIO_UUID=
 ARG VERSION=unknown
 ARG CREATED="an unknown date"
 ARG COMMIT=unknown

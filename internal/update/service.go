@@ -24,11 +24,13 @@ type Runner struct {
 	ipGetter     PublicIPFetcher
 	logger       Logger
 	timeNow      func() time.Time
+	hioClient    HealthchecksIOClient
 }
 
 func NewRunner(db Database, updater UpdaterInterface, ipGetter PublicIPFetcher,
 	period time.Duration, ipv6MaskBits uint8, cooldown time.Duration,
-	logger Logger, resolver LookupIPer, timeNow func() time.Time) *Runner {
+	logger Logger, resolver LookupIPer, timeNow func() time.Time,
+	hioClient HealthchecksIOClient) *Runner {
 	return &Runner{
 		period:       period,
 		db:           db,
@@ -41,6 +43,7 @@ func NewRunner(db Database, updater UpdaterInterface, ipGetter PublicIPFetcher,
 		ipGetter:     ipGetter,
 		logger:       logger,
 		timeNow:      timeNow,
+		hioClient:    hioClient,
 	}
 }
 
@@ -303,6 +306,11 @@ func (r *Runner) updateNecessary(ctx context.Context, ipv6MaskBits uint8) (error
 			errors = append(errors, err)
 			r.logger.Error(err.Error())
 		}
+	}
+
+	err := r.hioClient.Ping(ctx)
+	if err != nil {
+		r.logger.Error("pinging healthchecks.io failed: " + err.Error())
 	}
 
 	return errors

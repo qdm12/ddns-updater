@@ -235,6 +235,7 @@ Note that:
 | `LISTENING_PORT` | `8000` | Internal TCP listening port for the web UI |
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
 | `HEALTH_SERVER_ADDRESS` | `127.0.0.1:9999` | Health server listening address |
+| `HEALTH_HEALTHCHECKSIO_UUID` | | UUID for [healthchecks.io](https://healthchecks.io) to send a heartbeat on every update check |
 | `DATADIR` | `/updater/data` | Directory to read and write data files from internally |
 | `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file |
 | `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`. |

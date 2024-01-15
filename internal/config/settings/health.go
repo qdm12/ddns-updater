@@ -10,15 +10,18 @@ import (
 )
 
 type Health struct {
-	ServerAddress *string
+	ServerAddress      *string
+	HealthchecksioUUID *string
 }
 
 func (h *Health) SetDefaults() {
 	h.ServerAddress = gosettings.DefaultPointer(h.ServerAddress, "127.0.0.1:9999")
+	h.HealthchecksioUUID = gosettings.DefaultPointer(h.HealthchecksioUUID, "")
 }
 
 func (h Health) mergeWith(other Health) (merged Health) {
 	merged.ServerAddress = gosettings.MergeWithPointer(h.ServerAddress, other.ServerAddress)
+	merged.HealthchecksioUUID = gosettings.MergeWithPointer(h.HealthchecksioUUID, other.HealthchecksioUUID)
 	return merged
 }
 
@@ -38,5 +41,8 @@ func (h Health) String() string {
 func (h Health) toLinesNode() *gotree.Node {
 	node := gotree.New("Health")
 	node.Appendf("Server listening address: %s", *h.ServerAddress)
+	if *h.HealthchecksioUUID != "" {
+		node.Appendf("Healthchecks.io UUID: %s", *h.HealthchecksioUUID)
+	}
 	return node
 }

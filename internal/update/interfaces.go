@@ -39,3 +39,7 @@ type Logger interface {
 	Warn(s string)
 	Error(s string)
 }
+
+type HealthchecksIOClient interface {
+	Ping(ctx context.Context) (err error)
+}

@@ -6,5 +6,6 @@ import (
 
 func (s *Source) ReadHealth() (settings settings.Health) {
 	settings.ServerAddress = s.env.Get("HEALTH_SERVER_ADDRESS")
+	settings.HealthchecksioUUID = s.env.Get("HEALTH_HEALTHCHECKSIO_UUID")
 	return settings
 }

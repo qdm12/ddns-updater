@@ -18,6 +18,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/config/sources/env"
 	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/health"
+	"github.com/qdm12/ddns-updater/internal/healthchecksio"
 	"github.com/qdm12/ddns-updater/internal/models"
 	jsonparams "github.com/qdm12/ddns-updater/internal/params"
 	persistence "github.com/qdm12/ddns-updater/internal/persistence/json"
@@ -231,9 +232,12 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 		return fmt.Errorf("creating resolver: %w", err)
 	}
 
+	hioClient := healthchecksio.New(client, *config.Health.HealthchecksioUUID)
+
 	updater := update.NewUpdater(db, client, shoutrrrClient, logger)
 	runner := update.NewRunner(db, updater, ipGetter, config.Update.Period,
-		config.IPv6.MaskBits, config.Update.Cooldown, logger, resolver, timeNow)
+		config.IPv6.MaskBits, config.Update.Cooldown, logger, resolver, timeNow,
+		hioClient)
 
 	runnerHandler, runnerCtx, runnerDone := goshutdown.NewGoRoutineHandler("runner")
 	go runner.Run(runnerCtx, runnerDone)

@@ -1,9 +1,8 @@
 package netcup
 
 import (
+	"context"
 	"net/http"
-
-	"golang.org/x/net/context"
 )
 
 func (p *Provider) infoDNSRecords(ctx context.Context, client *http.Client,

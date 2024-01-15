@@ -1,12 +1,12 @@
 package netcup
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"golang.org/x/net/context"
 )
 
 func (p *Provider) getRecordToUpdate(ctx context.Context,

@@ -1,11 +1,11 @@
 package netcup
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
-	"golang.org/x/net/context"
 )
 
 func (p *Provider) login(ctx context.Context, client *http.Client) (

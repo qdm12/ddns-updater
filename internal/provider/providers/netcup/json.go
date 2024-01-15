@@ -2,6 +2,7 @@ package netcup
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
-	"golang.org/x/net/context"
 )
 
 func doJSONHTTP(ctx context.Context, client *http.Client,

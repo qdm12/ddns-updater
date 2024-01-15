@@ -11,7 +11,7 @@ func (p *Provider) refresh(ctx context.Context, client *http.Client, timestamp i
 	u := url.URL{
 		Scheme: p.apiURL.Scheme,
 		Host:   p.apiURL.Host,
-		Path:   p.apiURL.Path + "/domain/zone/" + p.domain + "/refresh",
+		Path:   fmt.Sprintf("%s/domain/zone/%s/refresh", p.apiURL.Path, p.domain),
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), nil)

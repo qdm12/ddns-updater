@@ -16,7 +16,7 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client,
 	u := url.URL{
 		Scheme:   p.apiURL.Scheme,
 		Host:     p.apiURL.Host,
-		Path:     p.apiURL.Path + "/domain/zone/" + p.domain + "/record",
+		Path:     fmt.Sprintf("%s/domain/zone/%s/record", p.apiURL.Path, p.domain),
 		RawQuery: values.Encode(),
 	}
 

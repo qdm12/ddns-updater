@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 )
 
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
@@ -15,7 +14,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	u := url.URL{
 		Scheme: p.apiURL.Scheme,
 		Host:   p.apiURL.Host,
-		Path:   p.apiURL.Path + "/domain/zone/" + p.domain + "/record/" + strconv.Itoa(int(recordID)),
+		Path:   fmt.Sprintf("%s/domain/zone/%s/record/%d", p.apiURL.Path, p.domain, recordID),
 	}
 	putRecordsParams := struct {
 		Target string `json:"target"`

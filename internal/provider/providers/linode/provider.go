@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
-	"strconv"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -198,7 +197,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.linode.com",
-		Path:   "/v4/domains/" + strconv.Itoa(domainID) + "/records",
+		Path:   fmt.Sprintf("/v4/domains/%d/records", domainID),
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
@@ -246,7 +245,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.linode.com",
-		Path:   "/v4/domains/" + strconv.Itoa(domainID) + "/records",
+		Path:   fmt.Sprintf("/v4/domains/%d/records", domainID),
 	}
 
 	type domainRecord struct {
@@ -308,7 +307,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.linode.com",
-		Path:   "/v4/domains/" + strconv.Itoa(domainID) + "/records/" + strconv.Itoa(recordID),
+		Path:   fmt.Sprintf("/v4/domains/%d/records/%d", domainID, recordID),
 	}
 
 	data := struct {

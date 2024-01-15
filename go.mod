@@ -14,7 +14,7 @@ require (
 	github.com/qdm12/gotree v0.2.0
 	github.com/qdm12/log v0.1.0
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/mod v0.12.0
+	golang.org/x/mod v0.14.0
 	golang.org/x/net v0.17.0
 	google.golang.org/api v0.114.0
 )

@@ -166,28 +166,22 @@ func (r *Runner) shouldUpdateRecordNoLookup(hostname string, ipVersion ipversion
 	switch ipVersion {
 	case ipversion.IP4or6:
 		if ip.IsValid() && ip.Compare(lastIP) != 0 {
-			r.logger.Info("Last IP address stored for " + hostname +
-				" is " + lastIP.String() + " and your IP address is " + ip.String())
+			r.logInfoNoLookupUpdate(hostname, "IP", lastIP, ip)
 			return true
 		}
-		r.logger.Debug("Last IP address stored for " + hostname + " is " +
-			lastIP.String() + " and your IP address is " + ip.String() + ", skipping update")
+		r.logDebugNoLookupSkip(hostname, "IP", lastIP, ip)
 	case ipversion.IP4:
 		if ipv4.IsValid() && ipv4.Compare(lastIP) != 0 {
-			r.logger.Info("Last IPv4 address stored for " + hostname +
-				" is " + lastIP.String() + " and your IPv4 address is " + ipv4.String())
+			r.logInfoNoLookupUpdate(hostname, "IPv4", lastIP, ipv6)
 			return true
 		}
-		r.logger.Debug("Last IPv4 address stored for " + hostname + " is " +
-			lastIP.String() + " and your IPv4 address is " + ipv4.String() + ", skipping update")
+		r.logDebugNoLookupSkip(hostname, "IPv4", lastIP, ipv4)
 	case ipversion.IP6:
 		if ipv6.IsValid() && ipv6.Compare(lastIP) != 0 {
-			r.logger.Info("Last IPv6 address stored for " + hostname +
-				" is " + lastIP.String() + " and your IPv6 address is " + ipv6.String())
+			r.logInfoNoLookupUpdate(hostname, "IPv6", lastIP, ipv6)
 			return true
 		}
-		r.logger.Debug("Last IPv6 address stored for " + hostname + " is " +
-			lastIP.String() + " and your IPv6 address is " + ipv6.String() + ", skipping update")
+		r.logDebugNoLookupSkip(hostname, "IPv6", lastIP, ipv6)
 	}
 	return false
 }
@@ -217,28 +211,22 @@ func (r *Runner) shouldUpdateRecordWithLookup(ctx context.Context, hostname stri
 			recordIP = recordIPv6
 		}
 		if ip.IsValid() && ip.Compare(recordIPv4) != 0 && ip.Compare(recordIPv6) != 0 {
-			r.logger.Info("IP address of " + hostname + " is " + recordIP.String() +
-				" and your IP address is " + ip.String())
+			r.logInfoLookupUpdate(hostname, "IP", recordIP, ip)
 			return true
 		}
-		r.logger.Debug("IP address of " + hostname + " is " + recordIP.String() +
-			" and your IP address is " + ip.String() + ", skipping update")
+		r.logDebugLookupSkip(hostname, "IP", recordIP, ip)
 	case ipversion.IP4:
 		if ipv4.IsValid() && ipv4.Compare(recordIPv4) != 0 {
-			r.logger.Info("IPv4 address of " + hostname + " is " + recordIPv4.String() +
-				" and your IPv4 address is " + ipv4.String())
+			r.logInfoLookupUpdate(hostname, "IPv4", recordIPv4, ipv4)
 			return true
 		}
-		r.logger.Debug("IPv4 address of " + hostname + " is " + recordIPv4.String() +
-			" and your IPv4 address is " + ipv4.String() + ", skipping update")
+		r.logDebugLookupSkip(hostname, "IPv4", recordIPv4, ipv4)
 	case ipversion.IP6:
 		if ipv6.IsValid() && ipv6.Compare(recordIPv6) != 0 {
-			r.logger.Info("IPv6 address of " + hostname + " is " + recordIPv6.String() +
-				" and your IPv6 address is " + ipv6.String())
+			r.logInfoLookupUpdate(hostname, "IPv6", recordIPv6, ipv6)
 			return true
 		}
-		r.logger.Debug("IPv6 address of " + hostname + " is " + recordIPv6.String() +
-			" and your IPv6 address is " + ipv6.String() + ", skipping update")
+		r.logDebugLookupSkip(hostname, "IPv6", recordIPv6, ipv6)
 	}
 	return false
 }

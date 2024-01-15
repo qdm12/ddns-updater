@@ -3,13 +3,8 @@ package data
 import (
 	"fmt"
 
-	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/records"
 )
-
-func (db *Database) GetEvents(domain, host string) (events []models.HistoryEvent, err error) {
-	return db.persistentDB.GetEvents(domain, host)
-}
 
 func (db *Database) Update(id uint, record records.Record) (err error) {
 	db.Lock()

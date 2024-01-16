@@ -36,7 +36,7 @@ func Test_Settings_String(t *testing.T) {
 ├── IPv6
 |   └── Prefix: /128
 ├── Server
-|   ├── Port: 8000
+|   ├── Listening address: :8000
 |   └── Root URL: /
 ├── Health
 |   └── Server listening address: 127.0.0.1:9999

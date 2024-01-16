@@ -70,7 +70,7 @@ func (s *Shoutrrr) read(r *reader.Reader, warner Warner) (err error) {
 	// Retro-compatibility
 	shoutrrrParamsCSV := r.Get("SHOUTRRR_PARAMS")
 	if shoutrrrParamsCSV != nil {
-		warner.Warnf("SHOUTRRR_PARAMS is disabled, you can use SHOUTRRR_TITLE and SHOUTRRR_ADDRESSES")
+		warner.Warnf("SHOUTRRR_PARAMS is disabled, you can use SHOUTRRR_DEFAULT_TITLE and SHOUTRRR_ADDRESSES")
 	}
 
 	s.DefaultTitle = r.String("SHOUTRRR_DEFAULT_TITLE", reader.ForceLowercase(false))

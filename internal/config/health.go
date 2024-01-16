@@ -1,10 +1,11 @@
-package settings
+package config
 
 import (
 	"fmt"
 	"os"
 
 	"github.com/qdm12/gosettings"
+	"github.com/qdm12/gosettings/reader"
 	"github.com/qdm12/gosettings/validate"
 	"github.com/qdm12/gotree"
 )
@@ -17,12 +18,6 @@ type Health struct {
 func (h *Health) SetDefaults() {
 	h.ServerAddress = gosettings.DefaultPointer(h.ServerAddress, "127.0.0.1:9999")
 	h.HealthchecksioUUID = gosettings.DefaultPointer(h.HealthchecksioUUID, "")
-}
-
-func (h Health) mergeWith(other Health) (merged Health) {
-	merged.ServerAddress = gosettings.MergeWithPointer(h.ServerAddress, other.ServerAddress)
-	merged.HealthchecksioUUID = gosettings.MergeWithPointer(h.HealthchecksioUUID, other.HealthchecksioUUID)
-	return merged
 }
 
 func (h Health) Validate() (err error) {
@@ -45,4 +40,9 @@ func (h Health) toLinesNode() *gotree.Node {
 		node.Appendf("Healthchecks.io UUID: %s", *h.HealthchecksioUUID)
 	}
 	return node
+}
+
+func (h *Health) Read(reader *reader.Reader) {
+	h.ServerAddress = reader.Get("HEALTH_SERVER_ADDRESS")
+	h.HealthchecksioUUID = reader.Get("HEALTH_HEALTHCHECKSIO_UUID")
 }

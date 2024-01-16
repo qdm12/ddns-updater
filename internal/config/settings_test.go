@@ -1,4 +1,4 @@
-package settings
+package config
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 func Test_Settings_String(t *testing.T) {
 	t.Parallel()
 
-	var defaultSettings Settings
+	var defaultSettings Config
 	defaultSettings.SetDefaults()
 
 	s := defaultSettings.String()
@@ -34,7 +34,7 @@ func Test_Settings_String(t *testing.T) {
 |       └── all
 ├── Resolver: use Go default resolver
 ├── IPv6
-|   └── Mask bits: 128
+|   └── Prefix: /128
 ├── Server
 |   ├── Port: 8000
 |   └── Root URL: /
@@ -44,7 +44,7 @@ func Test_Settings_String(t *testing.T) {
 |   └── Data directory: ./data
 ├── Backup: disabled
 └── Logger
-    ├── Caller: no
-    └── Level: INFO`
+    ├── Level: INFO
+    └── Caller: hidden`
 	assert.Equal(t, expected, s)
 }

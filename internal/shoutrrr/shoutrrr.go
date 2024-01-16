@@ -17,8 +17,8 @@ type Client struct {
 }
 
 func New(settings Settings) (client *Client, err error) {
-	settings.SetDefaults()
-	err = settings.Validate()
+	settings.setDefaults()
+	err = settings.validate()
 	if err != nil {
 		return nil, fmt.Errorf("validating settings: %w", err)
 	}

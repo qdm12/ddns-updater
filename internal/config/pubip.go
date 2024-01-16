@@ -1,15 +1,17 @@
-package settings
+package config
 
 import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/qdm12/ddns-updater/pkg/publicip/dns"
 	"github.com/qdm12/ddns-updater/pkg/publicip/http"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/qdm12/gosettings"
+	"github.com/qdm12/gosettings/reader"
 	"github.com/qdm12/gosettings/validate"
 	"github.com/qdm12/gotree"
 )
@@ -32,18 +34,7 @@ func (p *PubIP) setDefaults() {
 	p.DNSEnabled = gosettings.DefaultPointer(p.DNSEnabled, true)
 	p.DNSProviders = gosettings.DefaultSlice(p.DNSProviders, []string{all})
 	const defaultDNSTimeout = 3 * time.Second
-	p.DNSTimeout = gosettings.DefaultNumber(p.DNSTimeout, defaultDNSTimeout)
-}
-
-func (p PubIP) mergeWith(other PubIP) (merged PubIP) {
-	merged.HTTPEnabled = gosettings.MergeWithPointer(p.HTTPEnabled, other.HTTPEnabled)
-	merged.HTTPIPProviders = gosettings.MergeWithSlice(p.HTTPIPProviders, other.HTTPIPProviders)
-	merged.HTTPIPv4Providers = gosettings.MergeWithSlice(p.HTTPIPv4Providers, other.HTTPIPv4Providers)
-	merged.HTTPIPv6Providers = gosettings.MergeWithSlice(p.HTTPIPv6Providers, other.HTTPIPv6Providers)
-	merged.DNSEnabled = gosettings.MergeWithPointer(p.DNSEnabled, other.DNSEnabled)
-	merged.DNSProviders = gosettings.MergeWithSlice(p.DNSProviders, other.DNSProviders)
-	merged.DNSTimeout = gosettings.MergeWithNumber(p.DNSTimeout, other.DNSTimeout)
-	return merged
+	p.DNSTimeout = gosettings.DefaultComparable(p.DNSTimeout, defaultDNSTimeout)
 }
 
 func (p PubIP) Validate() (err error) {
@@ -228,4 +219,104 @@ func validateHTTPIPProviders(providerStrings []string,
 	}
 
 	return nil
+}
+
+func (p *PubIP) read(r *reader.Reader, warner Warner) (err error) {
+	p.HTTPEnabled, p.DNSEnabled, err = getFetchers(r)
+	if err != nil {
+		return err
+	}
+
+	p.HTTPIPProviders = r.CSV("PUBLICIP_HTTP_PROVIDERS",
+		reader.RetroKeys("IP_METHOD"))
+	p.HTTPIPv4Providers = r.CSV("PUBLICIPV4_HTTP_PROVIDERS",
+		reader.RetroKeys("IPV4_METHOD"))
+	p.HTTPIPv6Providers = r.CSV("PUBLICIPV6_HTTP_PROVIDERS",
+		reader.RetroKeys("IPV6_METHOD"))
+
+	// Retro-compatibility
+	for i := range p.HTTPIPProviders {
+		p.HTTPIPProviders[i] = handleRetroProvider(p.HTTPIPProviders[i])
+	}
+	for i := range p.HTTPIPv4Providers {
+		p.HTTPIPv4Providers[i] = handleRetroProvider(p.HTTPIPv4Providers[i])
+	}
+	for i := range p.HTTPIPv6Providers {
+		p.HTTPIPv6Providers[i] = handleRetroProvider(p.HTTPIPv6Providers[i])
+	}
+
+	// Retro-compatibility for now defunct opendns http provider for ipv4 or ipv6
+	if len(p.HTTPIPProviders) > 0 { // check to avoid transforming `nil` to `[]`
+		httpIPProvidersTemp := make([]string, len(p.HTTPIPProviders))
+		copy(httpIPProvidersTemp, p.HTTPIPProviders)
+		p.HTTPIPProviders = make([]string, 0, len(p.HTTPIPProviders))
+		for _, provider := range httpIPProvidersTemp {
+			if provider != "opendns" {
+				p.HTTPIPProviders = append(p.HTTPIPProviders, provider)
+			}
+		}
+	}
+
+	p.DNSProviders = r.CSV("PUBLICIP_DNS_PROVIDERS")
+
+	// Retro-compatibility
+	for i, provider := range p.DNSProviders {
+		if provider == "google" {
+			warner.Warnf("dns provider google will be ignored " +
+				"since it is no longer supported, " +
+				"see https://github.com/qdm12/ddns-updater/issues/492")
+			p.DNSProviders[i] = p.DNSProviders[len(p.DNSProviders)-1]
+			p.DNSProviders = p.DNSProviders[:len(p.DNSProviders)-1]
+		}
+	}
+
+	p.DNSTimeout, err = r.Duration("PUBLICIP_DNS_TIMEOUT")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var ErrFetcherNotValid = errors.New("fetcher is not valid")
+
+func getFetchers(reader *reader.Reader) (http, dns *bool, err error) {
+	// TODO change to use reader.BoolPtr with retro-compatibility
+	s := reader.String("PUBLICIP_FETCHERS")
+	if s == "" {
+		return nil, nil, nil
+	}
+
+	http, dns = new(bool), new(bool)
+	fields := strings.Split(s, ",")
+	for i, field := range fields {
+		switch strings.ToLower(field) {
+		case "all":
+			*http = true
+			*dns = true
+		case "http":
+			*http = true
+		case "dns":
+			*dns = true
+		default:
+			return nil, nil, fmt.Errorf(
+				"%w: %q at position %d of %d",
+				ErrFetcherNotValid, field, i+1, len(fields))
+		}
+	}
+
+	return http, dns, nil
+}
+
+func handleRetroProvider(provider string) (updatedProvider string) {
+	switch provider {
+	case "ipify6":
+		return "ipify"
+	case "noip4", "noip6", "noip8245_4", "noip8245_6":
+		return "noip"
+	case "cycle":
+		return "all"
+	default:
+		return provider
+	}
 }

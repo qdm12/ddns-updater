@@ -1,10 +1,11 @@
-package settings
+package config
 
 import (
 	"fmt"
 	"os"
 
 	"github.com/qdm12/gosettings"
+	"github.com/qdm12/gosettings/reader"
 	"github.com/qdm12/gosettings/validate"
 	"github.com/qdm12/gotree"
 )
@@ -17,13 +18,7 @@ type Server struct {
 func (s *Server) setDefaults() {
 	const defaultPort = 8000
 	s.Port = gosettings.DefaultPointer(s.Port, defaultPort)
-	s.RootURL = gosettings.DefaultString(s.RootURL, "/")
-}
-
-func (s Server) mergeWith(other Server) (merged Server) {
-	merged.Port = gosettings.MergeWithPointer(s.Port, other.Port)
-	merged.RootURL = gosettings.MergeWithString(s.RootURL, other.RootURL)
-	return merged
+	s.RootURL = gosettings.DefaultComparable(s.RootURL, "/")
 }
 
 func (s Server) Validate() (err error) {
@@ -47,4 +42,10 @@ func (s Server) toLinesNode() *gotree.Node {
 	node.Appendf("Port: %d", *s.Port)
 	node.Appendf("Root URL: %s", s.RootURL)
 	return node
+}
+
+func (s *Server) read(reader *reader.Reader) (err error) {
+	s.RootURL = reader.String("ROOT_URL")
+	s.Port, err = reader.Uint16Ptr("LISTENING_PORT") // TODO change to address
+	return err
 }

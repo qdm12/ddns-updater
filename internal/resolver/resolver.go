@@ -7,8 +7,8 @@ import (
 )
 
 func New(settings Settings) (resolver *net.Resolver, err error) {
-	settings.SetDefaults()
-	err = settings.Validate()
+	settings.setDefaults()
+	err = settings.validate()
 	if err != nil {
 		return nil, fmt.Errorf("validating settings: %w", err)
 	}

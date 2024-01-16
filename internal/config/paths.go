@@ -1,7 +1,8 @@
-package settings
+package config
 
 import (
 	"github.com/qdm12/gosettings"
+	"github.com/qdm12/gosettings/reader"
 	"github.com/qdm12/gotree"
 )
 
@@ -11,11 +12,6 @@ type Paths struct {
 
 func (p *Paths) setDefaults() {
 	p.DataDir = gosettings.DefaultPointer(p.DataDir, "./data")
-}
-
-func (p Paths) mergeWith(other Paths) (merged Paths) {
-	merged.DataDir = gosettings.MergeWithPointer(p.DataDir, other.DataDir)
-	return merged
 }
 
 func (p Paths) Validate() (err error) {
@@ -30,4 +26,8 @@ func (p Paths) toLinesNode() *gotree.Node {
 	node := gotree.New("Paths")
 	node.Appendf("Data directory: %s", *p.DataDir)
 	return node
+}
+
+func (p *Paths) read(reader *reader.Reader) {
+	p.DataDir = reader.Get("DATADIR")
 }

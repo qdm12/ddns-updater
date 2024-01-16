@@ -8,14 +8,14 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 	_ "time/tzdata"
 
 	_ "github.com/breml/rootcerts"
 	"github.com/qdm12/ddns-updater/internal/backup"
-	globsettings "github.com/qdm12/ddns-updater/internal/config/settings"
-	"github.com/qdm12/ddns-updater/internal/config/sources/env"
+	"github.com/qdm12/ddns-updater/internal/config"
 	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/health"
 	"github.com/qdm12/ddns-updater/internal/healthchecksio"
@@ -28,6 +28,8 @@ import (
 	"github.com/qdm12/ddns-updater/internal/shoutrrr"
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
+	"github.com/qdm12/gosettings/reader"
+	"github.com/qdm12/gosettings/reader/sources/env"
 	"github.com/qdm12/goshutdown"
 	"github.com/qdm12/gosplash"
 	"github.com/qdm12/log"
@@ -47,7 +49,15 @@ func main() {
 		Created: created,
 	}
 	logger := log.New()
-	env := env.New(logger)
+
+	env := env.New(env.Settings{Environ: os.Environ()})
+	reader := reader.New(reader.Settings{
+		Sources: []reader.Source{env},
+		HandleDeprecatedKey: func(source, oldKey, newKey string) {
+			logger.Warnf("%q key %s is deprecated, please use %q instead",
+				source, oldKey, newKey)
+		},
+	})
 
 	ctx := context.Background()
 	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
@@ -55,7 +65,7 @@ func main() {
 
 	errorCh := make(chan error)
 	go func() {
-		errorCh <- _main(ctx, env, os.Args, logger, buildInfo, time.Now)
+		errorCh <- _main(ctx, reader, os.Args, logger, buildInfo, time.Now)
 	}()
 
 	select {
@@ -90,14 +100,15 @@ func main() {
 	os.Exit(1)
 }
 
-func _main(ctx context.Context, settingsSource SettingsSource, args []string, logger log.LoggerInterface,
+func _main(ctx context.Context, reader *reader.Reader, args []string, logger log.LoggerInterface,
 	buildInfo models.BuildInformation, timeNow func() time.Time) (err error) {
 	if health.IsClientMode(args) {
 		// Running the program in a separate instance through the Docker
 		// built-in healthcheck, in an ephemeral fashion to query the
 		// long running instance of the program about its status
 
-		healthSettings := settingsSource.ReadHealth()
+		var healthSettings config.Health
+		healthSettings.Read(reader)
 		healthSettings.SetDefaults()
 		err = healthSettings.Validate()
 		if err != nil {
@@ -129,7 +140,8 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 		fmt.Println(line)
 	}
 
-	config, err := settingsSource.Read()
+	var config config.Config
+	err = config.Read(reader, logger)
 	if err != nil {
 		return fmt.Errorf("reading settings: %w", err)
 	}
@@ -139,17 +151,16 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 		return fmt.Errorf("settings validation: %w", err)
 	}
 
-	// Setup logger
-	options := []log.Option{log.SetLevel(*config.Logger.Level)}
-	if *config.Logger.Caller {
-		options = append(options, log.SetCallerFile(true), log.SetCallerLine(true))
-	}
-	logger.Patch(options...)
+	logger.Patch(config.Logger.ToOptions()...)
 
 	logger.Info(config.String())
 
-	config.Shoutrrr.Logger = logger.New(log.SetComponent("shoutrrr"))
-	shoutrrrClient, err := shoutrrr.New(config.Shoutrrr)
+	shoutrrrSettings := shoutrrr.Settings{
+		Addresses:    config.Shoutrrr.Addresses,
+		DefaultTitle: config.Shoutrrr.DefaultTitle,
+		Logger:       logger.New(log.SetComponent("shoutrrr")),
+	}
+	shoutrrrClient, err := shoutrrr.New(shoutrrrSettings)
 	if err != nil {
 		return fmt.Errorf("setting up Shoutrrr: %w", err)
 	}
@@ -227,7 +238,11 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 		return err
 	}
 
-	resolver, err := resolver.New(config.Resolver)
+	resolverSettings := resolver.Settings{
+		Address: config.Resolver.Address,
+		Timeout: config.Resolver.Timeout,
+	}
+	resolver, err := resolver.New(resolverSettings)
 	if err != nil {
 		return fmt.Errorf("creating resolver: %w", err)
 	}
@@ -236,8 +251,8 @@ func _main(ctx context.Context, settingsSource SettingsSource, args []string, lo
 
 	updater := update.NewUpdater(db, client, shoutrrrClient, logger)
 	runner := update.NewRunner(db, updater, ipGetter, config.Update.Period,
-		config.IPv6.MaskBits, config.Update.Cooldown, logger, resolver, timeNow,
-		hioClient)
+		ipv6PrefixToBits(config.IPv6.Prefix), config.Update.Cooldown, logger,
+		resolver, timeNow, hioClient)
 
 	runnerHandler, runnerCtx, runnerDone := goshutdown.NewGoRoutineHandler("runner")
 	go runner.Run(runnerCtx, runnerDone)
@@ -315,7 +330,11 @@ func backupRunLoop(ctx context.Context, done chan<- struct{}, backupPeriod time.
 	}
 }
 
-type SettingsSource interface {
-	Read() (settings globsettings.Settings, err error)
-	ReadHealth() (settings globsettings.Health)
+func ipv6PrefixToBits(prefix string) (maskBits uint8) {
+	prefix = strings.TrimPrefix(prefix, "/")
+	n, err := strconv.Atoi(prefix)
+	if err != nil {
+		panic(err) // prefix already validated before
+	}
+	return uint8(n)
 }

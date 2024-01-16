@@ -1,9 +1,10 @@
-package settings
+package config
 
 import (
 	"time"
 
 	"github.com/qdm12/gosettings"
+	"github.com/qdm12/gosettings/reader"
 	"github.com/qdm12/gotree"
 )
 
@@ -15,12 +16,6 @@ type Backup struct {
 func (b *Backup) setDefaults() {
 	b.Period = gosettings.DefaultPointer(b.Period, 0)
 	b.Directory = gosettings.DefaultPointer(b.Directory, "./data")
-}
-
-func (b Backup) mergeWith(other Backup) (merged Backup) {
-	merged.Period = gosettings.MergeWithPointer(b.Period, other.Period)
-	merged.Directory = gosettings.MergeWithPointer(b.Directory, other.Directory)
-	return merged
 }
 
 func (b Backup) Validate() (err error) {
@@ -39,4 +34,14 @@ func (b Backup) toLinesNode() *gotree.Node {
 	node.Appendf("Period: %s", b.Period)
 	node.Appendf("Directory: %s", *b.Directory)
 	return node
+}
+
+func (b *Backup) read(reader *reader.Reader) (err error) {
+	b.Period, err = reader.DurationPtr("BACKUP_PERIOD")
+	if err != nil {
+		return err
+	}
+
+	b.Directory = reader.Get("BACKUP_DIRECTORY")
+	return nil
 }

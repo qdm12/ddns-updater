@@ -1,3 +1,3 @@
-package settings
+package config
 
 const all = "all"

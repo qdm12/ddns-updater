@@ -219,6 +219,8 @@ Note that:
 
 ### Environment variables
 
+🆕 There are now flags equivalent for each variable below, for example `--ipv6-prefix`.
+
 | Environment variable | Default | Description |
 | --- | --- | --- |
 | `CONFIG` | | One line JSON object containing the entire config (takes precedence over config.json file) if specified |

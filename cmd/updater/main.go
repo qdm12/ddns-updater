@@ -29,7 +29,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
 	"github.com/qdm12/gosettings/reader"
-	"github.com/qdm12/gosettings/reader/sources/env"
 	"github.com/qdm12/goshutdown"
 	"github.com/qdm12/gosplash"
 	"github.com/qdm12/log"
@@ -50,9 +49,7 @@ func main() {
 	}
 	logger := log.New()
 
-	env := env.New(env.Settings{Environ: os.Environ()})
 	reader := reader.New(reader.Settings{
-		Sources: []reader.Source{env},
 		HandleDeprecatedKey: func(source, oldKey, newKey string) {
 			logger.Warnf("%q key %s is deprecated, please use %q instead",
 				source, oldKey, newKey)

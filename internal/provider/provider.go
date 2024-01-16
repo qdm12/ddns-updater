@@ -38,6 +38,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/ionos"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/linode"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/luadns"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/mikrotik"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/namecheap"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/namecom"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/netcup"
@@ -129,6 +130,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, host string
 		return linode.New(data, domain, host, ipVersion)
 	case constants.LuaDNS:
 		return luadns.New(data, domain, host, ipVersion)
+	case constants.Mikrotik:
+		return mikrotik.New(data, domain, host, ipVersion)
 	case constants.Namecheap:
 		return namecheap.New(data, domain, host, ipVersion)
 	case constants.NameCom:

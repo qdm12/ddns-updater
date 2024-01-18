@@ -36,6 +36,9 @@ func New(data json.RawMessage, domain, host string,
 	if err != nil {
 		return nil, err
 	}
+	if host == "" {
+		host = "@" // default
+	}
 	p = &Provider{
 		domain:        domain,
 		host:          host,

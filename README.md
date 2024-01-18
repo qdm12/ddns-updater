@@ -84,7 +84,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
 - Persistence with a JSON file *updates.json* to store old IP addresses with change times for each record
 - Docker healthcheck verifying the DNS resolution of your domains
 - Highly configurable
-- Send notifications with [**Shoutrrr**](https://containrrr.dev/shoutrrr/0.7/services/overview/) using `SHOUTRRR_ADDRESSES`
+- Send notifications with [**Shoutrrr**](https://containrrr.dev/shoutrrr/0.8/services/overview/) using `SHOUTRRR_ADDRESSES`
 - Compatible with `amd64`, `386`, `arm64`, `armv7`, `armv6`, `s390x`, `ppc64le`, `riscv64` CPU architectures.
 
 ## Setup
@@ -244,7 +244,7 @@ Note that:
 | `RESOLVER_ADDRESS` | Your network DNS | A plaintext DNS address to use, such as `1.1.1.1:53`. This is useful for split dns, see [#389](https://github.com/qdm12/ddns-updater/issues/389) |
 | `LOG_LEVEL` | `info` | Level of logging, `debug`, `info`, `warning` or `error` |
 | `LOG_CALLER` | `hidden` | Show caller per log line, `hidden` or `short` |
-| `SHOUTRRR_ADDRESSES` |  | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/services/overview/) (notification services) |
+| `SHOUTRRR_ADDRESSES` |  | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/0.8/services/overview/) (notification services) |
 | `SHOUTRRR_DEFAULT_TITLE` | `DDNS Updater` | Default title for Shoutrrr notifications |
 | `TZ` | | Timezone to have accurate times, i.e. `America/Montreal` |
 

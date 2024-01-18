@@ -16,7 +16,7 @@ func Test_Settings_String(t *testing.T) {
 
 	const expected = `Settings summary:
 ├── HTTP client
-|   └── Timeout: 10s
+|   └── Timeout: 20s
 ├── Update
 |   ├── Period: 10m0s
 |   └── Cooldown: 5m0s

@@ -22,7 +22,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"`
+- `"host"` can be `@` for the root domain or a subdomain or a wildcard subdomain (`*`), defaults to `@`
 - `"token"` is your token that you can create [here](https://desec.io/tokens)
 
 ### Optional parameters

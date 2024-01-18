@@ -54,11 +54,8 @@ func New(data json.RawMessage, domain, host string,
 }
 
 func (p *Provider) isValid() error {
-	switch {
-	case p.token == "":
+	if p.token == "" {
 		return fmt.Errorf("%w", errors.ErrTokenNotSet)
-	case p.host == "*":
-		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}
 	return nil
 }

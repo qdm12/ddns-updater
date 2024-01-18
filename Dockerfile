@@ -86,7 +86,7 @@ ENV \
     RESOLVER_ADDRESS= \
     RESOLVER_TIMEOUT=5s \
     # Web UI
-    LISTENING_PORT=:8000 \
+    LISTENING_ADDRESS=:8000 \
     ROOT_URL=/ \
     # Backup
     BACKUP_PERIOD=0 \

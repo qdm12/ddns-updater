@@ -139,8 +139,8 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return nil, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid,
+			response.StatusCode, makeErrorMessage(response.Body))
 	}
 
 	var responseData struct {
@@ -203,8 +203,8 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid,
+			response.StatusCode, makeErrorMessage(response.Body))
 	}
 	return nil
 }
@@ -251,8 +251,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid,
+			response.StatusCode, makeErrorMessage(response.Body))
 	}
 	return nil
 }

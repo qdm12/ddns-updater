@@ -13,7 +13,7 @@
       "host": "@",
       "username": "username",
       "password": "password",
-      "ip_version": "ipv4",
+      "ip_version": "ipv4"
     }
   ]
 }

@@ -11,7 +11,7 @@
       "provider": "nowdns",
       "domain": "domain.com",
       "username": "username",
-      "password": "password",
+      "password": "password"
     }
   ]
 }

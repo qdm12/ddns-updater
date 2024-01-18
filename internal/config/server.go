@@ -11,19 +11,17 @@ import (
 )
 
 type Server struct {
-	Port    *uint16
-	RootURL string
+	ListeningAddress string
+	RootURL          string
 }
 
 func (s *Server) setDefaults() {
-	const defaultPort = 8000
-	s.Port = gosettings.DefaultPointer(s.Port, defaultPort)
+	s.ListeningAddress = gosettings.DefaultComparable(s.ListeningAddress, ":8000")
 	s.RootURL = gosettings.DefaultComparable(s.RootURL, "/")
 }
 
 func (s Server) Validate() (err error) {
-	listeningAddress := ":" + fmt.Sprint(*s.Port)
-	err = validate.ListeningAddress(listeningAddress, os.Getuid())
+	err = validate.ListeningAddress(s.ListeningAddress, os.Getuid())
 	if err != nil {
 		return fmt.Errorf("listening address: %w", err)
 	}
@@ -39,13 +37,24 @@ func (s Server) String() string {
 
 func (s Server) toLinesNode() *gotree.Node {
 	node := gotree.New("Server")
-	node.Appendf("Port: %d", *s.Port)
+	node.Appendf("Listening address: %s", s.ListeningAddress)
 	node.Appendf("Root URL: %s", s.RootURL)
 	return node
 }
 
-func (s *Server) read(reader *reader.Reader) (err error) {
+func (s *Server) read(reader *reader.Reader, warner Warner) (err error) {
 	s.RootURL = reader.String("ROOT_URL")
-	s.Port, err = reader.Uint16Ptr("LISTENING_PORT") // TODO change to address
+
+	// Retro-compatibility
+	port, err := reader.Uint16Ptr("LISTENING_PORT") // TODO change to address
+	if err != nil {
+		handleDeprecated(warner, "LISTENING_PORT", "LISTENING_ADDRESS")
+		return err
+	} else if port != nil {
+		s.ListeningAddress = fmt.Sprintf(":%d", *port)
+	}
+
+	s.ListeningAddress = reader.String("LISTENING_ADDRESS")
+
 	return err
 }

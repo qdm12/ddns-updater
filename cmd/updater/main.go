@@ -265,9 +265,9 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	healthServerHandler, healthServerCtx, healthServerDone := goshutdown.NewGoRoutineHandler("health server")
 	go healthServer.Run(healthServerCtx, healthServerDone)
 
-	address := ":" + fmt.Sprint(*config.Server.Port)
 	serverLogger := logger.New(log.SetComponent("http server"))
-	server := server.New(ctx, address, config.Server.RootURL, db, serverLogger, runner)
+	server := server.New(ctx, config.Server.ListeningAddress, config.Server.RootURL,
+		db, serverLogger, runner)
 	serverHandler, serverCtx, serverDone := goshutdown.NewGoRoutineHandler("server")
 	go server.Run(serverCtx, serverDone)
 	shoutrrrClient.Notify("Launched with " + strconv.Itoa(len(records)) + " records to watch")

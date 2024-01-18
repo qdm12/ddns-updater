@@ -107,7 +107,7 @@ func (c *Config) Read(reader *reader.Reader,
 
 	c.IPv6.read(reader)
 
-	err = c.Server.read(reader)
+	err = c.Server.read(reader, warner)
 	if err != nil {
 		return fmt.Errorf("reading server settings: %w", err)
 	}

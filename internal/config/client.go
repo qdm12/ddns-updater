@@ -13,7 +13,7 @@ type Client struct {
 }
 
 func (c *Client) setDefaults() {
-	const defaultTimeout = 10 * time.Second
+	const defaultTimeout = 20 * time.Second
 	c.Timeout = gosettings.DefaultComparable(c.Timeout, defaultTimeout)
 }
 

@@ -169,3 +169,47 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	}
 	return nil
 }
+
+// See https://porkbun.com/api/json/v3/documentation#DNS%20Delete%20Records%20by%20Domain,%20Subdomain%20and%20Type
+func (p *Provider) deleteAliasRecord(ctx context.Context, client *http.Client) (err error) {
+	var subdomain string
+	if p.host != "@" {
+		subdomain = p.host + "."
+	}
+	u := url.URL{
+		Scheme: "https",
+		Host:   "porkbun.com",
+		Path:   "/api/json/v3/dns/deleteByNameType/" + p.domain + "/ALIAS/" + subdomain,
+	}
+	postRecordsParams := struct {
+		SecretAPIKey string `json:"secretapikey"`
+		APIKey       string `json:"apikey"`
+	}{
+		SecretAPIKey: p.secretAPIKey,
+		APIKey:       p.apiKey,
+	}
+	buffer := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buffer)
+	err = encoder.Encode(postRecordsParams)
+	if err != nil {
+		return fmt.Errorf("json encoding request data: %w", err)
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
+	if err != nil {
+		return fmt.Errorf("creating http request: %w", err)
+	}
+	setHeaders(request)
+
+	response, err := client.Do(request)
+	if err != nil {
+		return fmt.Errorf("doing http request: %w", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid,
+			response.StatusCode, makeErrorMessage(response.Body))
+	}
+	return nil
+}

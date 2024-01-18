@@ -33,3 +33,9 @@
 - From the [Domain Management page](https://porkbun.com/account/domainsSpeedy), toggle on **API ACCESS** for your domain.
 
 💁 [Official setup documentation](https://kb.porkbun.com/article/190-getting-started-with-the-porkbun-dns-api)
+
+## Record creation
+
+In case you don't have an A or AAAA record for your host and domain combination, it will be created by DDNS-Updater.
+However, to do so, the corresponding ALIAS record, that is automatically created by Porkbun, is automatically deleted to allow this.
+More details is in [this comment by @everydaycombat](https://github.com/qdm12/ddns-updater/issues/546#issuecomment-1773960193).

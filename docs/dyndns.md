@@ -22,7 +22,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
+- `"host"` is your host and can be a subdomain or `"@"` or `"*"`
 - `"username"`
 - `"client_key"`
 

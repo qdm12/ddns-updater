@@ -63,8 +63,6 @@ func (p *Provider) isValid() error {
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case p.clientKey == "":
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
-	case p.host == "*":
-		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}
 	return nil
 }

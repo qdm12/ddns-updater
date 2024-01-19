@@ -85,7 +85,7 @@ func (p *Provider) IPVersion() ipversion.IPVersion {
 }
 
 func (p *Provider) Proxied() bool {
-	return false
+	return p.host == "all"
 }
 
 func (p *Provider) BuildDomainName() string {

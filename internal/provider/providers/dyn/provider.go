@@ -19,21 +19,19 @@ import (
 )
 
 type Provider struct {
-	domain        string
-	host          string
-	ipVersion     ipversion.IPVersion
-	username      string
-	clientKey     string
-	useProviderIP bool
+	domain    string
+	host      string
+	ipVersion ipversion.IPVersion
+	username  string
+	clientKey string
 }
 
 func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
-		Username      string `json:"username"`
-		Password      string `json:"password"` // Retro-compatibility
-		ClientKey     string `json:"client_key"`
-		UseProviderIP bool   `json:"provider_ip"`
+		Username  string `json:"username"`
+		Password  string `json:"password"` // Retro-compatibility
+		ClientKey string `json:"client_key"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -46,12 +44,11 @@ func New(data json.RawMessage, domain, host string,
 	}
 
 	p = &Provider{
-		domain:        domain,
-		host:          host,
-		ipVersion:     ipVersion,
-		username:      extraSettings.Username,
-		clientKey:     clientKey,
-		useProviderIP: extraSettings.UseProviderIP,
+		domain:    domain,
+		host:      host,
+		ipVersion: ipVersion,
+		username:  extraSettings.Username,
+		clientKey: clientKey,
 	}
 	err = p.isValid()
 	if err != nil {
@@ -105,6 +102,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// See https://help.dyn.com/remote-access-api/perform-update/
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -114,9 +112,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	values := url.Values{}
 	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
-	if !p.useProviderIP {
-		values.Set("myip", ip.String())
-	}
+	values.Set("myip", ip.String())
 	u.RawQuery = values.Encode()
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)

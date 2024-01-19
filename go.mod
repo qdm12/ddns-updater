@@ -8,7 +8,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/golang/mock v1.6.0
 	github.com/miekg/dns v1.1.57
-	github.com/qdm12/gosettings v0.4.0-rc6
+	github.com/qdm12/gosettings v0.4.0-rc7
 	github.com/qdm12/goshutdown v0.3.0
 	github.com/qdm12/gosplash v0.1.0
 	github.com/qdm12/gotree v0.2.0
@@ -43,4 +43,6 @@ require (
 	google.golang.org/grpc v1.56.3 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	kernel.org/pub/linux/libs/security/libcap/cap v1.2.69 // indirect
+	kernel.org/pub/linux/libs/security/libcap/psx v1.2.69 // indirect
 )

@@ -13,6 +13,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/aliyun"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/allinkl"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/cloudflare"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/custom"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/dd24"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/ddnss"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/desec"
@@ -79,6 +80,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, host string
 		return allinkl.New(data, domain, host, ipVersion)
 	case constants.Cloudflare:
 		return cloudflare.New(data, domain, host, ipVersion)
+	case constants.Custom:
+		return custom.New(data, domain, host, ipVersion)
 	case constants.Dd24:
 		return dd24.New(data, domain, host, ipVersion)
 	case constants.DdnssDe:

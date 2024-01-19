@@ -7,6 +7,7 @@ const (
 	Aliyun       models.Provider = "aliyun"
 	AllInkl      models.Provider = "allinkl"
 	Cloudflare   models.Provider = "cloudflare"
+	Custom       models.Provider = "custom"
 	Dd24         models.Provider = "dd24"
 	DdnssDe      models.Provider = "ddnss"
 	DeSEC        models.Provider = "desec"

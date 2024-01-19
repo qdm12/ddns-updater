@@ -173,6 +173,7 @@ Check the documentation for your DNS provider:
 
 - [Aliyun](https://github.com/qdm12/ddns-updater/blob/master/docs/aliyun.md)
 - [Cloudflare](https://github.com/qdm12/ddns-updater/blob/master/docs/cloudflare.md)
+- [Custom](https://github.com/qdm12/ddns-updater/blob/master/docs/custom.md)
 - [DDNSS.de](https://github.com/qdm12/ddns-updater/blob/master/docs/ddnss.de.md)
 - [deSEC](https://github.com/qdm12/ddns-updater/blob/master/docs/desec.md)
 - [DigitalOcean](https://github.com/qdm12/ddns-updater/blob/master/docs/digitalocean.md)

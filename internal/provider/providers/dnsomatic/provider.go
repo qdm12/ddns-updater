@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
-	"regexp"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -55,13 +54,10 @@ func New(data json.RawMessage, domain, host string,
 	return p, nil
 }
 
-var regexUsername = regexp.MustCompile(`^[a-zA-Z0-9+@._-]{3,25}$`)
-
 func (p *Provider) isValid() error {
 	switch {
-	case !regexUsername.MatchString(p.username):
-		return fmt.Errorf("%w: username %q does not match regex %q",
-			errors.ErrUsernameNotValid, p.username, regexUsername)
+	case p.username == "":
+		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case p.password == "":
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	}

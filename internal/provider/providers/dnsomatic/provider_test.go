@@ -19,35 +19,8 @@ func Test_Provider_isValid(t *testing.T) {
 			provider: Provider{
 				password: "password",
 			},
-			errWrapped: errors.ErrUsernameNotValid,
-			errMessage: `username is not valid: username "" does not match regex "^[a-zA-Z0-9+@._-]{3,25}$"`,
-		},
-		"email_username": {
-			provider: Provider{
-				username: "a@a.ca",
-				password: "password",
-			},
-		},
-		"email_alias_username": {
-			provider: Provider{
-				username: "a+b@a.ca",
-				password: "password",
-			},
-		},
-		"dashes_username": {
-			provider: Provider{
-				username: "a-b-c",
-				password: "password",
-			},
-		},
-		"oversized_username": {
-			provider: Provider{
-				username: "aaaaaaaaaaaaaaaaaaaaaaaaaa",
-				password: "password",
-			},
-			errWrapped: errors.ErrUsernameNotValid,
-			errMessage: `username is not valid: username ` +
-				`"aaaaaaaaaaaaaaaaaaaaaaaaaa" does not match regex "^[a-zA-Z0-9+@._-]{3,25}$"`,
+			errWrapped: errors.ErrUsernameNotSet,
+			errMessage: `username is not set`,
 		},
 	}
 

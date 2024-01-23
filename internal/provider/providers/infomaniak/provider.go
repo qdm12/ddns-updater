@@ -132,28 +132,31 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	switch response.StatusCode {
 	case http.StatusOK:
-		switch {
-		case strings.HasPrefix(s, "good "):
-			newIP, err = netip.ParseAddr(s[5:])
-			if err != nil {
-				return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
-			} else if !p.useProviderIP && ip.Compare(newIP) != 0 {
-				return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-					errors.ErrIPReceivedMismatch, ip, newIP)
+		prefixFound := ""
+		for _, prefix := range []string{
+			"successfully_changed", "no_change",
+			"good", "nochg", // old prefixes
+		} {
+			if strings.HasPrefix(s, prefix) {
+				prefixFound = prefix
+				break
 			}
-			return newIP, nil
-		case strings.HasPrefix(s, "nochg "):
-			newIP, err = netip.ParseAddr(s[6:])
-			if err != nil {
-				return netip.Addr{}, fmt.Errorf("%w: in response %q", errors.ErrReceivedNoResult, s)
-			} else if !p.useProviderIP && ip.Compare(newIP) != 0 {
-				return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-					errors.ErrIPReceivedMismatch, ip, newIP)
-			}
-			return newIP, nil
-		default:
+		}
+
+		if prefixFound == "" {
 			return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 		}
+
+		ipString := strings.TrimPrefix(s, prefixFound+" ")
+		newIP, err = netip.ParseAddr(ipString)
+		if err != nil {
+			return netip.Addr{}, fmt.Errorf("%w: for response %q: %w",
+				errors.ErrIPReceivedMalformed, ipString, err)
+		} else if !p.useProviderIP && ip.Compare(newIP) != 0 {
+			return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
+				errors.ErrIPReceivedMismatch, ip, newIP)
+		}
+		return newIP, nil
 	case http.StatusBadRequest:
 		switch s {
 		case constants.Nohost:

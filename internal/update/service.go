@@ -2,6 +2,7 @@ package update
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/netip"
 	"time"
@@ -243,6 +244,10 @@ func getIPMatchingVersion(ip, ipv4, ipv6 netip.Addr, ipVersion ipversion.IPVersi
 	return netip.Addr{}
 }
 
+var (
+	errUpdateIPNotValid = errors.New("IP to update is not valid")
+)
+
 func setInitialUpToDateStatus(db Database, id uint, updateIP netip.Addr, now time.Time) error {
 	record, err := db.Select(id)
 	if err != nil {
@@ -251,6 +256,9 @@ func setInitialUpToDateStatus(db Database, id uint, updateIP netip.Addr, now tim
 	record.Status = constants.UPTODATE
 	record.Time = now
 	if !record.History.GetCurrentIP().IsValid() {
+		if !updateIP.IsValid() {
+			return fmt.Errorf("%w", errUpdateIPNotValid)
+		}
 		record.History = append(record.History, models.HistoryEvent{
 			IP:   updateIP,
 			Time: now,
@@ -281,6 +289,7 @@ func (r *Runner) updateNecessary(ctx context.Context, ipv6MaskBits uint8) (error
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Provider.IPVersion())
 		err := setInitialUpToDateStatus(r.db, id, updateIP, now)
 		if err != nil {
+			err = fmt.Errorf("setting initial up to date status: %w", err)
 			errors = append(errors, err)
 			r.logger.Error(err.Error())
 		}
@@ -288,6 +297,12 @@ func (r *Runner) updateNecessary(ctx context.Context, ipv6MaskBits uint8) (error
 	for id := range recordIDs {
 		record := records[id]
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Provider.IPVersion())
+		if !updateIP.IsValid() {
+			err := fmt.Errorf("getting ip matching ip version: %w", errUpdateIPNotValid)
+			errors = append(errors, err)
+			r.logger.Error(err.Error())
+			continue
+		}
 		r.logger.Info("Updating record " + record.Provider.String() + " to use " + updateIP.String())
 		err := r.updater.Update(ctx, id, updateIP, r.timeNow())
 		if err != nil {

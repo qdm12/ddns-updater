@@ -172,7 +172,7 @@ func (r *Runner) shouldUpdateRecordNoLookup(hostname string, ipVersion ipversion
 		r.logDebugNoLookupSkip(hostname, "IP", lastIP, ip)
 	case ipversion.IP4:
 		if ipv4.IsValid() && ipv4.Compare(lastIP) != 0 {
-			r.logInfoNoLookupUpdate(hostname, "IPv4", lastIP, ipv6)
+			r.logInfoNoLookupUpdate(hostname, "IPv4", lastIP, ipv4)
 			return true
 		}
 		r.logDebugNoLookupSkip(hostname, "IPv4", lastIP, ipv4)

@@ -155,40 +155,27 @@ func (r *Runner) shouldUpdateRecord(ctx context.Context, record librecords.Recor
 
 	hostname := record.Provider.BuildDomainName()
 	ipVersion := record.Provider.IPVersion()
+	publicIP := getIPMatchingVersion(ip, ipv4, ipv6, ipVersion)
 	if record.Provider.Proxied() {
 		lastIP := record.History.GetCurrentIP() // can be nil
-		return r.shouldUpdateRecordNoLookup(hostname, ipVersion, lastIP, ip, ipv4, ipv6)
+		return r.shouldUpdateRecordNoLookup(hostname, ipVersion, lastIP, publicIP)
 	}
-	return r.shouldUpdateRecordWithLookup(ctx, hostname, ipVersion, ip, ipv4, ipv6, ipv6MaskBits)
+	return r.shouldUpdateRecordWithLookup(ctx, hostname, ipVersion, publicIP, ipv6MaskBits)
 }
 
 func (r *Runner) shouldUpdateRecordNoLookup(hostname string, ipVersion ipversion.IPVersion,
-	lastIP, ip, ipv4, ipv6 netip.Addr) (update bool) {
-	switch ipVersion {
-	case ipversion.IP4or6:
-		if ip.IsValid() && ip.Compare(lastIP) != 0 {
-			r.logInfoNoLookupUpdate(hostname, "IP", lastIP, ip)
-			return true
-		}
-		r.logDebugNoLookupSkip(hostname, "IP", lastIP, ip)
-	case ipversion.IP4:
-		if ipv4.IsValid() && ipv4.Compare(lastIP) != 0 {
-			r.logInfoNoLookupUpdate(hostname, "IPv4", lastIP, ipv4)
-			return true
-		}
-		r.logDebugNoLookupSkip(hostname, "IPv4", lastIP, ipv4)
-	case ipversion.IP6:
-		if ipv6.IsValid() && ipv6.Compare(lastIP) != 0 {
-			r.logInfoNoLookupUpdate(hostname, "IPv6", lastIP, ipv6)
-			return true
-		}
-		r.logDebugNoLookupSkip(hostname, "IPv6", lastIP, ipv6)
+	lastIP, publicIP netip.Addr) (update bool) {
+	ipKind := ipVersionToIPKind(ipVersion)
+	if publicIP.IsValid() && publicIP.Compare(lastIP) != 0 {
+		r.logInfoNoLookupUpdate(hostname, ipKind, lastIP, publicIP)
+		return true
 	}
+	r.logDebugNoLookupSkip(hostname, ipKind, lastIP, publicIP)
 	return false
 }
 
 func (r *Runner) shouldUpdateRecordWithLookup(ctx context.Context, hostname string, ipVersion ipversion.IPVersion,
-	ip, ipv4, ipv6 netip.Addr, ipv6MaskBits uint8) (update bool) {
+	publicIP netip.Addr, ipv6MaskBits uint8) (update bool) {
 	const tries = 5
 	recordIPv4, recordIPv6, err := r.lookupIPsResilient(ctx, hostname, tries)
 	if err != nil {
@@ -205,30 +192,18 @@ func (r *Runner) shouldUpdateRecordWithLookup(ctx context.Context, hostname stri
 		recordIPv6 = mustMaskIPv6(recordIPv6, ipv6MaskBits)
 	}
 
-	switch ipVersion {
-	case ipversion.IP4or6:
-		recordIP := recordIPv4
-		if ip.Is6() {
-			recordIP = recordIPv6
-		}
-		if ip.IsValid() && ip.Compare(recordIPv4) != 0 && ip.Compare(recordIPv6) != 0 {
-			r.logInfoLookupUpdate(hostname, "IP", recordIP, ip)
-			return true
-		}
-		r.logDebugLookupSkip(hostname, "IP", recordIP, ip)
-	case ipversion.IP4:
-		if ipv4.IsValid() && ipv4.Compare(recordIPv4) != 0 {
-			r.logInfoLookupUpdate(hostname, "IPv4", recordIPv4, ipv4)
-			return true
-		}
-		r.logDebugLookupSkip(hostname, "IPv4", recordIPv4, ipv4)
-	case ipversion.IP6:
-		if ipv6.IsValid() && ipv6.Compare(recordIPv6) != 0 {
-			r.logInfoLookupUpdate(hostname, "IPv6", recordIPv6, ipv6)
-			return true
-		}
-		r.logDebugLookupSkip(hostname, "IPv6", recordIPv6, ipv6)
+	ipKind := ipVersionToIPKind(ipVersion)
+	recordIP := recordIPv4
+	if publicIP.Is6() {
+		recordIP = recordIPv6
 	}
+	recordIP = getIPMatchingVersion(recordIP, recordIPv4, recordIPv6, ipVersion)
+
+	if publicIP.IsValid() && publicIP.Compare(recordIP) != 0 {
+		r.logInfoLookupUpdate(hostname, ipKind, recordIP, publicIP)
+		return true
+	}
+	r.logDebugLookupSkip(hostname, ipKind, recordIP, publicIP)
 	return false
 }
 

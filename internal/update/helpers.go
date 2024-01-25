@@ -3,7 +3,16 @@ package update
 import (
 	"fmt"
 	"net/netip"
+
+	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
+
+func ipVersionToIPKind(version ipversion.IPVersion) (kind string) {
+	if version == ipversion.IP4or6 {
+		return "IP"
+	}
+	return version.String()
+}
 
 func (r *Runner) logDebugNoLookupSkip(hostname, ipKind string, lastIP, ip netip.Addr) {
 	r.logger.Debug(fmt.Sprintf("Last %s address stored for %s is %s and your %s address"+

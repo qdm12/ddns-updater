@@ -156,6 +156,13 @@ func (r *Runner) shouldUpdateRecord(ctx context.Context, record librecords.Recor
 	hostname := record.Provider.BuildDomainName()
 	ipVersion := record.Provider.IPVersion()
 	publicIP := getIPMatchingVersion(ip, ipv4, ipv6, ipVersion)
+
+	if !publicIP.IsValid() {
+		r.logger.Warn(fmt.Sprintf("Skipping update for %s because %s address was not found",
+			hostname, ipVersionToIPKind(ipVersion)))
+		return false
+	}
+
 	if record.Provider.Proxied() {
 		lastIP := record.History.GetCurrentIP() // can be nil
 		return r.shouldUpdateRecordNoLookup(hostname, ipVersion, lastIP, publicIP)

@@ -130,8 +130,16 @@ func extractAllSettings(jsonBytes []byte) (
 	return allProviders, warnings, nil
 }
 
+var (
+	ErrProviderNoLongerSupported = errors.New("provider no longer supported")
+)
+
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) (
 	providers []provider.Provider, warnings []string, err error) {
+	if common.Provider == "google" {
+		return nil, nil, fmt.Errorf("%w: %s", ErrProviderNoLongerSupported, common.Provider)
+	}
+
 	providerName := models.Provider(common.Provider)
 	if providerName == constants.DuckDNS { // only hosts, no domain
 		if common.Domain != "" { // retro compatibility

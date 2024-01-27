@@ -52,7 +52,6 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
   - Gandi
   - GCP
   - GoDaddy
-  - Google
   - He.net
   - Hetzner
   - Infomaniak
@@ -191,7 +190,6 @@ Check the documentation for your DNS provider:
 - [Gandi](https://github.com/qdm12/ddns-updater/blob/master/docs/gandi.md)
 - [GCP](https://github.com/qdm12/ddns-updater/blob/master/docs/gcp.md)
 - [GoDaddy](https://github.com/qdm12/ddns-updater/blob/master/docs/godaddy.md)
-- [Google](https://github.com/qdm12/ddns-updater/blob/master/docs/google.md)
 - [He.net](https://github.com/qdm12/ddns-updater/blob/master/docs/he.net.md)
 - [Infomaniak](https://github.com/qdm12/ddns-updater/blob/master/docs/infomaniak.md)
 - [INWX](https://github.com/qdm12/ddns-updater/blob/master/docs/inwx.md)

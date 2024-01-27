@@ -47,7 +47,7 @@ func (db *Database) GetEvents(domain, host string,
 	defer db.RUnlock()
 	for _, record := range db.data.Records {
 		if record.Domain == domain && record.Host == host {
-			return filterEvents(events, ipVersion), nil
+			return filterEvents(record.Events, ipVersion), nil
 		}
 	}
 	return nil, nil

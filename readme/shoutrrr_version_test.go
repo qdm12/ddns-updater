@@ -10,7 +10,7 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
-var regexShoutrrrURL = regexp.MustCompile(`https://containrrr.dev/shoutrrr/[0-9.]+/services/overview/`)
+var regexShoutrrrURL = regexp.MustCompile(`https://containrrr.dev/shoutrrr/v[0-9.]+/services/overview/`)
 
 func Test_Readme_Shoutrrr_Version(t *testing.T) {
 	t.Parallel()
@@ -30,11 +30,10 @@ func Test_Readme_Shoutrrr_Version(t *testing.T) {
 	}
 	require.NotEmpty(t, shoutrrrVersion)
 
-	// Remove prefix "v" and bugfix suffix from version
-	urlShoutrrrVersion := strings.TrimPrefix(shoutrrrVersion, "v")
-	lastDot := strings.LastIndex(urlShoutrrrVersion, ".")
+	// Remove bugfix suffix from version
+	lastDot := strings.LastIndex(shoutrrrVersion, ".")
 	require.GreaterOrEqual(t, lastDot, 0)
-	urlShoutrrrVersion = urlShoutrrrVersion[:lastDot]
+	urlShoutrrrVersion := shoutrrrVersion[:lastDot]
 
 	expectedShoutrrrURL := "https://containrrr.dev/shoutrrr/" +
 		urlShoutrrrVersion + "/services/overview/"

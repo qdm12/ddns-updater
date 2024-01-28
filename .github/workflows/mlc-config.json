@@ -1,0 +1,32 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^http://localhost"
+    },
+    {
+      "pattern": "^https://api6.ipify.org$"
+    },
+    {
+      "pattern": "^http://ip1.dynupdate6.no-ip.com$"
+    },
+    {
+      "pattern": "^https://ap.www.namecheap.com/Domains/DomainControlPanel/example.com/advancedns$"
+    },
+    {
+      "pattern": "^https://www.godaddy.com"
+    },
+    {
+      "pattern": "^https://www.namecheap.com"
+    },
+    {
+      "pattern": "https://www.linode.com/docs/products/tools/api/guides/manage-api-tokens/"
+    }
+  ],
+  "timeout": "5s",
+  "retryOn429": false,
+  "fallbackRetryDelay": "30s",
+  "aliveStatusCodes": [
+    200,
+    206
+  ]
+}

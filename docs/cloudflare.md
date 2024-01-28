@@ -27,7 +27,7 @@
 - `"host"` is your host and can be `"@"`, a subdomain or the wildcard `"*"`.
 See [this issue comment for context](https://github.com/qdm12/ddns-updater/issues/243#issuecomment-928313949). This is left as is for compatibility.
 - `"ttl"` integer value for record TTL in seconds (specify 1 for automatic)
-- One of the following ([how to find API keys](https://support.cloudflare.com/hc/en-us/articles/200167836-Where-do-I-find-my-Cloudflare-API-key-)):
+- One of the following ([how to find API keys](https://developers.cloudflare.com/fundamentals/api/get-started/)):
   - Email `"email"` and Global API Key `"key"`
   - User service key `"user_service_key"`
   - API Token `"token"`, configured with DNS edit permissions for your DNS name's zone

@@ -29,7 +29,7 @@ go mod download
 
 And finally install [golangci-lint](https://github.com/golangci/golangci-lint#install).
 
-You might want to use an editor such as [Visual Studio Code](https://code.visualstudio.com/download) with the [Go extension](https://code.visualstudio.com/docs/languages/go). Working settings are already in [.vscode/settings.json](../.vscode/settings.json).
+You might want to use an editor such as [Visual Studio Code](https://code.visualstudio.com/download) with the [Go extension](https://code.visualstudio.com/docs/languages/go).
 
 ## Build and Run
 

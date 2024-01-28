@@ -27,7 +27,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
 ![GitHub repo size](https://img.shields.io/github/repo-size/qdm12/ddns-updater)
 ![Go version](https://img.shields.io/github/go-mod/go-version/qdm12/ddns-updater)
 
-[![MIT](https://img.shields.io/github/license/qdm12/ddns-updater)](https://github.com/qdm12/ddns-updater/master/LICENSE)
+[![MIT](https://img.shields.io/github/license/qdm12/ddns-updater)](https://github.com/qdm12/ddns-updater/blob/master/LICENSE)
 ![Visitors count](https://visitor-badge.laobi.icu/badge?page_id=ddns-updater.readme)
 
 ## Features
@@ -176,7 +176,7 @@ Check the documentation for your DNS provider:
 - [DDNSS.de](https://github.com/qdm12/ddns-updater/blob/master/docs/ddnss.de.md)
 - [deSEC](https://github.com/qdm12/ddns-updater/blob/master/docs/desec.md)
 - [DigitalOcean](https://github.com/qdm12/ddns-updater/blob/master/docs/digitalocean.md)
-- [DD24](https://github.com/qdm12/ddns-updater/blob/master/docs/domaindiscount24.md)
+- [DD24](https://github.com/qdm12/ddns-updater/blob/master/docs/dd24.md)
 - [DonDominio](https://github.com/qdm12/ddns-updater/blob/master/docs/dondominio.md)
 - [DNSOMatic](https://github.com/qdm12/ddns-updater/blob/master/docs/dnsomatic.md)
 - [DNSPod](https://github.com/qdm12/ddns-updater/blob/master/docs/dnspod.md)
@@ -243,7 +243,7 @@ Note that:
 | `RESOLVER_ADDRESS` | Your network DNS | A plaintext DNS address to use, such as `1.1.1.1:53`. This is useful for split dns, see [#389](https://github.com/qdm12/ddns-updater/issues/389) |
 | `LOG_LEVEL` | `info` | Level of logging, `debug`, `info`, `warning` or `error` |
 | `LOG_CALLER` | `hidden` | Show caller per log line, `hidden` or `short` |
-| `SHOUTRRR_ADDRESSES` |  | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/0.8/services/overview/) (notification services) |
+| `SHOUTRRR_ADDRESSES` |  | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/v0.8/services/overview/) (notification services) |
 | `SHOUTRRR_DEFAULT_TITLE` | `DDNS Updater` | Default title for Shoutrrr notifications |
 | `TZ` | | Timezone to have accurate times, i.e. `America/Montreal` |
 
@@ -318,7 +318,7 @@ We could do an API call to get the record IP address every period, but that woul
 
 ## Testing
 
-- The automated healthcheck verifies all your records are up to date [using DNS lookups](https://github.com/qdm12/ddns-updater/blob/master/internal/healthcheck/healthcheck.go#L15)
+- The automated healthcheck verifies all your records are up to date [using DNS lookups](https://github.com/qdm12/ddns-updater/blob/master/internal/health/check.go#L42)
 - You can also manually check, by:
     1. Going to your DNS management webpage
     1. Setting your record to `127.0.0.1`
@@ -352,7 +352,7 @@ You can use optional build arguments with `--build-arg KEY=VALUE` from the table
 
 ## License
 
-This repository is under an [MIT license](https://github.com/qdm12/ddns-updater/master/license)
+This repository is under an [MIT license](https://github.com/qdm12/ddns-updater/blob/master/LICENSE)
 
 ## Used in external projects
 
@@ -361,8 +361,5 @@ This repository is under an [MIT license](https://github.com/qdm12/ddns-updater/
 ## Support
 
 Sponsor me on [Github](https://github.com/sponsors/qdm12) or donate to [paypal.me/qmcgaw](https://www.paypal.me/qmcgaw)
-
-[![https://github.com/sponsors/qdm12](https://raw.githubusercontent.com/qdm12/private-internet-access-docker/master/doc/sponsors.jpg)](https://github.com/sponsors/qdm12)
-[![https://www.paypal.me/qmcgaw](https://raw.githubusercontent.com/qdm12/private-internet-access-docker/master/doc/paypal.jpg)](https://www.paypal.me/qmcgaw)
 
 Many thanks to J. Famiglietti for supporting me financially 🥇👍

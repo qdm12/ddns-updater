@@ -32,7 +32,7 @@
 
 ## Domain setup
 
-[![GoDaddy Website](../readme/godaddy.png)](https://godaddy.com)
+[![GoDaddy Website](../readme/godaddy.png)](https://www.godaddy.com/en-ie)
 
 1. Login to [https://developer.godaddy.com/keys](https://developer.godaddy.com/keys/) with your account credentials.
 

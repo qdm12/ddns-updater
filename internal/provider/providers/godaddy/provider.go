@@ -92,7 +92,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
 		Host:      p.Host(),
-		Provider:  "<a href=\"https://godaddy.com\">GoDaddy</a>",
+		Provider:  "<a href=\"https://www.godaddy.com/en-ie\">GoDaddy</a>",
 		IPVersion: p.ipVersion.String(),
 	}
 }

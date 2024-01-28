@@ -30,6 +30,6 @@
 
 ## Domain setup
 
-[![DuckDNS Website](../readme/duckdns.png)](https://duckdns.org)
+[![DuckDNS Website](../readme/duckdns.png)](https://www.duckdns.org/)
 
-*See the [duckdns website](https://duckdns.org)*
+*See the [duckdns website](https://www.duckdns.org/)*

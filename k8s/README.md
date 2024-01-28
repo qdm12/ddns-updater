@@ -13,7 +13,7 @@ The Manifests have additional [Kustomize](https://kustomize.io/) overlays, which
     curl -O https://raw.githubusercontent.com/qdm12/ddns-updater/master/k8s/base/kustomization.yaml
     ```
 
-1. Modify `secret-config.yaml` as described in the [project readme](../README#configuration)
+1. Modify `secret-config.yaml` as described in the [project readme](../README.md#configuration)
 1. Use [kubectl](https://kubernetes.io/docs/reference/kubectl/) to apply the manifest:
 
     ```sh
@@ -33,6 +33,6 @@ The web UI should now be available at [http://localhost:8080](http://localhost:8
 Kustomize overlays can extend the installation:
 
 * [overlay/with-ingress](overlay/with-ingress/) - Basic **HTTP** Ingress ressource
-* [overlay/with-ingress-cert-manager](overlay/with-ingress-cert-manager/) - Basic **HTTPS** Ingress ressource which uses [cert-manager](https://github.com/cert-manager/cert-manager) to create certificates.
+* [overlay/with-ingress-tls-cert-manager](overlay/with-ingress-tls-cert-manager/) - Basic **HTTPS** Ingress ressource which uses [cert-manager](https://github.com/cert-manager/cert-manager) to create certificates.
 
 To install with the overlay **just change dirctory in the overlay folder you want to install** and hit `kubectl apply -k .` .

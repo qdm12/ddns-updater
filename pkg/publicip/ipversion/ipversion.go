@@ -12,6 +12,7 @@ const (
 	IP4or6 IPVersion = iota
 	IP4
 	IP6
+	IP4and6
 )
 
 func (v IPVersion) String() string {
@@ -22,8 +23,10 @@ func (v IPVersion) String() string {
 		return "ipv4"
 	case IP6:
 		return "ipv6"
+	case IP4and6:
+		return "ipv4 and ipv6"
 	default:
-		return "ip?"
+		panic(fmt.Sprintf("ip version %d not programmed", v))
 	}
 }
 
@@ -37,6 +40,8 @@ func Parse(s string) (version IPVersion, err error) {
 		return IP4, nil
 	case "ipv6":
 		return IP6, nil
+	case "ipv4 and ipv6":
+		return IP4and6, nil
 	default:
 		return IP4or6, fmt.Errorf("%w: %q", ErrInvalidIPVersion, s)
 	}

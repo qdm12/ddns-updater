@@ -95,6 +95,8 @@ func doIPVersion(records []librecords.Record) (doIP, doIPv4, doIPv6 bool) {
 			doIPv4 = true
 		case ipversion.IP6:
 			doIPv6 = true
+		case ipversion.IP4and6:
+			doIPv4, doIPv6 = true, true
 		}
 		if doIP && doIPv4 && doIPv6 {
 			return true, true, true

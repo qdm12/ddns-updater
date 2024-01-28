@@ -60,8 +60,6 @@ func (p *Provider) isValid() error {
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	case p.name == "":
 		return fmt.Errorf("%w", errors.ErrNameNotSet)
-	case p.host != "@":
-		return fmt.Errorf("%w", errors.ErrHostOnlyAt)
 	}
 	return nil
 }

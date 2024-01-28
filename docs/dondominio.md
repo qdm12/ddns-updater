@@ -10,6 +10,7 @@
     {
       "provider": "dondominio",
       "domain": "domain.com",
+      "host": "@",
       "name": "something",
       "username": "username",
       "password": "password",
@@ -22,6 +23,7 @@
 ### Compulsory parameters
 
 - `"domain"`
+- `"host"` is the subdomain to update which can be `@`, `*` or a subdomain
 - `"name"` is the name of the service/hosting
 - `"username"`
 - `"password"`

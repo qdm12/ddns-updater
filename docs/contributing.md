@@ -2,9 +2,9 @@
 
 ## Table of content
 
-1. [Setup](#Setup)
-1. [Commands available](#Commands-available)
-1. [Guidelines](#Guidelines)
+1. [Setup](#setup)
+1. [Commands available](#commands-available)
+1. [Guidelines](#guidelines)
 
 ## Setup
 

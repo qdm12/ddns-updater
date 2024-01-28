@@ -1,6 +1,6 @@
 # Name.com
 
-<a href="https://www.name.com"><img src="../readme/name.svg" alt="drawing" width="25%"/></a>
+<img src="../readme/name.svg" alt="drawing" width="25%"/>
 
 ## Configuration
 

@@ -95,6 +95,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # for gorelease last step
 
       # extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
@@ -146,3 +148,16 @@ jobs:
             VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
           tags: ${{ steps.meta.outputs.tags }}
           push: true
+
+      - if: github.event_name == 'release'
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.21
+
+      - if: github.event_name == 'release'
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: latest
+          args: release --clean --config .gorelease.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

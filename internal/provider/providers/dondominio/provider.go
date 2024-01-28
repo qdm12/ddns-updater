@@ -112,6 +112,15 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		ids = aaaaIDs
 	}
 
+	if len(ids) == 0 {
+		err = p.create(ctx, client, ip)
+		if err != nil {
+			return netip.Addr{}, fmt.Errorf("creating %s record for %s: %w",
+				recordType, p.BuildDomainName(), err)
+		}
+		return ip, nil
+	}
+
 	for _, id := range ids {
 		err = p.update(ctx, client, id, ip)
 		if err != nil {

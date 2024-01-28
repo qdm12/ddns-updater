@@ -6,13 +6,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
-	"net/url"
-	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
-	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -103,74 +100,25 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	u := url.URL{
-		Scheme: "https",
-		Host:   "simple-api.dondominio.net",
-	}
-	values := url.Values{}
-	values.Set("apiuser", p.username)
-	values.Set("apipasswd", p.password)
-	values.Set("domain", p.domain)
-	values.Set("name", p.name)
-	isIPv4 := ip.Is4()
-	if isIPv4 {
-		values.Set("ipv4", ip.String())
-	} else {
-		values.Set("ipv6", ip.String())
-	}
-	encodedValues := values.Encode()
-	buffer := strings.NewReader(encodedValues)
-
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
+	aIDs, aaaaIDs, err := p.list(ctx, client)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
-	}
-	headers.SetUserAgent(request)
-	headers.SetContentType(request, "application/x-www-form-urlencoded")
-	headers.SetAccept(request, "application/json")
-
-	response, err := client.Do(request)
-	if err != nil {
-		return netip.Addr{}, err
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return netip.Addr{}, fmt.Errorf("listing records: %w", err)
 	}
 
-	decoder := json.NewDecoder(response.Body)
-	var responseData struct {
-		Success          bool   `json:"success"`
-		ErrorCode        int    `json:"errorCode"`
-		ErrorCodeMessage string `json:"errorCodeMsg"`
-		ResponseData     struct {
-			GlueRecords []struct {
-				IPv4 string `json:"ipv4"`
-				IPv6 string `json:"ipv6"`
-			} `json:"gluerecords"`
-		} `json:"responseData"`
-	}
-	err = decoder.Decode(&responseData)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
+	recordType := constants.A
+	ids := aIDs
+	if ip.Is6() {
+		recordType = constants.AAAA
+		ids = aaaaIDs
 	}
 
-	if !responseData.Success {
-		return netip.Addr{}, fmt.Errorf("%w: %s (error code %d)",
-			errors.ErrUnsuccessful, responseData.ErrorCodeMessage, responseData.ErrorCode)
+	for _, id := range ids {
+		err = p.update(ctx, client, id, ip)
+		if err != nil {
+			return netip.Addr{}, fmt.Errorf("updating %s record for %s: %w",
+				recordType, p.BuildDomainName(), err)
+		}
 	}
-	ipString := responseData.ResponseData.GlueRecords[0].IPv4
-	if !isIPv4 {
-		ipString = responseData.ResponseData.GlueRecords[0].IPv6
-	}
-	newIP, err = netip.ParseAddr(ipString)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
-	} else if ip.Compare(newIP) != 0 {
-		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
-	}
-	return newIP, nil
+
+	return ip, nil
 }

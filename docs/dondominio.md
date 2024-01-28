@@ -22,7 +22,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"name"` is the name server associated with the domain
+- `"name"` is the name of the service/hosting
 - `"username"`
 - `"password"`
 
@@ -31,3 +31,5 @@
 - `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
 
 ## Domain setup
+
+See [dondominio.dev/en/dondns/docs/api/#before-start](https://dondominio.dev/en/dondns/docs/api/#before-start)

@@ -29,7 +29,7 @@ This provider uses Gandi v5 API
 
 ### Optional parameters
 
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), defaults to `ipv4 or ipv6`
+- `"ip_version"` can be `ipv4` (A records), or `ipv6` (AAAA records) or `ipv4 or ipv6` (update one of the two, depending on the public ip found). It defaults to `ipv4 or ipv6`.
 - `"ttl"` default is `3600`
 
 ## Domain setup

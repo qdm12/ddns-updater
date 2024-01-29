@@ -35,6 +35,6 @@ See [this issue comment for context](https://github.com/qdm12/ddns-updater/issue
 ### Optional parameters
 
 - `"proxied"` can be set to `true` to use the proxy services of Cloudflare
-- `"ip_version"` can be `ipv4` (A records) or `ipv6` (AAAA records), and defaults to `ipv4 or ipv6`
+- `"ip_version"` can be `ipv4` (A records), or `ipv6` (AAAA records) or `ipv4 or ipv6` (update one of the two, depending on the public ip found). It defaults to `ipv4 or ipv6`.
 
 Special thanks to @Starttoaster for helping out with the [documentation](https://gist.github.com/Starttoaster/07d568c2a99ad7631dd776688c988326) and testing.

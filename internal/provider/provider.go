@@ -130,7 +130,7 @@ func New(providerName models.Provider, data json.RawMessage, domain, host string
 	case constants.LuaDNS:
 		return luadns.New(data, domain, host, ipVersion)
 	case constants.Namecheap:
-		return namecheap.New(data, domain, host, ipVersion)
+		return namecheap.New(data, domain, host)
 	case constants.NameCom:
 		return namecom.New(data, domain, host, ipVersion)
 	case constants.Netcup:

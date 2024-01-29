@@ -22,16 +22,12 @@ import (
 type Provider struct {
 	domain        string
 	host          string
-	ipVersion     ipversion.IPVersion
 	password      string
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion) (p *Provider, err error) {
-	if ipVersion == ipversion.IP6 {
-		return nil, fmt.Errorf("%w", errors.ErrIPv6NotSupported)
-	}
+func New(data json.RawMessage, domain, host string) (
+	p *Provider, err error) {
 	extraSettings := struct {
 		Password      string `json:"password"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -43,7 +39,6 @@ func New(data json.RawMessage, domain, host string,
 	p = &Provider{
 		domain:        domain,
 		host:          host,
-		ipVersion:     ipVersion,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
@@ -65,7 +60,7 @@ func (p *Provider) isValid() error {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.host, constants.Namecheap, p.ipVersion)
+	return utils.ToString(p.domain, p.host, constants.Namecheap, ipversion.IP4)
 }
 
 func (p *Provider) Domain() string {
@@ -77,7 +72,11 @@ func (p *Provider) Host() string {
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
-	return p.ipVersion
+	return ipversion.IP4
+}
+
+func (p *Provider) IPv6Suffix() netip.Prefix {
+	return netip.Prefix{}
 }
 
 func (p *Provider) Proxied() bool {
@@ -93,7 +92,7 @@ func (p *Provider) HTML() models.HTMLRow {
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
 		Host:      p.Host(),
 		Provider:  "<a href=\"https://namecheap.com\">Namecheap</a>",
-		IPVersion: p.ipVersion.String(),
+		IPVersion: ipversion.IP4.String(),
 	}
 }
 

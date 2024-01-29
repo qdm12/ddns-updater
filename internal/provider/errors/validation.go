@@ -18,7 +18,6 @@ var (
 	ErrHostWildcard           = errors.New(`host cannot be a "*"`)
 	ErrIPv4KeyNotSet          = errors.New("IPv4 key is not set")
 	ErrIPv6KeyNotSet          = errors.New("IPv6 key is not set")
-	ErrIPv6NotSupported       = errors.New("IPv6 is not supported by this provider")
 	ErrKeyNotSet              = errors.New("key is not set")
 	ErrKeyNotValid            = errors.New("key is not valid")
 	ErrNameNotSet             = errors.New("name is not set")

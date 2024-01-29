@@ -12,7 +12,6 @@ type Config struct {
 	Update   Update
 	PubIP    PubIP
 	Resolver Resolver
-	IPv6     IPv6
 	Server   Server
 	Health   Health
 	Paths    Paths
@@ -26,7 +25,6 @@ func (c *Config) SetDefaults() {
 	c.Update.setDefaults()
 	c.PubIP.setDefaults()
 	c.Resolver.setDefaults()
-	c.IPv6.setDefaults()
 	c.Server.setDefaults()
 	c.Health.SetDefaults()
 	c.Paths.setDefaults()
@@ -44,7 +42,6 @@ func (c Config) Validate() (err error) {
 		"update":    &c.Update,
 		"public ip": &c.PubIP,
 		"resolver":  &c.Resolver,
-		"ipv6":      &c.IPv6,
 		"server":    &c.Server,
 		"health":    &c.Health,
 		"paths":     &c.Paths,
@@ -73,7 +70,6 @@ func (c Config) toLinesNode() *gotree.Node {
 	node.AppendNode(c.Update.toLinesNode())
 	node.AppendNode(c.PubIP.toLinesNode())
 	node.AppendNode(c.Resolver.ToLinesNode())
-	node.AppendNode(c.IPv6.toLinesNode())
 	node.AppendNode(c.Server.toLinesNode())
 	node.AppendNode(c.Health.toLinesNode())
 	node.AppendNode(c.Paths.toLinesNode())
@@ -104,8 +100,6 @@ func (c *Config) Read(reader *reader.Reader,
 	if err != nil {
 		return fmt.Errorf("reading resolver settings: %w", err)
 	}
-
-	c.IPv6.read(reader)
 
 	err = c.Server.read(reader, warner)
 	if err != nil {

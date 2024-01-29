@@ -22,13 +22,15 @@ type Provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
+	ipv6Suffix    netip.Prefix
 	email         string
 	password      string
 	useProviderIP bool
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion) (p *Provider, err error) {
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
+	p *Provider, err error) {
 	extraSettings := struct {
 		Email         string `json:"email"`
 		Password      string `json:"password"`
@@ -42,6 +44,7 @@ func New(data json.RawMessage, domain, host string,
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
+		ipv6Suffix:    ipv6Suffix,
 		email:         extraSettings.Email,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
@@ -81,6 +84,10 @@ func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
 }
 
+func (p *Provider) IPv6Suffix() netip.Prefix {
+	return p.ipv6Suffix
+}
+
 func (p *Provider) Proxied() bool {
 	return false
 }
@@ -100,7 +107,8 @@ func (p *Provider) HTML() models.HTMLRow {
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	host := "dyndns.variomedia.de"
-	if p.useProviderIP {
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if useProviderIP {
 		if ip.Is6() {
 			host = "dyndns6.variomedia.de"
 		} else {

@@ -18,10 +18,11 @@ import (
 )
 
 type Provider struct {
-	domain    string
-	host      string
-	ttl       int
-	ipVersion ipversion.IPVersion
+	domain     string
+	host       string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	ttl        int
 	// Authentication, either use the personal access token
 	// or the deprecated API key.
 	// See https://api.gandi.net/docs/authentication/
@@ -32,7 +33,8 @@ type Provider struct {
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion) (p *Provider, err error) {
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
+	p *Provider, err error) {
 	extraSettings := struct {
 		PersonalAccessToken string `json:"personal_access_token"`
 		APIKey              string `json:"key"`
@@ -46,6 +48,7 @@ func New(data json.RawMessage, domain, host string,
 		domain:              domain,
 		host:                host,
 		ipVersion:           ipVersion,
+		ipv6Suffix:          ipv6Suffix,
 		personalAccessToken: extraSettings.PersonalAccessToken,
 		apiKey:              extraSettings.APIKey,
 		ttl:                 extraSettings.TTL,
@@ -78,6 +81,10 @@ func (p *Provider) Host() string {
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
+}
+
+func (p *Provider) IPv6Suffix() netip.Prefix {
+	return p.ipv6Suffix
 }
 
 func (p *Provider) Proxied() bool {

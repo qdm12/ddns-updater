@@ -14,37 +14,34 @@ import (
 )
 
 type Runner struct {
-	period       time.Duration
-	db           Database
-	updater      UpdaterInterface
-	force        chan struct{}
-	forceResult  chan []error
-	ipv6MaskBits uint8
-	cooldown     time.Duration
-	resolver     LookupIPer
-	ipGetter     PublicIPFetcher
-	logger       Logger
-	timeNow      func() time.Time
-	hioClient    HealthchecksIOClient
+	period      time.Duration
+	db          Database
+	updater     UpdaterInterface
+	force       chan struct{}
+	forceResult chan []error
+	cooldown    time.Duration
+	resolver    LookupIPer
+	ipGetter    PublicIPFetcher
+	logger      Logger
+	timeNow     func() time.Time
+	hioClient   HealthchecksIOClient
 }
 
 func NewRunner(db Database, updater UpdaterInterface, ipGetter PublicIPFetcher,
-	period time.Duration, ipv6MaskBits uint8, cooldown time.Duration,
-	logger Logger, resolver LookupIPer, timeNow func() time.Time,
-	hioClient HealthchecksIOClient) *Runner {
+	period time.Duration, cooldown time.Duration, logger Logger, resolver LookupIPer,
+	timeNow func() time.Time, hioClient HealthchecksIOClient) *Runner {
 	return &Runner{
-		period:       period,
-		db:           db,
-		updater:      updater,
-		force:        make(chan struct{}),
-		forceResult:  make(chan []error),
-		ipv6MaskBits: ipv6MaskBits,
-		cooldown:     cooldown,
-		resolver:     resolver,
-		ipGetter:     ipGetter,
-		logger:       logger,
-		timeNow:      timeNow,
-		hioClient:    hioClient,
+		period:      period,
+		db:          db,
+		updater:     updater,
+		force:       make(chan struct{}),
+		forceResult: make(chan []error),
+		cooldown:    cooldown,
+		resolver:    resolver,
+		ipGetter:    ipGetter,
+		logger:      logger,
+		timeNow:     timeNow,
+		hioClient:   hioClient,
 	}
 }
 
@@ -103,15 +100,13 @@ func doIPVersion(records []librecords.Record) (doIP, doIPv4, doIPv6 bool) {
 	return doIP, doIPv4, doIPv6
 }
 
-func (r *Runner) getNewIPs(ctx context.Context, doIP, doIPv4, doIPv6 bool, ipv6MaskBits uint8) (
+func (r *Runner) getNewIPs(ctx context.Context, doIP, doIPv4, doIPv6 bool) (
 	ip, ipv4, ipv6 netip.Addr, errors []error) {
 	var err error
 	if doIP {
 		ip, err = tryAndRepeatGettingIP(ctx, r.ipGetter.IP, r.logger, ipversion.IP4or6)
 		if err != nil {
 			errors = append(errors, err)
-		} else if ip.Is6() {
-			ip = mustMaskIPv6(ip, ipv6MaskBits)
 		}
 	}
 	if doIPv4 {
@@ -124,18 +119,17 @@ func (r *Runner) getNewIPs(ctx context.Context, doIP, doIPv4, doIPv6 bool, ipv6M
 		ipv6, err = tryAndRepeatGettingIP(ctx, r.ipGetter.IP6, r.logger, ipversion.IP6)
 		if err != nil {
 			errors = append(errors, err)
-		} else {
-			ipv6 = mustMaskIPv6(ipv6, ipv6MaskBits)
 		}
 	}
 	return ip, ipv4, ipv6, errors
 }
 
 func (r *Runner) getRecordIDsToUpdate(ctx context.Context, records []librecords.Record,
-	ip, ipv4, ipv6 netip.Addr, now time.Time, ipv6MaskBits uint8) (recordIDs map[uint]struct{}) {
+	ip, ipv4, ipv6 netip.Addr, now time.Time) (recordIDs map[uint]struct{}) {
 	recordIDs = make(map[uint]struct{})
 	for i, record := range records {
-		if shouldUpdate := r.shouldUpdateRecord(ctx, record, ip, ipv4, ipv6, now, ipv6MaskBits); shouldUpdate {
+		shouldUpdate := r.shouldUpdateRecord(ctx, record, ip, ipv4, ipv6, now)
+		if shouldUpdate {
 			id := uint(i)
 			recordIDs[id] = struct{}{}
 		}
@@ -144,7 +138,7 @@ func (r *Runner) getRecordIDsToUpdate(ctx context.Context, records []librecords.
 }
 
 func (r *Runner) shouldUpdateRecord(ctx context.Context, record librecords.Record,
-	ip, ipv4, ipv6 netip.Addr, now time.Time, ipv6MaskBits uint8) (update bool) {
+	ip, ipv4, ipv6 netip.Addr, now time.Time) (update bool) {
 	isWithinBanPeriod := record.LastBan != nil && now.Sub(*record.LastBan) < time.Hour
 	isWithinCooldown := now.Sub(record.History.GetSuccessTime()) < r.cooldown
 	if isWithinBanPeriod || isWithinCooldown {
@@ -161,13 +155,15 @@ func (r *Runner) shouldUpdateRecord(ctx context.Context, record librecords.Recor
 		r.logger.Warn(fmt.Sprintf("Skipping update for %s because %s address was not found",
 			hostname, ipVersionToIPKind(ipVersion)))
 		return false
+	} else if publicIP.Is6() {
+		publicIP = ipv6WithSuffix(publicIP, record.Provider.IPv6Suffix())
 	}
 
 	if record.Provider.Proxied() {
 		lastIP := record.History.GetCurrentIP() // can be nil
 		return r.shouldUpdateRecordNoLookup(hostname, ipVersion, lastIP, publicIP)
 	}
-	return r.shouldUpdateRecordWithLookup(ctx, hostname, ipVersion, publicIP, ipv6MaskBits)
+	return r.shouldUpdateRecordWithLookup(ctx, hostname, ipVersion, publicIP)
 }
 
 func (r *Runner) shouldUpdateRecordNoLookup(hostname string, ipVersion ipversion.IPVersion,
@@ -181,8 +177,8 @@ func (r *Runner) shouldUpdateRecordNoLookup(hostname string, ipVersion ipversion
 	return false
 }
 
-func (r *Runner) shouldUpdateRecordWithLookup(ctx context.Context, hostname string, ipVersion ipversion.IPVersion,
-	publicIP netip.Addr, ipv6MaskBits uint8) (update bool) {
+func (r *Runner) shouldUpdateRecordWithLookup(ctx context.Context, hostname string,
+	ipVersion ipversion.IPVersion, publicIP netip.Addr) (update bool) {
 	const tries = 5
 	recordIPv4, recordIPv6, err := r.lookupIPsResilient(ctx, hostname, tries)
 	if err != nil {
@@ -193,10 +189,6 @@ func (r *Runner) shouldUpdateRecordWithLookup(ctx context.Context, hostname stri
 		}
 		r.logger.Warn("cannot DNS resolve " + hostname + " after " +
 			fmt.Sprint(tries) + " tries: " + err.Error()) // update anyway
-	}
-
-	if recordIPv6.IsValid() {
-		recordIPv6 = mustMaskIPv6(recordIPv6, ipv6MaskBits)
 	}
 
 	ipKind := ipVersionToIPKind(ipVersion)
@@ -249,18 +241,18 @@ func setInitialUpToDateStatus(db Database, id uint, updateIP netip.Addr, now tim
 	return db.Update(id, record)
 }
 
-func (r *Runner) updateNecessary(ctx context.Context, ipv6MaskBits uint8) (errors []error) {
+func (r *Runner) updateNecessary(ctx context.Context) (errors []error) {
 	records := r.db.SelectAll()
 	doIP, doIPv4, doIPv6 := doIPVersion(records)
 	r.logger.Debug(fmt.Sprintf("configured to fetch IP: v4 or v6: %t, v4: %t, v6: %t", doIP, doIPv4, doIPv6))
-	ip, ipv4, ipv6, errors := r.getNewIPs(ctx, doIP, doIPv4, doIPv6, ipv6MaskBits)
+	ip, ipv4, ipv6, errors := r.getNewIPs(ctx, doIP, doIPv4, doIPv6)
 	r.logger.Debug(fmt.Sprintf("your public IP address are: v4 or v6: %s, v4: %s, v6: %s", ip, ipv4, ipv6))
 	for _, err := range errors {
 		r.logger.Error(err.Error())
 	}
 
 	now := r.timeNow()
-	recordIDs := r.getRecordIDsToUpdate(ctx, records, ip, ipv4, ipv6, now, ipv6MaskBits)
+	recordIDs := r.getRecordIDsToUpdate(ctx, records, ip, ipv4, ipv6, now)
 
 	for i, record := range records {
 		id := uint(i)
@@ -269,6 +261,10 @@ func (r *Runner) updateNecessary(ctx context.Context, ipv6MaskBits uint8) (error
 			continue
 		}
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Provider.IPVersion())
+		if updateIP.Is6() {
+			updateIP = ipv6WithSuffix(updateIP, record.Provider.IPv6Suffix())
+		}
+
 		err := setInitialUpToDateStatus(r.db, id, updateIP, now)
 		if err != nil {
 			err = fmt.Errorf("setting initial up to date status: %w", err)
@@ -284,6 +280,8 @@ func (r *Runner) updateNecessary(ctx context.Context, ipv6MaskBits uint8) (error
 			errors = append(errors, err)
 			r.logger.Error(err.Error())
 			continue
+		} else if updateIP.Is6() {
+			updateIP = ipv6WithSuffix(updateIP, record.Provider.IPv6Suffix())
 		}
 		r.logger.Info("Updating record " + record.Provider.String() + " to use " + updateIP.String())
 		err := r.updater.Update(ctx, id, updateIP, r.timeNow())
@@ -307,9 +305,9 @@ func (r *Runner) Run(ctx context.Context, done chan<- struct{}) {
 	for {
 		select {
 		case <-ticker.C:
-			r.updateNecessary(ctx, r.ipv6MaskBits)
+			r.updateNecessary(ctx)
 		case <-r.force:
-			r.forceResult <- r.updateNecessary(ctx, r.ipv6MaskBits)
+			r.forceResult <- r.updateNecessary(ctx)
 		case <-ctx.Done():
 			ticker.Stop()
 			return

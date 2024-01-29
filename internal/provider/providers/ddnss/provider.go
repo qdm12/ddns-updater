@@ -22,6 +22,7 @@ type Provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
+	ipv6Suffix    netip.Prefix
 	username      string
 	password      string
 	dualStack     bool
@@ -29,7 +30,8 @@ type Provider struct {
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion) (p *Provider, err error) {
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
+	p *Provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -44,6 +46,7 @@ func New(data json.RawMessage, domain, host string,
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
+		ipv6Suffix:    ipv6Suffix,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		dualStack:     extraSettings.DualStack,
@@ -84,6 +87,10 @@ func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
 }
 
+func (p *Provider) IPv6Suffix() netip.Prefix {
+	return p.ipv6Suffix
+}
+
 func (p *Provider) Proxied() bool {
 	return false
 }
@@ -111,7 +118,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("user", p.username)
 	values.Set("pwd", p.password)
 	values.Set("host", utils.BuildURLQueryHostname(p.host, p.domain))
-	if !p.useProviderIP {
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if !useProviderIP {
 		ipKey := "ip"
 		if p.dualStack && ip.Is6() { // ipv6 update for dual stack
 			ipKey = "ip6"

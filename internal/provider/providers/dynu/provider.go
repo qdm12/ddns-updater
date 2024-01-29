@@ -21,15 +21,17 @@ import (
 type Provider struct {
 	domain        string
 	host          string
-	group         string
 	ipVersion     ipversion.IPVersion
+	ipv6Suffix    netip.Prefix
 	username      string
 	password      string
 	useProviderIP bool
+	group         string
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion) (p *Provider, err error) {
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
+	p *Provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -49,6 +51,7 @@ func New(data json.RawMessage, domain, host string,
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
+		ipv6Suffix:    ipv6Suffix,
 		group:         extraSettings.Group,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
@@ -89,6 +92,10 @@ func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
 }
 
+func (p *Provider) IPv6Suffix() netip.Prefix {
+	return p.ipv6Suffix
+}
+
 func (p *Provider) Proxied() bool {
 	return false
 }
@@ -118,7 +125,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("location", p.group)
 	hostname := utils.BuildDomainName(p.host, p.domain)
 	values.Set("hostname", hostname)
-	if !p.useProviderIP {
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if !useProviderIP {
 		if ip.Is6() {
 			values.Set("myipv6", ip.String())
 		} else {

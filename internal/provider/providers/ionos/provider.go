@@ -15,14 +15,16 @@ import (
 )
 
 type Provider struct {
-	domain    string
-	host      string
-	ipVersion ipversion.IPVersion
-	apiKey    string
+	domain     string
+	host       string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	apiKey     string
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion) (p *Provider, err error) {
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
+	p *Provider, err error) {
 	extraSettings := struct {
 		APIKey string `json:"api_key"`
 	}{}
@@ -30,10 +32,11 @@ func New(data json.RawMessage, domain, host string,
 		return nil, fmt.Errorf("decoding ionos extra settings: %w", err)
 	}
 	p = &Provider{
-		domain:    domain,
-		host:      host,
-		ipVersion: ipVersion,
-		apiKey:    extraSettings.APIKey,
+		domain:     domain,
+		host:       host,
+		ipVersion:  ipVersion,
+		ipv6Suffix: ipv6Suffix,
+		apiKey:     extraSettings.APIKey,
 	}
 	if err := p.isValid(); err != nil {
 		return nil, err
@@ -62,6 +65,10 @@ func (p *Provider) Host() string {
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
+}
+
+func (p *Provider) IPv6Suffix() netip.Prefix {
+	return p.ipv6Suffix
 }
 
 func (p *Provider) Proxied() bool {

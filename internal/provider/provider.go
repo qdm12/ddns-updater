@@ -64,6 +64,7 @@ type Provider interface {
 	HTML() models.HTMLRow
 	Proxied() bool
 	IPVersion() ipversion.IPVersion
+	IPv6Suffix() netip.Prefix
 	Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error)
 }
 
@@ -71,94 +72,94 @@ var ErrProviderUnknown = errors.New("unknown provider")
 
 //nolint:gocyclo
 func New(providerName models.Provider, data json.RawMessage, domain, host string, //nolint:ireturn
-	ipVersion ipversion.IPVersion) (provider Provider, err error) {
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (provider Provider, err error) {
 	switch providerName {
 	case constants.Aliyun:
-		return aliyun.New(data, domain, host, ipVersion)
+		return aliyun.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.AllInkl:
-		return allinkl.New(data, domain, host, ipVersion)
+		return allinkl.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Cloudflare:
-		return cloudflare.New(data, domain, host, ipVersion)
+		return cloudflare.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Custom:
-		return custom.New(data, domain, host, ipVersion)
+		return custom.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Dd24:
-		return dd24.New(data, domain, host, ipVersion)
+		return dd24.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.DdnssDe:
-		return ddnss.New(data, domain, host, ipVersion)
+		return ddnss.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.DeSEC:
-		return desec.New(data, domain, host, ipVersion)
+		return desec.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.DigitalOcean:
-		return digitalocean.New(data, domain, host, ipVersion)
+		return digitalocean.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.DNSOMatic:
-		return dnsomatic.New(data, domain, host, ipVersion)
+		return dnsomatic.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.DNSPod:
-		return dnspod.New(data, domain, host, ipVersion)
+		return dnspod.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.DonDominio:
-		return dondominio.New(data, domain, host, ipVersion)
+		return dondominio.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Dreamhost:
-		return dreamhost.New(data, domain, host, ipVersion)
+		return dreamhost.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.DuckDNS:
-		return duckdns.New(data, domain, host, ipVersion)
+		return duckdns.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Dyn:
-		return dyn.New(data, domain, host, ipVersion)
+		return dyn.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Dynu:
-		return dynu.New(data, domain, host, ipVersion)
+		return dynu.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.DynV6:
-		return dynv6.New(data, domain, host, ipVersion)
+		return dynv6.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.EasyDNS:
-		return easydns.New(data, domain, host, ipVersion)
+		return easydns.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.FreeDNS:
-		return freedns.New(data, domain, host, ipVersion)
+		return freedns.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Gandi:
-		return gandi.New(data, domain, host, ipVersion)
+		return gandi.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.GCP:
-		return gcp.New(data, domain, host, ipVersion)
+		return gcp.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.GoDaddy:
-		return godaddy.New(data, domain, host, ipVersion)
+		return godaddy.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.HE:
-		return he.New(data, domain, host, ipVersion)
+		return he.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Hetzner:
-		return hetzner.New(data, domain, host, ipVersion)
+		return hetzner.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Infomaniak:
-		return infomaniak.New(data, domain, host, ipVersion)
+		return infomaniak.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.INWX:
-		return inwx.New(data, domain, host, ipVersion)
+		return inwx.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Ionos:
-		return ionos.New(data, domain, host, ipVersion)
+		return ionos.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Linode:
-		return linode.New(data, domain, host, ipVersion)
+		return linode.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.LuaDNS:
-		return luadns.New(data, domain, host, ipVersion)
+		return luadns.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Namecheap:
 		return namecheap.New(data, domain, host)
 	case constants.NameCom:
-		return namecom.New(data, domain, host, ipVersion)
+		return namecom.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Netcup:
-		return netcup.New(data, domain, host, ipVersion)
+		return netcup.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Njalla:
-		return njalla.New(data, domain, host, ipVersion)
+		return njalla.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.NoIP:
-		return noip.New(data, domain, host, ipVersion)
+		return noip.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.NowDNS:
-		return nowdns.New(data, domain, ipVersion)
+		return nowdns.New(data, domain, ipVersion, ipv6Suffix)
 	case constants.OpenDNS:
-		return opendns.New(data, domain, host, ipVersion)
+		return opendns.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.OVH:
-		return ovh.New(data, domain, host, ipVersion)
+		return ovh.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Porkbun:
-		return porkbun.New(data, domain, host, ipVersion)
+		return porkbun.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.SelfhostDe:
-		return selfhostde.New(data, domain, host, ipVersion)
+		return selfhostde.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Servercow:
-		return servercow.New(data, domain, host, ipVersion)
+		return servercow.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Spdyn:
-		return spdyn.New(data, domain, host, ipVersion)
+		return spdyn.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Strato:
-		return strato.New(data, domain, host, ipVersion)
+		return strato.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Variomedia:
-		return variomedia.New(data, domain, host, ipVersion)
+		return variomedia.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Zoneedit:
-		return zoneedit.New(data, domain, host, ipVersion)
+		return zoneedit.New(data, domain, host, ipVersion, ipv6Suffix)
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrProviderUnknown, providerName)
 	}

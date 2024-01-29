@@ -127,7 +127,6 @@ The program reads the configuration from a JSON object, either from a file or fr
     docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data qmcgaw/ddns-updater
     ```
 
-1. ⚠️ If you use IPv6, you might need to set `-e IPV6_PREFIX=/64` (`/64` is your prefix, depending on your ISP)
 1. (Optional) You can also set your JSON configuration as a single environment variable line (i.e. `{"settings": [{"provider": "namecheap", ...}]}`), which takes precedence over config.json. Note however that if you don't bind mount the `/updater/data` directory, there won't be a persistent database file `/updater/updates.json` but it will still work.
 
 ### Next steps
@@ -224,7 +223,6 @@ Note that:
 | --- | --- | --- |
 | `CONFIG` | | One line JSON object containing the entire config (takes precedence over config.json file) if specified |
 | `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
-| `IPV6_PREFIX` | `/128` | IPv6 prefix used to mask your public IPv6 address and your record IPv6 address. Ranges from `/0` to `/128` depending on your ISP. |
 | `PUBLICIP_FETCHERS` | `all` | Comma separated fetcher types to obtain the public IP address from `http` and `dns` |
 | `PUBLICIP_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IP address (ipv4 or ipv6). See the [Public IP section](#public-ip) |
 | `PUBLICIPV4_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IPv4 address only. See the [Public IP section](#public-ip) |

@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 	_ "time/tzdata"
@@ -248,8 +247,7 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 
 	updater := update.NewUpdater(db, client, shoutrrrClient, logger)
 	runner := update.NewRunner(db, updater, ipGetter, config.Update.Period,
-		ipv6PrefixToBits(config.IPv6.Prefix), config.Update.Cooldown, logger,
-		resolver, timeNow, hioClient)
+		config.Update.Cooldown, logger, resolver, timeNow, hioClient)
 
 	runnerHandler, runnerCtx, runnerDone := goshutdown.NewGoRoutineHandler("runner")
 	go runner.Run(runnerCtx, runnerDone)
@@ -325,13 +323,4 @@ func backupRunLoop(ctx context.Context, done chan<- struct{}, backupPeriod time.
 			return
 		}
 	}
-}
-
-func ipv6PrefixToBits(prefix string) (maskBits uint8) {
-	prefix = strings.TrimPrefix(prefix, "/")
-	n, err := strconv.Atoi(prefix)
-	if err != nil {
-		panic(err) // prefix already validated before
-	}
-	return uint8(n)
 }

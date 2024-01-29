@@ -23,13 +23,15 @@ type Provider struct {
 	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
+	ipv6Suffix    netip.Prefix
 	username      string
 	password      string
 	useProviderIP bool
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion) (p *Provider, err error) {
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
+	p *Provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -43,6 +45,7 @@ func New(data json.RawMessage, domain, host string,
 		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
+		ipv6Suffix:    ipv6Suffix,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
@@ -82,6 +85,10 @@ func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
 }
 
+func (p *Provider) IPv6Suffix() netip.Prefix {
+	return p.ipv6Suffix
+}
+
 func (p *Provider) Proxied() bool {
 	return false
 }
@@ -108,8 +115,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	values := url.Values{}
 	values.Set("host", utils.BuildURLQueryHostname(p.host, p.domain))
-	if !p.useProviderIP {
-		if ip.Is6() { // ipv6
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if !useProviderIP {
+		if ip.Is6() {
 			values.Set("myip6", ip.String())
 		} else {
 			values.Set("myip", ip.String())
@@ -171,7 +179,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	newIP = ips[0]
-	if !p.useProviderIP && ip.Compare(newIP) != 0 {
+	if !useProviderIP && ip.Compare(newIP) != 0 {
 		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
 			errors.ErrIPReceivedMismatch, ip, newIP)
 	}

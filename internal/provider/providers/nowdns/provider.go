@@ -111,7 +111,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	values := url.Values{}
 	values.Set("hostname", p.domain)
-	if !p.useProviderIP {
+	if !p.useProviderIP || (ip.Is6() && p.ipv6Suffix.IsValid()) {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()

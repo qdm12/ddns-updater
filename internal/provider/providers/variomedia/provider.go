@@ -107,7 +107,8 @@ func (p *Provider) HTML() models.HTMLRow {
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	host := "dyndns.variomedia.de"
-	if p.useProviderIP {
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if useProviderIP {
 		if ip.Is6() {
 			host = "dyndns6.variomedia.de"
 		} else {

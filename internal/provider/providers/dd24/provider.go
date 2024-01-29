@@ -107,7 +107,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values := url.Values{}
 	values.Set("hostname", p.BuildDomainName())
 	values.Set("password", p.password)
-	if p.useProviderIP {
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if useProviderIP {
 		values.Set("ip", "auto")
 	} else {
 		values.Set("ip", ip.String())

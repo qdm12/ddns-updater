@@ -125,7 +125,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("location", p.group)
 	hostname := utils.BuildDomainName(p.host, p.domain)
 	values.Set("hostname", hostname)
-	if !p.useProviderIP {
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if !useProviderIP {
 		if ip.Is6() {
 			values.Set("myipv6", ip.String())
 		} else {

@@ -152,7 +152,8 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
 	values := url.Values{}
 	values.Set("system", "dyndns")
 	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
-	if !p.useProviderIP {
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if !useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()

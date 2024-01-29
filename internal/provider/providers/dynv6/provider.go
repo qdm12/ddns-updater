@@ -115,7 +115,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("token", p.token)
 	values.Set("zone", utils.BuildURLQueryHostname(p.host, p.domain))
 	ipValue := ip.String()
-	if p.useProviderIP {
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if useProviderIP {
 		ipValue = "auto"
 	}
 	if isIPv4 {

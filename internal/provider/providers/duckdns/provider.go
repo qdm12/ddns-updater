@@ -55,12 +55,11 @@ func New(data json.RawMessage, _, host string,
 var tokenRegex = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$`)
 
 func (p *Provider) isValid() error {
-	if !tokenRegex.MatchString(p.token) {
+	switch {
+	case !tokenRegex.MatchString(p.token):
 		return fmt.Errorf("%w: token %q does not match regex %q",
 			errors.ErrTokenNotValid, p.token, tokenRegex)
-	}
-	switch p.host {
-	case "@", "*":
+	case p.host == "@", p.host == "*":
 		return fmt.Errorf("%w: %q is not valid",
 			errors.ErrHostOnlySubdomain, p.host)
 	}
@@ -114,7 +113,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("verbose", "true")
 	values.Set("domains", p.host)
 	values.Set("token", p.token)
-	if !p.useProviderIP {
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if !useProviderIP {
 		if ip.Is6() {
 			values.Set("ipv6", ip.String())
 		} else {
@@ -163,7 +163,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 			return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoIP)
 		}
 		newIP = ips[0]
-		if !p.useProviderIP && newIP.Compare(ip) != 0 {
+		if !useProviderIP && newIP.Compare(ip) != 0 {
 			return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
 				errors.ErrIPReceivedMismatch, ip, newIP)
 		}

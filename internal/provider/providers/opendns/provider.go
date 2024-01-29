@@ -114,7 +114,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	values := url.Values{}
 	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
-	if !p.useProviderIP {
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if !useProviderIP {
 		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()
@@ -148,7 +149,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	newIP, err = netip.ParseAddr(responseIPString)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
-	} else if !p.useProviderIP && newIP.Compare(ip) != 0 {
+	} else if !useProviderIP && newIP.Compare(ip) != 0 {
 		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
 			errors.ErrIPReceivedMismatch, ip, newIP)
 	}

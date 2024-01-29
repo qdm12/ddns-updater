@@ -118,7 +118,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("user", p.username)
 	values.Set("pwd", p.password)
 	values.Set("host", utils.BuildURLQueryHostname(p.host, p.domain))
-	if !p.useProviderIP {
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if !useProviderIP {
 		ipKey := "ip"
 		if p.dualStack && ip.Is6() { // ipv6 update for dual stack
 			ipKey = "ip6"

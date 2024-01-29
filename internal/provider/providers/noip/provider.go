@@ -118,7 +118,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	values := url.Values{}
 	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
-	if !p.useProviderIP {
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if !useProviderIP {
 		if ip.Is6() {
 			values.Set("myipv6", ip.String())
 		} else {
@@ -177,12 +178,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		ips = ipextract.IPv6(s)
 	}
 
-	if !p.useProviderIP && len(ips) == 0 {
+	if !useProviderIP && len(ips) == 0 {
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoIP)
 	}
 
 	newIP = ips[0]
-	if !p.useProviderIP && ip.Compare(newIP) != 0 {
+	if !useProviderIP && ip.Compare(newIP) != 0 {
 		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
 			errors.ErrIPReceivedMismatch, ip, newIP)
 	}

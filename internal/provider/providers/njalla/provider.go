@@ -105,7 +105,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("h", utils.BuildURLQueryHostname(p.host, p.domain))
 	values.Set("k", p.key)
 	updatingIP6 := ip.Is6()
-	if p.useProviderIP {
+	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
+	if useProviderIP {
 		values.Set("auto", "")
 	} else {
 		if updatingIP6 {
@@ -154,7 +155,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		newIP, err = netip.ParseAddr(ipString)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
-		} else if !p.useProviderIP && ip.Compare(newIP) != 0 {
+		} else if !useProviderIP && ip.Compare(newIP) != 0 {
 			return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
 				errors.ErrIPReceivedMismatch, ip, newIP)
 		}

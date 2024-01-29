@@ -13,7 +13,7 @@
       "host": "@",
       "name": "something",
       "username": "username",
-      "password": "password",
+      "key": "key",
       "ip_version": "ipv4"
     }
   ]

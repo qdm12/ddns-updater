@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
+	"net/url"
+	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -19,7 +22,7 @@ type Provider struct {
 	host      string
 	ipVersion ipversion.IPVersion
 	username  string
-	password  string
+	key       string
 	name      string
 }
 
@@ -27,7 +30,8 @@ func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion) (p *Provider, err error) {
 	extraSettings := struct {
 		Username string `json:"username"`
-		Password string `json:"password"`
+		Password string `json:"password"` // retro-compatibility
+		Key      string `json:"key"`
 		Name     string `json:"name"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
@@ -37,12 +41,16 @@ func New(data json.RawMessage, domain, host string,
 	if host == "" {
 		host = "@" // default
 	}
+	if extraSettings.Password != "" { // retro-compatibility
+		extraSettings.Key = extraSettings.Password
+	}
+
 	p = &Provider{
 		domain:    domain,
 		host:      host,
 		ipVersion: ipVersion,
 		username:  extraSettings.Username,
-		password:  extraSettings.Password,
+		key:       extraSettings.Key,
 		name:      extraSettings.Name,
 	}
 	err = p.isValid()
@@ -56,8 +64,8 @@ func (p *Provider) isValid() error {
 	switch {
 	case p.username == "":
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
-	case p.password == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+	case p.key == "":
+		return fmt.Errorf("%w", errors.ErrKeyNotSet)
 	case p.name == "":
 		return fmt.Errorf("%w", errors.ErrNameNotSet)
 	}
@@ -98,33 +106,51 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	aIDs, aaaaIDs, err := p.list(ctx, client)
+	u := url.URL{
+		Scheme: "https",
+		Host:   "dondns.dondominio.com",
+		Path:   "/json/",
+		RawQuery: url.Values{
+			"user":   {p.username},
+			"apikey": {p.key},
+			"host":   {p.BuildDomainName()},
+			"ip":     {ip.String()},
+			"lang":   {"en"},
+		}.Encode(),
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("listing records: %w", err)
+		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
+	}
+	headers.SetUserAgent(request)
+	headers.SetAccept(request, "application/json")
+
+	response, err := client.Do(request)
+	if err != nil {
+		return netip.Addr{}, err
 	}
 
-	recordType := constants.A
-	ids := aIDs
-	if ip.Is6() {
-		recordType = constants.AAAA
-		ids = aaaaIDs
+	var data struct {
+		Success  bool     `json:"success"`
+		Messages []string `json:"messages"`
+	}
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&data)
+	if err != nil {
+		_ = response.Body.Close()
+		return netip.Addr{}, fmt.Errorf("decoding response body: %w", err)
 	}
 
-	if len(ids) == 0 {
-		err = p.create(ctx, client, ip)
-		if err != nil {
-			return netip.Addr{}, fmt.Errorf("creating %s record for %s: %w",
-				recordType, p.BuildDomainName(), err)
-		}
-		return ip, nil
+	err = response.Body.Close()
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("closing response body: %w", err)
 	}
 
-	for _, id := range ids {
-		err = p.update(ctx, client, id, ip)
-		if err != nil {
-			return netip.Addr{}, fmt.Errorf("updating %s record for %s: %w",
-				recordType, p.BuildDomainName(), err)
-		}
+	if !data.Success {
+		_ = response.Body.Close()
+		return netip.Addr{}, fmt.Errorf("%w: %s",
+			errors.ErrUnsuccessful, strings.Join(data.Messages, ", "))
 	}
 
 	return ip, nil

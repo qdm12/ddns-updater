@@ -15,7 +15,7 @@ func apiCall(ctx context.Context, client *http.Client,
 	path string, requestData any) (responseData json.RawMessage, err error) {
 	u := url.URL{
 		Scheme: "https",
-		Host:   "api.dondominio.com",
+		Host:   "simple-api.dondominio.net",
 		Path:   path,
 	}
 

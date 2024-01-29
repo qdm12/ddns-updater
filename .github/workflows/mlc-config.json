@@ -22,7 +22,7 @@
       "pattern": "https://www.linode.com/docs/products/tools/api/guides/manage-api-tokens/"
     }
   ],
-  "timeout": "5s",
+  "timeout": "20s",
   "retryOn429": false,
   "fallbackRetryDelay": "30s",
   "aliveStatusCodes": [

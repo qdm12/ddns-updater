@@ -19,10 +19,10 @@ import (
 )
 
 type Provider struct {
-	username      string
-	host          string
 	domain        string
+	host          string
 	ipVersion     ipversion.IPVersion
+	username      string
 	password      string
 	useProviderIP bool
 	ttl           uint
@@ -33,7 +33,6 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
-		Domain        string `json:"domain"`
 		TTL           uint   `json:"ttl"`
 		UseProviderIP bool   `json:"provider_ip"`
 	}{}
@@ -43,12 +42,12 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	}
 
 	p = &Provider{
+		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
-		domain:        extraSettings.Domain,
 		ttl:           extraSettings.TTL,
 	}
 	err = p.isValid()

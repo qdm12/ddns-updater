@@ -57,15 +57,16 @@ func New(data json.RawMessage, domain, host string,
 }
 
 func (p *Provider) isValid() error {
-	if p.token != "" {
-		return nil
+	if p.token == "" {
+		switch {
+		case p.user == "":
+			return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+		case p.password == "":
+			return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+		}
 	}
-	switch {
-	case p.user == "":
-		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
-	case p.password == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
-	case p.host == "*":
+
+	if p.host == "*" {
 		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}
 	return nil

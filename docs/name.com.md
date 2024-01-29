@@ -14,7 +14,9 @@
       "domain": "domain.com",
       "host": "@",
       "username": "username",
-      "token": "token"
+      "token": "token",
+      "ttl": 300,
+      "ip_version": "ipv4"
     }
   ]
 }

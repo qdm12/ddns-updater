@@ -69,6 +69,12 @@ func (r Resolver) ToLinesNode() *gotree.Node {
 
 func (r *Resolver) read(reader *reader.Reader) (err error) {
 	r.Address = reader.Get("RESOLVER_ADDRESS")
+	if r.Address != nil { // conveniently add port 53 if not specified
+		_, port, err := net.SplitHostPort(*r.Address)
+		if err == nil && port == "" {
+			*r.Address += ":53"
+		}
+	}
 	r.Timeout, err = reader.Duration("RESOLVER_TIMEOUT")
 	return err
 }

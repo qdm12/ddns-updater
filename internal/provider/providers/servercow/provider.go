@@ -63,8 +63,7 @@ func (p *Provider) isValid() error {
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case p.password == "":
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
-	}
-	if strings.Contains(p.host, "*") {
+	case strings.Contains(p.host, "*"):
 		return fmt.Errorf("%w", errors.ErrHostWildcard)
 	}
 	return nil

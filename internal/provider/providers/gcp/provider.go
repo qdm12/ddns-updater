@@ -3,6 +3,7 @@ package gcp
 import (
 	"encoding/json"
 	"fmt"
+	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -14,14 +15,16 @@ import (
 type Provider struct {
 	domain      string
 	host        string
+	ipVersion   ipversion.IPVersion
+	ipv6Suffix  netip.Prefix
 	project     string
 	zone        string
 	credentials json.RawMessage
-	ipVersion   ipversion.IPVersion
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion) (p *Provider, err error) {
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
+	p *Provider, err error) {
 	var extraSettings struct {
 		Project     string          `json:"project"`
 		Zone        string          `json:"zone"`
@@ -37,6 +40,7 @@ func New(data json.RawMessage, domain, host string,
 		domain:      domain,
 		host:        host,
 		ipVersion:   ipVersion,
+		ipv6Suffix:  ipv6Suffix,
 		project:     extraSettings.Project,
 		zone:        extraSettings.Zone,
 		credentials: extraSettings.Credentials,
@@ -80,6 +84,10 @@ func (p *Provider) Host() string {
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
+}
+
+func (p *Provider) IPv6Suffix() netip.Prefix {
+	return p.ipv6Suffix
 }
 
 func (p *Provider) Proxied() bool {

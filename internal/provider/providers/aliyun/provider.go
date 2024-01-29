@@ -19,13 +19,15 @@ type Provider struct {
 	domain       string
 	host         string
 	ipVersion    ipversion.IPVersion
+	ipv6Suffix   netip.Prefix
 	accessKeyID  string
 	accessSecret string
 	region       string
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion) (p *Provider, err error) {
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
+	p *Provider, err error) {
 	extraSettings := struct {
 		AccessKeyID  string `json:"access_key_id"`
 		AccessSecret string `json:"access_secret"`
@@ -39,6 +41,7 @@ func New(data json.RawMessage, domain, host string,
 		domain:       domain,
 		host:         host,
 		ipVersion:    ipVersion,
+		ipv6Suffix:   ipv6Suffix,
 		accessKeyID:  extraSettings.AccessKeyID,
 		accessSecret: extraSettings.AccessSecret,
 		region:       "cn-hangzhou",
@@ -77,6 +80,10 @@ func (p *Provider) Host() string {
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
+}
+
+func (p *Provider) IPv6Suffix() netip.Prefix {
+	return p.ipv6Suffix
 }
 
 func (p *Provider) Proxied() bool {

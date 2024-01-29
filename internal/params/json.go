@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"net/netip"
 	"os"
 	"strings"
 
@@ -16,10 +17,11 @@ import (
 )
 
 type commonSettings struct {
-	Provider  string `json:"provider"`
-	Domain    string `json:"domain"`
-	Host      string `json:"host"`
-	IPVersion string `json:"ip_version"`
+	Provider   string       `json:"provider"`
+	Domain     string       `json:"domain"`
+	Host       string       `json:"host"`
+	IPVersion  string       `json:"ip_version"`
+	IPv6Suffix netip.Prefix `json:"ipv6_suffix,omitempty"`
 	// Retro values for warnings
 	IPMethod *string `json:"ip_method,omitempty"`
 	Delay    *uint64 `json:"delay,omitempty"`
@@ -165,10 +167,16 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) 
 		return nil, nil, err
 	}
 
+	if ipVersion != ipversion.IP6 && common.IPv6Suffix.IsValid() {
+		warnings = append(warnings,
+			fmt.Sprintf("IPv6 suffix specified as %s but IP version is %s",
+				common.IPv6Suffix, ipVersion))
+	}
+
 	providers = make([]provider.Provider, len(hosts))
 	for i, host := range hosts {
 		providers[i], err = provider.New(providerName, rawSettings, common.Domain,
-			host, ipVersion)
+			host, ipVersion, common.IPv6Suffix)
 		if err != nil {
 			return nil, warnings, err
 		}

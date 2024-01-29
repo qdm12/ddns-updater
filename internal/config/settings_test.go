@@ -33,8 +33,6 @@ func Test_Settings_String(t *testing.T) {
 |   └── DNS over TLS providers
 |       └── all
 ├── Resolver: use Go default resolver
-├── IPv6
-|   └── Prefix: /128
 ├── Server
 |   ├── Listening address: :8000
 |   └── Root URL: /

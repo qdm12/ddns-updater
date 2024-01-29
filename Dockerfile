@@ -73,7 +73,6 @@ ENV \
     # Core
     CONFIG= \
     PERIOD=5m \
-    IPV6_PREFIX=/128 \
     UPDATE_COOLDOWN_PERIOD=5m \
     PUBLICIP_FETCHERS=all \
     PUBLICIP_HTTP_PROVIDERS=all \

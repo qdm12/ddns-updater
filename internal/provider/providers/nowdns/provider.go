@@ -21,13 +21,15 @@ import (
 type Provider struct {
 	domain        string
 	ipVersion     ipversion.IPVersion
+	ipv6Suffix    netip.Prefix
 	username      string
 	password      string
 	useProviderIP bool
 }
 
 func New(data json.RawMessage, domain string,
-	ipVersion ipversion.IPVersion) (p *Provider, err error) {
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
+	p *Provider, err error) {
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -40,6 +42,7 @@ func New(data json.RawMessage, domain string,
 	p = &Provider{
 		domain:        domain,
 		ipVersion:     ipVersion,
+		ipv6Suffix:    ipv6Suffix,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
@@ -75,6 +78,10 @@ func (p *Provider) Host() string {
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
+}
+
+func (p *Provider) IPv6Suffix() netip.Prefix {
+	return p.ipv6Suffix
 }
 
 func (p *Provider) Proxied() bool {

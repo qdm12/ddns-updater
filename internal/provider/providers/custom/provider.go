@@ -22,6 +22,7 @@ type Provider struct {
 	domain       string
 	host         string
 	ipVersion    ipversion.IPVersion
+	ipv6Suffix   netip.Prefix
 	url          *url.URL
 	ipv4Key      string
 	ipv6Key      string
@@ -29,7 +30,8 @@ type Provider struct {
 }
 
 func New(data json.RawMessage, domain, host string,
-	ipVersion ipversion.IPVersion) (p *Provider, err error) {
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
+	p *Provider, err error) {
 	extraSettings := struct {
 		URL          string        `json:"url"`
 		IPv4Key      string        `json:"ipv4key"`
@@ -50,6 +52,7 @@ func New(data json.RawMessage, domain, host string,
 		domain:       domain,
 		host:         host,
 		ipVersion:    ipVersion,
+		ipv6Suffix:   ipv6Suffix,
 		url:          parsedURL,
 		ipv4Key:      extraSettings.IPv4Key,
 		ipv6Key:      extraSettings.IPv6Key,
@@ -93,6 +96,10 @@ func (p *Provider) Host() string {
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
 	return p.ipVersion
+}
+
+func (p *Provider) IPv6Suffix() netip.Prefix {
+	return p.ipv6Suffix
 }
 
 func (p *Provider) Proxied() bool {

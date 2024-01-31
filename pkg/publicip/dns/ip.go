@@ -57,8 +57,9 @@ func (f *Fetcher) ip(ctx context.Context, network string) (
 	providerData := f.ring.providers[index].data()
 
 	client := &dns.Client{
-		Net:     network + "-tls",
-		Timeout: f.timeout,
+		Net:         network + "-tls",
+		Timeout:     f.timeout,
+		DialTimeout: f.timeout,
 		TLSConfig: &tls.Config{
 			MinVersion: tls.VersionTLS12,
 			ServerName: providerData.TLSName,

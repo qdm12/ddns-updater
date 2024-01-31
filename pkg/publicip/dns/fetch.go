@@ -24,7 +24,7 @@ func fetch(ctx context.Context, client Client, network string,
 	var serverHost string
 	switch network {
 	case "tcp":
-		serverHost = providerData.TLSName
+		serverHost = providerData.Address
 	case "tcp4":
 		serverHost = providerData.IPv4.String()
 	case "tcp6":

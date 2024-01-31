@@ -102,12 +102,12 @@ func Test_fetch(t *testing.T) {
 			ctx := context.Background()
 
 			client := mock_dns.NewMockClient(ctrl)
-			expectedAddress := net.JoinHostPort(providerData.TLSName, "853")
+			expectedAddress := net.JoinHostPort(providerData.Address, "853")
 			client.EXPECT().
 				ExchangeContext(ctx, expectedMessage, expectedAddress).
 				Return(testCase.response, time.Millisecond, testCase.exchangeErr)
 
-			const network = "tcp" // so it picks the TLSName field as the address
+			const network = "tcp" // so it picks the Address field as the address
 			publicIPs, err := fetch(ctx, client, network, providerData)
 
 			if testCase.err != nil {

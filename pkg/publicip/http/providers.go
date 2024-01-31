@@ -82,6 +82,8 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 
 	case ipversion.IP4or6:
 		switch provider { //nolint:exhaustive
+		case Ipify:
+			url = "https://api64.ipify.org"
 		case Google:
 			url = "https://domains.google.com/checkip"
 		case Ifconfig:

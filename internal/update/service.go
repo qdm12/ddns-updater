@@ -263,6 +263,12 @@ func (r *Runner) updateNecessary(ctx context.Context) (errors []error) {
 	now := r.timeNow()
 	recordIDs := r.getRecordIDsToUpdate(ctx, records, ip, ipv4, ipv6, now)
 
+	// Current time is used to set initial states for records already
+	// up to date or in the fail state due to the public IP not found.
+	// No need to have it queried within the next for loop since each
+	// iteration is fast and has no IO involved.
+	now = r.timeNow()
+
 	for i, record := range records {
 		id := uint(i)
 		_, requireUpdate := recordIDs[id]

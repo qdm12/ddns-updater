@@ -310,7 +310,7 @@ func (r *Runner) updateNecessary(ctx context.Context) (errors []error) {
 			updateIP = ipv6WithSuffix(updateIP, record.Provider.IPv6Suffix())
 		}
 		r.logger.Info("Updating record " + record.Provider.String() + " to use " + updateIP.String())
-		err := r.updater.Update(ctx, id, updateIP, r.timeNow())
+		err := r.updater.Update(ctx, id, updateIP)
 		if err != nil {
 			errors = append(errors, err)
 			r.logger.Error(err.Error())

@@ -245,7 +245,7 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 
 	hioClient := healthchecksio.New(client, *config.Health.HealthchecksioUUID)
 
-	updater := update.NewUpdater(db, client, shoutrrrClient, logger)
+	updater := update.NewUpdater(db, client, shoutrrrClient, logger, timeNow)
 	runner := update.NewRunner(db, updater, ipGetter, config.Update.Period,
 		config.Update.Cooldown, logger, resolver, timeNow, hioClient)
 

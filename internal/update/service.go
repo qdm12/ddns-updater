@@ -125,10 +125,10 @@ func (r *Runner) getNewIPs(ctx context.Context, doIP, doIPv4, doIPv6 bool) (
 }
 
 func (r *Runner) getRecordIDsToUpdate(ctx context.Context, records []librecords.Record,
-	ip, ipv4, ipv6 netip.Addr, now time.Time) (recordIDs map[uint]struct{}) {
+	ip, ipv4, ipv6 netip.Addr) (recordIDs map[uint]struct{}) {
 	recordIDs = make(map[uint]struct{})
 	for i, record := range records {
-		shouldUpdate := r.shouldUpdateRecord(ctx, record, ip, ipv4, ipv6, now)
+		shouldUpdate := r.shouldUpdateRecord(ctx, record, ip, ipv4, ipv6)
 		if shouldUpdate {
 			id := uint(i)
 			recordIDs[id] = struct{}{}
@@ -138,7 +138,8 @@ func (r *Runner) getRecordIDsToUpdate(ctx context.Context, records []librecords.
 }
 
 func (r *Runner) shouldUpdateRecord(ctx context.Context, record librecords.Record,
-	ip, ipv4, ipv6 netip.Addr, now time.Time) (update bool) {
+	ip, ipv4, ipv6 netip.Addr) (update bool) {
+	now := r.timeNow()
 	isWithinBanPeriod := record.LastBan != nil && now.Sub(*record.LastBan) < time.Hour
 	isWithinCooldown := now.Sub(record.History.GetSuccessTime()) < r.cooldown
 	if isWithinBanPeriod || isWithinCooldown {
@@ -260,14 +261,13 @@ func (r *Runner) updateNecessary(ctx context.Context) (errors []error) {
 		r.logger.Error(err.Error())
 	}
 
-	now := r.timeNow()
-	recordIDs := r.getRecordIDsToUpdate(ctx, records, ip, ipv4, ipv6, now)
+	recordIDs := r.getRecordIDsToUpdate(ctx, records, ip, ipv4, ipv6)
 
 	// Current time is used to set initial states for records already
 	// up to date or in the fail state due to the public IP not found.
 	// No need to have it queried within the next for loop since each
 	// iteration is fast and has no IO involved.
-	now = r.timeNow()
+	now := r.timeNow()
 
 	for i, record := range records {
 		id := uint(i)

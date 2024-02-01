@@ -119,9 +119,15 @@ func extractAllSettings(jsonBytes []byte) (
 	if err != nil {
 		return nil, nil, fmt.Errorf("%w: %w", errUnmarshalRaw, err)
 	}
+	// TODO(v3): remove retro compatibility with IPV6_PREFIX
+	retroIPv6Suffix, err := getRetroIPv6Suffix()
+	if err != nil {
+		return nil, nil, fmt.Errorf("getting retro-compatible global IPV6 suffix: %w", err)
+	}
 
 	for i, common := range config.CommonSettings {
-		newProvider, newWarnings, err := makeSettingsFromObject(common, rawConfig.Settings[i])
+		newProvider, newWarnings, err := makeSettingsFromObject(common, rawConfig.Settings[i],
+			retroIPv6Suffix)
 		warnings = append(warnings, newWarnings...)
 		if err != nil {
 			return nil, warnings, err
@@ -136,7 +142,8 @@ var (
 	ErrProviderNoLongerSupported = errors.New("provider no longer supported")
 )
 
-func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) (
+func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
+	retroGlobalIPv6Suffix netip.Prefix) (
 	providers []provider.Provider, warnings []string, err error) {
 	if common.Provider == "google" {
 		return nil, nil, fmt.Errorf("%w: %s", ErrProviderNoLongerSupported, common.Provider)
@@ -167,16 +174,21 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) 
 		return nil, nil, err
 	}
 
-	if ipVersion == ipversion.IP4 && common.IPv6Suffix.IsValid() {
+	ipv6Suffix := common.IPv6Suffix
+	if !ipv6Suffix.IsValid() {
+		ipv6Suffix = retroGlobalIPv6Suffix
+	}
+
+	if ipVersion == ipversion.IP4 && ipv6Suffix.IsValid() {
 		warnings = append(warnings,
 			fmt.Sprintf("IPv6 suffix specified as %s but IP version is %s",
-				common.IPv6Suffix, ipVersion))
+				ipv6Suffix, ipVersion))
 	}
 
 	providers = make([]provider.Provider, len(hosts))
 	for i, host := range hosts {
 		providers[i], err = provider.New(providerName, rawSettings, common.Domain,
-			host, ipVersion, common.IPv6Suffix)
+			host, ipVersion, ipv6Suffix)
 		if err != nil {
 			return nil, warnings, err
 		}

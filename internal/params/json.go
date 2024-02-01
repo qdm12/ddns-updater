@@ -167,7 +167,7 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage) 
 		return nil, nil, err
 	}
 
-	if ipVersion != ipversion.IP6 && common.IPv6Suffix.IsValid() {
+	if ipVersion == ipversion.IP4 && common.IPv6Suffix.IsValid() {
 		warnings = append(warnings,
 			fmt.Sprintf("IPv6 suffix specified as %s but IP version is %s",
 				common.IPv6Suffix, ipVersion))

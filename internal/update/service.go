@@ -2,7 +2,6 @@ package update
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/netip"
 	"time"
@@ -220,10 +219,6 @@ func getIPMatchingVersion(ip, ipv4, ipv6 netip.Addr, ipVersion ipversion.IPVersi
 	return netip.Addr{}
 }
 
-var (
-	errUpdateIPNotValid = errors.New("IP to update is not valid")
-)
-
 func setInitialUpToDateStatus(db Database, id uint, updateIP netip.Addr, now time.Time) error {
 	record, err := db.Select(id)
 	if err != nil {
@@ -301,12 +296,8 @@ func (r *Runner) updateNecessary(ctx context.Context) (errors []error) {
 	for id := range recordIDs {
 		record := records[id]
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Provider.IPVersion())
-		if !updateIP.IsValid() {
-			err := fmt.Errorf("getting ip matching ip version: %w", errUpdateIPNotValid)
-			errors = append(errors, err)
-			r.logger.Error(err.Error())
-			continue
-		} else if updateIP.Is6() {
+		// Note: each record id has a matching valid public IP address.
+		if updateIP.Is6() {
 			updateIP = ipv6WithSuffix(updateIP, record.Provider.IPv6Suffix())
 		}
 		r.logger.Info("Updating record " + record.Provider.String() + " to use " + updateIP.String())

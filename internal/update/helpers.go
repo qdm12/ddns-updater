@@ -3,6 +3,7 @@ package update
 import (
 	"fmt"
 	"net/netip"
+	"strings"
 
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -32,4 +33,20 @@ func (r *Runner) logDebugLookupSkip(hostname, ipKind string, recordIP, ip netip.
 func (r *Runner) logInfoLookupUpdate(hostname, ipKind string, recordIP, ip netip.Addr) {
 	r.logger.Info(fmt.Sprintf("%s address of %s is %s and your %s address  is %s",
 		ipKind, hostname, recordIP, ipKind, ip))
+}
+
+type joinedErrors struct { //nolint:errname
+	errs []error
+}
+
+func (e *joinedErrors) Error() string {
+	errorMessages := make([]string, len(e.errs))
+	for i := range e.errs {
+		errorMessages[i] = e.errs[i].Error()
+	}
+	return strings.Join(errorMessages, ", ")
+}
+
+func (e *joinedErrors) Unwrap() []error {
+	return e.errs
 }

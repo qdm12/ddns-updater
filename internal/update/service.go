@@ -199,6 +199,7 @@ func (r *Runner) shouldUpdateRecordWithLookup(ctx context.Context, hostname stri
 	recordIP = getIPMatchingVersion(recordIP, recordIPv4, recordIPv6, ipVersion)
 
 	if publicIP.IsValid() && publicIP.Compare(recordIP) != 0 {
+		// Note if the recordIP is not valid (not found), we want to update.
 		r.logInfoLookupUpdate(hostname, ipKind, recordIP, publicIP)
 		return true
 	}
@@ -230,14 +231,22 @@ func setInitialUpToDateStatus(db Database, id uint, updateIP netip.Addr, now tim
 	record.Status = constants.UPTODATE
 	record.Time = now
 	if !record.History.GetCurrentIP().IsValid() {
-		if !updateIP.IsValid() {
-			return fmt.Errorf("%w", errUpdateIPNotValid)
-		}
 		record.History = append(record.History, models.HistoryEvent{
 			IP:   updateIP,
 			Time: now,
 		})
 	}
+	return db.Update(id, record)
+}
+
+func setInitialPublicIPFailStatus(db Database, id uint, now time.Time) error {
+	record, err := db.Select(id)
+	if err != nil {
+		return err
+	}
+	record.Status = constants.FAIL
+	record.Message = "public IP address not found"
+	record.Time = now
 	return db.Update(id, record)
 }
 
@@ -260,8 +269,19 @@ func (r *Runner) updateNecessary(ctx context.Context) (errors []error) {
 		if requireUpdate || record.Status != constants.UNSET {
 			continue
 		}
-		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Provider.IPVersion())
-		if updateIP.Is6() {
+
+		ipVersion := record.Provider.IPVersion()
+		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, ipVersion)
+		if !updateIP.IsValid() {
+			// warning was already logged in getRecordIDsToUpdate
+			err := setInitialPublicIPFailStatus(r.db, id, now)
+			if err != nil {
+				err = fmt.Errorf("setting initial public IP fail status: %w", err)
+				errors = append(errors, err)
+				r.logger.Error(err.Error())
+			}
+			continue
+		} else if updateIP.Is6() {
 			updateIP = ipv6WithSuffix(updateIP, record.Provider.IPv6Suffix())
 		}
 

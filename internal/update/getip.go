@@ -2,14 +2,20 @@ package update
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/netip"
 	"strconv"
+	"strings"
 
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type getIPFunc func(ctx context.Context) (ip netip.Addr, err error)
+
+var (
+	ErrIPv6NotSupported = errors.New("IPv6 is not supported on this system")
+)
 
 func tryAndRepeatGettingIP(ctx context.Context, getIPFunc getIPFunc,
 	logger Logger, version ipversion.IPVersion) (ip netip.Addr, err error) {
@@ -30,6 +36,19 @@ func tryAndRepeatGettingIP(ctx context.Context, getIPFunc getIPFunc,
 		}
 		return ip, nil
 	}
+
+	allErrorsAreIPv6NotSupported := true
+	for _, err := range errs {
+		const ipv6NotSupportedMessage = "connect: cannot assign requested address"
+		if !strings.Contains(err.Error(), ipv6NotSupportedMessage) {
+			allErrorsAreIPv6NotSupported = false
+			break
+		}
+	}
+
 	err = &joinedErrors{errs: errs}
+	if allErrorsAreIPv6NotSupported {
+		return ip, fmt.Errorf("%w: after %d tries, errors were: %w", ErrIPv6NotSupported, tries, err)
+	}
 	return ip, fmt.Errorf("%s: after %d tries, errors were: %w", logMessagePrefix, tries, err)
 }

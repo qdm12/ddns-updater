@@ -25,7 +25,7 @@ const (
 	Gandi        models.Provider = "gandi"
 	GCP          models.Provider = "gcp"
 	GoDaddy      models.Provider = "godaddy"
-  GoIP         models.Provider = "goip"
+	GoIP         models.Provider = "goip"
 	HE           models.Provider = "he"
 	Hetzner      models.Provider = "hetzner"
 	Infomaniak   models.Provider = "infomaniak"
@@ -72,7 +72,7 @@ func ProviderChoices() []models.Provider {
 		Gandi,
 		GCP,
 		GoDaddy,
-    GoIP,
+		GoIP,
 		HE,
 		Hetzner,
 		Infomaniak,

@@ -19,7 +19,7 @@ import (
 )
 
 type Provider struct {
-	domain        string
+	subdomain     string
 	ipVersion     ipversion.IPVersion
 	ipv6Suffix    netip.Prefix
 	username      string
@@ -27,7 +27,7 @@ type Provider struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain string,
+func New(data json.RawMessage, subdomain string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
@@ -40,7 +40,7 @@ func New(data json.RawMessage, domain string,
 		return nil, err
 	}
 	p = &Provider{
-		domain:        domain,
+		subdomain:     subdomain,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		username:      extraSettings.Username,
@@ -64,14 +64,16 @@ func (p *Provider) isValid() error {
 	return nil
 }
 
+// "@" necessary to prevent ToString from appending a "." to the FQDN
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, "@", constants.GoIP, p.ipVersion)
+	return utils.ToString(p.subdomain, "@", constants.GoIP, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
-	return p.domain
+	return p.subdomain
 }
 
+// "@" hard coded for compatibility with other provider implementations
 func (p *Provider) Host() string {
 	return "@"
 }
@@ -89,7 +91,7 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return p.domain
+	return p.subdomain
 }
 
 func (p *Provider) HTML() models.HTMLRow {
@@ -109,7 +111,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/setip",
 	}
 	values := url.Values{}
-	values.Set("subdomain", p.domain)
+	values.Set("subdomain", p.subdomain)
 	values.Set("username", p.username)
 	values.Set("password", p.password)
 	values.Set("shortResponse", "true")
@@ -133,8 +135,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	switch response.StatusCode {
 	case http.StatusOK:
-	case http.StatusNoContent:
-		return ip, nil
 	case http.StatusUnauthorized:
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	case http.StatusConflict:
@@ -143,8 +143,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAccountInactive)
 	case http.StatusLengthRequired:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrIPSentMalformed, ip)
-	case http.StatusPreconditionFailed:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrPrivateIPSent, ip)
 	case http.StatusServiceUnavailable:
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrDNSServerSide)
 	default:
@@ -158,12 +156,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	s := string(b)
 	switch {
-	case strings.HasPrefix(s, p.domain+" ("+ip.String()+")"):
+	case strings.HasPrefix(s, p.subdomain+" ("+ip.String()+")"):
 		return ip, nil
-	case strings.HasPrefix(s, "Zugriff verweigert"):
+	case strings.HasPrefix(strings.ToLower(s), "zugriff verweigert"):
 		return netip.Addr{}, fmt.Errorf("Username, Password or Subdomain incorrect")
-	case strings.HasPrefix(s, "Die Datenübertragung war fehlerhaft"):
-		return netip.Addr{}, fmt.Errorf(("IP address incorrectly formatted"))
 	default:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}

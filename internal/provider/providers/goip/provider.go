@@ -19,7 +19,7 @@ import (
 )
 
 type Provider struct {
-	subdomain     string
+	fqdn          string
 	ipVersion     ipversion.IPVersion
 	ipv6Suffix    netip.Prefix
 	username      string
@@ -27,7 +27,7 @@ type Provider struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, subdomain string,
+func New(data json.RawMessage, fqdn string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
@@ -40,7 +40,7 @@ func New(data json.RawMessage, subdomain string,
 		return nil, err
 	}
 	p = &Provider{
-		subdomain:     subdomain,
+		fqdn:          fqdn,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		username:      extraSettings.Username,
@@ -64,16 +64,16 @@ func (p *Provider) isValid() error {
 	return nil
 }
 
-// "@" necessary to prevent ToString from appending a "." to the FQDN
+// "@" necessary to prevent ToString from appending a "." to the FQDN.
 func (p *Provider) String() string {
-	return utils.ToString(p.subdomain, "@", constants.GoIP, p.ipVersion)
+	return utils.ToString(p.fqdn, "@", constants.GoIP, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
-	return p.subdomain
+	return p.fqdn
 }
 
-// "@" hard coded for compatibility with other provider implementations
+// "@" hard coded for compatibility with other provider implementations.
 func (p *Provider) Host() string {
 	return "@"
 }
@@ -91,7 +91,7 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return p.subdomain
+	return p.fqdn
 }
 
 func (p *Provider) HTML() models.HTMLRow {
@@ -111,7 +111,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/setip",
 	}
 	values := url.Values{}
-	values.Set("subdomain", p.subdomain)
+	values.Set("fqdn", p.fqdn)
 	values.Set("username", p.username)
 	values.Set("password", p.password)
 	values.Set("shortResponse", "true")
@@ -156,10 +156,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	s := string(b)
 	switch {
-	case strings.HasPrefix(s, p.subdomain+" ("+ip.String()+")"):
+	case strings.HasPrefix(s, p.fqdn+" ("+ip.String()+")"):
 		return ip, nil
 	case strings.HasPrefix(strings.ToLower(s), "zugriff verweigert"):
-		return netip.Addr{}, fmt.Errorf("Username, Password or Subdomain incorrect")
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrParametersNotValid)
 	default:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}

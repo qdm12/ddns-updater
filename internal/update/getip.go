@@ -20,20 +20,25 @@ var (
 func tryAndRepeatGettingIP(ctx context.Context, getIPFunc getIPFunc,
 	logger Logger, version ipversion.IPVersion) (ip netip.Addr, err error) {
 	const tries = 3
-	logMessagePrefix := "obtaining " + version.String() + " address failed"
+	logMessagePrefix := "obtaining " + version.String() + " address"
 	errs := make([]error, 0, tries)
 	for try := 0; try < tries; try++ {
 		ip, err = getIPFunc(ctx)
 		if err != nil {
 			errs = append(errs, err)
 			logger.Debug(logMessagePrefix + ": try " + strconv.Itoa(try+1) + " of " +
-				strconv.Itoa(tries) + ": " + err.Error())
+				strconv.Itoa(tries) + " failed: " + err.Error())
 			continue
+		} else if try == 0 {
+			return ip, nil
 		}
-		if try > 0 {
-			logger.Info(logMessagePrefix + ": succeeded after " +
-				strconv.Itoa(try+1) + " tries")
+
+		tryWord := "try"
+		if try > 1 {
+			tryWord = "tries"
 		}
+		logger.Info(logMessagePrefix + " succeeded after " +
+			strconv.Itoa(try) + " failed " + tryWord)
 		return ip, nil
 	}
 

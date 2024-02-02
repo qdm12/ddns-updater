@@ -139,11 +139,21 @@ func (r *Runner) getRecordIDsToUpdate(ctx context.Context, records []librecords.
 func (r *Runner) shouldUpdateRecord(ctx context.Context, record librecords.Record,
 	ip, ipv4, ipv6 netip.Addr) (update bool) {
 	now := r.timeNow()
-	isWithinBanPeriod := record.LastBan != nil && now.Sub(*record.LastBan) < time.Hour
+
 	isWithinCooldown := now.Sub(record.History.GetSuccessTime()) < r.cooldown
-	if isWithinBanPeriod || isWithinCooldown {
-		domain := record.Provider.BuildDomainName()
-		r.logger.Debug("record " + domain + " is within ban period or cooldown period, skipping update")
+	if isWithinCooldown {
+		r.logger.Debug(fmt.Sprintf(
+			"record %s is within cooldown period of %s, skipping update",
+			recordToLogString(record), r.cooldown))
+		return false
+	}
+
+	const banPeriod = time.Hour
+	isWithinBanPeriod := record.LastBan != nil && now.Sub(*record.LastBan) < banPeriod
+	if isWithinBanPeriod {
+		r.logger.Info(fmt.Sprintf(
+			"record %s is within ban period of %s started at %s, skipping update",
+			recordToLogString(record), banPeriod, *record.LastBan))
 		return false
 	}
 

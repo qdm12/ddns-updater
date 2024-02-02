@@ -9,7 +9,7 @@
   "settings": [
     {
       "provider": "goip.de",
-      "subdomain": "subdomain",
+      "fqdn": "mysubdomain.goip.de",
       "username": "username",
       "password": "password",
       "provider_ip": true,
@@ -20,7 +20,7 @@
 
 ### Compulsory parameters
 
-- `"subdomain"`
+- `"subdomain"` is the full FQDN of your ddns address. sample.goip.de or something.goip.it
 - `"username"` is your goip.de username listed under "Routers"
 - `"password"` is your router account password
 

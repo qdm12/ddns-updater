@@ -65,7 +65,7 @@ func (p *Provider) isValid() error {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain,"@", constants.GoIP, p.ipVersion)
+	return utils.ToString(p.domain, "@", constants.GoIP, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
@@ -100,7 +100,7 @@ func (p *Provider) HTML() models.HTMLRow {
 		IPVersion: p.ipVersion.String(),
 	}
 }
-//https://www.goip.de/setip?username=%5BUser%5D&password=%5BPass%5D&subdomain=%5Bsubdomain.goip.de%5D
+
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -110,9 +110,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	values := url.Values{}
 	values.Set("subdomain", p.domain)
-  values.Set("username", p.username)
-  values.Set("password", p.password)
-  values.Set("shortResponse", "true")
+	values.Set("username", p.username)
+	values.Set("password", p.password)
+	values.Set("shortResponse", "true")
 	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
 	if !useProviderIP {
 		values.Set("ip", ip.String())
@@ -120,7 +120,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	u.RawQuery = values.Encode()
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
-  fmt.Println(request)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
 	}
@@ -158,11 +157,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 	s := string(b)
-  fmt.Println("Start:" + s + ":End")
 	switch {
-  case strings.HasPrefix(s, p.domain + " (" + ip.String() + ")"):
-    fmt.Println("All good")
-    return ip, nil
+	case strings.HasPrefix(s, p.domain+" ("+ip.String()+")"):
+		return ip, nil
+	case strings.HasPrefix(s, "Zugriff verweigert"):
+		return netip.Addr{}, fmt.Errorf("Username, Password or Subdomain incorrect")
+	case strings.HasPrefix(s, "Die Datenübertragung war fehlerhaft"):
+		return netip.Addr{}, fmt.Errorf(("IP address incorrectly formatted"))
 	default:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}

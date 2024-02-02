@@ -206,6 +206,14 @@ func validateHTTPIPProviders(providerStrings []string,
 	}
 
 	for _, providerString := range providerStrings {
+		if providerString == "noip" {
+			// NoIP is no longer supported because the echo service
+			// only works over plaintext HTTP and could be tempered with.
+			// Silently discard it and it will default to another HTTP IP
+			// echo service.
+			continue
+		}
+
 		// Custom URL check
 		url, err := url.Parse(providerString)
 		if err == nil && url != nil && url.Scheme == "https" {

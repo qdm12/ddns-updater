@@ -38,16 +38,6 @@ func Test_SetProvidersIP(t *testing.T) {
 				providersIP: []Provider{Google},
 			},
 		},
-		"bad provider for IP version": {
-			initialSettings: settings{
-				providersIP: []Provider{Ifconfig},
-			},
-			providers: []Provider{Noip},
-			expectedSettings: settings{
-				providersIP: []Provider{Ifconfig},
-			},
-			err: errors.New(`provider does not support IP version: "noip" for version ipv4 or ipv6`),
-		},
 	}
 
 	for name, testCase := range testCases {
@@ -81,13 +71,13 @@ func Test_SetProvidersIP4(t *testing.T) {
 		expectedSettings settings
 		err              error
 	}{
-		"NoIP": {
+		"Ipify": {
 			initialSettings: settings{
 				providersIP4: []Provider{Ipify},
 			},
-			providers: []Provider{Noip},
+			providers: []Provider{Ipify},
 			expectedSettings: settings{
-				providersIP4: []Provider{Noip},
+				providersIP4: []Provider{Ipify},
 			},
 		},
 		"bad provider for IP version": {
@@ -133,13 +123,13 @@ func Test_SetProvidersIP6(t *testing.T) {
 		expectedSettings settings
 		err              error
 	}{
-		"NoIP": {
+		"Ipify": {
 			initialSettings: settings{
 				providersIP6: []Provider{Ipify},
 			},
-			providers: []Provider{Noip},
+			providers: []Provider{Ipify},
 			expectedSettings: settings{
-				providersIP6: []Provider{Noip},
+				providersIP6: []Provider{Ipify},
 			},
 		},
 		"bad provider for IP version": {

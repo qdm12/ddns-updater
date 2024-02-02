@@ -16,7 +16,6 @@ const (
 	Ifconfig Provider = "ifconfig"
 	Ipify    Provider = "ipify"
 	Ipinfo   Provider = "ipinfo"
-	Noip     Provider = "noip"
 )
 
 func ListProviders() []Provider {
@@ -25,7 +24,6 @@ func ListProviders() []Provider {
 		Ifconfig,
 		Ipify,
 		Ipinfo,
-		Noip,
 	}
 }
 
@@ -65,23 +63,17 @@ func ValidateProvider(provider Provider, version ipversion.IPVersion) error {
 func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) {
 	switch version {
 	case ipversion.IP4:
-		switch provider { //nolint:exhaustive
-		case Ipify:
+		if provider == Ipify {
 			url = "https://api.ipify.org"
-		case Noip:
-			url = "http://ip1.dynupdate.no-ip.com"
 		}
 
 	case ipversion.IP6:
-		switch provider { //nolint:exhaustive
-		case Ipify:
+		if provider == Ipify {
 			url = "https://api6.ipify.org"
-		case Noip:
-			url = "http://ip1.dynupdate6.no-ip.com"
 		}
 
 	case ipversion.IP4or6:
-		switch provider { //nolint:exhaustive
+		switch provider {
 		case Ipify:
 			url = "https://api64.ipify.org"
 		case Google:

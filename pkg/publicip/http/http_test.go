@@ -29,11 +29,11 @@ func Test_New(t *testing.T) {
 				},
 				ip4: &urlsRing{
 					banned: map[int]string{},
-					urls:   []string{"http://ip1.dynupdate.no-ip.com"},
+					urls:   []string{"https://api.ipify.org"},
 				},
 				ip6: &urlsRing{
 					banned: map[int]string{},
-					urls:   []string{"http://ip1.dynupdate6.no-ip.com"},
+					urls:   []string{"https://api6.ipify.org"},
 				},
 			},
 		},

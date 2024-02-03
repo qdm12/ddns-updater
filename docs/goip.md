@@ -8,7 +8,7 @@
 {
   "settings": [
     {
-      "provider": "goip.de",
+      "provider": "goip",
       "domain": "goip.de",
       "host": "mysubdomain",
       "username": "username",

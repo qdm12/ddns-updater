@@ -256,6 +256,7 @@ This allows you not to be blocked for making too many requests.
 You can otherwise customize it with the following:
 
 - `PUBLICIP_HTTP_PROVIDERS` gets your public IPv4 or IPv6 address. It can be one or more of the following:
+  - `ipify` using [https://api64.ipify.org](https://api64.ipify.org)
   - `ifconfig` using [https://ifconfig.io/ip](https://ifconfig.io/ip)
   - `ipinfo` using [https://ipinfo.io/ip](https://ipinfo.io/ip)
   - `google` using [https://domains.google.com/checkip](https://domains.google.com/checkip)

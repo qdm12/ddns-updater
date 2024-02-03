@@ -147,7 +147,7 @@ func (p *PubIP) ToDNSPOptions() (options []dns.Option) {
 		}
 	}
 
-	providers := make([]dns.Provider, 0, len(p.HTTPIPProviders))
+	providers := make([]dns.Provider, 0, len(uniqueProviders))
 	for providerString := range uniqueProviders {
 		providers = append(providers, dns.Provider(providerString))
 	}

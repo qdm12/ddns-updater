@@ -114,6 +114,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// See https://www.goip.de/update-url.html
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{
 		Scheme: "https",
@@ -126,13 +127,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("username", p.username)
 	values.Set("password", p.password)
 	values.Set("shortResponse", "true")
-	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
-	if !useProviderIP {
-		if ip.Is4() {
+	if ip.Is4() {
+		if !p.useProviderIP {
 			values.Set("ip", ip.String())
-		} else {
-			values.Set("ip6", ip.String())
 		}
+	} else {
+		// IPv6 cannot be automatically detected
+		values.Set("ip6", ip.String())
 	}
 	u.RawQuery = values.Encode()
 

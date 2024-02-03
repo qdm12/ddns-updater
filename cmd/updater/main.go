@@ -37,14 +37,14 @@ import (
 var (
 	version = "unknown"
 	commit  = "unknown"
-	created = "an unknown date"
+	date    = "an unknown date"
 )
 
 func main() {
 	buildInfo := models.BuildInformation{
 		Version: version,
 		Commit:  commit,
-		Created: created,
+		Date:    date,
 	}
 	logger := log.New()
 
@@ -125,7 +125,7 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		Emails:       []string{"quentin.mcgaw@gmail.com"},
 		Version:      buildInfo.Version,
 		Commit:       buildInfo.Commit,
-		BuildDate:    buildInfo.Created,
+		BuildDate:    buildInfo.Date,
 		Announcement: "Public IP dns provider GOOGLE, see https://github.com/qdm12/ddns-updater/issues/492",
 		AnnounceExp:  announcementExp,
 		// Sponsor information

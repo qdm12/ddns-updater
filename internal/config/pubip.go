@@ -147,7 +147,7 @@ func (p *PubIP) ToDNSPOptions() (options []dns.Option) {
 		}
 	}
 
-	providers := make([]dns.Provider, 0, len(p.HTTPIPProviders))
+	providers := make([]dns.Provider, 0, len(uniqueProviders))
 	for providerString := range uniqueProviders {
 		providers = append(providers, dns.Provider(providerString))
 	}
@@ -162,7 +162,7 @@ var (
 	ErrNoPublicIPDNSProvider = errors.New("no public IP DNS provider specified")
 )
 
-func (p *PubIP) validateDNSProviders() (err error) {
+func (p PubIP) validateDNSProviders() (err error) {
 	if len(p.DNSProviders) == 0 {
 		return fmt.Errorf("%w", ErrNoPublicIPDNSProvider)
 	}
@@ -176,15 +176,15 @@ func (p *PubIP) validateDNSProviders() (err error) {
 	return validate.AreAllOneOf(p.DNSProviders, validChoices)
 }
 
-func (p *PubIP) validateHTTPIPProviders() (err error) {
+func (p PubIP) validateHTTPIPProviders() (err error) {
 	return validateHTTPIPProviders(p.HTTPIPProviders, ipversion.IP4or6)
 }
 
-func (p *PubIP) validateHTTPIPv4Providers() (err error) {
+func (p PubIP) validateHTTPIPv4Providers() (err error) {
 	return validateHTTPIPProviders(p.HTTPIPv4Providers, ipversion.IP4)
 }
 
-func (p *PubIP) validateHTTPIPv6Providers() (err error) {
+func (p PubIP) validateHTTPIPv6Providers() (err error) {
 	return validateHTTPIPProviders(p.HTTPIPv6Providers, ipversion.IP6)
 }
 
@@ -206,6 +206,14 @@ func validateHTTPIPProviders(providerStrings []string,
 	}
 
 	for _, providerString := range providerStrings {
+		if providerString == "noip" {
+			// NoIP is no longer supported because the echo service
+			// only works over plaintext HTTP and could be tempered with.
+			// Silently discard it and it will default to another HTTP IP
+			// echo service.
+			continue
+		}
+
 		// Custom URL check
 		url, err := url.Parse(providerString)
 		if err == nil && url != nil && url.Scheme == "https" {

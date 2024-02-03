@@ -5,6 +5,7 @@ import (
 	"net/netip"
 	"strings"
 
+	"github.com/qdm12/ddns-updater/internal/records"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -13,6 +14,12 @@ func ipVersionToIPKind(version ipversion.IPVersion) (kind string) {
 		return "IP"
 	}
 	return version.String()
+}
+
+func recordToLogString(record records.Record) string {
+	return fmt.Sprintf("%s (%s)",
+		record.Provider.BuildDomainName(),
+		record.Provider.IPVersion())
 }
 
 func (r *Runner) logDebugNoLookupSkip(hostname, ipKind string, lastIP, ip netip.Addr) {

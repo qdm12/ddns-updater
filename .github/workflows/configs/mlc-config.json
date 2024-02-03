@@ -20,6 +20,9 @@
     },
     {
       "pattern": "https://www.linode.com/docs/products/tools/api/guides/manage-api-tokens/"
+    },
+    {
+      "pattern": "https://ipv6.ipleak.net/json"
     }
   ],
   "timeout": "20s",

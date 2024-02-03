@@ -19,6 +19,7 @@ import (
 )
 
 type Provider struct {
+	domain        string
 	host          string
 	ipVersion     ipversion.IPVersion
 	ipv6Suffix    netip.Prefix
@@ -27,9 +28,15 @@ type Provider struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, host string,
+const defaultDomain = "goip.de"
+
+func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
+	if domain == "" {
+		domain = defaultDomain
+	}
+
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -40,6 +47,7 @@ func New(data json.RawMessage, host string,
 		return nil, err
 	}
 	p = &Provider{
+		domain:        domain,
 		host:          host,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
@@ -60,25 +68,25 @@ func (p *Provider) isValid() error {
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case p.password == "":
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
-	case !(strings.HasSuffix(p.host, ".goip.de") || strings.HasSuffix(p.host, ".goip.it")):
-		fmt.Println(strings.HasSuffix(p.host, ".goip.de"))
-		return fmt.Errorf("%w", errors.ErrURLNotSet)
+	case p.domain != defaultDomain && p.domain != "goip.it":
+		return fmt.Errorf(`%w: %q must be "goip.de" or "goip.it"`,
+			errors.ErrDomainNotValid, p.domain)
+	case p.host == "@" || p.host == "*":
+		return fmt.Errorf("%w: host %q is not valid", errors.ErrHostOnlySubdomain, p.host)
 	}
 	return nil
 }
 
-// "@" necessary to prevent ToString from appending a "." to the host.
 func (p *Provider) String() string {
-	return utils.ToString(p.host, "@", constants.GoIP, p.ipVersion)
+	return utils.ToString(p.host, p.domain, constants.GoIP, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
-	return "goip.de"
+	return p.domain
 }
 
-// "@" hard coded for compatibility with other provider implementations.
 func (p *Provider) Host() string {
-	return "@"
+	return p.host
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -94,14 +102,14 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return p.host
+	return utils.BuildDomainName(p.host, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
 		Host:      p.Host(),
-		Provider:  "<a href=\"https://www.goip.de/\">GoIP.de</a>",
+		Provider:  "<a href=\"https://www." + p.domain + "/\">" + p.domain + "</a>",
 		IPVersion: p.ipVersion.String(),
 	}
 }
@@ -114,7 +122,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/setip",
 	}
 	values := url.Values{}
-	values.Set("host", p.host)
+	values.Set("host", p.BuildDomainName())
 	values.Set("username", p.username)
 	values.Set("password", p.password)
 	values.Set("shortResponse", "true")
@@ -159,7 +167,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	s := string(b)
 	switch {
-	case strings.HasPrefix(s, p.host+" ("+ip.String()+")"):
+	case strings.HasPrefix(s, p.BuildDomainName()+" ("+ip.String()+")"):
 		return ip, nil
 	case strings.HasPrefix(strings.ToLower(s), "zugriff verweigert"):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrParametersNotValid)

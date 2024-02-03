@@ -45,3 +45,4 @@ jobs:
           repository: qmcgaw/ddns-updater
           short-description: Container to update DNS records periodically with WebUI for many DNS providers
           readme-filepath: README.md
+          enable-url-completion: true

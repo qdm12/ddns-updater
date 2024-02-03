@@ -27,7 +27,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
 ![GitHub repo size](https://img.shields.io/github/repo-size/qdm12/ddns-updater)
 ![Go version](https://img.shields.io/github/go-mod/go-version/qdm12/ddns-updater)
 
-[![MIT](https://img.shields.io/github/license/qdm12/ddns-updater)](https://github.com/qdm12/ddns-updater/blob/master/LICENSE)
+[![MIT](https://img.shields.io/github/license/qdm12/ddns-updater)](LICENSE)
 ![Visitors count](https://visitor-badge.laobi.icu/badge?page_id=ddns-updater.readme)
 
 ## Features
@@ -133,7 +133,7 @@ The program reads the configuration from a JSON object, either from a file or fr
 
 #### Docker-Compose
 
-You can also use [docker-compose.yml](https://github.com/qdm12/ddns-updater/blob/master/docker-compose.yml) with:
+You can also use [docker-compose.yml](docker-compose.yml) with:
 
 ```sh
 docker-compose up -d
@@ -169,47 +169,47 @@ Start by having the following content in *config.json*, or in your `CONFIG` envi
 For each setting, you need to fill in parameters.
 Check the documentation for your DNS provider:
 
-- [Aliyun](https://github.com/qdm12/ddns-updater/blob/master/docs/aliyun.md)
-- [Cloudflare](https://github.com/qdm12/ddns-updater/blob/master/docs/cloudflare.md)
-- [Custom](https://github.com/qdm12/ddns-updater/blob/master/docs/custom.md)
-- [DDNSS.de](https://github.com/qdm12/ddns-updater/blob/master/docs/ddnss.de.md)
-- [deSEC](https://github.com/qdm12/ddns-updater/blob/master/docs/desec.md)
-- [DigitalOcean](https://github.com/qdm12/ddns-updater/blob/master/docs/digitalocean.md)
-- [DD24](https://github.com/qdm12/ddns-updater/blob/master/docs/dd24.md)
-- [DonDominio](https://github.com/qdm12/ddns-updater/blob/master/docs/dondominio.md)
-- [DNSOMatic](https://github.com/qdm12/ddns-updater/blob/master/docs/dnsomatic.md)
-- [DNSPod](https://github.com/qdm12/ddns-updater/blob/master/docs/dnspod.md)
-- [Dreamhost](https://github.com/qdm12/ddns-updater/blob/master/docs/dreamhost.md)
-- [DuckDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/duckdns.md)
-- [DynDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/dyndns.md)
-- [Dynu](https://github.com/qdm12/ddns-updater/blob/master/docs/dynu.md)
-- [DynV6](https://github.com/qdm12/ddns-updater/blob/master/docs/dynv6.md)
-- [EasyDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/easydns.md)
-- [FreeDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/freedns.md)
-- [Gandi](https://github.com/qdm12/ddns-updater/blob/master/docs/gandi.md)
-- [GCP](https://github.com/qdm12/ddns-updater/blob/master/docs/gcp.md)
-- [GoDaddy](https://github.com/qdm12/ddns-updater/blob/master/docs/godaddy.md)
-- [He.net](https://github.com/qdm12/ddns-updater/blob/master/docs/he.net.md)
-- [Infomaniak](https://github.com/qdm12/ddns-updater/blob/master/docs/infomaniak.md)
-- [INWX](https://github.com/qdm12/ddns-updater/blob/master/docs/inwx.md)
-- [Ionos](https://github.com/qdm12/ddns-updater/blob/master/docs/ionos.md)
-- [Linode](https://github.com/qdm12/ddns-updater/blob/master/docs/linode.md)
-- [LuaDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/luadns.md)
-- [Name.com](https://github.com/qdm12/ddns-updater/blob/master/docs/name.com.md)
-- [Namecheap](https://github.com/qdm12/ddns-updater/blob/master/docs/namecheap.md)
-- [Netcup](https://github.com/qdm12/ddns-updater/blob/master/docs/netcup.md)
-- [NoIP](https://github.com/qdm12/ddns-updater/blob/master/docs/noip.md)
-- [Now-DNS](https://github.com/qdm12/ddns-updater/blob/master/docs/nowdns.md)
-- [Njalla](https://github.com/qdm12/ddns-updater/blob/master/docs/njalla.md)
-- [OpenDNS](https://github.com/qdm12/ddns-updater/blob/master/docs/opendns.md)
-- [OVH](https://github.com/qdm12/ddns-updater/blob/master/docs/ovh.md)
-- [Porkbun](https://github.com/qdm12/ddns-updater/blob/master/docs/porkbun.md)
-- [Selfhost.de](https://github.com/qdm12/ddns-updater/blob/master/docs/selfhost.de.md)
-- [Servercow.de](https://github.com/qdm12/ddns-updater/blob/master/docs/servercow.md)
-- [Spdyn](https://github.com/qdm12/ddns-updater/blob/master/docs/spdyn.md)
-- [Strato.de](https://github.com/qdm12/ddns-updater/blob/master/docs/strato.md)
-- [Variomedia.de](https://github.com/qdm12/ddns-updater/blob/master/docs/variomedia.md)
-- [Zoneedit](https://github.com/qdm12/ddns-updater/blob/master/docs/zoneedit.md)
+- [Aliyun](docs/aliyun.md)
+- [Cloudflare](docs/cloudflare.md)
+- [Custom](docs/custom.md)
+- [DDNSS.de](docs/ddnss.de.md)
+- [deSEC](docs/desec.md)
+- [DigitalOcean](docs/digitalocean.md)
+- [DD24](docs/dd24.md)
+- [DonDominio](docs/dondominio.md)
+- [DNSOMatic](docs/dnsomatic.md)
+- [DNSPod](docs/dnspod.md)
+- [Dreamhost](docs/dreamhost.md)
+- [DuckDNS](docs/duckdns.md)
+- [DynDNS](docs/dyndns.md)
+- [Dynu](docs/dynu.md)
+- [DynV6](docs/dynv6.md)
+- [EasyDNS](docs/easydns.md)
+- [FreeDNS](docs/freedns.md)
+- [Gandi](docs/gandi.md)
+- [GCP](docs/gcp.md)
+- [GoDaddy](docs/godaddy.md)
+- [He.net](docs/he.net.md)
+- [Infomaniak](docs/infomaniak.md)
+- [INWX](docs/inwx.md)
+- [Ionos](docs/ionos.md)
+- [Linode](docs/linode.md)
+- [LuaDNS](docs/luadns.md)
+- [Name.com](docs/name.com.md)
+- [Namecheap](docs/namecheap.md)
+- [Netcup](docs/netcup.md)
+- [NoIP](docs/noip.md)
+- [Now-DNS](docs/nowdns.md)
+- [Njalla](docs/njalla.md)
+- [OpenDNS](docs/opendns.md)
+- [OVH](docs/ovh.md)
+- [Porkbun](docs/porkbun.md)
+- [Selfhost.de](docs/selfhost.de.md)
+- [Servercow.de](docs/servercow.md)
+- [Spdyn](docs/spdyn.md)
+- [Strato.de](docs/strato.md)
+- [Variomedia.de](docs/variomedia.md)
+- [Zoneedit](docs/zoneedit.md)
 
 Note that:
 
@@ -319,7 +319,7 @@ We could do an API call to get the record IP address every period, but that woul
 
 ## Testing
 
-- The automated healthcheck verifies all your records are up to date [using DNS lookups](https://github.com/qdm12/ddns-updater/blob/master/internal/health/check.go#L42)
+- The automated healthcheck verifies all your records are up to date [using DNS lookups](internal/health/check.go#L42)
 - You can also manually check, by:
     1. Going to your DNS management webpage
     1. Setting your record to `127.0.0.1`
@@ -346,14 +346,14 @@ You can use optional build arguments with `--build-arg KEY=VALUE` from the table
 
 ## Development and contributing
 
-- [Contribute with code](https://github.com/qdm12/ddns-updater/blob/master/docs/contributing.md)
+- [Contribute with code](docs/contributing.md)
 - [Github workflows to know what's building](https://github.com/qdm12/ddns-updater/actions)
 - [List of issues and feature requests](https://github.com/qdm12/ddns-updater/issues)
 - [Kanban board](https://github.com/qdm12/ddns-updater/projects/1)
 
 ## License
 
-This repository is under an [MIT license](https://github.com/qdm12/ddns-updater/blob/master/LICENSE)
+This repository is under an [MIT license](LICENSE)
 
 ## Used in external projects
 

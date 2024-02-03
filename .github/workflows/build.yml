@@ -90,7 +90,7 @@ jobs:
     needs: [verify, codeql]
     permissions:
       actions: read
-      contents: read
+      contents: write
       packages: write
     runs-on: ubuntu-latest
     steps:

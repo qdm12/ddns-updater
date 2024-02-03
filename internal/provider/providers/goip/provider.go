@@ -170,7 +170,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case strings.HasPrefix(s, p.BuildDomainName()+" ("+ip.String()+")"):
 		return ip, nil
 	case strings.HasPrefix(strings.ToLower(s), "zugriff verweigert"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrParametersNotValid)
+		return netip.Addr{}, fmt.Errorf("%w (access denied)", errors.ErrBadRequest)
 	default:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, utils.ToSingleLine(s))
 	}

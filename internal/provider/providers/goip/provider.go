@@ -149,21 +149,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	defer response.Body.Close()
 
-	switch response.StatusCode {
-	case http.StatusOK:
-	case http.StatusUnauthorized:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
-	case http.StatusConflict:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrZoneNotFound)
-	case http.StatusGone:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAccountInactive)
-	case http.StatusLengthRequired:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrIPSentMalformed, ip)
-	case http.StatusServiceUnavailable:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrDNSServerSide)
-	default:
+	if response.StatusCode != http.StatusOK {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode,
+			utils.BodyToSingleLine(response.Body))
 	}
 
 	b, err := io.ReadAll(response.Body)
@@ -175,7 +164,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case strings.HasPrefix(s, p.BuildDomainName()+" ("+ip.String()+")"):
 		return ip, nil
 	case strings.HasPrefix(strings.ToLower(s), "zugriff verweigert"):
-		return netip.Addr{}, fmt.Errorf("%w (access denied)", errors.ErrBadRequest)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	default:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, utils.ToSingleLine(s))
 	}

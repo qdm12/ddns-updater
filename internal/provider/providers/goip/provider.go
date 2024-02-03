@@ -19,7 +19,7 @@ import (
 )
 
 type Provider struct {
-	fqdn          string
+	host          string
 	ipVersion     ipversion.IPVersion
 	ipv6Suffix    netip.Prefix
 	username      string
@@ -27,7 +27,7 @@ type Provider struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, fqdn string,
+func New(data json.RawMessage, domain string, host string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
@@ -40,7 +40,7 @@ func New(data json.RawMessage, fqdn string,
 		return nil, err
 	}
 	p = &Provider{
-		fqdn:          fqdn,
+		host:          host,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		username:      extraSettings.Username,
@@ -60,17 +60,20 @@ func (p *Provider) isValid() error {
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case p.password == "":
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+	case !(strings.HasSuffix(p.host, ".goip.de") || strings.HasSuffix(p.host, ".goip.it")):
+		fmt.Println(strings.HasSuffix(p.host, ".goip.de"))
+		return fmt.Errorf("%w", errors.ErrURLNotSet)
 	}
 	return nil
 }
 
-// "@" necessary to prevent ToString from appending a "." to the FQDN.
+// "@" necessary to prevent ToString from appending a "." to the host.
 func (p *Provider) String() string {
-	return utils.ToString(p.fqdn, "@", constants.GoIP, p.ipVersion)
+	return utils.ToString(p.host, "@", constants.GoIP, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
-	return p.fqdn
+	return "goip.de"
 }
 
 // "@" hard coded for compatibility with other provider implementations.
@@ -91,7 +94,7 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return p.fqdn
+	return p.host
 }
 
 func (p *Provider) HTML() models.HTMLRow {
@@ -111,7 +114,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/setip",
 	}
 	values := url.Values{}
-	values.Set("fqdn", p.fqdn)
+	values.Set("host", p.host)
 	values.Set("username", p.username)
 	values.Set("password", p.password)
 	values.Set("shortResponse", "true")
@@ -156,11 +159,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	s := string(b)
 	switch {
-	case strings.HasPrefix(s, p.fqdn+" ("+ip.String()+")"):
+	case strings.HasPrefix(s, p.host+" ("+ip.String()+")"):
 		return ip, nil
 	case strings.HasPrefix(strings.ToLower(s), "zugriff verweigert"):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrParametersNotValid)
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, utils.ToSingleLine(s))
 	}
 }

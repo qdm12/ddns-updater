@@ -23,7 +23,7 @@ var (
 	ErrNameNotSet             = errors.New("name is not set")
 	ErrPasswordNotSet         = errors.New("password is not set")
 	ErrPasswordNotValid       = errors.New("password is not valid")
-	ErrParametersNotValid     = errors.New("Username, Password or FQDN incorrect")
+	ErrParametersNotValid     = errors.New("username, password or host incorrect")
 	ErrSecretNotSet           = errors.New("secret is not set")
 	ErrSuccessRegexNotSet     = errors.New("success regex is not set")
 	ErrTokenNotSet            = errors.New("token is not set")

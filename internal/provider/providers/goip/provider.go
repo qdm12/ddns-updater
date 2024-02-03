@@ -123,7 +123,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/setip",
 	}
 	values := url.Values{}
-	values.Set("host", p.BuildDomainName())
+	values.Set("subdomain", p.BuildDomainName())
 	values.Set("username", p.username)
 	values.Set("password", p.password)
 	values.Set("shortResponse", "true")

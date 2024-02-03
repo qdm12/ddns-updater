@@ -16,6 +16,7 @@ const (
 	Ifconfig Provider = "ifconfig"
 	Ipify    Provider = "ipify"
 	Ipinfo   Provider = "ipinfo"
+	Spdyn    Provider = "spdyn"
 )
 
 func ListProviders() []Provider {
@@ -24,6 +25,7 @@ func ListProviders() []Provider {
 		Ifconfig,
 		Ipify,
 		Ipinfo,
+		Spdyn,
 	}
 }
 
@@ -82,6 +84,8 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 			url = "https://ifconfig.io/ip"
 		case Ipinfo:
 			url = "https://ipinfo.io/ip"
+		case Spdyn:
+			url = "https://checkip.spdyn.de"
 		}
 	}
 

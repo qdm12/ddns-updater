@@ -259,6 +259,7 @@ You can otherwise customize it with the following:
   - `ifconfig` using [https://ifconfig.io/ip](https://ifconfig.io/ip)
   - `ipinfo` using [https://ipinfo.io/ip](https://ipinfo.io/ip)
   - `google` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
+  - `spdyn` using [https://checkip.spdyn.de](https://checkip.spdyn.de/)
   - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
 - `PUBLICIPV4_HTTP_PROVIDERS` gets your public IPv4 address only. It can be one or more of the following:
   - `ipify` using [https://api.ipify.org](https://api.ipify.org)

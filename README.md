@@ -1,6 +1,6 @@
-# Lightweight universal DDNS Updater with Docker and web UI
+# Lightweight universal DDNS Updater program
 
-Light container updating DNS A and/or AAAA records periodically for multiple DNS providers
+Program to keep DNS A and/or AAAA records updated for multiple DNS providers
 
 <img height="200" alt="DDNS Updater logo" src="https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/ddnsgopher.svg">
 
@@ -32,6 +32,8 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
 
 ## Features
 
+- Available as a Docker image [`qmcgaw/ddns-updater`](https://hub.docker.com/r/qmcgaw/ddns-updater) and [`ghcr.io/qdm12/ddns-updater`]((https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater))
+- 🆕 Available as [zero-dependency binaries for Linux, Windows and MacOS](https://github.com/qdm12/ddns-updater/releases)
 - Updates periodically A records for different DNS providers:
   - Aliyun
   - AllInkl
@@ -80,16 +82,41 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
 
 ![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
 
-- 11MB Docker image based on a Go static binary in a Scratch Docker image
-- Persistence with a JSON file *updates.json* to store old IP addresses with change times for each record
-- Docker healthcheck verifying the DNS resolution of your domains
-- Highly configurable
 - Send notifications with [**Shoutrrr**](https://containrrr.dev/shoutrrr/v0.8/services/overview/) using `SHOUTRRR_ADDRESSES`
-- Compatible with `amd64`, `386`, `arm64`, `armv7`, `armv6`, `s390x`, `ppc64le`, `riscv64` CPU architectures.
+- Container (Docker/K8s) specific features:
+  - Lightweight 15MB Docker image based on the Scratch Docker image
+  - Docker healthcheck verifying the DNS resolution of your domains
+  - Images compatible with `amd64`, `386`, `arm64`, `armv7`, `armv6`, `s390x`, `ppc64le`, `riscv64` CPU architectures
+- Persistence with a JSON file *updates.json* to store old IP addresses with change times for each record
 
 ## Setup
 
-The program reads the configuration from a JSON object, either from a file or from an environment variable.
+### Binary programs
+
+1. Download the pre-built program for your platform from the assets of a release in the [releases page](https://github.com/qdm12/ddns-updater/releases). Note this is only available from [release v2.6.0](https://github.com/qdm12/ddns-updater/releases/tag/v2.6.0).
+1. For Linux and MacOS, make the program executable with `chmod +x ddns-updater`.
+1. In the directory where the program is saved, create a directory `data`.
+1. Write a JSON configuration in `data/config.json`, for example:
+
+    ```json
+    {
+        "settings": [
+            {
+                "provider": "namecheap",
+                "domain": "example.com",
+                "host": "@",
+                "password": "e5322165c1d74692bfa6d807100c0310"
+            }
+        ]
+    }
+    ```
+
+    You can find more information in the [configuration section](#configuration) to customize it.
+1. Run the program with `./ddns-updater` (`./ddns-updater.exe` on Windows) or by double-clicking on it.
+1. The following is **optional**.
+    - You can customize the program behavior using either [environment variables](#environment-variables) or flags. For flags, there is a flag corresponding to each environment variable, where it's all lowercase and underscores are replaced with dashes. For example the environment variable `LOG_LEVEL` translates into `--log-level`.
+
+### Container
 
 1. Create a directory of your choice, say *data* with a file named **config.json** inside:
 
@@ -128,27 +155,13 @@ The program reads the configuration from a JSON object, either from a file or fr
     docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data qmcgaw/ddns-updater
     ```
 
-1. (Optional) You can also set your JSON configuration as a single environment variable line (i.e. `{"settings": [{"provider": "namecheap", ...}]}`), which takes precedence over config.json. Note however that if you don't bind mount the `/updater/data` directory, there won't be a persistent database file `/updater/updates.json` but it will still work.
-
-### Next steps
-
-#### Docker-Compose
-
-You can also use [docker-compose.yml](docker-compose.yml) with:
-
-```sh
-docker-compose up -d
-```
-
-You can update the image with `docker pull qmcgaw/ddns-updater`. Other [Docker image tags are available](https://hub.docker.com/repository/docker/qmcgaw/ddns-updater/tags).
-
-#### Kubernetes
-
-Check out the [k8s directory](k8s) for an installation guide and examples.
-
-### GHCR
-
-Images are also added to the Github Container Registry. To use the GHCR container replace `qmcgaw/ddns-updater` to `ghcr.io/qdm12/ddns-updater`, further details are available [here](https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater)
+1. The following is **optional**.
+    - You can customize the program behavior using [environment variables](#environment-variables)
+    - You can use [docker-compose.yml](docker-compose.yml) with `docker-compose up -d`
+    - **Kubernetes**: check out the [k8s directory](k8s) for an installation guide and examples.
+    - Other [Docker image tags are available](https://hub.docker.com/repository/docker/qmcgaw/ddns-updater/tags)
+    - You can update the image with `docker pull qmcgaw/ddns-updater`
+    - You can set your JSON configuration as a single environment variable line (i.e. `{"settings": [{"provider": "namecheap", ...}]}`), which takes precedence over config.json. Note however that if you don't bind mount the `/updater/data` directory, there won't be a persistent database file `/updater/updates.json` but it will still work.
 
 ## Configuration
 
@@ -219,7 +232,7 @@ Note that:
 
 ### Environment variables
 
-🆕 There are now flags equivalent for each variable below, for example `--ipv6-prefix`.
+🆕 There are now flags equivalent for each variable below, for example `--log-level`.
 
 | Environment variable | Default | Description |
 | --- | --- | --- |

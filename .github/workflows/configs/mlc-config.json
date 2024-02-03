@@ -23,6 +23,9 @@
     },
     {
       "pattern": "https://ipv6.ipleak.net/json"
+    },
+    {
+      "pattern": "https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater"
     }
   ],
   "timeout": "20s",

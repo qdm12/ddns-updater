@@ -33,7 +33,7 @@ func New(data json.RawMessage, host string,
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
-		UseProviderIP bool   `json:"providor_ip"`
+		UseProviderIP bool   `json:"provider_ip"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {

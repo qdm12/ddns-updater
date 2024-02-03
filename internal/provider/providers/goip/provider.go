@@ -128,7 +128,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("shortResponse", "true")
 	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
 	if !useProviderIP {
-		values.Set("ip", ip.String())
+		if ip.Is4() {
+			values.Set("ip", ip.String())
+		} else {
+			values.Set("ip6", ip.String())
+		}
 	}
 	u.RawQuery = values.Encode()
 

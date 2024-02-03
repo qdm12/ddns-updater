@@ -27,7 +27,7 @@ type Provider struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain string, host string,
+func New(data json.RawMessage, host string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {

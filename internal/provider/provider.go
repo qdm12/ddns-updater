@@ -118,7 +118,7 @@ func New(providerName models.Provider, data json.RawMessage, domain, host string
 	case constants.GoDaddy:
 		return godaddy.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.GoIP:
-		return goip.New(data, domain, host, ipVersion, ipv6Suffix)
+		return goip.New(data, host, ipVersion, ipv6Suffix)
 	case constants.HE:
 		return he.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Hetzner:

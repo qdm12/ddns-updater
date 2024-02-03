@@ -162,7 +162,7 @@ var (
 	ErrNoPublicIPDNSProvider = errors.New("no public IP DNS provider specified")
 )
 
-func (p *PubIP) validateDNSProviders() (err error) {
+func (p PubIP) validateDNSProviders() (err error) {
 	if len(p.DNSProviders) == 0 {
 		return fmt.Errorf("%w", ErrNoPublicIPDNSProvider)
 	}
@@ -176,15 +176,15 @@ func (p *PubIP) validateDNSProviders() (err error) {
 	return validate.AreAllOneOf(p.DNSProviders, validChoices)
 }
 
-func (p *PubIP) validateHTTPIPProviders() (err error) {
+func (p PubIP) validateHTTPIPProviders() (err error) {
 	return validateHTTPIPProviders(p.HTTPIPProviders, ipversion.IP4or6)
 }
 
-func (p *PubIP) validateHTTPIPv4Providers() (err error) {
+func (p PubIP) validateHTTPIPv4Providers() (err error) {
 	return validateHTTPIPProviders(p.HTTPIPv4Providers, ipversion.IP4)
 }
 
-func (p *PubIP) validateHTTPIPv6Providers() (err error) {
+func (p PubIP) validateHTTPIPv6Providers() (err error) {
 	return validateHTTPIPProviders(p.HTTPIPv6Providers, ipversion.IP6)
 }
 

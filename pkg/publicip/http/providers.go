@@ -17,6 +17,7 @@ const (
 	Ipify    Provider = "ipify"
 	Ipinfo   Provider = "ipinfo"
 	Spdyn    Provider = "spdyn"
+	Ipleak   Provider = "ipleak"
 )
 
 func ListProviders() []Provider {
@@ -26,6 +27,7 @@ func ListProviders() []Provider {
 		Ipify,
 		Ipinfo,
 		Spdyn,
+		Ipleak,
 	}
 }
 
@@ -65,13 +67,19 @@ func ValidateProvider(provider Provider, version ipversion.IPVersion) error {
 func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) {
 	switch version {
 	case ipversion.IP4:
-		if provider == Ipify {
+		switch provider { //nolint:exhaustive
+		case Ipify:
 			url = "https://api.ipify.org"
+		case Ipleak:
+			url = "https://ipv4.ipleak.net/json"
 		}
 
 	case ipversion.IP6:
-		if provider == Ipify {
+		switch provider { //nolint:exhaustive
+		case Ipify:
 			url = "https://api6.ipify.org"
+		case Ipleak:
+			url = "https://ipv6.ipleak.net/json"
 		}
 
 	case ipversion.IP4or6:
@@ -86,6 +94,8 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 			url = "https://ipinfo.io/ip"
 		case Spdyn:
 			url = "https://checkip.spdyn.de"
+		case Ipleak:
+			url = "https://ipleak.net/json"
 		}
 	}
 

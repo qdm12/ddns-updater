@@ -261,11 +261,14 @@ You can otherwise customize it with the following:
   - `ipinfo` using [https://ipinfo.io/ip](https://ipinfo.io/ip)
   - `google` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
   - `spdyn` using [https://checkip.spdyn.de](https://checkip.spdyn.de/)
+  - `ipleak` using [https://ipleak.net/json](https://ipleak.net/json)
   - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
 - `PUBLICIPV4_HTTP_PROVIDERS` gets your public IPv4 address only. It can be one or more of the following:
+  - `ipleak` using [https://ipv4.ipleak.net/json](https://ipv4.ipleak.net/json)
   - `ipify` using [https://api.ipify.org](https://api.ipify.org)
   - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
 - `PUBLICIPV6_HTTP_PROVIDERS` gets your public IPv6 address only. It can be one or more of the following:
+  - `ipleak` using [https://ipv6.ipleak.net/json](https://ipv6.ipleak.net/json)
   - `ipify` using [https://api6.ipify.org](https://api6.ipify.org)
   - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
 - `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see #136). It can be one or more of the following:

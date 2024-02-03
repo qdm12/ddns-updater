@@ -52,6 +52,7 @@ Light container updating DNS A and/or AAAA records periodically for multiple DNS
   - Gandi
   - GCP
   - GoDaddy
+  - GoIP.de
   - He.net
   - Hetzner
   - Infomaniak
@@ -189,6 +190,7 @@ Check the documentation for your DNS provider:
 - [Gandi](docs/gandi.md)
 - [GCP](docs/gcp.md)
 - [GoDaddy](docs/godaddy.md)
+- [GoIP.de](docs/goip.md)
 - [He.net](docs/he.net.md)
 - [Infomaniak](docs/infomaniak.md)
 - [INWX](docs/inwx.md)

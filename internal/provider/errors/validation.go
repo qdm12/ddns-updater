@@ -14,6 +14,7 @@ var (
 	ErrEmailNotSet            = errors.New("email is not set")
 	ErrEmailNotValid          = errors.New("email address is not valid")
 	ErrGCPProjectNotSet       = errors.New("GCP project is not set")
+	ErrDomainNotValid         = errors.New("domain is not valid")
 	ErrHostOnlySubdomain      = errors.New("host can only be a subdomain")
 	ErrHostWildcard           = errors.New(`host cannot be a "*"`)
 	ErrIPv4KeyNotSet          = errors.New("IPv4 key is not set")

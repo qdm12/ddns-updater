@@ -149,6 +149,12 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           push: true
 
+      - name: Delete untagged images on ghcr.io
+        uses: camargo/delete-untagged-action@v1
+        with:
+          github-token: ${{ secrets.DELETE_PACKAGES_TOKEN }}
+          personal-account: true
+
       - if: github.event_name == 'release'
         uses: actions/setup-go@v2
         with:

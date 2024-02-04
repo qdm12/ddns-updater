@@ -53,7 +53,7 @@ func Test_SetProviders(t *testing.T) {
 			expectedSettings: settings{
 				providers: []Provider{Cloudflare},
 			},
-			err: errors.New("unknown provider: invalid"),
+			err: errors.New("unknown public IP echo DNS provider: invalid"),
 		},
 	}
 

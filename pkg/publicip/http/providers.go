@@ -42,7 +42,7 @@ func ListProvidersForVersion(version ipversion.IPVersion) (providers []Provider)
 }
 
 var (
-	ErrUnknownProvider   = errors.New("unknown provider")
+	ErrUnknownProvider   = errors.New("unknown public IP echo HTTP provider")
 	ErrProviderIPVersion = errors.New("provider does not support IP version")
 )
 

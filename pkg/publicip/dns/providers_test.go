@@ -22,7 +22,7 @@ func Test_ValidateProvider(t *testing.T) {
 		},
 		"invalid provider": {
 			provider: Provider("invalid"),
-			err:      errors.New("unknown provider: invalid"),
+			err:      errors.New("unknown public IP echo DNS provider: invalid"),
 		},
 	}
 

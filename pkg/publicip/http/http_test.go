@@ -66,7 +66,7 @@ func Test_New(t *testing.T) {
 				SetProvidersIP(Provider("invalid")),
 			},
 			err:        ErrUnknownProvider,
-			errMessage: "unknown provider: invalid",
+			errMessage: "unknown public IP echo HTTP provider: invalid",
 		},
 	}
 

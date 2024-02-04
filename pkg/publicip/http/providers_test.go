@@ -65,7 +65,7 @@ func Test_ValidateProvider(t *testing.T) {
 		"unknown": {
 			provider: Provider("unknown"),
 			version:  ipversion.IP4,
-			err:      errors.New("unknown provider: unknown"),
+			err:      errors.New("unknown public IP echo HTTP provider: unknown"),
 		},
 	}
 

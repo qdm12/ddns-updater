@@ -22,7 +22,7 @@ func ListProviders() []Provider {
 	}
 }
 
-var ErrUnknownProvider = errors.New("unknown provider")
+var ErrUnknownProvider = errors.New("unknown public IP echo DNS provider")
 
 func ValidateProvider(provider Provider) error {
 	for _, possible := range ListProviders() {

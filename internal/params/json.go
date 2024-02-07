@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"net/netip"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -140,6 +141,8 @@ func extractAllSettings(jsonBytes []byte) (
 
 var (
 	ErrProviderNoLongerSupported = errors.New("provider no longer supported")
+	errHostDomainBlank           = errors.New("\"host\" or \"domain\" blank")
+	errFQDNInvalid               = errors.New("FQDN Invalid")
 )
 
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
@@ -148,8 +151,19 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	if common.Provider == "google" {
 		return nil, nil, fmt.Errorf("%w: %s", ErrProviderNoLongerSupported, common.Provider)
 	}
+	//Probably the best place to validate the "FQDN"
+	FQDN_regex := "^(?i)(@?|[a-z0-9-]+)(\\.[a-z0-9-]{2,})+$"
+	FQDN := (common.Host + "." + common.Domain)
+	match, _ := regexp.MatchString(FQDN_regex, FQDN)
+
+	if (common.Host == "" || common.Domain == "") {
+		return nil, nil, fmt.Errorf("%w", errHostDomainBlank)
+	} else if !match {
+		return nil, nil, fmt.Errorf("%w: %s", errFQDNInvalid, FQDN)
+	}
 
 	providerName := models.Provider(common.Provider)
+
 	if providerName == constants.DuckDNS { // only hosts, no domain
 		if common.Domain != "" { // retro compatibility
 			if common.Host == "" {

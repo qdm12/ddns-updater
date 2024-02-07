@@ -151,12 +151,12 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	if common.Provider == "google" {
 		return nil, nil, fmt.Errorf("%w: %s", ErrProviderNoLongerSupported, common.Provider)
 	}
-	//Probably the best place to validate the "FQDN"
-	FQDN_regex := "^(?i)(@?|[a-z0-9-]+)(\\.[a-z0-9-]{2,})+$"
-	FQDN := (common.Host + "." + common.Domain)
-	match, _ := regexp.MatchString(FQDN_regex, FQDN)
 
-	if (common.Host == "" || common.Domain == "") {
+	FQDNRegex := "^(?i)(@?|[a-z0-9-]+)(\\.[a-z0-9-]{2,})+$"
+	FQDN := (common.Host + "." + common.Domain)
+	match, _ := regexp.MatchString(FQDNRegex, FQDN)
+
+	if common.Host == "" || common.Domain == "" {
 		return nil, nil, fmt.Errorf("%w", errHostDomainBlank)
 	} else if !match {
 		return nil, nil, fmt.Errorf("%w: %s", errFQDNInvalid, FQDN)

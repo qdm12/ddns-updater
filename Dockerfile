@@ -50,6 +50,7 @@ RUN git init && \
     rm -rf .git/
 
 FROM --platform=$BUILDPLATFORM base AS build
+RUN mkdir -p /tmp/data
 ARG VERSION=unknown
 ARG CREATED="an unknown date"
 ARG COMMIT=unknown
@@ -69,6 +70,7 @@ ARG UID=1000
 ARG GID=1000
 USER ${UID}:${GID}
 ENTRYPOINT ["/updater/app"]
+COPY --from=build --chown=${UID}:${GID} /tmp/data /updater/data
 ENV \
     # Core
     CONFIG= \

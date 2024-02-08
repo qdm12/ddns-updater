@@ -98,21 +98,27 @@ func main() {
 
 func _main(ctx context.Context, reader *reader.Reader, args []string, logger log.LoggerInterface,
 	buildInfo models.BuildInformation, timeNow func() time.Time) (err error) {
-	if health.IsClientMode(args) {
-		// Running the program in a separate instance through the Docker
-		// built-in healthcheck, in an ephemeral fashion to query the
-		// long running instance of the program about its status
+	if len(args) > 1 {
+		switch args[1] {
+		case "version", "-version", "--version":
+			fmt.Println(buildInfo.VersionString())
+			return nil
+		case "healthcheck":
+			// Running the program in a separate instance through the Docker
+			// built-in healthcheck, in an ephemeral fashion to query the
+			// long running instance of the program about its status
 
-		var healthSettings config.Health
-		healthSettings.Read(reader)
-		healthSettings.SetDefaults()
-		err = healthSettings.Validate()
-		if err != nil {
-			return fmt.Errorf("health settings: %w", err)
+			var healthSettings config.Health
+			healthSettings.Read(reader)
+			healthSettings.SetDefaults()
+			err = healthSettings.Validate()
+			if err != nil {
+				return fmt.Errorf("health settings: %w", err)
+			}
+
+			client := health.NewClient()
+			return client.Query(ctx, *healthSettings.ServerAddress)
 		}
-
-		client := health.NewClient()
-		return client.Query(ctx, *healthSettings.ServerAddress)
 	}
 
 	announcementExp, err := time.Parse(time.RFC3339, "2023-07-15T00:00:00Z")

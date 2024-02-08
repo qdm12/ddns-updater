@@ -150,7 +150,7 @@ jobs:
           push: true
 
       - if: github.event_name == 'release'
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
           go-version: 1.21
 

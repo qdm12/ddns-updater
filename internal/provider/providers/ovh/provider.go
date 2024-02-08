@@ -189,6 +189,8 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
 		return ip, nil
 	case strings.HasPrefix(s, "good"):
 		return ip, nil
+	case strings.HasPrefix(s, "nohost"):
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	default:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}

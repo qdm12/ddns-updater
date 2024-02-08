@@ -163,7 +163,6 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	}
 
 	providerName := models.Provider(common.Provider)
-
 	if providerName == constants.DuckDNS { // only hosts, no domain
 		if common.Domain != "" { // retro compatibility
 			if common.Host == "" {

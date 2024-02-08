@@ -8,7 +8,6 @@ import (
 	"io/fs"
 	"net/netip"
 	"os"
-  "reflect"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -152,27 +151,22 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	if common.Provider == "google" {
 		return nil, nil, fmt.Errorf("%w: %s", ErrProviderNoLongerSupported, common.Provider)
 	}
-  if ((common.Host != "" && common.Host != "@") && common.Domain != "") {
-    FQDN := common.Host + "." + common.Domain
-    fmt.Println(reflect.TypeOf(common.Host))
-    fmt.Println(len(common.Host))
-    err := domain.Check(FQDN)
-		if err != nil {
-      return nil, nil, fmt.Errorf("%w: %s", errFQDNInvalid, FQDN)
-      }
-	} else if (common.Host == "@" || common.Host == "") && common.Domain != "" {
-      err := domain.Check(common.Domain)
-      if err != nil {
-        return nil, nil, fmt.Errorf("%w: %s", errFQDNInvalid, common.Domain)
-    } 
-  } else if common.Host != "" && common.Host != "@" && common.Domain == "" {
-      FQDN := common.Host + ".test.com"
-      err := domain.Check(FQDN)
-      if err != nil {
-        return nil, nil, fmt.Errorf("%w: %s", errFQDNInvalid, FQDN)
-    }
+  
+  FQDN := ""
+  switch {
+    case (common.Host != "" && common.Host != "@") && common.Domain != "":
+      FQDN = common.Host + "." + common.Domain
+    case (common.Host == "@" || common.Host == "") && common.Domain != "":
+      FQDN = common.Domain
+    case common.Host != "" && common.Host != "@" && common.Domain == "":
+      FQDN = common.Host + ".test.com"
   }
-
+  
+  err = domain.Check(FQDN)
+  if err != nil {
+    return nil, nil, fmt.Errorf("%w: %s", errFQDNInvalid, FQDN)
+  }
+  
 	providerName := models.Provider(common.Provider)
 	if providerName == constants.DuckDNS { // only hosts, no domain
 		if common.Domain != "" { // retro compatibility

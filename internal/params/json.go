@@ -10,12 +10,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/chmike/domain"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
-  "github.com/chmike/domain"
-
 )
 
 type commonSettings struct {
@@ -140,10 +139,7 @@ func extractAllSettings(jsonBytes []byte) (
 	return allProviders, warnings, nil
 }
 
-var (
-	ErrProviderNoLongerSupported = errors.New("provider no longer supported")
-	errFQDNInvalid               = errors.New("FQDN Invalid")
-)
+var ErrProviderNoLongerSupported = errors.New("provider no longer supported")
 
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	retroGlobalIPv6Suffix netip.Prefix) (
@@ -151,22 +147,12 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	if common.Provider == "google" {
 		return nil, nil, fmt.Errorf("%w: %s", ErrProviderNoLongerSupported, common.Provider)
 	}
-  
-  FQDN := ""
-  switch {
-    case (common.Host != "" && common.Host != "@") && common.Domain != "":
-      FQDN = common.Host + "." + common.Domain
-    case (common.Host == "@" || common.Host == "") && common.Domain != "":
-      FQDN = common.Domain
-    case common.Host != "" && common.Host != "@" && common.Domain == "":
-      FQDN = common.Host + ".fakedomain.com"
-  }
-  
-  err = domain.Check(FQDN)
-  if err != nil {
-    return nil, nil, fmt.Errorf("%w: %s", errFQDNInvalid, FQDN)
-  }
-  
+	if common.Domain != "" {
+		err = domain.Check(common.Domain)
+		if err != nil {
+			return nil, nil, fmt.Errorf("validating domain: %w", err)
+		}
+	}
 	providerName := models.Provider(common.Provider)
 	if providerName == constants.DuckDNS { // only hosts, no domain
 		if common.Domain != "" { // retro compatibility

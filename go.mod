@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/breml/rootcerts v0.2.16
+	github.com/chmike/domain v1.0.1
 	github.com/containrrr/shoutrrr v0.8.0
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/golang/mock v1.6.0
@@ -21,7 +22,6 @@ require (
 require (
 	cloud.google.com/go/compute v1.19.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	github.com/chmike/domain v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect

@@ -10,10 +10,6 @@ import (
 	"time"
 )
 
-func IsClientMode(args []string) bool {
-	return len(args) > 1 && args[1] == "healthcheck"
-}
-
 type Client struct {
 	*http.Client
 }

@@ -8,13 +8,15 @@ import (
 	"io/fs"
 	"net/netip"
 	"os"
-	"regexp"
+  "reflect"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
+  "github.com/chmike/domain"
+
 )
 
 type commonSettings struct {
@@ -141,7 +143,6 @@ func extractAllSettings(jsonBytes []byte) (
 
 var (
 	ErrProviderNoLongerSupported = errors.New("provider no longer supported")
-	errHostDomainBlank           = errors.New("\"host\" or \"domain\" blank")
 	errFQDNInvalid               = errors.New("FQDN Invalid")
 )
 
@@ -151,16 +152,26 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	if common.Provider == "google" {
 		return nil, nil, fmt.Errorf("%w: %s", ErrProviderNoLongerSupported, common.Provider)
 	}
-
-	FQDNRegex := "^(?i)(@?|[a-z0-9-]+)(\\.[a-z0-9-]{2,})+$"
-	FQDN := (common.Host + "." + common.Domain)
-	match, _ := regexp.MatchString(FQDNRegex, FQDN)
-
-	if common.Host == "" || common.Domain == "" {
-		return nil, nil, fmt.Errorf("%w", errHostDomainBlank)
-	} else if !match {
-		return nil, nil, fmt.Errorf("%w: %s", errFQDNInvalid, FQDN)
-	}
+  if ((common.Host != "" && common.Host != "@") && common.Domain != "") {
+    FQDN := common.Host + "." + common.Domain
+    fmt.Println(reflect.TypeOf(common.Host))
+    fmt.Println(len(common.Host))
+    err := domain.Check(FQDN)
+		if err != nil {
+      return nil, nil, fmt.Errorf("%w: %s", errFQDNInvalid, FQDN)
+      }
+	} else if (common.Host == "@" || common.Host == "") && common.Domain != "" {
+      err := domain.Check(common.Domain)
+      if err != nil {
+        return nil, nil, fmt.Errorf("%w: %s", errFQDNInvalid, common.Domain)
+    } 
+  } else if common.Host != "" && common.Host != "@" && common.Domain == "" {
+      FQDN := common.Host + ".test.com"
+      err := domain.Check(FQDN)
+      if err != nil {
+        return nil, nil, fmt.Errorf("%w: %s", errFQDNInvalid, FQDN)
+    }
+  }
 
 	providerName := models.Provider(common.Provider)
 	if providerName == constants.DuckDNS { // only hosts, no domain

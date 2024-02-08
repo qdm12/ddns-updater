@@ -10,6 +10,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/breml/rootcerts v0.2.16 h1:yN1TGvicfHx8dKz3OQRIrx/5nE/iN3XT1ibqGbd6urc=
 github.com/breml/rootcerts v0.2.16/go.mod h1:S/PKh+4d1HUn4HQovEB8hPJZO6pUZYrIhmXBhsegfXw=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
+github.com/chmike/domain v1.0.1 h1:ug6h3a7LLAfAecBAysbCXWxP1Jo8iBKWNVDxcs1BNzA=
+github.com/chmike/domain v1.0.1/go.mod h1:h558M2qGKpYRUxHHNyey6puvXkZBjvjmseOla/d1VGQ=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/containrrr/shoutrrr v0.8.0 h1:mfG2ATzIS7NR2Ec6XL+xyoHzN97H8WPjir8aYzJUSec=

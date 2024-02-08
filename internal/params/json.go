@@ -159,7 +159,7 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
     case (common.Host == "@" || common.Host == "") && common.Domain != "":
       FQDN = common.Domain
     case common.Host != "" && common.Host != "@" && common.Domain == "":
-      FQDN = common.Host + ".test.com"
+      FQDN = common.Host + ".fakedomain.com"
   }
   
   err = domain.Check(FQDN)

@@ -115,19 +115,19 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	ipStr := ip.String()
 	recordIDs, err := p.getRecordIDs(ctx, client, recordType)
 	if err != nil {
-		return netip.Addr{}, err
+		return netip.Addr{}, fmt.Errorf("getting record IDs: %w", err)
 	}
 
 	if len(recordIDs) == 0 {
 		// ALIAS record needs to be deleted to allow creating an A record.
 		err = p.deleteALIASRecordIfNeeded(ctx, client)
 		if err != nil {
-			return netip.Addr{}, err
+			return netip.Addr{}, fmt.Errorf("deleting ALIAS record if needed: %w", err)
 		}
 
 		err = p.createRecord(ctx, client, recordType, ipStr)
 		if err != nil {
-			return netip.Addr{}, err
+			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 		}
 		return ip, nil
 	}
@@ -135,7 +135,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	for _, recordID := range recordIDs {
 		err = p.updateRecord(ctx, client, recordType, ipStr, recordID)
 		if err != nil {
-			return netip.Addr{}, err
+			return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 		}
 	}
 

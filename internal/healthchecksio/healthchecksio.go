@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 // New creates a new healthchecks.io client.
@@ -25,13 +26,31 @@ var (
 	ErrStatusCode = errors.New("bad status code")
 )
 
-func (c *Client) Ping(ctx context.Context) (err error) {
+type State string
+
+const (
+	Ok    State = "ok"
+	Start State = "start"
+	Fail  State = "fail"
+	Exit0 State = "0"
+	Exit1 State = "1"
+)
+
+func (c *Client) Ping(ctx context.Context, state State) (err error) {
 	if c.uuid == "" {
 		return nil
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet,
-		"https://hc-ping.com/"+c.uuid, nil)
+	url := url.URL{
+		Scheme: "https",
+		Host:   "hc-ping.com",
+		Path:   "/" + c.uuid,
+	}
+	if state != Ok {
+		url.Path += "/" + string(state)
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
 	if err != nil {
 		return fmt.Errorf("creating request: %w", err)
 	}

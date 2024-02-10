@@ -288,9 +288,12 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 
 	err = shutdownGroup.Shutdown(context.Background())
 	if err != nil {
+		exitHealthchecksio(hioClient, logger, healthchecksio.Exit1)
 		shoutrrrClient.Notify(err.Error())
 		return err
 	}
+
+	exitHealthchecksio(hioClient, logger, healthchecksio.Exit0)
 	return nil
 }
 
@@ -328,5 +331,13 @@ func backupRunLoop(ctx context.Context, done chan<- struct{}, backupPeriod time.
 			timer.Stop()
 			return
 		}
+	}
+}
+
+func exitHealthchecksio(hioClient *healthchecksio.Client,
+	logger log.LoggerInterface, state healthchecksio.State) {
+	err := hioClient.Ping(context.Background(), state)
+	if err != nil {
+		logger.Error(err.Error())
 	}
 }

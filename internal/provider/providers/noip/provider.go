@@ -120,11 +120,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
 	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
 	if !useProviderIP {
-		if ip.Is6() {
-			values.Set("myipv6", ip.String())
-		} else {
-			values.Set("myip", ip.String())
-		}
+		// See https://help.dyn.com/remote-access-api/perform-update/ stating:
+		// This authentication method supports both IPv6 and IPv4 addresses.
+		// Use commas to separate multiple IP addresses in the myip field.
+		values.Set("myip", ip.String())
 	}
 	u.RawQuery = values.Encode()
 

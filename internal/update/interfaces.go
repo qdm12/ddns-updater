@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/netip"
 
+	"github.com/qdm12/ddns-updater/internal/healthchecksio"
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
@@ -40,5 +41,5 @@ type Logger interface {
 }
 
 type HealthchecksIOClient interface {
-	Ping(ctx context.Context) (err error)
+	Ping(ctx context.Context, state healthchecksio.State) (err error)
 }

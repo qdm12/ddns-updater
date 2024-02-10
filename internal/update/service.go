@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
+	"github.com/qdm12/ddns-updater/internal/healthchecksio"
 	"github.com/qdm12/ddns-updater/internal/models"
 	librecords "github.com/qdm12/ddns-updater/internal/records"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -318,7 +319,12 @@ func (r *Runner) updateNecessary(ctx context.Context) (errors []error) {
 		}
 	}
 
-	err := r.hioClient.Ping(ctx)
+	healthchecksIOState := healthchecksio.Ok
+	if len(errors) > 0 {
+		healthchecksIOState = healthchecksio.Fail
+	}
+
+	err := r.hioClient.Ping(ctx, healthchecksIOState)
 	if err != nil {
 		r.logger.Error("pinging healthchecks.io failed: " + err.Error())
 	}

@@ -225,7 +225,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 	return listRecordsResponse.Result[0].ID, false, nil
 }
 
-func (p *Provider) CreateRecord(ctx context.Context, client *http.Client, ip netip.Addr) (recordID string, err error) {
+func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip netip.Addr) (recordID string, err error) {
 	recordType := constants.A
 
 	if ip.Is6() {
@@ -314,7 +314,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	switch {
 	case stderrors.Is(err, errors.ErrReceivedNoResult):
-		identifier, err = p.CreateRecord(ctx, client, ip)
+		identifier, err = p.createRecord(ctx, client, ip)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 		}

@@ -12,12 +12,16 @@ import (
 type Provider string
 
 const (
-	Google   Provider = "google"
-	Ifconfig Provider = "ifconfig"
-	Ipify    Provider = "ipify"
-	Ipinfo   Provider = "ipinfo"
-	Spdyn    Provider = "spdyn"
-	Ipleak   Provider = "ipleak"
+	Google    Provider = "google"
+	Ifconfig  Provider = "ifconfig"
+	Ipify     Provider = "ipify"
+	Ipinfo    Provider = "ipinfo"
+	Spdyn     Provider = "spdyn"
+	Ipleak    Provider = "ipleak"
+	Icanhazip Provider = "icanhazip"
+	Ident     Provider = "ident"
+	Nnev      Provider = "nnev"
+	Wtfismyip Provider = "wtfismyip"
 )
 
 func ListProviders() []Provider {
@@ -28,6 +32,10 @@ func ListProviders() []Provider {
 		Ipinfo,
 		Spdyn,
 		Ipleak,
+		Icanhazip,
+		Ident,
+		Nnev,
+		Wtfismyip,
 	}
 }
 
@@ -72,6 +80,14 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 			url = "https://api.ipify.org"
 		case Ipleak:
 			url = "https://ipv4.ipleak.net/json"
+		case Icanhazip:
+			url = "https://ipv4.icanhazip.com"
+		case Ident:
+			url = "https://v4.ident.me"
+		case Nnev:
+			url = "https://ip4.nnev.de"
+		case Wtfismyip:
+			url = "https://ipv4.wtfismyip.com/text"
 		}
 
 	case ipversion.IP6:
@@ -80,6 +96,14 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 			url = "https://api6.ipify.org"
 		case Ipleak:
 			url = "https://ipv6.ipleak.net/json"
+		case Icanhazip:
+			url = "https://ipv6.icanhazip.com"
+		case Ident:
+			url = "https://v6.ident.me"
+		case Nnev:
+			url = "https://ip6.nnev.de"
+		case Wtfismyip:
+			url = "https://ipv6.wtfismyip.com/text"
 		}
 
 	case ipversion.IP4or6:
@@ -96,6 +120,14 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 			url = "https://checkip.spdyn.de"
 		case Ipleak:
 			url = "https://ipleak.net/json"
+		case Icanhazip:
+			url = "https://icanhazip.com"
+		case Ident:
+			url = "https://ident.me"
+		case Nnev:
+			url = "https://ip.nnev.de"
+		case Wtfismyip:
+			url = "https://wtfismyip.com/text"
 		}
 	}
 

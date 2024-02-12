@@ -277,14 +277,26 @@ You can otherwise customize it with the following:
   - `google` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
   - `spdyn` using [https://checkip.spdyn.de](https://checkip.spdyn.de/)
   - `ipleak` using [https://ipleak.net/json](https://ipleak.net/json)
+  - `icanhazip` using [https://icanhazip.com](https://icanhazip.com)
+  - `ident` using [https://ident.me](https://ident.me)
+  - `nnev` using [https://ip.nnev.de](https://ip.nnev.de)
+  - `wtfismyip` using [https://wtfismyip.com/text](https://wtfismyip.com/text)
   - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
 - `PUBLICIPV4_HTTP_PROVIDERS` gets your public IPv4 address only. It can be one or more of the following:
   - `ipleak` using [https://ipv4.ipleak.net/json](https://ipv4.ipleak.net/json)
   - `ipify` using [https://api.ipify.org](https://api.ipify.org)
+  - `icanhazip` using [https://ipv4.icanhazip.com](https://ipv4.icanhazip.com)
+  - `ident` using [https://v4.ident.me](https://v4.ident.me)
+  - `nnev` using [https://ip4.nnev.de](https://ip4.nnev.de)
+  - `wtfismyip` using [https://ipv4.wtfismyip.com/text](https://ipv4.wtfismyip.com/text)
   - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
 - `PUBLICIPV6_HTTP_PROVIDERS` gets your public IPv6 address only. It can be one or more of the following:
   - `ipleak` using [https://ipv6.ipleak.net/json](https://ipv6.ipleak.net/json)
   - `ipify` using [https://api6.ipify.org](https://api6.ipify.org)
+  - `icanhazip` using [https://ipv6.icanhazip.com](https://ipv6.icanhazip.com)
+  - `ident` using [https://v6.ident.me](https://v6.ident.me)
+  - `nnev` using [https://ip6.nnev.de](https://ip6.nnev.de)
+  - `wtfismyip` using [https://ipv6.wtfismyip.com/text](https://ipv6.wtfismyip.com/text)
   - You can also specify an HTTPS URL such as `https://ipinfo.io/ip`
 - `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see #136). It can be one or more of the following:
   - `cloudflare`

@@ -22,6 +22,7 @@ const (
 	Ident     Provider = "ident"
 	Nnev      Provider = "nnev"
 	Wtfismyip Provider = "wtfismyip"
+	Seeip     Provider = "seeip"
 )
 
 func ListProviders() []Provider {
@@ -36,6 +37,7 @@ func ListProviders() []Provider {
 		Ident,
 		Nnev,
 		Wtfismyip,
+		Seeip,
 	}
 }
 
@@ -72,7 +74,7 @@ func ValidateProvider(provider Provider, version ipversion.IPVersion) error {
 	return fmt.Errorf("%w: %s", ErrUnknownProvider, provider)
 }
 
-func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) {
+func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) { //nolint:gocyclo
 	switch version {
 	case ipversion.IP4:
 		switch provider { //nolint:exhaustive
@@ -88,6 +90,8 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 			url = "https://ip4.nnev.de"
 		case Wtfismyip:
 			url = "https://ipv4.wtfismyip.com/text"
+		case Seeip:
+			url = "https://ipv4.seeip.org"
 		}
 
 	case ipversion.IP6:
@@ -104,6 +108,8 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 			url = "https://ip6.nnev.de"
 		case Wtfismyip:
 			url = "https://ipv6.wtfismyip.com/text"
+		case Seeip:
+			url = "https://ipv6.seeip.org"
 		}
 
 	case ipversion.IP4or6:
@@ -128,6 +134,8 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 			url = "https://ip.nnev.de"
 		case Wtfismyip:
 			url = "https://wtfismyip.com/text"
+		case Seeip:
+			url = "https://api.seeip.org"
 		}
 	}
 

@@ -139,7 +139,10 @@ func extractAllSettings(jsonBytes []byte) (
 	return allProviders, warnings, nil
 }
 
-var ErrProviderNoLongerSupported = errors.New("provider no longer supported")
+var (
+	ErrProviderNoLongerSupported = errors.New("provider no longer supported")
+	ErrDomainBlank               = errors.New("domain cannot be blank for provider")
+)
 
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	retroGlobalIPv6Suffix netip.Prefix) (
@@ -147,12 +150,18 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	if common.Provider == "google" {
 		return nil, nil, fmt.Errorf("%w: %s", ErrProviderNoLongerSupported, common.Provider)
 	}
+
+	if common.Domain == "" && (common.Provider != "duckdns" && common.Provider != "goip") {
+		return nil, nil, fmt.Errorf("%w: %s", ErrDomainBlank, common.Provider)
+	}
+
 	if common.Domain != "" {
 		err = domain.Check(common.Domain)
 		if err != nil {
 			return nil, nil, fmt.Errorf("validating domain: %w", err)
 		}
 	}
+
 	providerName := models.Provider(common.Provider)
 	if providerName == constants.DuckDNS { // only hosts, no domain
 		if common.Domain != "" { // retro compatibility

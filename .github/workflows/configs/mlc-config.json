@@ -22,7 +22,7 @@
       "pattern": "https://www.linode.com/docs/products/tools/api/guides/manage-api-tokens/"
     },
     {
-      "pattern": "https://ipv6.ipleak.net/json"
+      "pattern": "https://(ip|ipv|v)6.+"
     },
     {
       "pattern": "https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater"

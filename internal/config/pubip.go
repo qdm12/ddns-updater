@@ -190,6 +190,7 @@ func (p PubIP) validateHTTPIPv6Providers() (err error) {
 
 var (
 	ErrNoPublicIPHTTPProvider = errors.New("no public IP HTTP provider specified")
+	ErrURLIsNotValidHTTPS     = errors.New("URL is not valid or not HTTPS")
 )
 
 func validateHTTPIPProviders(providerStrings []string,
@@ -215,8 +216,11 @@ func validateHTTPIPProviders(providerStrings []string,
 		}
 
 		// Custom URL check
-		url, err := url.Parse(providerString)
-		if err == nil && url != nil && url.Scheme == "https" {
+		if strings.HasPrefix(providerString, "url:") {
+			url, err := url.Parse(providerString[4:])
+			if err != nil || url.Scheme != "https" {
+				return fmt.Errorf("%w: %s", ErrURLIsNotValidHTTPS, providerString)
+			}
 			continue
 		}
 

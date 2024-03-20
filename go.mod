@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/breml/rootcerts v0.2.16
 	github.com/containrrr/shoutrrr v0.8.0
-	github.com/go-chi/chi/v5 v5.0.11
+	github.com/go-chi/chi/v5 v5.0.12
 	github.com/golang/mock v1.6.0
 	github.com/miekg/dns v1.1.58
 	github.com/qdm12/gosettings v0.4.0-rc9

@@ -122,8 +122,10 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	values := url.Values{}
-	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
+	values, err := url.ParseQuery(p.url.RawQuery)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("parsing URL query: %w", err)
+	}
 	ipKey := p.ipv4Key
 	if ip.Is6() {
 		ipKey = p.ipv6Key

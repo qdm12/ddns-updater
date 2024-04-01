@@ -152,7 +152,7 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	}
 
 	if common.Domain == "" && (common.Provider != "duckdns" && common.Provider != "goip") {
-		return nil, nil, fmt.Errorf("%w: %s", ErrDomainBlank, common.Provider)
+		return nil, nil, fmt.Errorf("%w: for provider %s", ErrDomainBlank, common.Provider)
 	}
 
 	if common.Domain != "" {

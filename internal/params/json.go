@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/chmike/domain"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -140,6 +141,7 @@ func extractAllSettings(jsonBytes []byte) (
 
 var (
 	ErrProviderNoLongerSupported = errors.New("provider no longer supported")
+	ErrDomainBlank               = errors.New("domain cannot be blank for provider")
 )
 
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
@@ -147,6 +149,17 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	providers []provider.Provider, warnings []string, err error) {
 	if common.Provider == "google" {
 		return nil, nil, fmt.Errorf("%w: %s", ErrProviderNoLongerSupported, common.Provider)
+	}
+
+	if common.Domain == "" && (common.Provider != "duckdns" && common.Provider != "goip") {
+		return nil, nil, fmt.Errorf("%w: for provider %s", ErrDomainBlank, common.Provider)
+	}
+
+	if common.Domain != "" {
+		err = domain.Check(common.Domain)
+		if err != nil {
+			return nil, nil, fmt.Errorf("validating domain: %w", err)
+		}
 	}
 
 	providerName := models.Provider(common.Provider)

@@ -53,15 +53,15 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 func convertStatus(status models.Status) string {
 	switch status {
 	case constants.SUCCESS:
-		return `<font color="green"><b>Success</b></font>`
+		return `<span class="success">Success</span>`
 	case constants.FAIL:
-		return `<font color="red"><b>Failure</b></font>`
+		return `<span class="error">Failure</span>`
 	case constants.UPTODATE:
-		return `<font color="#00CC66"><b>Up to date</b></font>`
+		return `<span class="uptodate">Up to date</span>`
 	case constants.UPDATING:
-		return `<font color="orange"><b>Updating</b></font>`
+		return `<span class="updating">Updating</span>`
 	case constants.UNSET:
-		return `<font color="purple"><b>Unset</b></font>`
+		return `<span class="unset">Unset</span>`
 	default:
 		return "Unknown status"
 	}

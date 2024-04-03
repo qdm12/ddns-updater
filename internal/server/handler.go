@@ -50,5 +50,7 @@ func newHandler(ctx context.Context, rootURL string,
 
 	router.Get(rootURL+"/update", handlers.update)
 
+	router.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("ui/static"))))
+
 	return router
 }

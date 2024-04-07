@@ -78,9 +78,11 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
   - Variomedia.de
   - Zoneedit
   - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
-- Web User interface
+- Web user interface (Desktop)  
+![Web UI](readme/webui-desktop.gif)
 
-![Web UI](https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/webui.png)
+- Web user interface (Mobile)  
+![Mobile Web UI](readme/webui-mobile.png)
 
 - Send notifications with [**Shoutrrr**](https://containrrr.dev/shoutrrr/v0.8/services/overview/) using `SHOUTRRR_ADDRESSES`
 - Container (Docker/K8s) specific features:

@@ -8,7 +8,9 @@
   --link-color: #039;
   --link-color-hover: #36c;
   --success-color: #181;
+  --warn-color: #951;
   --error-color: #811;
+  --progress-color: #818;
   --footer-background: #eee;
   --footer-link-color: #666;
   --footer-link-color-hover: #777;
@@ -25,7 +27,9 @@
     --link-color: #9cf;
     --link-color-hover: #69c;
     --success-color: #9f9;
-    --error-color: #f99;
+    --warn-color: #fb8;
+    --error-color: #f88;
+    --progress-color: #c7c;
     --footer-background: #111;
     --footer-link-color: #999;
     --footer-link-color-hover: #888;
@@ -119,15 +123,15 @@ footer a:hover {
 }
 
 .uptodate {
-  color: var(--uptodate-color);
+  color: var(--success-color);
 }
 
 .updating {
-  color: var(--updating-color);
+  color: var(--progress-color);
 }
 
 .unset {
-  color: var(--unset-color);
+  color: var(--warn-color);
 }
 
 .github-icon {

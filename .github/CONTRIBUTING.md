@@ -30,8 +30,8 @@ That should be easier and better than a local setup, although it might use more 
 1. Install [Docker](https://docs.docker.com/install/)
     - On Windows, share a drive with Docker Desktop and have the project on that partition
     - On OSX, share your project directory with Docker Desktop
-1. With [Visual Studio Code](https://code.visualstudio.com/download), install the [remote containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-1. In Visual Studio Code, press on `F1` and select `Remote-Containers: Open Folder in Container...`
+1. With [Visual Studio Code](https://code.visualstudio.com/download), install the [dev containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+1. In Visual Studio Code, press on `F1` and select `Dev Containers: Open Folder in Container...`
 1. Your dev environment is ready to go!... and it's running in a container :+1:
 
 ### Locally

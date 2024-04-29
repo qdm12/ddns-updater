@@ -200,6 +200,7 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 
 	providers = make([]provider.Provider, len(hosts))
 	for i, host := range hosts {
+		host = strings.TrimSpace(host)
 		providers[i], err = provider.New(providerName, rawSettings, common.Domain,
 			host, ipVersion, ipv6Suffix)
 		if err != nil {

@@ -78,7 +78,7 @@ var (
 
 func (p *Provider) isValid() error {
 	switch {
-	case p.key != "": // email and key must be provided
+	case p.email != "", p.key != "": // email and key must be provided
 		switch {
 		case !keyRegex.MatchString(p.key):
 			return fmt.Errorf("%w: key %q does not match regex %q",

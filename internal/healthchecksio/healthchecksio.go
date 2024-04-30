@@ -5,20 +5,21 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 )
 
 // New creates a new healthchecks.io client.
 // If passed an empty uuid string, it acts as no-op implementation.
-func New(httpClient *http.Client, uuid string) *Client {
+func New(httpClient *http.Client, baseURL, uuid string) *Client {
 	return &Client{
 		httpClient: httpClient,
+		baseURL:    baseURL,
 		uuid:       uuid,
 	}
 }
 
 type Client struct {
 	httpClient *http.Client
+	baseURL    string
 	uuid       string
 }
 
@@ -41,16 +42,12 @@ func (c *Client) Ping(ctx context.Context, state State) (err error) {
 		return nil
 	}
 
-	url := url.URL{
-		Scheme: "https",
-		Host:   "hc-ping.com",
-		Path:   "/" + c.uuid,
-	}
+	url := c.baseURL + "/" + c.uuid
 	if state != Ok {
-		url.Path += "/" + string(state)
+		url += "/" + string(state)
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("creating request: %w", err)
 	}

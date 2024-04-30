@@ -249,7 +249,8 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		return fmt.Errorf("creating resolver: %w", err)
 	}
 
-	hioClient := healthchecksio.New(client, *config.Health.HealthchecksioUUID)
+	hioClient := healthchecksio.New(client, config.Health.HealthchecksioBaseURL,
+		*config.Health.HealthchecksioUUID)
 
 	updater := update.NewUpdater(db, client, shoutrrrClient, logger, timeNow)
 	runner := update.NewRunner(db, updater, ipGetter, config.Update.Period,

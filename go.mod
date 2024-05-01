@@ -1,6 +1,6 @@
 module github.com/qdm12/ddns-updater
 
-go 1.22
+go 1.22.0
 
 require (
 	github.com/breml/rootcerts v0.2.17

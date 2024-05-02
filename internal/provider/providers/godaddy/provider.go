@@ -160,5 +160,15 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	if jsonErr != nil || parsedJSON.Message == "" {
 		return netip.Addr{}, fmt.Errorf("%w: %s", err, utils.ToSingleLine(string(b)))
 	}
-	return netip.Addr{}, fmt.Errorf("%w: %s", err, parsedJSON.Message)
+
+	err = fmt.Errorf("%w: %s", err, parsedJSON.Message)
+
+	if response.StatusCode == http.StatusForbidden &&
+		parsedJSON.Message == "Authenticated user is not allowed access" {
+		err = fmt.Errorf("%w - "+
+			"See https://github.com/qdm12/ddns-updater/issues/707#issuecomment-2089632215",
+			err)
+	}
+
+	return netip.Addr{}, err
 }

@@ -208,7 +208,7 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		*config.Health.HealthchecksioUUID)
 
 	updater := update.NewUpdater(db, client, shoutrrrClient, logger, timeNow)
-	runner := update.NewRunner(db, updater, ipGetter, config.Update.Period,
+	runner := update.NewService(db, updater, ipGetter, config.Update.Period,
 		config.Update.Cooldown, logger, resolver, timeNow, hioClient)
 
 	runnerHandler, runnerCtx, runnerDone := goshutdown.NewGoRoutineHandler("runner")

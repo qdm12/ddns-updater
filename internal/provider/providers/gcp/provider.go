@@ -54,7 +54,7 @@ func New(data json.RawMessage, domain, host string,
 	return p, nil
 }
 
-func (p *Provider) isValid() error {
+func (p *Provider) isValid() (err error) {
 	if p.project == "" {
 		return fmt.Errorf("%w", ddnserrors.ErrGCPProjectNotSet)
 	}
@@ -65,6 +65,14 @@ func (p *Provider) isValid() error {
 
 	if len(p.credentials) == 0 {
 		return fmt.Errorf("%w", ddnserrors.ErrCredentialsNotSet)
+	}
+	var creds struct {
+		Type string `json:"type"`
+	}
+	err = json.Unmarshal(p.credentials, &creds)
+	if err != nil || creds.Type == "" {
+		return fmt.Errorf("%w: 'type' JSON field value missing",
+			ddnserrors.ErrCredentialsNotValid)
 	}
 
 	return nil

@@ -10,6 +10,7 @@ var (
 	ErrAppKeyNotSet           = errors.New("app key is not set")
 	ErrConsumerKeyNotSet      = errors.New("consumer key is not set")
 	ErrCredentialsNotSet      = errors.New("credentials are not set")
+	ErrCredentialsNotValid    = errors.New("credentials are not valid")
 	ErrCustomerNumberNotSet   = errors.New("customer number is not set")
 	ErrDomainNotSet           = errors.New("domain is not set")
 	ErrEmailNotSet            = errors.New("email is not set")

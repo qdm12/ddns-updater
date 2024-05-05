@@ -10,6 +10,7 @@ import (
 	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
+	"github.com/qdm12/log"
 )
 
 type Provider struct {
@@ -45,6 +46,10 @@ func New(data json.RawMessage, domain, host string,
 		zone:        extraSettings.Zone,
 		credentials: extraSettings.Credentials,
 	}
+
+	logger := log.New(log.SetCallerFile(true), log.SetCallerLine(true))
+	logger.Debugf("project is %q, zone is %q, credentials JSON is: %s",
+		p.project, p.zone, string(p.credentials))
 
 	err = p.isValid()
 	if err != nil {

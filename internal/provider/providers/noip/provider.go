@@ -177,7 +177,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		ips = ipextract.IPv6(s)
 	}
 
-	if !useProviderIP && len(ips) == 0 {
+	if len(ips) == 0 {
+		if useProviderIP {
+			// No returned ip address from noip server
+			return ip, nil
+		}
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoIP)
 	}
 

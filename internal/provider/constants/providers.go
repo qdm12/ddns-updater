@@ -6,6 +6,7 @@ import "github.com/qdm12/ddns-updater/internal/models"
 const (
 	Aliyun       models.Provider = "aliyun"
 	AllInkl      models.Provider = "allinkl"
+	AWS          models.Provider = "aws"
 	Cloudflare   models.Provider = "cloudflare"
 	Custom       models.Provider = "custom"
 	Dd24         models.Provider = "dd24"
@@ -55,6 +56,7 @@ func ProviderChoices() []models.Provider {
 	return []models.Provider{
 		Aliyun,
 		AllInkl,
+		AWS,
 		Cloudflare,
 		Dd24,
 		DdnssDe,

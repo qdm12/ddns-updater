@@ -77,11 +77,6 @@ type settings struct {
 }
 
 func validateSettings(providerSpecificSettings settings, domain, host string) error {
-	// TODO: update this switch to be as restrictive as possible
-	// to fail early for the user. Use errors already defined
-	// in the internal/provider/errors package, or add your own
-	// if really necessary. When returning an error, always use
-	// fmt.Errorf (to enforce the caller to use errors.Is()).
 	switch {
 	case domain == "":
 		return fmt.Errorf("%w", errors.ErrDomainNotSet)

@@ -4,8 +4,6 @@
 
 ### Example
 
-<!-- UPDATE THIS JSON EXAMPLE -->
-
 ```json
 {
   "settings": [
@@ -33,8 +31,6 @@
 - `"aws_secret_access_key"`
 - `"hosted_zone_id"`
 
-<!-- UPDATE THIS IF NEEDED -->
-
 ### Optional parameters
 
 - `"ip_version"` can be `ipv4` (A records), or `ipv6` (AAAA records) or `ipv4 or ipv6` (update one of the two, depending on the public ip found). It defaults to `ipv4 or ipv6`.
@@ -42,12 +38,9 @@
 - `"ttl"` amount of time, in seconds, that you want DNS recursive resolvers to cache information about this record. Defaults to `300`.
 - `"region"` of the route53 API. Route53 is a global resource, records created here will be globaly available unless you are using geolocation routing policy. Defaults to `us-east-1`.
 
-<!-- UPDATE THIS IF NEEDED -->
-
 ## Domain setup
 
-<!-- FILL THIS UP WITH A FEW NUMBERED STEPS -->
-Amazon has an extensive documentation on registering or tranferring your domain to route53 <https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html>. 
+Amazon has [an extensive documentation on registering or tranfering your domain to route53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html).
 
 ## User permissions
 

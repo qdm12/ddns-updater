@@ -8,15 +8,14 @@
 {
   "settings": [
     {
-      "provider": "aws",
+      "provider": "route53",
       "domain": "domain.com",
       "host": "@",
       "ip_version": "ipv4",
       "ipv6_suffix": "",
-      "aws_access_key_id": "ffffffffffffffffffff",
-      "aws_secret_access_key": "ffffffffffffffffffffffffffffffffffffffff",
-      "hosted_zone_id": "A30888735ZF12K83Z6F00",
-      "region": "eu-central-1",
+      "access_key": "ffffffffffffffffffff",
+      "secret_key": "ffffffffffffffffffffffffffffffffffffffff",
+      "zone_id": "A30888735ZF12K83Z6F00",
       "ttl": 60
     }
   ]
@@ -27,16 +26,15 @@
 
 - `"domain"`
 - `"host"` is your host and can be a subdomain or `"@"` or the wildcard `"*"`
-- `"aws_access_key_id"`
-- `"aws_secret_access_key"`
-- `"hosted_zone_id"`
+- `"access_key"` is the `AWS_ACCESS_KEY`
+- `"secret_key"` is the `AWS_SECRET_ACCESS_KEY`
+- `"zone_id"` is identification of your hosted zone
 
 ### Optional parameters
 
 - `"ip_version"` can be `ipv4` (A records), or `ipv6` (AAAA records) or `ipv4 or ipv6` (update one of the two, depending on the public ip found). It defaults to `ipv4 or ipv6`.
 - `"ipv6_suffix"` is the IPv6 interface identifiersuffix to use. It can be for example `0:0:0:0:72ad:8fbb:a54e:bedd/64`. If left empty, it defaults to no suffix and the raw public IPv6 address obtained is used in the record updating.
 - `"ttl"` amount of time, in seconds, that you want DNS recursive resolvers to cache information about this record. Defaults to `300`.
-- `"region"` of the route53 API. Route53 is a global resource, records created here will be globaly available unless you are using geolocation routing policy. Defaults to `us-east-1`.
 
 ## Domain setup
 

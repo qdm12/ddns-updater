@@ -12,7 +12,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/aliyun"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/allinkl"
-	"github.com/qdm12/ddns-updater/internal/provider/providers/aws"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/cloudflare"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/custom"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/dd24"
@@ -50,6 +49,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/opendns"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/ovh"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/porkbun"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/route53"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/selfhostde"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/servercow"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/spdyn"
@@ -81,8 +81,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, host string
 		return aliyun.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.AllInkl:
 		return allinkl.New(data, domain, host, ipVersion, ipv6Suffix)
-	case constants.AWS:
-		return aws.New(data, domain, host, ipVersion, ipv6Suffix)
+	case constants.Route53:
+		return route53.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Cloudflare:
 		return cloudflare.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Custom:

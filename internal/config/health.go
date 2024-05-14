@@ -48,7 +48,7 @@ func (h Health) toLinesNode() *gotree.Node {
 	node.Appendf("Server listening address: %s", *h.ServerAddress)
 	if *h.HealthchecksioUUID != "" {
 		node.Appendf("Healthchecks.io base URL: %s", h.HealthchecksioBaseURL)
-		node.Appendf("Healthchecks.io additional path: %s", h.HealthchecksioAdditionalPath)
+		node.Appendf("Healthchecks.io additional path: %s", *h.HealthchecksioAdditionalPath)
 		node.Appendf("Healthchecks.io UUID: %s", *h.HealthchecksioUUID)
 	}
 	return node

@@ -57,6 +57,6 @@ func (h Health) toLinesNode() *gotree.Node {
 func (h *Health) Read(reader *reader.Reader) {
 	h.ServerAddress = reader.Get("HEALTH_SERVER_ADDRESS")
 	h.HealthchecksioBaseURL = reader.String("HEALTH_HEALTHCHECKSIO_BASE_URL")
-	h.HealthchecksioAdditionalPath = reader.String("HEALTH_HEALTHCHECKSIO_ADDITIONAL_PATH")
+	h.HealthchecksioAdditionalPath = reader.Get("HEALTH_HEALTHCHECKSIO_ADDITIONAL_PATH")
 	h.HealthchecksioUUID = reader.Get("HEALTH_HEALTHCHECKSIO_UUID")
 }

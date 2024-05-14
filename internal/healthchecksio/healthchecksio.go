@@ -9,18 +9,20 @@ import (
 
 // New creates a new healthchecks.io client.
 // If passed an empty uuid string, it acts as no-op implementation.
-func New(httpClient *http.Client, baseURL, uuid string) *Client {
+func New(httpClient *http.Client, baseURL, additionalPath string, uuid string) *Client {
 	return &Client{
-		httpClient: httpClient,
-		baseURL:    baseURL,
-		uuid:       uuid,
+		httpClient:     httpClient,
+		baseURL:        baseURL,
+		additionalPath: additionalPath,
+		uuid:           uuid,
 	}
 }
 
 type Client struct {
-	httpClient *http.Client
-	baseURL    string
-	uuid       string
+	httpClient     *http.Client
+	baseURL        string
+	additionalPath string
+	uuid           string
 }
 
 var (
@@ -42,7 +44,7 @@ func (c *Client) Ping(ctx context.Context, state State) (err error) {
 		return nil
 	}
 
-	url := c.baseURL + "/" + c.uuid
+	url := c.baseURL + c.additionalPath + "/" + c.uuid
 	if state != Ok {
 		url += "/" + string(state)
 	}

@@ -12,14 +12,16 @@ import (
 )
 
 type Health struct {
-	ServerAddress         *string
-	HealthchecksioBaseURL string
-	HealthchecksioUUID    *string
+	ServerAddress                *string
+	HealthchecksioBaseURL        string
+	HealthchecksioAdditionalPath *string
+	HealthchecksioUUID           *string
 }
 
 func (h *Health) SetDefaults() {
 	h.ServerAddress = gosettings.DefaultPointer(h.ServerAddress, "127.0.0.1:9999")
 	h.HealthchecksioBaseURL = gosettings.DefaultComparable(h.HealthchecksioBaseURL, "https://hc-ping.com")
+	h.HealthchecksioAdditionalPath = gosettings.DefaultPointer(h.HealthchecksioAdditionalPath, "")
 	h.HealthchecksioUUID = gosettings.DefaultPointer(h.HealthchecksioUUID, "")
 }
 
@@ -46,6 +48,7 @@ func (h Health) toLinesNode() *gotree.Node {
 	node.Appendf("Server listening address: %s", *h.ServerAddress)
 	if *h.HealthchecksioUUID != "" {
 		node.Appendf("Healthchecks.io base URL: %s", h.HealthchecksioBaseURL)
+		node.Appendf("Healthchecks.io additional path: %s", h.HealthchecksioAdditionalPath)
 		node.Appendf("Healthchecks.io UUID: %s", *h.HealthchecksioUUID)
 	}
 	return node
@@ -54,5 +57,6 @@ func (h Health) toLinesNode() *gotree.Node {
 func (h *Health) Read(reader *reader.Reader) {
 	h.ServerAddress = reader.Get("HEALTH_SERVER_ADDRESS")
 	h.HealthchecksioBaseURL = reader.String("HEALTH_HEALTHCHECKSIO_BASE_URL")
+	h.HealthchecksioAdditionalPath = reader.String("HEALTH_HEALTHCHECKSIO_ADDITIONAL_PATH")
 	h.HealthchecksioUUID = reader.Get("HEALTH_HEALTHCHECKSIO_UUID")
 }

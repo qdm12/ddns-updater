@@ -250,7 +250,7 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	}
 
 	hioClient := healthchecksio.New(client, config.Health.HealthchecksioBaseURL,
-		*config.Health.HealthchecksioUUID)
+		*config.Health.HealthchecksioAdditionalPath, *config.Health.HealthchecksioUUID)
 
 	updater := update.NewUpdater(db, client, shoutrrrClient, logger, timeNow)
 	runner := update.NewRunner(db, updater, ipGetter, config.Update.Period,

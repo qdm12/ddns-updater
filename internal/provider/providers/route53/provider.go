@@ -25,7 +25,7 @@ type Provider struct {
 	ipv6Suffix  netip.Prefix
 	credentials credentials
 	zoneID      string
-	ttl         uint
+	ttl         int32
 	signer      signer
 }
 
@@ -33,7 +33,7 @@ type settings struct {
 	AccessKey string `json:"access_key"`
 	SecretKey string `json:"secret_key"`
 	ZoneID    string `json:"zone_id"`
-	TTL       *uint  `json:"ttl"`
+	TTL       *int32 `json:"ttl"`
 }
 
 type signer interface {
@@ -53,7 +53,7 @@ func New(data json.RawMessage, domain, host string,
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
 
-	ttl := uint(300)
+	ttl := int32(300)
 	if providerSpecificSettings.TTL != nil {
 		ttl = *providerSpecificSettings.TTL
 	}
@@ -91,6 +91,8 @@ func validateSettings(providerSpecificSettings settings, domain, host string) er
 		return fmt.Errorf("%w", errors.ErrAccessKeySecretNotSet)
 	case providerSpecificSettings.ZoneID == "":
 		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
+	case providerSpecificSettings.TTL != nil && *providerSpecificSettings.TTL < 0:
+		return fmt.Errorf("%w", errors.ErrTTLTooLow)
 	}
 	return nil
 }
@@ -132,7 +134,6 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-// https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	// API details https://docs.aws.amazon.com/Route53/latest/APIReference/API_ChangeResourceRecordSets.html
 

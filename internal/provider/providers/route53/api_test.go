@@ -20,7 +20,7 @@ func TestEncodeRequest(t *testing.T) {
 					ResourceRecordSet: resourceRecordSet{
 						Name:            "test.com",
 						Type:            "A",
-						TTL:             uint(300),
+						TTL:             int32(300),
 						ResourceRecords: []resourceRecord{{Value: "127.0.0.1"}},
 					},
 				},

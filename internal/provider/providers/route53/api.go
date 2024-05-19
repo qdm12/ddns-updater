@@ -57,7 +57,7 @@ type change struct {
 type resourceRecordSet struct {
 	Name            string
 	Type            string
-	TTL             uint
+	TTL             int32
 	ResourceRecords []resourceRecord `xml:"ResourceRecords>ResourceRecord"`
 }
 
@@ -83,7 +83,7 @@ func (p *Provider) simpleRecordChange(ip netip.Addr) changeResourceRecordSetsReq
 						TTL:  p.ttl,
 						ResourceRecords: []resourceRecord{
 							{
-								Value: "127.0.0.1", //ip.String(),
+								Value: ip.String(),
 							},
 						},
 					},

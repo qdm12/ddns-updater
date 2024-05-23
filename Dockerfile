@@ -65,11 +65,11 @@ RUN GOARCH="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -field a
 
 FROM scratch
 EXPOSE 8000
-HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=2 CMD ["/updater/app", "healthcheck"]
+HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=2 CMD ["/updater/ddns-updater", "healthcheck"]
 ARG UID=1000
 ARG GID=1000
 USER ${UID}:${GID}
-ENTRYPOINT ["/updater/app"]
+ENTRYPOINT ["/updater/ddns-updater"]
 COPY --from=build --chown=${UID}:${GID} /tmp/data /updater/data
 ENV \
     # Core
@@ -114,4 +114,4 @@ LABEL \
     org.opencontainers.image.source="https://github.com/qdm12/ddns-updater" \
     org.opencontainers.image.title="ddns-updater" \
     org.opencontainers.image.description="Universal DNS updater with WebUI"
-COPY --from=build --chown=${UID}:${GID} /tmp/gobuild/app /updater/app
+COPY --from=build --chown=${UID}:${GID} /tmp/gobuild/app /updater/ddns-updater

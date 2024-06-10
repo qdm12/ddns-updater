@@ -141,7 +141,7 @@ jobs:
         run: echo "::set-output name=value::$(git rev-parse --short HEAD)"
 
       - name: Build and push final image
-        uses: docker/build-push-action@v5.1.0
+        uses: docker/build-push-action@v5.4.0
         with:
           platforms: linux/amd64,linux/386,linux/arm64,linux/arm/v6,linux/arm/v7,linux/s390x,linux/ppc64le,linux/riscv64
           labels: ${{ steps.meta.outputs.labels }}

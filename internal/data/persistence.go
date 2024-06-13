@@ -28,9 +28,3 @@ func (db *Database) Update(id uint, record records.Record) (err error) {
 	}
 	return nil
 }
-
-func (db *Database) Close() (err error) {
-	db.Lock() // ensure write operation finishes
-	defer db.Unlock()
-	return db.persistentDB.Close()
-}

@@ -9,8 +9,8 @@ require (
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/golang/mock v1.6.0
 	github.com/miekg/dns v1.1.58
+	github.com/qdm12/goservices v0.1.0
 	github.com/qdm12/gosettings v0.4.1
-	github.com/qdm12/goshutdown v0.3.0
 	github.com/qdm12/gosplash v0.1.0
 	github.com/qdm12/gotree v0.2.0
 	github.com/qdm12/log v0.1.0

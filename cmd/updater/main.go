@@ -28,8 +28,8 @@ import (
 	"github.com/qdm12/ddns-updater/internal/shoutrrr"
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
+	"github.com/qdm12/goservices"
 	"github.com/qdm12/gosettings/reader"
-	"github.com/qdm12/goshutdown"
 	"github.com/qdm12/gosplash"
 	"github.com/qdm12/log"
 )
@@ -173,12 +173,6 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	}
 
 	db := data.NewDatabase(records, persistentDB)
-	defer func() {
-		err := db.Close()
-		if err != nil {
-			logger.Error(err.Error())
-		}
-	}()
 
 	httpSettings := publicip.HTTPSettings{
 		Enabled: *config.PubIP.HTTPEnabled,
@@ -208,45 +202,65 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		*config.Health.HealthchecksioUUID)
 
 	updater := update.NewUpdater(db, client, shoutrrrClient, logger, timeNow)
-	runner := update.NewRunner(db, updater, ipGetter, config.Update.Period,
+	updaterService := update.NewService(db, updater, ipGetter, config.Update.Period,
 		config.Update.Cooldown, logger, resolver, timeNow, hioClient)
-
-	runnerHandler, runnerCtx, runnerDone := goshutdown.NewGoRoutineHandler("runner")
-	go runner.Run(runnerCtx, runnerDone)
-
-	// note: errors are logged within the goroutine,
-	// no need to collect the resulting errors.
-	go runner.ForceUpdate(ctx)
 
 	isHealthy := health.MakeIsHealthy(db, resolver)
 	healthLogger := logger.New(log.SetComponent("healthcheck server"))
-	healthServer := health.NewServer(*config.Health.ServerAddress,
+	healthServer, err := health.NewServer(*config.Health.ServerAddress,
 		healthLogger, isHealthy)
-	healthServerHandler, healthServerCtx, healthServerDone := goshutdown.NewGoRoutineHandler("health server")
-	go healthServer.Run(healthServerCtx, healthServerDone)
+	if err != nil {
+		return fmt.Errorf("creating health server: %w", err)
+	}
 
 	serverLogger := logger.New(log.SetComponent("http server"))
-	server := server.New(ctx, config.Server.ListeningAddress, config.Server.RootURL,
-		db, serverLogger, runner)
-	serverHandler, serverCtx, serverDone := goshutdown.NewGoRoutineHandler("server")
-	go server.Run(serverCtx, serverDone)
+	server, err := server.New(ctx, config.Server.ListeningAddress, config.Server.RootURL,
+		db, serverLogger, updaterService)
+	if err != nil {
+		return fmt.Errorf("creating server: %w", err)
+	}
+
+	var backupService goservices.Service
+	backupLogger := logger.New(log.SetComponent("backup"))
+	backupService = backup.New(*config.Backup.Period, *config.Paths.DataDir,
+		*config.Backup.Directory, backupLogger)
+	backupService, err = goservices.NewRestarter(goservices.RestarterSettings{Service: backupService})
+	if err != nil {
+		return fmt.Errorf("creating backup restarter: %w", err)
+	}
+
+	servicesSequence, err := goservices.NewSequence(goservices.SequenceSettings{
+		ServicesStart: []goservices.Service{db, updaterService, healthServer, server, backupService},
+		ServicesStop:  []goservices.Service{server, healthServer, updaterService, backupService, db},
+	})
+	if err != nil {
+		return fmt.Errorf("creating services sequence: %w", err)
+	}
+
+	runError, startErr := servicesSequence.Start(ctx)
+	if startErr != nil {
+		return fmt.Errorf("starting services: %w", startErr)
+	}
+
+	// note: errors are logged within the goroutine,
+	// no need to collect the resulting errors.
+	go updaterService.ForceUpdate(ctx)
+
 	shoutrrrClient.Notify("Launched with " + strconv.Itoa(len(records)) + " records to watch")
 
-	backupHandler, backupCtx, backupDone := goshutdown.NewGoRoutineHandler("backup")
-	backupLogger := logger.New(log.SetComponent("backup"))
-	go backupRunLoop(backupCtx, backupDone, *config.Backup.Period, *config.Paths.DataDir,
-		*config.Backup.Directory, backupLogger, timeNow)
+	select {
+	case <-ctx.Done():
+	case err = <-runError:
+		exitHealthchecksio(hioClient, logger, healthchecksio.Exit1)
+		shoutrrrClient.Notify(err.Error())
+		return fmt.Errorf("exiting due to critical error: %w", err)
+	}
 
-	shutdownGroup := goshutdown.NewGroupHandler("")
-	shutdownGroup.Add(runnerHandler, healthServerHandler, serverHandler, backupHandler)
-
-	<-ctx.Done()
-
-	err = shutdownGroup.Shutdown(context.Background())
+	err = servicesSequence.Stop()
 	if err != nil {
 		exitHealthchecksio(hioClient, logger, healthchecksio.Exit1)
 		shoutrrrClient.Notify(err.Error())
-		return err
+		return fmt.Errorf("stopping failed: %w", err)
 	}
 
 	exitHealthchecksio(hioClient, logger, healthchecksio.Exit0)
@@ -322,43 +336,6 @@ func readRecords(providers []provider.Provider, persistentDB *persistence.Databa
 		records[i] = recordslib.New(provider, events)
 	}
 	return records, nil
-}
-
-type InfoErroer interface {
-	Info(s string)
-	Error(s string)
-}
-
-func backupRunLoop(ctx context.Context, done chan<- struct{}, backupPeriod time.Duration,
-	dataDir, outputDir string, logger InfoErroer, timeNow func() time.Time) {
-	defer close(done)
-	if backupPeriod == 0 {
-		logger.Info("disabled")
-		return
-	}
-	logger.Info("each " + backupPeriod.String() +
-		"; writing zip files to directory " + outputDir)
-	ziper := backup.NewZiper()
-	timer := time.NewTimer(backupPeriod)
-	for {
-		fileName := "ddns-updater-backup-" + strconv.Itoa(int(timeNow().UnixNano())) + ".zip"
-		zipFilepath := filepath.Join(outputDir, fileName)
-		err := ziper.ZipFiles(
-			zipFilepath,
-			filepath.Join(dataDir, "updates.json"),
-			filepath.Join(dataDir, "config.json"),
-		)
-		if err != nil {
-			logger.Error(err.Error())
-		}
-		select {
-		case <-timer.C:
-			timer.Reset(backupPeriod)
-		case <-ctx.Done():
-			timer.Stop()
-			return
-		}
-	}
 }
 
 func exitHealthchecksio(hioClient *healthchecksio.Client,

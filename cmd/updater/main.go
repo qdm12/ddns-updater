@@ -229,11 +229,11 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	go healthServer.Run(healthServerCtx, healthServerDone)
 
 	serverLogger := logger.New(log.SetComponent("http server"))
-	server := server.New(ctx, config.Server.ListeningAddress, config.Server.RootURL,
+	server, err := server.New(ctx, config.Server.ListeningAddress, config.Server.RootURL,
 		db, serverLogger, runner)
-	serverHandler, serverCtx, serverDone := goshutdown.NewGoRoutineHandler("server")
-	go server.Run(serverCtx, serverDone)
-	shoutrrrClient.Notify("Launched with " + strconv.Itoa(len(records)) + " records to watch")
+	if err != nil {
+		return fmt.Errorf("creating server: %w", err)
+	}
 
 	var backupService goservices.Service
 	backupLogger := logger.New(log.SetComponent("backup"))
@@ -245,11 +245,11 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	}
 
 	shutdownGroup := goshutdown.NewGroupHandler("")
-	shutdownGroup.Add(runnerHandler, healthServerHandler, serverHandler)
+	shutdownGroup.Add(runnerHandler, healthServerHandler)
 
 	servicesSequence, err := goservices.NewSequence(goservices.SequenceSettings{
-		ServicesStart: []goservices.Service{backupService},
-		ServicesStop:  []goservices.Service{backupService},
+		ServicesStart: []goservices.Service{server, backupService},
+		ServicesStop:  []goservices.Service{server, backupService},
 	})
 	if err != nil {
 		return fmt.Errorf("creating services sequence: %w", err)
@@ -259,6 +259,8 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	if startErr != nil {
 		return fmt.Errorf("starting services: %w", startErr)
 	}
+
+	shoutrrrClient.Notify("Launched with " + strconv.Itoa(len(records)) + " records to watch")
 
 	select {
 	case <-ctx.Done():

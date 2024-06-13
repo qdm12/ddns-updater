@@ -32,7 +32,7 @@ import (
 	"github.com/qdm12/goservices"
 	"github.com/qdm12/gosettings/reader"
 	"github.com/qdm12/goshutdown"
-	"github.com/qdm12/goshutdown/group"
+	"github.com/qdm12/goshutdown/goroutine"
 	"github.com/qdm12/gosplash"
 	"github.com/qdm12/log"
 )
@@ -223,10 +223,11 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 
 	isHealthy := health.MakeIsHealthy(db, resolver)
 	healthLogger := logger.New(log.SetComponent("healthcheck server"))
-	healthServer := health.NewServer(*config.Health.ServerAddress,
+	healthServer, err := health.NewServer(*config.Health.ServerAddress,
 		healthLogger, isHealthy)
-	healthServerHandler, healthServerCtx, healthServerDone := goshutdown.NewGoRoutineHandler("health server")
-	go healthServer.Run(healthServerCtx, healthServerDone)
+	if err != nil {
+		return fmt.Errorf("creating health server: %w", err)
+	}
 
 	serverLogger := logger.New(log.SetComponent("http server"))
 	server, err := server.New(ctx, config.Server.ListeningAddress, config.Server.RootURL,
@@ -244,12 +245,9 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		return fmt.Errorf("creating backup restarter: %w", err)
 	}
 
-	shutdownGroup := goshutdown.NewGroupHandler("")
-	shutdownGroup.Add(runnerHandler, healthServerHandler)
-
 	servicesSequence, err := goservices.NewSequence(goservices.SequenceSettings{
-		ServicesStart: []goservices.Service{server, backupService},
-		ServicesStop:  []goservices.Service{server, backupService},
+		ServicesStart: []goservices.Service{healthServer, server, backupService},
+		ServicesStop:  []goservices.Service{server, backupService, healthServer},
 	})
 	if err != nil {
 		return fmt.Errorf("creating services sequence: %w", err)
@@ -267,15 +265,15 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	case err = <-runError:
 		exitHealthchecksio(hioClient, logger, healthchecksio.Exit1)
 		shoutrrrClient.Notify(err.Error())
-		_ = shutdownGroup.Shutdown(context.Background())
+		_ = runnerHandler.Shutdown(context.Background())
 		return fmt.Errorf("exiting due to critical error: %w", err)
 	}
 
-	return stop(servicesSequence, shutdownGroup, hioClient, shoutrrrClient, logger)
+	return stop(servicesSequence, runnerHandler, hioClient, shoutrrrClient, logger)
 }
 
 func stop(servicesSequence goservices.Service,
-	shutdownGroup group.Handler, hioClient *healthchecksio.Client,
+	runnerHandler goroutine.Handler, hioClient *healthchecksio.Client,
 	shoutrrrClient *shoutrrr.Client, logger log.LoggerInterface) (err error) {
 	var stopErrors []error
 	err = servicesSequence.Stop()
@@ -283,7 +281,7 @@ func stop(servicesSequence goservices.Service,
 		stopErrors = append(stopErrors, err)
 	}
 
-	err = shutdownGroup.Shutdown(context.Background())
+	err = runnerHandler.Shutdown(context.Background())
 	if err != nil {
 		stopErrors = append(stopErrors, err)
 	}

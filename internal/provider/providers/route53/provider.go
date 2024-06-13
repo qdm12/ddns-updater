@@ -80,9 +80,9 @@ func validateSettings(providerSpecificSettings settings, domain, host string) er
 	case host == "":
 		return fmt.Errorf("%w", errors.ErrHostNotSet)
 	case providerSpecificSettings.AccessKey == "":
-		return fmt.Errorf("%w", errors.ErrKeyNotSet)
+		return fmt.Errorf("%w", errors.ErrAccessKeyNotSet)
 	case providerSpecificSettings.SecretKey == "":
-		return fmt.Errorf("%w", errors.ErrAccessKeySecretNotSet)
+		return fmt.Errorf("%w", errors.ErrSecretKeyNotSet)
 	case providerSpecificSettings.ZoneID == "":
 		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
 	}

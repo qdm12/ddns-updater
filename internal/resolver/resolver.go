@@ -20,7 +20,7 @@ func New(settings Settings) (resolver *net.Resolver, err error) {
 	dialer := net.Dialer{Timeout: settings.Timeout}
 	return &net.Resolver{
 		PreferGo: true,
-		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+		Dial: func(ctx context.Context, _, _ string) (net.Conn, error) {
 			const protocol = "udp"
 			return dialer.DialContext(ctx, protocol, *settings.Address)
 		},

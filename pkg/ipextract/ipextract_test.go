@@ -80,7 +80,7 @@ func Test_IPv6(t *testing.T) {
 }
 
 func Fuzz_IPv6(f *testing.F) {
-	f.Fuzz(func(t *testing.T, ipv6A, ipv6B, ipv6C []byte,
+	f.Fuzz(func(_ *testing.T, ipv6A, ipv6B, ipv6C []byte,
 		garbageA, garbageB, garbageC string) {
 		var arrayA [16]byte
 		if len(ipv6A) > 0 {

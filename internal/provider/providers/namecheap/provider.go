@@ -134,7 +134,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	decoder := xml.NewDecoder(response.Body)
-	decoder.CharsetReader = func(encoding string, input io.Reader) (io.Reader, error) {
+	decoder.CharsetReader = func(_ string, input io.Reader) (io.Reader, error) {
 		return input, nil
 	}
 

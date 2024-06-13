@@ -38,11 +38,13 @@ func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	provider *Provider, err error) {
 	var providerSpecificSettings settings
-	if err := json.Unmarshal(data, &providerSpecificSettings); err != nil {
+	err = json.Unmarshal(data, &providerSpecificSettings)
+	if err != nil {
 		return nil, fmt.Errorf("decoding provider specific settings: %w", err)
 	}
 
-	if err := validateSettings(providerSpecificSettings, domain, host); err != nil {
+	err = validateSettings(providerSpecificSettings, domain, host)
+	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
 
@@ -149,7 +151,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	// Signature based auth request
-	if err := p.setHeaders(request, payload); err != nil {
+	err = p.setHeaders(request, payload)
+	if err != nil {
 		return netip.Addr{}, fmt.Errorf("%w", err)
 	}
 
@@ -162,7 +165,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	xmlDecoder := xml.NewDecoder(response.Body)
 	if response.StatusCode != http.StatusOK {
 		var errorResponse errorResponse
-		if err := xmlDecoder.Decode(&errorResponse); err != nil {
+		err = xmlDecoder.Decode(&errorResponse)
+		if err != nil {
 			return netip.Addr{}, fmt.Errorf("decoding body to xml: %w", err)
 		}
 		return netip.Addr{}, fmt.Errorf("%w: %d: request %s %s/%s: %s",

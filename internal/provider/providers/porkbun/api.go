@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
@@ -93,7 +94,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 		Content:      ipStr,
 		Type:         recordType,
 		Name:         p.host,
-		TTL:          fmt.Sprint(p.ttl),
+		TTL:          strconv.FormatUint(uint64(p.ttl), 10),
 	}
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
@@ -141,7 +142,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 		APIKey:       p.apiKey,
 		Content:      ipStr,
 		Type:         recordType,
-		TTL:          fmt.Sprint(p.ttl),
+		TTL:          strconv.FormatUint(uint64(p.ttl), 10),
 		Name:         p.host,
 	}
 	buffer := bytes.NewBuffer(nil)

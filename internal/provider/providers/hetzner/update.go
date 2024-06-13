@@ -24,7 +24,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	u := url.URL{
 		Scheme: "https",
 		Host:   "dns.hetzner.com",
-		Path:   fmt.Sprintf("/api/v1/records/%s", recordID),
+		Path:   "/api/v1/records/" + recordID,
 	}
 
 	requestData := struct {

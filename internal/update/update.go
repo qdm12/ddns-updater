@@ -65,7 +65,7 @@ func (u *Updater) Update(ctx context.Context, id uint, ip netip.Addr) (err error
 		return err
 	}
 	record.Status = constants.SUCCESS
-	record.Message = fmt.Sprintf("changed to %s", ip.String())
+	record.Message = "changed to " + ip.String()
 	record.History = append(record.History, models.HistoryEvent{
 		IP:   newIP,
 		Time: u.timeNow(),

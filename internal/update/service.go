@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/netip"
+	"strconv"
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
@@ -203,7 +204,7 @@ func (s *Service) shouldUpdateRecordWithLookup(ctx context.Context, hostname str
 			return false
 		}
 		s.logger.Warn("cannot DNS resolve " + hostname + " after " +
-			fmt.Sprint(tries) + " tries: " + err.Error()) // update anyway
+			strconv.Itoa(tries) + " tries: " + err.Error()) // update anyway
 	}
 
 	ipKind := ipVersionToIPKind(ipVersion)
@@ -346,7 +347,7 @@ func (s *Service) Start(ctx context.Context) (runError <-chan error, startErr er
 	s.runCancel = runCancel
 	done := make(chan struct{})
 	s.done = done
-	go s.run(runCtx, ready, done)
+	go s.run(runCtx, ready, done) //nolint:contextcheck
 	select {
 	case <-ready:
 	case <-ctx.Done():

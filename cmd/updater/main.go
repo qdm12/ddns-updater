@@ -315,7 +315,7 @@ func logProvidersCount(providersCount int, logger log.LeveledLogger) {
 	case 1:
 		logger.Info("Found single setting to update record")
 	default:
-		logger.Info("Found " + fmt.Sprint(providersCount) + " settings to update records")
+		logger.Info("Found " + strconv.Itoa(providersCount) + " settings to update records")
 	}
 }
 
@@ -340,7 +340,10 @@ func readRecords(providers []provider.Provider, persistentDB *persistence.Databa
 
 func exitHealthchecksio(hioClient *healthchecksio.Client,
 	logger log.LoggerInterface, state healthchecksio.State) {
-	err := hioClient.Ping(context.Background(), state)
+	const timeout = 3 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	err := hioClient.Ping(ctx, state)
 	if err != nil {
 		logger.Error(err.Error())
 	}

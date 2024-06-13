@@ -1,7 +1,7 @@
 package params
 
 import (
-	"fmt"
+	"errors"
 	"net/netip"
 	"testing"
 
@@ -19,12 +19,12 @@ func Test_makeIPv6Suffix(t *testing.T) {
 		errMessage       string
 	}{
 		"empty": {
-			errWrapped: fmt.Errorf(`IPv6 prefix format is incorrect: ` +
+			errWrapped: errors.New(`IPv6 prefix format is incorrect: ` +
 				`cannot parse "" as uint8`),
 		},
 		"malformed": {
 			prefixBitsString: "malformed",
-			errWrapped: fmt.Errorf(`IPv6 prefix format is incorrect: ` +
+			errWrapped: errors.New(`IPv6 prefix format is incorrect: ` +
 				`cannot parse "malformed" as uint8`),
 		},
 		"with_leading_slash": {

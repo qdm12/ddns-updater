@@ -10,9 +10,9 @@ import (
 	"github.com/qdm12/ddns-updater/internal/constants"
 )
 
-func MakeIsHealthy(db AllSelecter, resolver LookupIPer) func() error {
-	return func() (err error) {
-		return isHealthy(db, resolver)
+func MakeIsHealthy(db AllSelecter, resolver LookupIPer) func(ctx context.Context) error {
+	return func(ctx context.Context) (err error) {
+		return isHealthy(ctx, db, resolver)
 	}
 }
 
@@ -23,7 +23,7 @@ var (
 )
 
 // isHealthy checks all the records were updated successfully and returns an error if not.
-func isHealthy(db AllSelecter, resolver LookupIPer) (err error) {
+func isHealthy(ctx context.Context, db AllSelecter, resolver LookupIPer) (err error) {
 	records := db.SelectAll()
 	for _, record := range records {
 		if record.Status == constants.FAIL {
@@ -39,7 +39,7 @@ func isHealthy(db AllSelecter, resolver LookupIPer) (err error) {
 			return fmt.Errorf("%w: for hostname %s", ErrRecordIPNotSet, hostname)
 		}
 
-		lookedUpNetIPs, err := resolver.LookupIP(context.Background(), "ip", hostname)
+		lookedUpNetIPs, err := resolver.LookupIP(ctx, "ip", hostname)
 		if err != nil {
 			return err
 		}

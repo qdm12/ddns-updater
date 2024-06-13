@@ -90,6 +90,7 @@ ENV \
     RESOLVER_ADDRESS= \
     RESOLVER_TIMEOUT=5s \
     # Web UI
+    SERVER_ENABLED=yes \
     LISTENING_ADDRESS=:8000 \
     ROOT_URL=/ \
     # Backup

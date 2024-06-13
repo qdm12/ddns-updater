@@ -11,11 +11,13 @@ import (
 )
 
 type Server struct {
+	Enabled          *bool
 	ListeningAddress string
 	RootURL          string
 }
 
 func (s *Server) setDefaults() {
+	s.Enabled = gosettings.DefaultPointer(s.Enabled, true)
 	s.ListeningAddress = gosettings.DefaultComparable(s.ListeningAddress, ":8000")
 	s.RootURL = gosettings.DefaultComparable(s.RootURL, "/")
 }
@@ -36,6 +38,9 @@ func (s Server) String() string {
 }
 
 func (s Server) toLinesNode() *gotree.Node {
+	if !*s.Enabled {
+		return gotree.New("Server: disabled")
+	}
 	node := gotree.New("Server")
 	node.Appendf("Listening address: %s", s.ListeningAddress)
 	node.Appendf("Root URL: %s", s.RootURL)
@@ -43,6 +48,11 @@ func (s Server) toLinesNode() *gotree.Node {
 }
 
 func (s *Server) read(reader *reader.Reader, warner Warner) (err error) {
+	s.Enabled, err = reader.BoolPtr("SERVER_ENABLED")
+	if err != nil {
+		return err
+	}
+
 	s.RootURL = reader.String("ROOT_URL")
 
 	// Retro-compatibility

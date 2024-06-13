@@ -14,11 +14,11 @@ func TestEncodeRequest(t *testing.T) {
 	t.Parallel()
 
 	simpleRecordSet := changeResourceRecordSetsRequest{
-		XMLNS: xmlns,
+		XMLNS: "https://route53.amazonaws.com/doc/2013-04-01/",
 		ChangeBatch: changeBatch{
 			Changes: []change{
 				{
-					Action: recordAction,
+					Action: "UPSERT",
 					ResourceRecordSet: resourceRecordSet{
 						Name:            "test.com",
 						Type:            "A",

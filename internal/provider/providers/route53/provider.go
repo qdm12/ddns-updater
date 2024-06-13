@@ -9,10 +9,12 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"time"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -24,7 +26,7 @@ type Provider struct {
 	ipv6Suffix netip.Prefix
 	zoneID     string
 	ttl        uint32
-	signer     *v4Signer
+	signer     *signer
 }
 
 type settings struct {
@@ -54,24 +56,27 @@ func New(data json.RawMessage, domain, host string,
 		ttl = *providerSpecificSettings.TTL
 	}
 
+	// Global resources needs signature to us-east-1 globalRegion
+	// and update / insert operations to route53 are also in us-east-1.
+	const globalRegion = "us-east-1"
+	const route53Service = "route53"
+	const v4SignatureVersion = "aws4_request"
+	signer := &signer{
+		accessKey:        providerSpecificSettings.AccessKey,
+		secretkey:        providerSpecificSettings.SecretKey,
+		region:           globalRegion,
+		service:          route53Service,
+		signatureVersion: v4SignatureVersion,
+	}
+
 	return &Provider{
 		domain:     domain,
 		host:       host,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
-		signer: &v4Signer{
-			credentials: credentials{
-				accessKey: providerSpecificSettings.AccessKey,
-				secretkey: providerSpecificSettings.SecretKey,
-			},
-			scope: scope{
-				region:           globalRegion,
-				service:          route53Service,
-				signatureVersion: v4SignatureVersion,
-			},
-		},
-		zoneID: providerSpecificSettings.ZoneID,
-		ttl:    ttl,
+		signer:     signer,
+		zoneID:     providerSpecificSettings.ZoneID,
+		ttl:        ttl,
 	}, nil
 }
 
@@ -128,33 +133,30 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// See https://docs.aws.amazon.com/Route53/latest/APIReference/API_ChangeResourceRecordSets.html
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	// API details https://docs.aws.amazon.com/Route53/latest/APIReference/API_ChangeResourceRecordSets.html
-
 	u := url.URL{
 		Scheme: "https",
 		Host:   route53Domain,
-		Path:   fmt.Sprintf("/2013-04-01/hostedzone/%s/rrset", p.zoneID),
+		Path:   "/2013-04-01/hostedzone/" + p.zoneID + "/rrset",
 	}
 
-	changeBatch := p.simpleRecordChange(ip)
+	changeRRSetRequest := newChangeRRSetRequest(p.BuildDomainName(), p.ttl, ip)
 
-	// AWS api does not accept application/json as input for this endpoint
-	payload, err := xml.Marshal(changeBatch)
+	// Note the AWS API does not accept JSON for this endpoint
+	buffer := bytes.NewBuffer(nil)
+	encoder := xml.NewEncoder(buffer)
+	err = encoder.Encode(changeRRSetRequest)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("encoding http body: %w", err)
+		return netip.Addr{}, fmt.Errorf("XML encoding change RRSet request: %w", err)
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewReader(payload))
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
 	}
 
-	// Signature based auth request
-	err = p.setHeaders(request, payload)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w", err)
-	}
+	p.setHeaders(request, buffer.Bytes())
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -163,17 +165,28 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	defer response.Body.Close()
 
 	xmlDecoder := xml.NewDecoder(response.Body)
-	if response.StatusCode != http.StatusOK {
-		var errorResponse errorResponse
-		err = xmlDecoder.Decode(&errorResponse)
-		if err != nil {
-			return netip.Addr{}, fmt.Errorf("decoding body to xml: %w", err)
-		}
-		return netip.Addr{}, fmt.Errorf("%w: %d: request %s %s/%s: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode,
-			errorResponse.RequestID, errorResponse.Error.Type,
-			errorResponse.Error.Code, errorResponse.Error.Message)
+	if response.StatusCode == http.StatusOK {
+		return ip, nil
 	}
 
-	return ip, nil
+	var errorResponse errorResponse
+	err = xmlDecoder.Decode(&errorResponse)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("XML decoding response body: %w", err)
+	}
+	return netip.Addr{}, fmt.Errorf("%w: %d: request %s %s/%s: %s",
+		errors.ErrHTTPStatusNotValid, response.StatusCode,
+		errorResponse.RequestID, errorResponse.Error.Type,
+		errorResponse.Error.Code, errorResponse.Error.Message)
+}
+
+func (p *Provider) setHeaders(request *http.Request, payload []byte) {
+	now := time.Now().UTC()
+	headers.SetUserAgent(request)
+	headers.SetContentType(request, "application/xml")
+	headers.SetAccept(request, "application/xml")
+	request.Header.Set("Date", now.Format(dateTimeFormat))
+	request.Header.Set("Host", route53Domain)
+	signature := p.signer.sign(request.Method, request.URL.Path, payload, now)
+	request.Header.Set("Authorization", signature)
 }

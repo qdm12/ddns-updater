@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -28,8 +29,10 @@ import (
 	"github.com/qdm12/ddns-updater/internal/shoutrrr"
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
+	"github.com/qdm12/goservices"
 	"github.com/qdm12/gosettings/reader"
 	"github.com/qdm12/goshutdown"
+	"github.com/qdm12/goshutdown/group"
 	"github.com/qdm12/gosplash"
 	"github.com/qdm12/log"
 )
@@ -232,17 +235,61 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	go server.Run(serverCtx, serverDone)
 	shoutrrrClient.Notify("Launched with " + strconv.Itoa(len(records)) + " records to watch")
 
-	backupHandler, backupCtx, backupDone := goshutdown.NewGoRoutineHandler("backup")
+	var backupService goservices.Service
 	backupLogger := logger.New(log.SetComponent("backup"))
-	go backupRunLoop(backupCtx, backupDone, *config.Backup.Period, *config.Paths.DataDir,
-		*config.Backup.Directory, backupLogger, timeNow)
+	backupService = backup.New(*config.Backup.Period, *config.Paths.DataDir,
+		*config.Backup.Directory, backupLogger)
+	backupService, err = goservices.NewRestarter(goservices.RestarterSettings{Service: backupService})
+	if err != nil {
+		return fmt.Errorf("creating backup restarter: %w", err)
+	}
 
 	shutdownGroup := goshutdown.NewGroupHandler("")
-	shutdownGroup.Add(runnerHandler, healthServerHandler, serverHandler, backupHandler)
+	shutdownGroup.Add(runnerHandler, healthServerHandler, serverHandler)
 
-	<-ctx.Done()
+	servicesSequence, err := goservices.NewSequence(goservices.SequenceSettings{
+		ServicesStart: []goservices.Service{backupService},
+		ServicesStop:  []goservices.Service{backupService},
+	})
+	if err != nil {
+		return fmt.Errorf("creating services sequence: %w", err)
+	}
+
+	runError, startErr := servicesSequence.Start(ctx)
+	if startErr != nil {
+		return fmt.Errorf("starting services: %w", startErr)
+	}
+
+	select {
+	case <-ctx.Done():
+	case err = <-runError:
+		exitHealthchecksio(hioClient, logger, healthchecksio.Exit1)
+		shoutrrrClient.Notify(err.Error())
+		_ = shutdownGroup.Shutdown(context.Background())
+		return fmt.Errorf("exiting due to critical error: %w", err)
+	}
+
+	return stop(servicesSequence, shutdownGroup, hioClient, shoutrrrClient, logger)
+}
+
+func stop(servicesSequence goservices.Service,
+	shutdownGroup group.Handler, hioClient *healthchecksio.Client,
+	shoutrrrClient *shoutrrr.Client, logger log.LoggerInterface) (err error) {
+	var stopErrors []error
+	err = servicesSequence.Stop()
+	if err != nil {
+		stopErrors = append(stopErrors, err)
+	}
 
 	err = shutdownGroup.Shutdown(context.Background())
+	if err != nil {
+		stopErrors = append(stopErrors, err)
+	}
+
+	if len(stopErrors) > 0 {
+		err = errors.Join(stopErrors...)
+	}
+
 	if err != nil {
 		exitHealthchecksio(hioClient, logger, healthchecksio.Exit1)
 		shoutrrrClient.Notify(err.Error())
@@ -322,43 +369,6 @@ func readRecords(providers []provider.Provider, persistentDB *persistence.Databa
 		records[i] = recordslib.New(provider, events)
 	}
 	return records, nil
-}
-
-type InfoErroer interface {
-	Info(s string)
-	Error(s string)
-}
-
-func backupRunLoop(ctx context.Context, done chan<- struct{}, backupPeriod time.Duration,
-	dataDir, outputDir string, logger InfoErroer, timeNow func() time.Time) {
-	defer close(done)
-	if backupPeriod == 0 {
-		logger.Info("disabled")
-		return
-	}
-	logger.Info("each " + backupPeriod.String() +
-		"; writing zip files to directory " + outputDir)
-	ziper := backup.NewZiper()
-	timer := time.NewTimer(backupPeriod)
-	for {
-		fileName := "ddns-updater-backup-" + strconv.Itoa(int(timeNow().UnixNano())) + ".zip"
-		zipFilepath := filepath.Join(outputDir, fileName)
-		err := ziper.ZipFiles(
-			zipFilepath,
-			filepath.Join(dataDir, "updates.json"),
-			filepath.Join(dataDir, "config.json"),
-		)
-		if err != nil {
-			logger.Error(err.Error())
-		}
-		select {
-		case <-timer.C:
-			timer.Reset(backupPeriod)
-		case <-ctx.Done():
-			timer.Stop()
-			return
-		}
-	}
 }
 
 func exitHealthchecksio(hioClient *healthchecksio.Client,

@@ -30,7 +30,8 @@ func (s *signer) sign(method, urlPath string, payload []byte, date time.Time) (
 	credentialScope := fmt.Sprintf("%s/%s/%s/%s", date.Format(dateFormat),
 		s.region, s.service, s.signatureVersion)
 	credential := fmt.Sprintf("%s/%s", s.accessKey, credentialScope)
-	canonicalRequest, signedHeaders := buildCanonicalRequest(method, urlPath, payload)
+	const signedHeaders = "content-type;host"
+	canonicalRequest := buildCanonicalRequest(method, urlPath, signedHeaders, payload)
 	stringToSign := buildStringToSign(date, canonicalRequest, credentialScope)
 	signingKey := s.buildPrivateKey(date)
 	signature := hmacSha256Sum([]byte(signingKey), []byte(stringToSign))
@@ -39,9 +40,8 @@ func (s *signer) sign(method, urlPath string, payload []byte, date time.Time) (
 		credential, signedHeaders, signatureString)
 }
 
-func buildCanonicalRequest(method, path string, payload []byte) (
-	canonicalRequest, signedHeaders string) {
-	signedHeaders = "content-type;host"
+func buildCanonicalRequest(method, path, headers string, payload []byte) (
+	canonicalRequest string) {
 	canonicalHeaders := "content-type:application/xml\nhost:" + route53Domain + "\n"
 	const canonicalQuery = "" // no query arg used
 	payloadHashDigest := hex.EncodeToString(sha256Sum(payload))
@@ -50,10 +50,10 @@ func buildCanonicalRequest(method, path string, payload []byte) (
 		path,
 		canonicalQuery,
 		canonicalHeaders,
-		signedHeaders,
+		headers,
 		payloadHashDigest,
 	}, "\n")
-	return canonicalRequest, signedHeaders
+	return canonicalRequest
 }
 
 func buildStringToSign(date time.Time,

@@ -2,6 +2,7 @@ package route53
 
 import (
 	"encoding/xml"
+	"net/netip"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -93,4 +94,64 @@ func Test_errorResponse_XML_Decode(t *testing.T) {
 		RequestID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
 	}
 	assert.Equal(t, expectedObject, parsed)
+}
+
+func Test_newChangeRRSetRequest(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		name     string
+		ttl      uint32
+		ip       netip.Addr
+		expected changeResourceRecordSetsRequest
+	}{
+		"ipv4": {
+			name: "test.com",
+			ttl:  300,
+			ip:   netip.MustParseAddr("127.0.0.1"),
+			expected: changeResourceRecordSetsRequest{
+				XMLNS: "https://route53.amazonaws.com/doc/2013-04-01/",
+				ChangeBatch: changeBatch{
+					Changes: []change{{
+						Action: "UPSERT",
+						ResourceRecordSet: resourceRecordSet{
+							Name:            "test.com",
+							Type:            "A",
+							TTL:             300,
+							ResourceRecords: []resourceRecord{{Value: "127.0.0.1"}},
+						},
+					}},
+				},
+			},
+		},
+		"ipv6": {
+			name: "test.com",
+			ttl:  300,
+			ip:   netip.MustParseAddr("::1"),
+			expected: changeResourceRecordSetsRequest{
+				XMLNS: "https://route53.amazonaws.com/doc/2013-04-01/",
+				ChangeBatch: changeBatch{
+					Changes: []change{{
+						Action: "UPSERT",
+						ResourceRecordSet: resourceRecordSet{
+							Name:            "test.com",
+							Type:            "AAAA",
+							TTL:             300,
+							ResourceRecords: []resourceRecord{{Value: "::1"}},
+						},
+					}},
+				},
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		testCase := testCase
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			actual := newChangeRRSetRequest(testCase.name, testCase.ttl, testCase.ip)
+			assert.Equal(t, testCase.expected, actual)
+		})
+	}
 }

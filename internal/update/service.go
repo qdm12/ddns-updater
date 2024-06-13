@@ -14,17 +14,21 @@ import (
 )
 
 type Service struct {
-	period      time.Duration
-	db          Database
-	updater     UpdaterInterface
+	period    time.Duration
+	db        Database
+	updater   UpdaterInterface
+	cooldown  time.Duration
+	resolver  LookupIPer
+	ipGetter  PublicIPFetcher
+	logger    Logger
+	timeNow   func() time.Time
+	hioClient HealthchecksIOClient
+
+	// Service lifecycle
+	runCancel   context.CancelFunc
+	done        <-chan struct{}
 	force       chan struct{}
 	forceResult chan []error
-	cooldown    time.Duration
-	resolver    LookupIPer
-	ipGetter    PublicIPFetcher
-	logger      Logger
-	timeNow     func() time.Time
-	hioClient   HealthchecksIOClient
 }
 
 func NewService(db Database, updater UpdaterInterface, ipGetter PublicIPFetcher,
@@ -332,9 +336,30 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 	return errors
 }
 
-func (s *Service) Run(ctx context.Context, done chan<- struct{}) {
+func (s *Service) String() string {
+	return "updater"
+}
+
+func (s *Service) Start(ctx context.Context) (runError <-chan error, startErr error) {
+	ready := make(chan struct{})
+	runCtx, runCancel := context.WithCancel(context.Background())
+	s.runCancel = runCancel
+	done := make(chan struct{})
+	s.done = done
+	go s.run(runCtx, ready, done)
+	select {
+	case <-ready:
+	case <-ctx.Done():
+		return nil, s.Stop()
+	}
+	return nil, nil //nolint:nilnil
+}
+
+func (s *Service) run(ctx context.Context, ready chan<- struct{},
+	done chan<- struct{}) {
 	defer close(done)
 	ticker := time.NewTicker(s.period)
+	close(ready)
 	for {
 		select {
 		case <-ticker.C:
@@ -346,6 +371,12 @@ func (s *Service) Run(ctx context.Context, done chan<- struct{}) {
 			return
 		}
 	}
+}
+
+func (s *Service) Stop() (err error) {
+	s.runCancel()
+	<-s.done
+	return nil
 }
 
 func (s *Service) ForceUpdate(ctx context.Context) (errs []error) {

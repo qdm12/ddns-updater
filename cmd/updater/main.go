@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -31,8 +30,6 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip"
 	"github.com/qdm12/goservices"
 	"github.com/qdm12/gosettings/reader"
-	"github.com/qdm12/goshutdown"
-	"github.com/qdm12/goshutdown/goroutine"
 	"github.com/qdm12/gosplash"
 	"github.com/qdm12/log"
 )
@@ -211,15 +208,8 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		*config.Health.HealthchecksioUUID)
 
 	updater := update.NewUpdater(db, client, shoutrrrClient, logger, timeNow)
-	runner := update.NewService(db, updater, ipGetter, config.Update.Period,
+	updaterService := update.NewService(db, updater, ipGetter, config.Update.Period,
 		config.Update.Cooldown, logger, resolver, timeNow, hioClient)
-
-	runnerHandler, runnerCtx, runnerDone := goshutdown.NewGoRoutineHandler("runner")
-	go runner.Run(runnerCtx, runnerDone)
-
-	// note: errors are logged within the goroutine,
-	// no need to collect the resulting errors.
-	go runner.ForceUpdate(ctx)
 
 	isHealthy := health.MakeIsHealthy(db, resolver)
 	healthLogger := logger.New(log.SetComponent("healthcheck server"))
@@ -231,7 +221,7 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 
 	serverLogger := logger.New(log.SetComponent("http server"))
 	server, err := server.New(ctx, config.Server.ListeningAddress, config.Server.RootURL,
-		db, serverLogger, runner)
+		db, serverLogger, updaterService)
 	if err != nil {
 		return fmt.Errorf("creating server: %w", err)
 	}
@@ -246,8 +236,8 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	}
 
 	servicesSequence, err := goservices.NewSequence(goservices.SequenceSettings{
-		ServicesStart: []goservices.Service{healthServer, server, backupService},
-		ServicesStop:  []goservices.Service{server, backupService, healthServer},
+		ServicesStart: []goservices.Service{updaterService, healthServer, server, backupService},
+		ServicesStop:  []goservices.Service{server, healthServer, updaterService, backupService},
 	})
 	if err != nil {
 		return fmt.Errorf("creating services sequence: %w", err)
@@ -258,6 +248,10 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		return fmt.Errorf("starting services: %w", startErr)
 	}
 
+	// note: errors are logged within the goroutine,
+	// no need to collect the resulting errors.
+	go updaterService.ForceUpdate(ctx)
+
 	shoutrrrClient.Notify("Launched with " + strconv.Itoa(len(records)) + " records to watch")
 
 	select {
@@ -265,35 +259,14 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	case err = <-runError:
 		exitHealthchecksio(hioClient, logger, healthchecksio.Exit1)
 		shoutrrrClient.Notify(err.Error())
-		_ = runnerHandler.Shutdown(context.Background())
 		return fmt.Errorf("exiting due to critical error: %w", err)
 	}
 
-	return stop(servicesSequence, runnerHandler, hioClient, shoutrrrClient, logger)
-}
-
-func stop(servicesSequence goservices.Service,
-	runnerHandler goroutine.Handler, hioClient *healthchecksio.Client,
-	shoutrrrClient *shoutrrr.Client, logger log.LoggerInterface) (err error) {
-	var stopErrors []error
 	err = servicesSequence.Stop()
-	if err != nil {
-		stopErrors = append(stopErrors, err)
-	}
-
-	err = runnerHandler.Shutdown(context.Background())
-	if err != nil {
-		stopErrors = append(stopErrors, err)
-	}
-
-	if len(stopErrors) > 0 {
-		err = errors.Join(stopErrors...)
-	}
-
 	if err != nil {
 		exitHealthchecksio(hioClient, logger, healthchecksio.Exit1)
 		shoutrrrClient.Notify(err.Error())
-		return err
+		return fmt.Errorf("stopping failed: %w", err)
 	}
 
 	exitHealthchecksio(hioClient, logger, healthchecksio.Exit0)

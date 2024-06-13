@@ -40,7 +40,7 @@
 
 Amazon has [an extensive documentation on registering or tranfering your domain to route53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html).
 
-## User permissions
+### User permissions
 
 Create a policy to grant access to change record sets, you can use a wildcard `*` in case you want to grant access to all your hosted zones.
 

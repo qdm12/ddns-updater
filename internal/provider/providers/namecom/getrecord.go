@@ -54,6 +54,9 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	}
 
 	for _, record := range data.Records {
+		if record.Host == "" {
+			record.Host = "@"
+		}
 		if record.Host == p.host && record.Type == recordType {
 			return record.RecordID, nil
 		}

@@ -6,7 +6,6 @@ import "github.com/qdm12/ddns-updater/internal/models"
 const (
 	Aliyun       models.Provider = "aliyun"
 	AllInkl      models.Provider = "allinkl"
-	Route53      models.Provider = "route53"
 	Cloudflare   models.Provider = "cloudflare"
 	Custom       models.Provider = "custom"
 	Dd24         models.Provider = "dd24"
@@ -44,6 +43,7 @@ const (
 	OpenDNS      models.Provider = "opendns"
 	OVH          models.Provider = "ovh"
 	Porkbun      models.Provider = "porkbun"
+	Route53      models.Provider = "route53"
 	SelfhostDe   models.Provider = "selfhost.de"
 	Servercow    models.Provider = "servercow"
 	Spdyn        models.Provider = "spdyn"
@@ -56,7 +56,6 @@ func ProviderChoices() []models.Provider {
 	return []models.Provider{
 		Aliyun,
 		AllInkl,
-		Route53,
 		Cloudflare,
 		Dd24,
 		DdnssDe,
@@ -92,6 +91,7 @@ func ProviderChoices() []models.Provider {
 		OpenDNS,
 		OVH,
 		Porkbun,
+		Route53,
 		SelfhostDe,
 		Spdyn,
 		Strato,

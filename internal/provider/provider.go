@@ -81,8 +81,6 @@ func New(providerName models.Provider, data json.RawMessage, domain, host string
 		return aliyun.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.AllInkl:
 		return allinkl.New(data, domain, host, ipVersion, ipv6Suffix)
-	case constants.Route53:
-		return route53.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Cloudflare:
 		return cloudflare.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Custom:
@@ -157,6 +155,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, host string
 		return ovh.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Porkbun:
 		return porkbun.New(data, domain, host, ipVersion, ipv6Suffix)
+	case constants.Route53:
+		return route53.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.SelfhostDe:
 		return selfhostde.New(data, domain, host, ipVersion, ipv6Suffix)
 	case constants.Servercow:

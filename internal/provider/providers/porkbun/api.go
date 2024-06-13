@@ -19,7 +19,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 		Host:   "porkbun.com",
 		Path:   "/api/json/v3/dns/retrieveByNameType/" + p.domain + "/" + recordType + "/",
 	}
-	if p.host != "@" {
+	if p.host != "@" && p.host != "*" {
 		u.Path += p.host
 	}
 

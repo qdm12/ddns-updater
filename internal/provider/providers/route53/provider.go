@@ -23,15 +23,15 @@ type Provider struct {
 	ipVersion  ipversion.IPVersion
 	ipv6Suffix netip.Prefix
 	zoneID     string
-	ttl        int32
+	ttl        uint32
 	signer     *v4Signer
 }
 
 type settings struct {
-	AccessKey string `json:"access_key"`
-	SecretKey string `json:"secret_key"`
-	ZoneID    string `json:"zone_id"`
-	TTL       *int32 `json:"ttl"`
+	AccessKey string  `json:"access_key"`
+	SecretKey string  `json:"secret_key"`
+	ZoneID    string  `json:"zone_id"`
+	TTL       *uint32 `json:"ttl,omitempty"`
 }
 
 func New(data json.RawMessage, domain, host string,
@@ -47,7 +47,7 @@ func New(data json.RawMessage, domain, host string,
 	}
 
 	const defaultTTL = 300
-	ttl := int32(defaultTTL)
+	ttl := uint32(defaultTTL)
 	if providerSpecificSettings.TTL != nil {
 		ttl = *providerSpecificSettings.TTL
 	}
@@ -85,8 +85,6 @@ func validateSettings(providerSpecificSettings settings, domain, host string) er
 		return fmt.Errorf("%w", errors.ErrAccessKeySecretNotSet)
 	case providerSpecificSettings.ZoneID == "":
 		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
-	case providerSpecificSettings.TTL != nil && *providerSpecificSettings.TTL < 0:
-		return fmt.Errorf("%w", errors.ErrTTLTooLow)
 	}
 	return nil
 }

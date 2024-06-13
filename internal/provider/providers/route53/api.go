@@ -61,7 +61,7 @@ type change struct {
 type resourceRecordSet struct {
 	Name            string
 	Type            string
-	TTL             int32
+	TTL             uint32
 	ResourceRecords []resourceRecord `xml:"ResourceRecords>ResourceRecord"`
 }
 

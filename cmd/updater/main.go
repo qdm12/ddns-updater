@@ -21,6 +21,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 	jsonparams "github.com/qdm12/ddns-updater/internal/params"
 	persistence "github.com/qdm12/ddns-updater/internal/persistence/json"
+	"github.com/qdm12/ddns-updater/internal/provider"
 	recordslib "github.com/qdm12/ddns-updater/internal/records"
 	"github.com/qdm12/ddns-updater/internal/resolver"
 	"github.com/qdm12/ddns-updater/internal/server"
@@ -121,41 +122,12 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		}
 	}
 
-	announcementExp, err := time.Parse(time.RFC3339, "2023-07-15T00:00:00Z")
+	printSplash(buildInfo)
+
+	config, err := readConfig(reader, logger)
 	if err != nil {
 		return err
 	}
-	splashSettings := gosplash.Settings{
-		User:         "qdm12",
-		Repository:   "ddns-updater",
-		Emails:       []string{"quentin.mcgaw@gmail.com"},
-		Version:      buildInfo.Version,
-		Commit:       buildInfo.Commit,
-		BuildDate:    buildInfo.Date,
-		Announcement: "Public IP dns provider GOOGLE, see https://github.com/qdm12/ddns-updater/issues/492",
-		AnnounceExp:  announcementExp,
-		// Sponsor information
-		PaypalUser:    "qmcgaw",
-		GithubSponsor: "qdm12",
-	}
-	for _, line := range gosplash.MakeLines(splashSettings) {
-		fmt.Println(line)
-	}
-
-	var config config.Config
-	err = config.Read(reader, logger)
-	if err != nil {
-		return fmt.Errorf("reading settings: %w", err)
-	}
-	config.SetDefaults()
-	err = config.Validate()
-	if err != nil {
-		return fmt.Errorf("settings validation: %w", err)
-	}
-
-	logger.Patch(config.Logger.ToOptions()...)
-
-	logger.Info(config.String())
 
 	shoutrrrSettings := shoutrrr.Settings{
 		Addresses:    config.Shoutrrr.Addresses,
@@ -185,38 +157,21 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		return err
 	}
 
-	L := len(providers)
-	switch L {
-	case 0:
-		logger.Warn("Found no setting to update record")
-	case 1:
-		logger.Info("Found single setting to update record")
-	default:
-		logger.Info("Found " + fmt.Sprint(len(providers)) + " settings to update records")
-	}
+	logProvidersCount(len(providers), logger)
 
 	client := &http.Client{Timeout: config.Client.Timeout}
+	defer client.CloseIdleConnections()
 
 	err = health.CheckHTTP(ctx, client)
 	if err != nil {
 		logger.Warn(err.Error())
 	}
 
-	records := make([]recordslib.Record, len(providers))
-	for i, provider := range providers {
-		logger.Info("Reading history from database: domain " +
-			provider.Domain() + " host " + provider.Host() +
-			" " + provider.IPVersion().String())
-		events, err := persistentDB.GetEvents(provider.Domain(),
-			provider.Host(), provider.IPVersion())
-		if err != nil {
-			shoutrrrClient.Notify(err.Error())
-			return err
-		}
-		records[i] = recordslib.New(provider, events)
+	records, err := readRecords(providers, persistentDB, logger, shoutrrrClient)
+	if err != nil {
+		return fmt.Errorf("reading records: %w", err)
 	}
 
-	defer client.CloseIdleConnections()
 	db := data.NewDatabase(records, persistentDB)
 	defer func() {
 		err := db.Close()
@@ -296,6 +251,77 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 
 	exitHealthchecksio(hioClient, logger, healthchecksio.Exit0)
 	return nil
+}
+
+func printSplash(buildInfo models.BuildInformation) {
+	announcementExp, err := time.Parse(time.RFC3339, "2023-07-15T00:00:00Z")
+	if err != nil {
+		panic(err)
+	}
+	splashSettings := gosplash.Settings{
+		User:         "qdm12",
+		Repository:   "ddns-updater",
+		Emails:       []string{"quentin.mcgaw@gmail.com"},
+		Version:      buildInfo.Version,
+		Commit:       buildInfo.Commit,
+		BuildDate:    buildInfo.Date,
+		Announcement: "Public IP dns provider GOOGLE, see https://github.com/qdm12/ddns-updater/issues/492",
+		AnnounceExp:  announcementExp,
+		// Sponsor information
+		PaypalUser:    "qmcgaw",
+		GithubSponsor: "qdm12",
+	}
+	for _, line := range gosplash.MakeLines(splashSettings) {
+		fmt.Println(line)
+	}
+}
+
+func readConfig(reader *reader.Reader, logger log.LoggerInterface) (
+	config config.Config, err error) {
+	err = config.Read(reader, logger)
+	if err != nil {
+		return config, fmt.Errorf("reading settings: %w", err)
+	}
+	config.SetDefaults()
+	err = config.Validate()
+	if err != nil {
+		return config, fmt.Errorf("settings validation: %w", err)
+	}
+
+	logger.Patch(config.Logger.ToOptions()...)
+	logger.Info(config.String())
+
+	return config, nil
+}
+
+func logProvidersCount(providersCount int, logger log.LeveledLogger) {
+	switch providersCount {
+	case 0:
+		logger.Warn("Found no setting to update record")
+	case 1:
+		logger.Info("Found single setting to update record")
+	default:
+		logger.Info("Found " + fmt.Sprint(providersCount) + " settings to update records")
+	}
+}
+
+func readRecords(providers []provider.Provider, persistentDB *persistence.Database,
+	logger log.LoggerInterface, shoutrrrClient *shoutrrr.Client) (
+	records []recordslib.Record, err error) {
+	records = make([]recordslib.Record, len(providers))
+	for i, provider := range providers {
+		logger.Info("Reading history from database: domain " +
+			provider.Domain() + " host " + provider.Host() +
+			" " + provider.IPVersion().String())
+		events, err := persistentDB.GetEvents(provider.Domain(),
+			provider.Host(), provider.IPVersion())
+		if err != nil {
+			shoutrrrClient.Notify(err.Error())
+			return nil, err
+		}
+		records[i] = recordslib.New(provider, events)
+	}
+	return records, nil
 }
 
 type InfoErroer interface {

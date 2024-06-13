@@ -42,12 +42,12 @@ type scope struct {
 func (v4 *v4Signer) Sign(req *http.Request, payload []byte, date time.Time) (string, error) {
 	req.Header.Set("Host", route53Domain)
 
-	sanatizedHeaders, err := v4.sanatizeHeaders(req.Header)
+	sanitizedHeaders, err := v4.sanitizeHeaders(req.Header)
 	if err != nil {
 		return "", err
 	}
 
-	canonicalRequest, signedHeaders := v4.buildCanonicalRequest(req.Method, req.URL.Path, sanatizedHeaders, payload)
+	canonicalRequest, signedHeaders := v4.buildCanonicalRequest(req.Method, req.URL.Path, sanitizedHeaders, payload)
 	credentialScope := v4.formatScope(date)
 	stringToSign := v4.buildStringToSign(canonicalRequest, credentialScope, date)
 	signingKey := v4.buildPrivKey(date)
@@ -116,7 +116,7 @@ var (
 	ErrHeadersMissing = errors.New("missing mandatory headers to sign request")
 )
 
-func (v4 *v4Signer) sanatizeHeaders(headers http.Header) (map[string]string, error) {
+func (v4 *v4Signer) sanitizeHeaders(headers http.Header) (map[string]string, error) {
 	// These are the only mandatory headers as no other x-amz header is expected for now
 	mandatoryHeaders := map[string]bool{
 		"content-type": true,

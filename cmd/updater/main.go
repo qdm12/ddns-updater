@@ -19,6 +19,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/health"
 	"github.com/qdm12/ddns-updater/internal/healthchecksio"
 	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/noop"
 	jsonparams "github.com/qdm12/ddns-updater/internal/params"
 	persistence "github.com/qdm12/ddns-updater/internal/persistence/json"
 	"github.com/qdm12/ddns-updater/internal/provider"
@@ -205,10 +206,7 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	updaterService := update.NewService(db, updater, ipGetter, config.Update.Period,
 		config.Update.Cooldown, logger, resolver, timeNow, hioClient)
 
-	isHealthy := health.MakeIsHealthy(db, resolver)
-	healthLogger := logger.New(log.SetComponent("healthcheck server"))
-	healthServer, err := health.NewServer(*config.Health.ServerAddress,
-		healthLogger, isHealthy)
+	healthServer, err := createHealthServer(db, resolver, logger, *config.Health.ServerAddress)
 	if err != nil {
 		return fmt.Errorf("creating health server: %w", err)
 	}
@@ -347,4 +345,16 @@ func exitHealthchecksio(hioClient *healthchecksio.Client,
 	if err != nil {
 		logger.Error(err.Error())
 	}
+}
+
+//nolint:ireturn
+func createHealthServer(db health.AllSelecter, resolver health.LookupIPer,
+	logger log.LoggerInterface, serverAddress string) (
+	healthServer goservices.Service, err error) {
+	if !health.IsDocker() {
+		return noop.New("healthcheck server"), nil
+	}
+	isHealthy := health.MakeIsHealthy(db, resolver)
+	healthLogger := logger.New(log.SetComponent("healthcheck server"))
+	return health.NewServer(serverAddress, healthLogger, isHealthy)
 }

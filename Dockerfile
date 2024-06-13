@@ -50,7 +50,8 @@ RUN git init && \
     rm -rf .git/
 
 FROM --platform=$BUILDPLATFORM base AS build
-RUN mkdir -p /tmp/data
+RUN mkdir -p /tmp/data && \
+    touch /tmp/isdocker
 ARG VERSION=unknown
 ARG CREATED="an unknown date"
 ARG COMMIT=unknown
@@ -69,8 +70,10 @@ HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=2 CMD ["/up
 ARG UID=1000
 ARG GID=1000
 USER ${UID}:${GID}
+WORKDIR /updater
 ENTRYPOINT ["/updater/ddns-updater"]
 COPY --from=build --chown=${UID}:${GID} /tmp/data /updater/data
+COPY --from=build --chown=${UID}:${GID} /tmp/isdocker /updater/isdocker
 ENV \
     # Core
     CONFIG= \

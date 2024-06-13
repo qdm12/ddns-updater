@@ -1,6 +1,4 @@
 linters-settings:
-  maligned:
-    suggest-new: true
   misspell:
     locale: US
 
@@ -80,8 +78,3 @@ linters:
     - usestdlibvars
     - wastedassign
     - whitespace
-
-run:
-  skip-dirs:
-    - .devcontainer
-    - .github

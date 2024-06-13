@@ -173,12 +173,6 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	}
 
 	db := data.NewDatabase(records, persistentDB)
-	defer func() {
-		err := db.Close()
-		if err != nil {
-			logger.Error(err.Error())
-		}
-	}()
 
 	httpSettings := publicip.HTTPSettings{
 		Enabled: *config.PubIP.HTTPEnabled,
@@ -236,8 +230,8 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	}
 
 	servicesSequence, err := goservices.NewSequence(goservices.SequenceSettings{
-		ServicesStart: []goservices.Service{updaterService, healthServer, server, backupService},
-		ServicesStop:  []goservices.Service{server, healthServer, updaterService, backupService},
+		ServicesStart: []goservices.Service{db, updaterService, healthServer, server, backupService},
+		ServicesStop:  []goservices.Service{server, healthServer, updaterService, backupService, db},
 	})
 	if err != nil {
 		return fmt.Errorf("creating services sequence: %w", err)

@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
-	"time"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -19,14 +18,13 @@ import (
 )
 
 type Provider struct {
-	domain      string
-	host        string
-	ipVersion   ipversion.IPVersion
-	ipv6Suffix  netip.Prefix
-	credentials credentials
-	zoneID      string
-	ttl         int32
-	signer      signer
+	domain     string
+	host       string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	zoneID     string
+	ttl        int32
+	signer     *v4Signer
 }
 
 type settings struct {
@@ -36,14 +34,9 @@ type settings struct {
 	TTL       *int32 `json:"ttl"`
 }
 
-type signer interface {
-	Sign(*http.Request, []byte, time.Time) (string, error)
-}
-
 func New(data json.RawMessage, domain, host string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	provider *Provider, err error) {
-
 	var providerSpecificSettings settings
 	if err := json.Unmarshal(data, &providerSpecificSettings); err != nil {
 		return nil, fmt.Errorf("decoding provider specific settings: %w", err)
@@ -53,7 +46,8 @@ func New(data json.RawMessage, domain, host string,
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
 
-	ttl := int32(300)
+	const defaultTTL = 300
+	ttl := int32(defaultTTL)
 	if providerSpecificSettings.TTL != nil {
 		ttl = *providerSpecificSettings.TTL
 	}
@@ -173,7 +167,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		if err := xmlDecoder.Decode(&errorResponse); err != nil {
 			return netip.Addr{}, fmt.Errorf("decoding body to xml: %w", err)
 		}
-		return netip.Addr{}, fmt.Errorf("%w: %d: request %s %s/%s: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, errorResponse.RequestId, errorResponse.Error.Type, errorResponse.Error.Code, errorResponse.Error.Message)
+		return netip.Addr{}, fmt.Errorf("%w: %d: request %s %s/%s: %s",
+			errors.ErrHTTPStatusNotValid, response.StatusCode,
+			errorResponse.RequestID, errorResponse.Error.Type,
+			errorResponse.Error.Code, errorResponse.Error.Message)
 	}
 
 	return ip, nil

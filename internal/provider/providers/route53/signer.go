@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -17,7 +18,7 @@ const v4SignatureVersion = "aws4_request"
 const route53Service = "route53"
 
 // Global resources needs signature to us-east-1 globalRegion
-// and update / insert operations to route53 are also in us-east-1
+// and update / insert operations to route53 are also in us-east-1.
 const globalRegion = "us-east-1"
 
 type credentials struct {
@@ -39,9 +40,7 @@ type scope struct {
 }
 
 func (v4 *v4Signer) Sign(req *http.Request, payload []byte, date time.Time) (string, error) {
-	if err := v4.sanatizeHostHeader(req); err != nil {
-		return "", err
-	}
+	req.Header.Set("Host", route53Domain)
 
 	sanatizedHeaders, err := v4.sanatizeHeaders(req.Header)
 	if err != nil {
@@ -55,10 +54,12 @@ func (v4 *v4Signer) Sign(req *http.Request, payload []byte, date time.Time) (str
 	signature := hmacSha256Sum([]byte(signingKey), []byte(stringToSign))
 
 	credential := fmt.Sprintf("%s/%s", v4.credentials.accessKey, credentialScope)
-	return fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s,SignedHeaders=%s,Signature=%s", credential, signedHeaders, hex.EncodeToString(signature)), nil
+	return fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s,SignedHeaders=%s,Signature=%s",
+		credential, signedHeaders, hex.EncodeToString(signature)), nil
 }
 
-func (v4 *v4Signer) buildCanonicalRequest(method, path string, headers map[string]string, payload []byte) (string, string) {
+func (v4 *v4Signer) buildCanonicalRequest(method, path string,
+	headers map[string]string, payload []byte) (string, string) {
 	toSignHeaders := make([]string, 0, len(headers))
 	for header := range headers {
 		toSignHeaders = append(toSignHeaders, header)
@@ -111,6 +112,10 @@ func (v4 *v4Signer) buildPrivKey(date time.Time) string {
 	return string(signingKey)
 }
 
+var (
+	ErrHeadersMissing = errors.New("missing mandatory headers to sign request")
+)
+
 func (v4 *v4Signer) sanatizeHeaders(headers http.Header) (map[string]string, error) {
 	// These are the only mandatory headers as no other x-amz header is expected for now
 	mandatoryHeaders := map[string]bool{
@@ -148,30 +153,9 @@ func (v4 *v4Signer) sanatizeHeaders(headers http.Header) (map[string]string, err
 	}
 
 	if len(missingHeaders) > 0 {
-		return map[string]string{}, fmt.Errorf("missing mandatory header(s) to sign request: '%s'", strings.Join(missingHeaders, "', '"))
+		return nil, fmt.Errorf("%w: '%s'", ErrHeadersMissing, strings.Join(missingHeaders, "', '"))
 	}
 	return sanitizedHeaders, nil
-}
-
-func (v4 *v4Signer) sanatizeHostHeader(req *http.Request) error {
-	// Remove any existing host header in order to enforce route53.amazonaws.com
-	for header := range req.Header {
-		if strings.ToLower(header) == "host" {
-			req.Header.Del(header)
-		}
-	}
-
-	domain := req.URL.Host
-	if req.Host != "" {
-		domain = req.Host // authoritaive pseudo-header is preferred
-	}
-
-	if domain != route53Domain {
-		return fmt.Errorf("request must be to %s: %s", route53Domain, req.Host)
-	}
-
-	req.Header.Set("Host", route53Domain)
-	return nil
 }
 
 func (v4 *v4Signer) formatScope(date time.Time) string {

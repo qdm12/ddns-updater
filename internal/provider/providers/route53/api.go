@@ -15,34 +15,38 @@ import (
 const recordAction = "UPSERT"
 const xmlns = "https://route53.amazonaws.com/doc/2013-04-01/"
 
-// Refer to https://docs.aws.amazon.com/Route53/latest/APIReference/API_ChangeResourceRecordSets.html#API_ChangeResourceRecordSets_RequestSyntax
+// See https://docs.aws.amazon.com/Route53/latest/APIReference/API_ChangeResourceRecordSets.html#API_ChangeResourceRecordSets_RequestSyntax
 type changeResourceRecordSetsRequest struct {
-	XMLName     xml.Name `xml:"ChangeResourceRecordSetsRequest"`
-	ChangeBatch changeBatch
-	XMLNS       string `xml:"xmlns,attr"`
+	XMLName     xml.Name    `xml:"ChangeResourceRecordSetsRequest"`
+	ChangeBatch changeBatch `xml:"ChangeBatch"`
+	XMLNS       string      `xml:"xmlns,attr"`
 }
 
-// Refer to https://docs.aws.amazon.com/Route53/latest/APIReference/API_ChangeResourceRecordSets.html#API_ChangeResourceRecordSets_ResponseSyntax
+// See https://docs.aws.amazon.com/Route53/latest/APIReference/API_ChangeResourceRecordSets.html#API_ChangeResourceRecordSets_ResponseSyntax
 type changeResourceRecordSetsResponse struct {
-	XMLNS      string   `xml:"xmlns,attr"`
-	XMLName    xml.Name `xml:"ChangeResourceRecordSetsResponse"`
-	ChangeInfo struct {
-		Id          string
-		Status      string
-		SubmittedAt string
-	}
+	XMLNS      string        `xml:"xmlns,attr"`
+	XMLName    xml.Name      `xml:"ChangeResourceRecordSetsResponse"`
+	ChangeInfo xmlChangeInfo `xml:"ChangeInfo"`
 }
 
-// Refer to https://docs.aws.amazon.com/Route53/latest/APIReference/requests-rest-responses.html
+type xmlChangeInfo struct {
+	ID          string `xml:"Id"`
+	Status      string `xml:"Status"`
+	SubmittedAt string `xml:"SubmittedAt"`
+}
+
+// See https://docs.aws.amazon.com/Route53/latest/APIReference/requests-rest-responses.html
 type errorResponse struct {
-	XMLNS   string   `xml:"xmlns,attr"`
-	XMLName xml.Name `xml:"ErrorResponse"`
-	Error   struct {
-		Type    string
-		Code    string
-		Message string
-	}
-	RequestId string
+	XMLNS     string   `xml:"xmlns,attr"`
+	XMLName   xml.Name `xml:"ErrorResponse"`
+	Error     xmlError `xml:"Error"`
+	RequestID string   `xml:"RequestId"`
+}
+
+type xmlError struct {
+	Type    string `xml:"Type"`
+	Code    string `xml:"Code"`
+	Message string `xml:"Message"`
 }
 
 type changeBatch struct {

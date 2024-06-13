@@ -41,10 +41,3 @@ func SetXAuthPassword(request *http.Request, value string) {
 func SetXAPIKey(request *http.Request, value string) {
 	request.Header.Set("X-API-Key", value)
 }
-
-func SetDate(request *http.Request, value string) {
-	request.Header.Set("Date", value)
-}
-func SetAuthorizationSignature(request *http.Request, value string) {
-	request.Header.Set("Authorization", value)
-}

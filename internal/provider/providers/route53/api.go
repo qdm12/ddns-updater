@@ -94,17 +94,15 @@ func (p *Provider) simpleRecordChange(ip netip.Addr) changeResourceRecordSetsReq
 }
 
 func (p *Provider) setHeaders(req *http.Request, payload []byte) error {
-
 	now := time.Now().UTC()
 	headers.SetUserAgent(req)
 	headers.SetContentType(req, "application/xml")
 	headers.SetAccept(req, "application/xml")
-	headers.SetDate(req, formatDateTime(now))
-
+	req.Header.Set("Date", formatDateTime(now))
 	signature, err := p.signer.Sign(req, payload, now)
 	if err != nil {
 		return fmt.Errorf("signing request: %w", err)
 	}
-	headers.SetAuthorizationSignature(req, signature)
+	req.Header.Set("Authorization", signature)
 	return nil
 }

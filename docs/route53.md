@@ -16,7 +16,7 @@
       "access_key": "ffffffffffffffffffff",
       "secret_key": "ffffffffffffffffffffffffffffffffffffffff",
       "zone_id": "A30888735ZF12K83Z6F00",
-      "ttl": 60
+      "ttl": 300
     }
   ]
 }

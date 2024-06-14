@@ -18,16 +18,16 @@ type HistoryEvent struct { // current and previous ips
 
 // GetPreviousIPs returns an antichronological list of previous
 // IP addresses if there is any.
-func (h History) GetPreviousIPs() []netip.Addr {
+func (h History) GetPreviousIPs() (previousIPs []netip.Addr) {
 	if len(h) <= 1 {
 		return nil
 	}
-	IPs := make([]netip.Addr, len(h)-1)
-	const two = 2
-	for i := len(h) - two; i >= 0; i-- {
-		IPs[i] = h[i].IP
+	previousIPs = make([]netip.Addr, len(h)-1)
+	mostRecentPreviousIPIndex := len(h) - 2 //nolint:gomnd
+	for i := range previousIPs {
+		previousIPs[i] = h[mostRecentPreviousIPIndex-i].IP
 	}
-	return IPs
+	return previousIPs
 }
 
 // GetCurrentIP returns the current IP address (latest in history).

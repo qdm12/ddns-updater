@@ -43,6 +43,9 @@ func newHandler(ctx context.Context, rootURL string,
 	router.Use(middleware.Logger)
 	rootURL = strings.TrimSuffix(rootURL, "/")
 
+	if rootURL != "" {
+		router.Get(rootURL, handlers.index)
+	}
 	router.Get(rootURL+"/", handlers.index)
 
 	router.Get(rootURL+"/update", handlers.update)

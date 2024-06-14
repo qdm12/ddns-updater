@@ -121,7 +121,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	const usualRecordsCount = 1
 	matchingRecords := make([]apiRecord, 0, usualRecordsCount)
-	fullDomainName := p.BuildDomainName()
+	fullDomainName := utils.BuildURLQueryHostname(p.host, p.domain)
 	for _, record := range records {
 		if record.Name == fullDomainName {
 			matchingRecords = append(matchingRecords, record)

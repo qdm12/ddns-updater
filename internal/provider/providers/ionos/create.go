@@ -11,6 +11,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
 func (p *Provider) createRecord(ctx context.Context, client *http.Client,
@@ -30,7 +31,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	const defaultPrio = 0
 	recordsList := []apiRecord{
 		{
-			Name:     p.BuildDomainName(),
+			Name:     utils.BuildURLQueryHostname(p.host, p.domain),
 			Type:     recordType,
 			Content:  ip.String(),
 			TTL:      defaultTTL,

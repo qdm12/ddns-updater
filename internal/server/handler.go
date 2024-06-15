@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"embed"
+	"io/fs"
 	"net/http"
 	"strings"
 	"text/template"
@@ -29,6 +30,11 @@ func newHandler(ctx context.Context, rootURL string,
 	db Database, runner UpdateForcer) http.Handler {
 	indexTemplate := template.Must(template.ParseFS(uiFS, "ui/index.html"))
 
+	staticFolder, err := fs.Sub(uiFS, "ui/static")
+	if err != nil {
+		panic(err)
+	}
+
 	handlers := &handlers{
 		ctx:           ctx,
 		db:            db,
@@ -49,6 +55,8 @@ func newHandler(ctx context.Context, rootURL string,
 	router.Get(rootURL+"/", handlers.index)
 
 	router.Get(rootURL+"/update", handlers.update)
+
+	router.Handle(rootURL+"/static/*", http.StripPrefix(rootURL+"/static/", http.FileServerFS(staticFolder)))
 
 	return router
 }

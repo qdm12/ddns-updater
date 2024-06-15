@@ -1,0 +1,181 @@
+:root {
+  --page-background: #fff;
+  --table-background: #eee;
+  --background-zebra: #ddd;
+  --background-hover: #e9e9f9;
+  --text-color: #000;
+  --border-color: #666;
+  --link-color: #039;
+  --link-color-hover: #36c;
+  --success-color: #181;
+  --warn-color: #951;
+  --error-color: #811;
+  --progress-color: #818;
+  --footer-background: #eee;
+  --footer-link-color: #666;
+  --footer-link-color-hover: #777;
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  :root {
+    --page-background: #000;
+    --table-background: #111;
+    --background-zebra: #222;
+    --background-hover: #191929;
+    --text-color: #ddd;
+    --border-color: #aaa;
+    --link-color: #9cf;
+    --link-color-hover: #69c;
+    --success-color: #9f9;
+    --warn-color: #fb8;
+    --error-color: #f88;
+    --progress-color: #c7c;
+    --footer-background: #111;
+    --footer-link-color: #999;
+    --footer-link-color-hover: #888;
+  }
+}
+
+html,
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-size: 16px;
+  background-color: var(--page-background);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0.5rem;
+}
+
+table {
+  border-collapse: collapse;
+  border-radius: 0.3rem;
+  overflow: hidden;
+  width: 100%;
+  max-width: 1900px;
+  background: var(--table-background);
+  margin: 0 auto;
+  position: center;
+}
+
+td,
+th {
+  text-align: center;
+  padding: 0.7rem;
+}
+
+th {
+  border-bottom: 1px solid var(--border-color);
+}
+
+tbody tr:nth-child(odd) {
+  background: var(--background-zebra);
+}
+
+tbody tr:hover {
+  background: var(--background-hover);
+}
+
+a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--link-color-hover);
+  text-decoration: underline;
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--footer-background);
+  font-size: 0.9em;
+  line-height: 1.6em;
+}
+footer a {
+  color: var(--footer-link-color);
+}
+footer a:hover {
+  color: var(--footer-link-color-hover);
+}
+
+.text-big {
+  font-size: 1.4em;
+}
+
+.success, .error, .uptodate, .updating, .unset {
+  font-weight: bold;
+}
+
+.success {
+  color: var(--success-color);
+}
+
+.error {
+  color: var(--error-color);
+}
+
+.uptodate {
+  color: var(--success-color);
+}
+
+.updating {
+  color: var(--progress-color);
+}
+
+.unset {
+  color: var(--warn-color);
+}
+
+.github-icon {
+  vertical-align: text-bottom;
+  fill: currentColor;
+  height: 1em;
+}
+
+/* responsive table. source: https://css-tricks.com/responsive-data-tables/ */
+@media only screen and (max-width: 760px),
+  (min-device-width: 768px) and (max-device-width: 1024px) {
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr {
+    display: block;
+  }
+
+  thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  tr {
+    margin: 0 0 1rem 0;
+  }
+
+  td {
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    padding-left: 50%;
+  }
+
+  td:before {
+    position: absolute;
+    left: 6px;
+    width: 45%;
+    padding-right: 10px;
+    white-space: nowrap;
+    font-weight: bold;
+    content: attr(data-label);
+  }
+}

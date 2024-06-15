@@ -37,6 +37,7 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
 - Updates periodically A records for different DNS providers:
   - Aliyun
   - AllInkl
+  - Changeip
   - Cloudflare
   - DD24
   - DDNSS.de
@@ -191,6 +192,7 @@ Check the documentation for your DNS provider:
 
 - [Aliyun](docs/aliyun.md)
 - [Allinkl](docs/allinkl.md)
+- [ChangeIP](docs/changeip.md)
 - [Cloudflare](docs/cloudflare.md)
 - [Custom](docs/custom.md)
 - [DDNSS.de](docs/ddnss.de.md)

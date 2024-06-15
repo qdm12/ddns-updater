@@ -44,7 +44,7 @@ func newHandler(ctx context.Context, rootURL string,
 	rootURL = strings.TrimSuffix(rootURL, "/")
 
 	if rootURL != "" {
-		router.Get(rootURL, handlers.index)
+		router.Handle(rootURL, http.RedirectHandler(rootURL+"/", http.StatusPermanentRedirect))
 	}
 	router.Get(rootURL+"/", handlers.index)
 

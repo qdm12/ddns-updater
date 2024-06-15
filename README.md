@@ -84,7 +84,7 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
 
 - Send notifications with [**Shoutrrr**](https://containrrr.dev/shoutrrr/v0.8/services/overview/) using `SHOUTRRR_ADDRESSES`
 - Container (Docker/K8s) specific features:
-  - Lightweight 15MB Docker image based on the Scratch Docker image
+  - Lightweight 12MB Docker image based on the Scratch Docker image
   - Docker healthcheck verifying the DNS resolution of your domains
   - Images compatible with `amd64`, `386`, `arm64`, `armv7`, `armv6`, `s390x`, `ppc64le`, `riscv64` CPU architectures
 - Persistence with a JSON file *updates.json* to store old IP addresses with change times for each record
@@ -117,6 +117,8 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
     - You can customize the program behavior using either [environment variables](#environment-variables) or flags. For flags, there is a flag corresponding to each environment variable, where it's all lowercase and underscores are replaced with dashes. For example the environment variable `LOG_LEVEL` translates into `--log-level`.
 
 ### Container
+
+[➡️ Qnap guide by @Araminta](https://github.com/qdm12/ddns-updater/issues/708)
 
 1. Create a directory of your choice, say *data* with a file named **config.json** inside:
 

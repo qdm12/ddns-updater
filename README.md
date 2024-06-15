@@ -72,6 +72,7 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
   - OpenDNS
   - OVH
   - Porkbun
+  - Route53
   - Selfhost.de
   - Servercow.de
   - Spdyn

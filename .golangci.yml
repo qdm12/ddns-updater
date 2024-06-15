@@ -12,6 +12,9 @@ issues:
     - text: Function `exitHealthchecksio` should pass the context parameter
       linters:
         - contextcheck
+    - source: "See https://"
+      linters:
+        - lll
 
 linters:
   enable:

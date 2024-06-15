@@ -4,6 +4,7 @@ import "errors"
 
 var (
 	ErrAccessKeyIDNotSet      = errors.New("access key id is not set")
+	ErrAccessKeyNotSet        = errors.New("access key is not set")
 	ErrAccessKeySecretNotSet  = errors.New("key secret is not set")
 	ErrAPIKeyNotSet           = errors.New("API key is not set")
 	ErrAPISecretNotSet        = errors.New("API secret is not set")
@@ -27,6 +28,7 @@ var (
 	ErrNameNotSet             = errors.New("name is not set")
 	ErrPasswordNotSet         = errors.New("password is not set")
 	ErrPasswordNotValid       = errors.New("password is not valid")
+	ErrSecretKeyNotSet        = errors.New("secret key is not set")
 	ErrSecretNotSet           = errors.New("secret is not set")
 	ErrSuccessRegexNotSet     = errors.New("success regex is not set")
 	ErrTokenNotSet            = errors.New("token is not set")

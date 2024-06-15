@@ -8,7 +8,6 @@ import (
 	"net/netip"
 	"regexp"
 
-	"github.com/go-routeros/routeros" //nolint:misspell
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
@@ -17,12 +16,12 @@ import (
 )
 
 type Provider struct {
-	ipVersion   ipversion.IPVersion
-	ipv6Suffix  netip.Prefix
-	routerIP    netip.Addr
-	username    string
-	password    string
-	addressList string
+	ipVersion     ipversion.IPVersion
+	ipv6Suffix    netip.Prefix
+	routerAddress netip.AddrPort
+	username      string
+	password      string
+	addressList   string
 }
 
 type settings struct {
@@ -44,13 +43,14 @@ func New(data json.RawMessage, ipVersion ipversion.IPVersion,
 		return nil, fmt.Errorf("validating settings: %w", err)
 	}
 
+	const routerPort = 8728
 	return &Provider{
-		ipVersion:   ipVersion,
-		ipv6Suffix:  ipv6Suffix,
-		routerIP:    providerSpecificSettings.RouterIP,
-		username:    providerSpecificSettings.Username,
-		password:    providerSpecificSettings.Password,
-		addressList: providerSpecificSettings.AddressList,
+		ipVersion:     ipVersion,
+		ipv6Suffix:    ipv6Suffix,
+		routerAddress: netip.AddrPortFrom(providerSpecificSettings.RouterIP, routerPort),
+		username:      providerSpecificSettings.Username,
+		password:      providerSpecificSettings.Password,
+		addressList:   providerSpecificSettings.AddressList,
 	}, nil
 }
 
@@ -99,18 +99,22 @@ func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    p.Domain(),
 		Host:      p.addressList,
-		Provider:  fmt.Sprintf("<a href=\"http://%s\">Mikrotik</a>", p.routerIP),
+		Provider:  fmt.Sprintf("<a href=\"http://%s\">Mikrotik</a>", p.routerAddress),
 		IPVersion: p.ipVersion.String(),
 	}
 }
 
 func (p *Provider) Update(_ context.Context, _ *http.Client, ip netip.Addr) (
 	newIP netip.Addr, err error) {
-	client, err := routeros.Dial(p.routerIP.String()+":8728", p.username, p.password)
+	client, err := newClient(p.routerAddress)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("authenticating with router: %w", err)
+		return netip.Addr{}, fmt.Errorf("creating client: %w", err)
 	}
 	defer client.Close()
+	err = client.login(p.username, p.password)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("logging in router: %w", err)
+	}
 
 	addressListItems, err := getAddressListItems(client, p.addressList)
 	if err != nil {

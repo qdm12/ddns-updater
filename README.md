@@ -190,6 +190,7 @@ For each setting, you need to fill in parameters.
 Check the documentation for your DNS provider:
 
 - [Aliyun](docs/aliyun.md)
+- [Allinkl](docs/allinkl.md)
 - [Cloudflare](docs/cloudflare.md)
 - [Custom](docs/custom.md)
 - [DDNSS.de](docs/ddnss.de.md)

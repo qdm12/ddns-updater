@@ -26,6 +26,7 @@ func IPv6(text string) (addresses []netip.Addr) {
 }
 
 func extract(text string, alphabet string) (addresses []netip.Addr) {
+	addressesSeen := make(map[netip.Addr]struct{})
 	var start, end int
 	for {
 		for i := start; i < len(text); i++ {
@@ -39,7 +40,11 @@ func extract(text string, alphabet string) (addresses []netip.Addr) {
 		possibleIPString := text[start:end]
 		ipAddress, err := netip.ParseAddr(possibleIPString)
 		if err == nil { // Valid IP address found
-			addresses = append(addresses, ipAddress)
+			_, seen := addressesSeen[ipAddress]
+			if !seen {
+				addressesSeen[ipAddress] = struct{}{}
+				addresses = append(addresses, ipAddress)
+			}
 		}
 
 		if end == len(text) {

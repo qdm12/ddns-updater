@@ -23,6 +23,7 @@ const (
 	Nnev      Provider = "nnev"
 	Wtfismyip Provider = "wtfismyip"
 	Seeip     Provider = "seeip"
+	Changeip  Provider = "changeip"
 )
 
 func ListProviders() []Provider {
@@ -38,6 +39,7 @@ func ListProviders() []Provider {
 		Nnev,
 		Wtfismyip,
 		Seeip,
+		Changeip,
 	}
 }
 
@@ -136,6 +138,8 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 			url = "https://wtfismyip.com/text"
 		case Seeip:
 			url = "https://api.seeip.org"
+		case Changeip:
+			url = "https://ip.changeip.com"
 		}
 	}
 

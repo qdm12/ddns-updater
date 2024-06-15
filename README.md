@@ -290,6 +290,7 @@ You can otherwise customize it with the following:
   - `nnev` using [https://ip.nnev.de](https://ip.nnev.de)
   - `wtfismyip` using [https://wtfismyip.com/text](https://wtfismyip.com/text)
   - `seeip` using [https://api.seeip.org](https://api.seeip.org)
+  - `changeip` using [https://ip.changeip.com](https://ip.changeip.com)
   - You can also specify an HTTPS URL with prefix `url:` for example `url:https://ipinfo.io/ip`
 - `PUBLICIPV4_HTTP_PROVIDERS` gets your public IPv4 address only. It can be one or more of the following:
   - `ipleak` using [https://ipv4.ipleak.net/json](https://ipv4.ipleak.net/json)

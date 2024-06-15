@@ -20,7 +20,7 @@ func Test_ListProvidersForVersion(t *testing.T) {
 		"ip4or6": {
 			version: ipversion.IP4or6,
 			providers: []Provider{Google, Ifconfig, Ipify, Ipinfo, Spdyn, Ipleak,
-				Icanhazip, Ident, Nnev, Wtfismyip, Seeip},
+				Icanhazip, Ident, Nnev, Wtfismyip, Seeip, Changeip},
 		},
 		"ip4": {
 			version:   ipversion.IP4,

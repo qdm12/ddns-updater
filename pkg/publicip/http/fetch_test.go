@@ -85,14 +85,14 @@ func Test_fetch(t *testing.T) {
 			ctx:         context.Background(),
 			url:         "https://opendns.com/ip",
 			version:     ipversion.IP4or6,
-			httpContent: []byte(`1.67.201.251 1.67.201.251`),
+			httpContent: []byte(`1.67.201.251 1.67.201.252`),
 			err:         errors.New("too many IP addresses: found 2 IPv4 addresses instead of 1"),
 		},
 		"too many IPv6s for IP4or6": {
 			ctx:         context.Background(),
 			url:         "https://opendns.com/ip",
 			version:     ipversion.IP4or6,
-			httpContent: []byte(`::1 ::1`),
+			httpContent: []byte(`::1 ::2`),
 			err:         errors.New("too many IP addresses: found 2 IPv6 addresses instead of 1"),
 		},
 		"no IP for IP4": {
@@ -113,7 +113,7 @@ func Test_fetch(t *testing.T) {
 			ctx:         context.Background(),
 			url:         "https://opendns.com/ip",
 			version:     ipversion.IP4,
-			httpContent: []byte(`1.67.201.251 1.67.201.251`),
+			httpContent: []byte(`1.67.201.251 1.67.201.252`),
 			err:         errors.New("too many IP addresses: found 2 IPv4 addresses instead of 1"),
 		},
 		"no IP for IP6": {
@@ -137,7 +137,7 @@ func Test_fetch(t *testing.T) {
 			ctx:         context.Background(),
 			url:         "https://opendns.com/ip",
 			version:     ipversion.IP6,
-			httpContent: []byte(`::1 ::1`),
+			httpContent: []byte(`::1 ::2`),
 			err:         errors.New("too many IP addresses: found 2 IPv6 addresses instead of 1"),
 		},
 	}

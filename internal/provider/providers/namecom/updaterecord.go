@@ -27,13 +27,17 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 		User:   url.UserPassword(p.username, p.token),
 	}
 
+	host := ""
+	if p.host != "@" {
+		host = p.host
+	}
 	postRecordsParams := struct {
 		Host   string  `json:"host"`
 		Type   string  `json:"type"`
 		Answer string  `json:"answer"`
 		TTL    *uint32 `json:"ttl,omitempty"`
 	}{
-		Host:   p.host,
+		Host:   host,
 		Type:   recordType,
 		Answer: ip.String(),
 		TTL:    p.ttl,

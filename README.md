@@ -126,21 +126,28 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
 
 [➡️ Qnap guide by @Araminta](https://github.com/qdm12/ddns-updater/issues/708)
 
-1. Create a directory of your choice, say *data* with a file named **config.json** inside:
+1. Create a directory, for example, *data* which is:
+    - owned by user id `1000`, which is the built-in user ID of the ddns-updater container
+    - has user read+write+execute permissions
 
     ```sh
     mkdir data
-    touch data/config.json
-    # Owned by user ID of Docker container (1000)
-    chown -R 1000 data
-    # all access (for creating json database file data/updates.json)
-    chmod 700 data
-    # read access only
-    chmod 400 data/config.json
+    chown 1000 data
+    chmod u+r+w+x data
     ```
 
     If you want to use another user ID, [build the image yourself](#build-the-image) with `--build-arg UID=<your-uid>`. You could also just run the container as root with `--user="0"` but this is not advised security wise.
-1. Write a JSON configuration in *data/config.json*, for example:
+
+1. Similarly, create a *data/config.json* file which is:
+    - owned by user id `1000`
+    - has user read permissions
+
+    ```sh
+    touch data/config.json
+    chmod u+r data/config.json
+    ```
+
+1. Edit *data/config.json*, for example:
 
     ```json
     {

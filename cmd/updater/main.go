@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strconv"
 	"syscall"
 	"time"
@@ -147,8 +146,7 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	}
 
 	jsonReader := jsonparams.NewReader(logger)
-	jsonFilepath := filepath.Join(*config.Paths.DataDir, "config.json")
-	providers, warnings, err := jsonReader.JSONProviders(jsonFilepath)
+	providers, warnings, err := jsonReader.JSONProviders(*config.Paths.Config)
 	for _, w := range warnings {
 		logger.Warn(w)
 		shoutrrrClient.Notify(w)

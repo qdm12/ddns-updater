@@ -39,7 +39,8 @@ func Test_Settings_String(t *testing.T) {
 ├── Health
 |   └── Server listening address: 127.0.0.1:9999
 ├── Paths
-|   └── Data directory: ./data
+|   ├── Data directory: ./data
+|   └── Config file: data/config.json
 ├── Backup: disabled
 └── Logger
     ├── Level: INFO

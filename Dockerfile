@@ -87,6 +87,7 @@ ENV \
     PUBLICIP_DNS_TIMEOUT=3s \
     HTTP_TIMEOUT=10s \
     DATADIR=/updater/data \
+    CONFIG_FILEPATH=/updater/data/config.json \
     RESOLVER_ADDRESS= \
     RESOLVER_TIMEOUT=5s \
     # Web UI

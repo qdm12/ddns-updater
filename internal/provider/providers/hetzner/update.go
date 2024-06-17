@@ -32,7 +32,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 		Name           string `json:"name"`
 		Value          string `json:"value"`
 		ZoneIdentifier string `json:"zone_id"`
-		TTL            uint   `json:"ttl"`
+		TTL            uint32 `json:"ttl"`
 	}{
 		Type:           recordType,
 		Name:           p.host,

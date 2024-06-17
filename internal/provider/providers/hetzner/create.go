@@ -31,7 +31,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 		Name           string `json:"name"`
 		Value          string `json:"value"`
 		ZoneIdentifier string `json:"zone_id"`
-		TTL            uint   `json:"ttl"`
+		TTL            uint32 `json:"ttl"`
 	}{
 		Type:           recordType,
 		Name:           p.host,

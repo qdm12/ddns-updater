@@ -22,7 +22,7 @@ type Provider struct {
 	host       string
 	ipVersion  ipversion.IPVersion
 	ipv6Suffix netip.Prefix
-	ttl        int
+	ttl        uint32
 	// Authentication, either use the personal access token
 	// or the deprecated API key.
 	// See https://api.gandi.net/docs/authentication/
@@ -38,7 +38,7 @@ func New(data json.RawMessage, domain, host string,
 	extraSettings := struct {
 		PersonalAccessToken string `json:"personal_access_token"`
 		APIKey              string `json:"key"`
-		TTL                 int    `json:"ttl"`
+		TTL                 uint32 `json:"ttl"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -118,14 +118,14 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
-	const defaultTTL = 3600
+	const defaultTTL uint32 = 3600
 	ttl := defaultTTL
 	if p.ttl != 0 {
 		ttl = p.ttl
 	}
 	requestData := struct {
 		Values [1]string `json:"rrset_values"`
-		TTL    int       `json:"rrset_ttl"`
+		TTL    uint32    `json:"rrset_ttl"`
 	}{
 		Values: [1]string{ip.Unmap().String()},
 		TTL:    ttl,

@@ -19,7 +19,7 @@ type recordResourceSet struct {
 	// Rrdatas, as defined in RFC 1035 (section 5) and RFC 1034 (section 3.6.1)
 	Rrdatas []string `json:"rrdatas,omitempty"`
 	// TTL is the number of seconds that this RRSet can be cached by resolvers.
-	TTL int64 `json:"ttl"`
+	TTL uint32 `json:"ttl"`
 	// Type is the identifier of a record type. For example A or AAAA.
 	Type string `json:"type"`
 }

@@ -26,7 +26,7 @@ type Provider struct {
 	username      string
 	password      string
 	useProviderIP bool
-	ttl           uint
+	ttl           uint32
 }
 
 func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
@@ -34,7 +34,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
-		TTL           uint   `json:"ttl"`
+		TTL           uint32 `json:"ttl"`
 		UseProviderIP bool   `json:"provider_ip"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
@@ -128,7 +128,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Type    string `json:"type"`    // constants.A or constants.AAAA depending on ip address given
 		Name    string `json:"name"`    // DNS record name (only the subdomain part)
 		Content string `json:"content"` // ip address
-		TTL     uint   `json:"ttl"`
+		TTL     uint32 `json:"ttl"`
 	}{
 		Type:    recordType,
 		Name:    updateHost,

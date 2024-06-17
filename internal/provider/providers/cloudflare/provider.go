@@ -31,7 +31,7 @@ type Provider struct {
 	userServiceKey string
 	zoneIdentifier string
 	proxied        bool
-	ttl            uint
+	ttl            uint32
 }
 
 func New(data json.RawMessage, domain, host string,
@@ -44,7 +44,7 @@ func New(data json.RawMessage, domain, host string,
 		UserServiceKey string `json:"user_service_key"`
 		ZoneIdentifier string `json:"zone_identifier"`
 		Proxied        bool   `json:"proxied"`
-		TTL            uint   `json:"ttl"`
+		TTL            uint32 `json:"ttl"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -243,7 +243,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 		Name    string `json:"name"`    // DNS record name i.e. example.com
 		Content string `json:"content"` // ip address
 		Proxied bool   `json:"proxied"` // whether the record is receiving the performance and security benefits of Cloudflare
-		TTL     uint   `json:"ttl"`
+		TTL     uint32 `json:"ttl"`
 	}{
 		Type:    recordType,
 		Name:    utils.BuildURLQueryHostname(p.host, p.domain),
@@ -335,7 +335,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Name    string `json:"name"`    // DNS record name i.e. example.com
 		Content string `json:"content"` // ip address
 		Proxied bool   `json:"proxied"` // whether the record is receiving the performance and security benefits of Cloudflare
-		TTL     uint   `json:"ttl"`
+		TTL     uint32 `json:"ttl"`
 	}{
 		Type:    recordType,
 		Name:    utils.BuildURLQueryHostname(p.host, p.domain),

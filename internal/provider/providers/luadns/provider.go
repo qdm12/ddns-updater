@@ -137,7 +137,7 @@ type luaDNSRecord struct {
 	Name    string `json:"name"`
 	Type    string `json:"type"`
 	Content string `json:"content"`
-	TTL     int    `json:"ttl"`
+	TTL     uint32 `json:"ttl"`
 }
 
 type luaDNSError struct {

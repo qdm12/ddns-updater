@@ -22,7 +22,7 @@ type Provider struct {
 	ipv6Suffix     netip.Prefix
 	token          string
 	zoneIdentifier string
-	ttl            uint
+	ttl            uint32
 }
 
 func New(data json.RawMessage, domain, host string,
@@ -31,7 +31,7 @@ func New(data json.RawMessage, domain, host string,
 	extraSettings := struct {
 		Token          string `json:"token"`
 		ZoneIdentifier string `json:"zone_identifier"`
-		TTL            uint   `json:"ttl"`
+		TTL            uint32 `json:"ttl"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {

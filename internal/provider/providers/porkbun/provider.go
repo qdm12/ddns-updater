@@ -20,7 +20,7 @@ type Provider struct {
 	host         string
 	ipVersion    ipversion.IPVersion
 	ipv6Suffix   netip.Prefix
-	ttl          uint
+	ttl          uint32
 	apiKey       string
 	secretAPIKey string
 }
@@ -31,7 +31,7 @@ func New(data json.RawMessage, domain, host string,
 	extraSettings := struct {
 		SecretAPIKey string `json:"secret_api_key"`
 		APIKey       string `json:"api_key"`
-		TTL          uint   `json:"ttl"`
+		TTL          uint32 `json:"ttl"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {

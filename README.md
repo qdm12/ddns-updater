@@ -227,6 +227,7 @@ Check the documentation for your DNS provider:
 - [Ionos](docs/ionos.md)
 - [Linode](docs/linode.md)
 - [LuaDNS](docs/luadns.md)
+- [Mikrotik](docs/mikrotik.md)
 - [Name.com](docs/name.com.md)
 - [Namecheap](docs/namecheap.md)
 - [Netcup](docs/netcup.md)

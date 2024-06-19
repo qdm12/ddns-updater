@@ -6,7 +6,7 @@ require (
 	github.com/breml/rootcerts v0.2.17
 	github.com/chmike/domain v1.0.1
 	github.com/containrrr/shoutrrr v0.8.0
-	github.com/go-chi/chi/v5 v5.0.12
+	github.com/go-chi/chi/v5 v5.0.13
 	github.com/golang/mock v1.6.0
 	github.com/miekg/dns v1.1.61
 	github.com/qdm12/goservices v0.1.0

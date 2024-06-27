@@ -51,6 +51,11 @@ func Test_extractFromDomainField(t *testing.T) {
 			domainRegistered: "domain.goip.de",
 			owners:           []string{"my"},
 		},
+		"duckdns.org": {
+			domainField:      "my.domain.duckdns.org",
+			domainRegistered: "domain.duckdns.org",
+			owners:           []string{"my"},
+		},
 	}
 
 	for name, testCase := range testCases {

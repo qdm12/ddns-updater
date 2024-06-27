@@ -9,6 +9,7 @@ import (
 	"net/netip"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -28,9 +29,28 @@ type Provider struct {
 	useProviderIP bool
 }
 
+const eTLD = "duckdns.org"
+
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
+	// Note domain is of the form:
+	// - for retro-compatibility: "", "duckdns.org"
+	// - domain.duckdns.org since duckdns.org is an eTLD.
+	if domain == "" { // retro-compatibility
+		domain = eTLD
+	}
+	if domain == eTLD { // retro-compatibility
+		ownerParts := strings.Split(owner, ".")
+		lastOwnerPart := ownerParts[len(ownerParts)-1]
+		domain = lastOwnerPart + "." + domain // form domain.duckdns.org
+		if len(ownerParts) > 1 {
+			owner = strings.Join(ownerParts[:len(ownerParts)-1], ".")
+		} else {
+			owner = "@" // root domain
+		}
+	}
+
 	extraSettings := struct {
 		Token         string `json:"token"`
 		UseProviderIP bool   `json:"provider_ip"`
@@ -38,9 +58,6 @@ func New(data json.RawMessage, domain, owner string,
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
 		return nil, err
-	}
-	if domain == "" {
-		domain = "duckdns.org"
 	}
 
 	err = validateSettings(domain, owner, extraSettings.Token)
@@ -58,15 +75,22 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-var tokenRegex = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$`)
+var (
+	regexDomain = regexp.MustCompile(`^.+\.(duckdns\.org)$`)
+	tokenRegex  = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$`)
+)
 
 func validateSettings(domain, owner, token string) (err error) {
+	const maxDomainLabels = 3 // domain.duckdns.org
 	switch {
-	case domain != "duckdns.org":
-		return fmt.Errorf("%w: %s must be duckdns.org", errors.ErrDomainNotValid, domain)
-	case owner == "@", owner == "*":
-		return fmt.Errorf("%w: %q is not valid",
-			errors.ErrOwnerRootOrWildcard, owner)
+	case !regexDomain.MatchString(domain):
+		return fmt.Errorf(`%w: %q must have the effective TLD "duckdns.org"`,
+			errors.ErrDomainNotValid, domain)
+	case strings.Count(owner, ".") > maxDomainLabels-1:
+		return fmt.Errorf("%w: %q has more than %d labels",
+			errors.ErrDomainNotValid, domain, maxDomainLabels)
+	case owner == "*":
+		return fmt.Errorf("%w: %s", errors.ErrOwnerWildcard, owner)
 	case !tokenRegex.MatchString(token):
 		return fmt.Errorf("%w: token %q does not match regex %q",
 			errors.ErrTokenNotValid, token, tokenRegex)
@@ -119,7 +143,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	values := url.Values{}
 	values.Set("verbose", "true")
-	values.Set("domains", p.owner)
+	values.Set("domains", p.BuildDomainName())
 	values.Set("token", p.token)
 	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
 	if !useProviderIP {

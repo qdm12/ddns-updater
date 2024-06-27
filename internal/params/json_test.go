@@ -46,6 +46,11 @@ func Test_extractFromDomainField(t *testing.T) {
 			errWrapped:  ErrMultipleDomainsSpecified,
 			errMessage:  "multiple domains specified: \"example.com\" and \"something.com\"",
 		},
+		"goip.de": {
+			domainField:      "my.domain.goip.de",
+			domainRegistered: "domain.goip.de",
+			owners:           []string{"my"},
+		},
 	}
 
 	for name, testCase := range testCases {

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -33,8 +34,21 @@ const defaultDomain = "goip.de"
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
-	if domain == "" {
+	// Note domain is of the form:
+	// - for retro-compatibility: "", "goip.de" or "goip.it"
+	// - domain.goip.de or domain.goip.it since goip.de and goip.it are eTLDs.
+	if domain == "" { // retro-compatibility
 		domain = defaultDomain
+	}
+	if domain == defaultDomain || domain == "goip.it" { // retro-compatibility
+		ownerParts := strings.Split(owner, ".")
+		lastOwnerPart := ownerParts[len(ownerParts)-1]
+		domain = lastOwnerPart + "." + domain // form domain.goip.de or domain.goip.it
+		if len(ownerParts) > 1 {
+			owner = strings.Join(ownerParts[:len(ownerParts)-1], ".")
+		} else {
+			owner = "@" // root domain
+		}
 	}
 
 	extraSettings := struct {
@@ -63,17 +77,23 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
+var regexDomain = regexp.MustCompile(`^.+\.(goip\.de|goip\.it)$`)
+
 func validateSettings(domain, owner, username, password string) (err error) {
+	const maxDomainLabels = 3 // domain.goip.de
 	switch {
 	case username == "":
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case password == "":
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
-	case domain != defaultDomain && domain != "goip.it":
-		return fmt.Errorf(`%w: %q must be "goip.de" or "goip.it"`,
+	case !regexDomain.MatchString(domain):
+		return fmt.Errorf(`%w: %q must match have the effective TLD "goip.de" or "goip.it"`,
 			errors.ErrDomainNotValid, domain)
-	case owner == "@" || owner == "*":
-		return fmt.Errorf("%w: %q", errors.ErrOwnerRootOrWildcard, owner)
+	case strings.Count(owner, ".") > maxDomainLabels-1:
+		return fmt.Errorf("%w: %q has more than %d labels",
+			errors.ErrDomainNotValid, domain, maxDomainLabels)
+	case owner == "*":
+		return fmt.Errorf("%w: %q", errors.ErrOwnerWildcard, owner)
 	}
 	return nil
 }

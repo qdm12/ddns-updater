@@ -39,29 +39,30 @@ func New(data json.RawMessage, domain, owner string,
 	if err != nil {
 		return nil, err
 	}
-	p = &Provider{
+
+	err = validateSettings(extraSettings.Key, extraSettings.Secret)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:     domain,
 		owner:      owner,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
 		key:        extraSettings.Key,
 		secret:     extraSettings.Secret,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
 var keyRegex = regexp.MustCompile(`^[A-Za-z0-9]{8,14}\_[A-Za-z0-9]{21,22}$`)
 
-func (p *Provider) isValid() error {
+func validateSettings(key, secret string) (err error) {
 	switch {
-	case !keyRegex.MatchString(p.key):
+	case !keyRegex.MatchString(key):
 		return fmt.Errorf("%w: key %q does not match regex %s",
-			errors.ErrKeyNotValid, p.key, keyRegex)
-	case p.secret == "":
+			errors.ErrKeyNotValid, key, keyRegex)
+	case secret == "":
 		return fmt.Errorf("%w", errors.ErrSecretNotSet)
 	}
 	return nil

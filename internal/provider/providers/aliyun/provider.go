@@ -37,30 +37,32 @@ func New(data json.RawMessage, domain, owner string,
 	if err != nil {
 		return nil, err
 	}
-	p = &Provider{
+	region := "cn-hangzhou"
+	if extraSettings.Region != "" {
+		region = extraSettings.Region
+	}
+
+	err = validateSettings(extraSettings.AccessKeyID, extraSettings.AccessSecret)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:       domain,
 		owner:        owner,
 		ipVersion:    ipVersion,
 		ipv6Suffix:   ipv6Suffix,
 		accessKeyID:  extraSettings.AccessKeyID,
 		accessSecret: extraSettings.AccessSecret,
-		region:       "cn-hangzhou",
-	}
-	if extraSettings.Region != "" {
-		p.region = extraSettings.Region
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+		region:       region,
+	}, nil
 }
 
-func (p *Provider) isValid() error {
+func validateSettings(accessKeyID, accessSecret string) (err error) {
 	switch {
-	case p.accessKeyID == "":
+	case accessKeyID == "":
 		return fmt.Errorf("%w", errors.ErrAccessKeyIDNotSet)
-	case p.accessSecret == "":
+	case accessSecret == "":
 		return fmt.Errorf("%w", errors.ErrAccessKeySecretNotSet)
 	}
 	return nil

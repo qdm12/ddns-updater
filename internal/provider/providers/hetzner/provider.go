@@ -37,30 +37,33 @@ func New(data json.RawMessage, domain, owner string,
 	if err != nil {
 		return nil, err
 	}
-	p = &Provider{
+
+	ttl := uint32(1)
+	if extraSettings.TTL > 0 {
+		ttl = extraSettings.TTL
+	}
+
+	err = validateSettings(extraSettings.ZoneIdentifier, extraSettings.Token)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:         domain,
 		owner:          owner,
 		ipVersion:      ipVersion,
 		ipv6Suffix:     ipv6Suffix,
 		token:          extraSettings.Token,
 		zoneIdentifier: extraSettings.ZoneIdentifier,
-		ttl:            extraSettings.TTL,
-	}
-	if p.ttl == 0 {
-		p.ttl = 1
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+		ttl:            ttl,
+	}, nil
 }
 
-func (p *Provider) isValid() error {
+func validateSettings(zoneIdentifier, token string) (err error) {
 	switch {
-	case p.zoneIdentifier == "":
+	case zoneIdentifier == "":
 		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
-	case p.token == "":
+	case token == "":
 		return fmt.Errorf("%w", errors.ErrTokenNotSet)
 	}
 	return nil

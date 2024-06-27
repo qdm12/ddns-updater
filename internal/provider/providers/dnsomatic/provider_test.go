@@ -7,18 +7,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Provider_isValid(t *testing.T) {
+func Test_validateSettings(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		provider   Provider
+		username   string
+		password   string
 		errWrapped error
 		errMessage string
 	}{
 		"empty_username": {
-			provider: Provider{
-				password: "password",
-			},
+			password:   "password",
 			errWrapped: errors.ErrUsernameNotSet,
 			errMessage: `username is not set`,
 		},
@@ -29,7 +28,7 @@ func Test_Provider_isValid(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := testCase.provider.isValid()
+			err := validateSettings(testCase.username, testCase.password)
 
 			assert.ErrorIs(t, err, testCase.errWrapped)
 			if testCase.errWrapped != nil {

@@ -36,23 +36,24 @@ func New(data json.RawMessage, domain, owner string,
 	if err != nil {
 		return nil, err
 	}
-	p = &Provider{
+
+	err = validateSettings(extraSettings.Key)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:        domain,
 		owner:         owner,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		key:           extraSettings.Key,
 		useProviderIP: extraSettings.UseProviderIP,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
-func (p *Provider) isValid() error {
-	if p.key == "" {
+func validateSettings(key string) (err error) {
+	if key == "" {
 		return fmt.Errorf("%w", errors.ErrKeyNotSet)
 	}
 	return nil

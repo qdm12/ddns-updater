@@ -36,25 +36,26 @@ func New(data json.RawMessage, domain, owner string) (
 	if err != nil {
 		return nil, err
 	}
-	p = &Provider{
+
+	err = validateSettings(extraSettings.Password)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:        domain,
 		owner:         owner,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
 var passwordRegex = regexp.MustCompile(`^[a-f0-9]{32}$`)
 
-func (p *Provider) isValid() error {
-	if !passwordRegex.MatchString(p.password) {
+func validateSettings(password string) (err error) {
+	if !passwordRegex.MatchString(password) {
 		return fmt.Errorf("%w: password %q does not match regex %q",
-			errors.ErrPasswordNotValid, p.password, passwordRegex)
+			errors.ErrPasswordNotValid, password, passwordRegex)
 	}
 	return nil
 }

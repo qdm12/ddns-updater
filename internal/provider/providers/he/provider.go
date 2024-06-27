@@ -39,23 +39,24 @@ func New(data json.RawMessage, domain, owner string,
 	if err != nil {
 		return nil, err
 	}
-	p = &Provider{
+
+	err = validateSettings(extraSettings.Password)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:        domain,
 		owner:         owner,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
-func (p *Provider) isValid() error {
-	if p.password == "" {
+func validateSettings(password string) (err error) {
+	if password == "" {
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	}
 	return nil

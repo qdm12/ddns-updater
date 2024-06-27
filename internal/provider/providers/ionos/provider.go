@@ -31,21 +31,23 @@ func New(data json.RawMessage, domain, owner string,
 	if err := json.Unmarshal(data, &extraSettings); err != nil {
 		return nil, fmt.Errorf("decoding ionos extra settings: %w", err)
 	}
-	p = &Provider{
+
+	err = validateSettings(p.apiKey)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:     domain,
 		owner:      owner,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
 		apiKey:     extraSettings.APIKey,
-	}
-	if err := p.isValid(); err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
-func (p *Provider) isValid() error {
-	if p.apiKey == "" {
+func validateSettings(apiKey string) (err error) {
+	if apiKey == "" {
 		return fmt.Errorf("%w", errors.ErrTokenNotSet)
 	}
 	return nil

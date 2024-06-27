@@ -50,7 +50,14 @@ func New(data json.RawMessage, domain, owner string,
 	if err != nil {
 		return nil, err
 	}
-	p = &Provider{
+
+	err = validateSettings(extraSettings.Email, extraSettings.Key, extraSettings.UserServiceKey,
+		extraSettings.ZoneIdentifier, extraSettings.TTL)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:         domain,
 		owner:          owner,
 		ipVersion:      ipVersion,
@@ -62,12 +69,7 @@ func New(data json.RawMessage, domain, owner string,
 		zoneIdentifier: extraSettings.ZoneIdentifier,
 		proxied:        extraSettings.Proxied,
 		ttl:            extraSettings.TTL,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
 var (
@@ -76,28 +78,28 @@ var (
 	regexEmail          = regexp.MustCompile(`[a-zA-Z0-9-_.+]+@[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,10}`)
 )
 
-func (p *Provider) isValid() error {
+func validateSettings(email, key, userServiceKey, zoneIdentifier string, ttl uint32) (err error) {
 	switch {
-	case p.email != "", p.key != "": // email and key must be provided
+	case email != "", key != "": // email and key must be provided
 		switch {
-		case !keyRegex.MatchString(p.key):
+		case !keyRegex.MatchString(key):
 			return fmt.Errorf("%w: key %q does not match regex %q",
-				errors.ErrKeyNotValid, p.key, keyRegex)
-		case !regexEmail.MatchString(p.email):
+				errors.ErrKeyNotValid, key, keyRegex)
+		case !regexEmail.MatchString(email):
 			return fmt.Errorf("%w: email %q does not match regex %q",
-				errors.ErrEmailNotValid, p.email, regexEmail)
+				errors.ErrEmailNotValid, email, regexEmail)
 		}
-	case p.userServiceKey != "": // only user service key
-		if !userServiceKeyRegex.MatchString(p.userServiceKey) {
+	case userServiceKey != "": // only user service key
+		if !userServiceKeyRegex.MatchString(userServiceKey) {
 			return fmt.Errorf("%w: %q does not match regex %q",
-				errors.ErrUserServiceKeyNotValid, p.userServiceKey, userServiceKeyRegex)
+				errors.ErrUserServiceKeyNotValid, userServiceKey, userServiceKeyRegex)
 		}
 	default: // constants.API token only
 	}
 	switch {
-	case p.zoneIdentifier == "":
+	case zoneIdentifier == "":
 		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
-	case p.ttl == 0:
+	case ttl == 0:
 		return fmt.Errorf("%w", errors.ErrTTLNotSet)
 	}
 	return nil

@@ -36,7 +36,12 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("JSON decoding extra settings: %w", err)
 	}
 
-	p = &Provider{
+	err = validateSettings(extraSettings.Project, extraSettings.Zone, extraSettings.Credentials)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:      domain,
 		owner:       owner,
 		ipVersion:   ipVersion,
@@ -44,32 +49,22 @@ func New(data json.RawMessage, domain, owner string,
 		project:     extraSettings.Project,
 		zone:        extraSettings.Zone,
 		credentials: extraSettings.Credentials,
-	}
-
-	err = p.isValid()
-	if err != nil {
-		return nil, fmt.Errorf("configuration is not valid: %w", err)
-	}
-
-	return p, nil
+	}, nil
 }
 
-func (p *Provider) isValid() (err error) {
-	if p.project == "" {
+func validateSettings(project, zone string, credentials json.RawMessage) (err error) {
+	switch {
+	case project == "":
 		return fmt.Errorf("%w", ddnserrors.ErrGCPProjectNotSet)
-	}
-
-	if p.zone == "" {
+	case zone == "":
 		return fmt.Errorf("%w", ddnserrors.ErrZoneIdentifierNotSet)
-	}
-
-	if len(p.credentials) == 0 {
+	case len(credentials) == 0:
 		return fmt.Errorf("%w", ddnserrors.ErrCredentialsNotSet)
 	}
 	var creds struct {
 		Type string `json:"type"`
 	}
-	err = json.Unmarshal(p.credentials, &creds)
+	err = json.Unmarshal(credentials, &creds)
 	if err != nil || creds.Type == "" {
 		return fmt.Errorf("%w: 'type' JSON field value missing",
 			ddnserrors.ErrCredentialsNotValid)

@@ -41,23 +41,24 @@ func New(data json.RawMessage, domain, owner string,
 	if owner == "" {
 		owner = "@" // default
 	}
-	p = &Provider{
+
+	err = validateSettings(extraSettings.Token)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:        domain,
 		owner:         owner,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		token:         extraSettings.Token,
 		useProviderIP: extraSettings.UseProviderIP,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
-func (p *Provider) isValid() error {
-	if p.token == "" {
+func validateSettings(token string) (err error) {
+	if token == "" {
 		return fmt.Errorf("%w", errors.ErrTokenNotSet)
 	}
 	return nil

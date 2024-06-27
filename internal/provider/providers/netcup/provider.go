@@ -37,7 +37,13 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("JSON decoding provider specific settings: %w", err)
 	}
 
-	p = &Provider{
+	err = validateSettings(owner, extraSettings.CustomerNumber,
+		extraSettings.APIKey, extraSettings.Password)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:         domain,
 		owner:          owner,
 		ipVersion:      ipVersion,
@@ -45,26 +51,19 @@ func New(data json.RawMessage, domain, owner string,
 		customerNumber: extraSettings.CustomerNumber,
 		apiKey:         extraSettings.APIKey,
 		password:       extraSettings.Password,
-	}
-
-	err = p.isValid()
-	if err != nil {
-		return nil, fmt.Errorf("validating provider settings: %w", err)
-	}
-
-	return p, nil
+	}, nil
 }
 
-func (p *Provider) isValid() error {
+func validateSettings(owner, customerNumber, apiKey, password string) (err error) {
 	switch {
-	case p.customerNumber == "":
-		return fmt.Errorf("%w", errors.ErrCustomerNumberNotSet)
-	case p.apiKey == "":
-		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
-	case p.password == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
-	case p.owner == "*":
+	case owner == "*":
 		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
+	case customerNumber == "":
+		return fmt.Errorf("%w", errors.ErrCustomerNumberNotSet)
+	case apiKey == "":
+		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
+	case password == "":
+		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	}
 	return nil
 }

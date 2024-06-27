@@ -39,26 +39,27 @@ func New(data json.RawMessage, domain, owner string,
 	if owner == "" { // TODO-v2 remove default
 		owner = "@" // default
 	}
-	p = &Provider{
+
+	err = validateSettings(extraSettings.Key)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:     domain,
 		owner:      owner,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
 		key:        extraSettings.Key,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
 var keyRegex = regexp.MustCompile(`^[a-zA-Z0-9]{16}$`)
 
-func (p *Provider) isValid() error {
-	if !keyRegex.MatchString(p.key) {
+func validateSettings(key string) (err error) {
+	if !keyRegex.MatchString(key) {
 		return fmt.Errorf("%w: key %q does not match regex %s",
-			errors.ErrKeyNotValid, p.key, keyRegex)
+			errors.ErrKeyNotValid, key, keyRegex)
 	}
 	return nil
 }

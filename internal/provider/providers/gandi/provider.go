@@ -44,7 +44,13 @@ func New(data json.RawMessage, domain, owner string,
 	if err != nil {
 		return nil, err
 	}
-	p = &Provider{
+
+	err = validateSettings(extraSettings.APIKey, extraSettings.PersonalAccessToken)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:              domain,
 		owner:               owner,
 		ipVersion:           ipVersion,
@@ -52,16 +58,11 @@ func New(data json.RawMessage, domain, owner string,
 		personalAccessToken: extraSettings.PersonalAccessToken,
 		apiKey:              extraSettings.APIKey,
 		ttl:                 extraSettings.TTL,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
-func (p *Provider) isValid() error {
-	if p.apiKey == "" && p.personalAccessToken == "" {
+func validateSettings(apiKey, personalAccessToken string) (err error) {
+	if apiKey == "" && personalAccessToken == "" {
 		return fmt.Errorf("%w: API key and personal access token not set", errors.ErrKeyNotSet)
 	}
 	return nil

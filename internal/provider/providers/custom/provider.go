@@ -48,7 +48,12 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("parsing URL: %w", err)
 	}
 
-	p = &Provider{
+	err = validateSettings(parsedURL, extraSettings.IPv4Key, extraSettings.IPv6Key, extraSettings.SuccessRegex)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:       domain,
 		owner:        owner,
 		ipVersion:    ipVersion,
@@ -57,25 +62,21 @@ func New(data json.RawMessage, domain, owner string,
 		ipv4Key:      extraSettings.IPv4Key,
 		ipv6Key:      extraSettings.IPv6Key,
 		successRegex: extraSettings.SuccessRegex,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
-func (p *Provider) isValid() error {
+func validateSettings(url *url.URL, ipv4Key, ipv6Key string,
+	successRegex regexp.Regexp) (err error) {
 	switch {
-	case p.url.String() == "":
+	case url.String() == "":
 		return fmt.Errorf("%w", errors.ErrURLNotSet)
-	case p.url.Scheme != "https":
-		return fmt.Errorf("%w: %s", errors.ErrURLNotHTTPS, p.url.Scheme)
-	case p.ipv4Key == "":
+	case url.Scheme != "https":
+		return fmt.Errorf("%w: %s", errors.ErrURLNotHTTPS, url.Scheme)
+	case ipv4Key == "":
 		return fmt.Errorf("%w", errors.ErrIPv4KeyNotSet)
-	case p.ipv6Key == "":
+	case ipv6Key == "":
 		return fmt.Errorf("%w", errors.ErrIPv6KeyNotSet)
-	case p.successRegex.String() == "":
+	case successRegex.String() == "":
 		return fmt.Errorf("%w", errors.ErrSuccessRegexNotSet)
 	default:
 		return nil

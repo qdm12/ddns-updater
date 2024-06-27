@@ -40,7 +40,13 @@ func New(data json.RawMessage, domain, owner string,
 	if err != nil {
 		return nil, err
 	}
-	p = &Provider{
+
+	err = validateSettings(owner, extraSettings.Email, extraSettings.Password)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:        domain,
 		owner:         owner,
 		ipVersion:     ipVersion,
@@ -48,22 +54,17 @@ func New(data json.RawMessage, domain, owner string,
 		email:         extraSettings.Email,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
-func (p *Provider) isValid() error {
+func validateSettings(owner, email, password string) (err error) {
 	switch {
-	case p.email == "":
-		return fmt.Errorf("%w", errors.ErrEmailNotSet)
-	case p.password == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
-	case p.owner == "*":
+	case owner == "*":
 		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
+	case email == "":
+		return fmt.Errorf("%w", errors.ErrEmailNotSet)
+	case password == "":
+		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	}
 	return nil
 }

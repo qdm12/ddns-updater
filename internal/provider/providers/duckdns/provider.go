@@ -38,30 +38,31 @@ func New(data json.RawMessage, _, owner string,
 	if err != nil {
 		return nil, err
 	}
-	p = &Provider{
+
+	err = validateSettings(owner, extraSettings.Token)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		owner:         owner,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		token:         extraSettings.Token,
 		useProviderIP: extraSettings.UseProviderIP,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
 var tokenRegex = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$`)
 
-func (p *Provider) isValid() error {
+func validateSettings(owner, token string) (err error) {
 	switch {
-	case !tokenRegex.MatchString(p.token):
-		return fmt.Errorf("%w: token %q does not match regex %q",
-			errors.ErrTokenNotValid, p.token, tokenRegex)
-	case p.owner == "@", p.owner == "*":
+	case owner == "@", owner == "*":
 		return fmt.Errorf("%w: %q is not valid",
-			errors.ErrOwnerRootOrWildcard, p.owner)
+			errors.ErrOwnerRootOrWildcard, owner)
+	case !tokenRegex.MatchString(token):
+		return fmt.Errorf("%w: token %q does not match regex %q",
+			errors.ErrTokenNotValid, token, tokenRegex)
 	}
 	return nil
 }

@@ -38,15 +38,9 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, err
 	}
 
-	const minTTL = 300
-	switch {
-	case extraSettings.Username == "":
-		return nil, fmt.Errorf("%w", errors.ErrUsernameNotSet)
-	case extraSettings.Token == "":
-		return nil, fmt.Errorf("%w", errors.ErrPasswordNotSet)
-	case extraSettings.TTL != nil && *extraSettings.TTL < minTTL:
-		return nil, fmt.Errorf("%w: %d must be at least %d",
-			errors.ErrTTLTooLow, *extraSettings.TTL, minTTL)
+	err = validateSettings(extraSettings.Username, extraSettings.Token, extraSettings.TTL)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
 
 	return &Provider{
@@ -58,6 +52,21 @@ func New(data json.RawMessage, domain, owner string,
 		token:      extraSettings.Token,
 		ttl:        extraSettings.TTL,
 	}, nil
+}
+
+func validateSettings(username, token string, ttl *uint32) (err error) {
+	const minTTL = uint32(300)
+	switch {
+	case username == "":
+		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+	case token == "":
+		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+	case ttl != nil && *ttl < minTTL:
+		return fmt.Errorf("%w: %d must be at least %d",
+			errors.ErrTTLTooLow, *ttl, minTTL)
+	default:
+		return nil
+	}
 }
 
 func (p *Provider) String() string {

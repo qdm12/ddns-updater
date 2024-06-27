@@ -26,24 +26,25 @@ type Provider struct {
 	useProviderIP bool
 }
 
-type settings struct {
-	Username      string `json:"username"`
-	Password      string `json:"password"`
-	UseProviderIP bool   `json:"provider_ip"`
-}
-
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
-	var providerSpecificSettings settings
+	var providerSpecificSettings struct {
+		Username      string `json:"username"`
+		Password      string `json:"password"`
+		UseProviderIP bool   `json:"provider_ip"`
+	}
 	err = json.Unmarshal(data, &providerSpecificSettings)
 	if err != nil {
 		return nil, fmt.Errorf("json decoding provider specific settings: %w", err)
 	}
-	err = validateSettings(domain, owner, providerSpecificSettings)
+
+	err = validateSettings(domain, owner,
+		providerSpecificSettings.Username, providerSpecificSettings.Password)
 	if err != nil {
-		return nil, fmt.Errorf("validating settings: %w", err)
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
+
 	return &Provider{
 		domain:        domain,
 		owner:         owner,
@@ -55,15 +56,15 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(domain, owner string, settings settings) error {
+func validateSettings(domain, owner, username, password string) error {
 	switch {
 	case domain == "":
 		return fmt.Errorf("%w", errors.ErrDomainNotSet)
 	case owner == "":
 		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
-	case settings.Username == "":
+	case username == "":
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
-	case settings.Password == "":
+	case password == "":
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	}
 	return nil

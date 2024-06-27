@@ -32,13 +32,18 @@ type Provider struct {
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	provider *Provider, err error) {
-	var providerSpecificSettings settings
+	var providerSpecificSettings struct {
+		// TODO adapt to the provider specific settings.
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
 	err = json.Unmarshal(data, &providerSpecificSettings)
 	if err != nil {
-		return nil, fmt.Errorf("decoding provider specific settings: %w", err)
+		return nil, fmt.Errorf("json decoding provider specific settings: %w", err)
 	}
 
-	err = validateSettings(providerSpecificSettings, domain, owner)
+	err = validateSettings(domain, owner,
+		providerSpecificSettings.Username, providerSpecificSettings.Password)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -53,13 +58,7 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-// TODO adapt to the provider specific settings.
-type settings struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-func validateSettings(providerSpecificSettings settings, domain, owner string) error {
+func validateSettings(domain, owner, username, password string) error {
 	// TODO: update this switch to be as restrictive as possible
 	// to fail early for the user. Use errors already defined
 	// in the internal/provider/errors package, or add your own
@@ -73,9 +72,9 @@ func validateSettings(providerSpecificSettings settings, domain, owner string) e
 	// TODO: does the provider support wildcard owners? If not, disallow * owners
 	// case owner == "*":
 	// 	return fmt.Errorf("%w", errors.ErrOwnerWildcard)
-	case providerSpecificSettings.Username == "":
+	case username == "":
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
-	case providerSpecificSettings.Password == "":
+	case password == "":
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	}
 	return nil

@@ -39,31 +39,32 @@ func New(data json.RawMessage, domain, owner string,
 	if err != nil {
 		return nil, err
 	}
-	p = &Provider{
+
+	err = validateSettings(extraSettings.Email, extraSettings.Token)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:     domain,
 		owner:      owner,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
 		email:      extraSettings.Email,
 		token:      extraSettings.Token,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
 var (
 	regexEmail = regexp.MustCompile(`[a-zA-Z0-9-_.+]+@[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,10}`)
 )
 
-func (p *Provider) isValid() error {
+func validateSettings(email, token string) (err error) {
 	switch {
-	case !regexEmail.MatchString(p.email):
+	case !regexEmail.MatchString(email):
 		return fmt.Errorf("%w: email %q does not match regex %s",
-			errors.ErrEmailNotValid, p.email, regexEmail)
-	case p.token == "":
+			errors.ErrEmailNotValid, email, regexEmail)
+	case token == "":
 		return fmt.Errorf("%w", errors.ErrTokenNotSet)
 	}
 	return nil

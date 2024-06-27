@@ -46,7 +46,13 @@ func New(data json.RawMessage, domain, owner string,
 	if err != nil {
 		return nil, err
 	}
-	p = &Provider{
+
+	err = validateSettings(domain, owner, extraSettings.Username, extraSettings.Password)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:        domain,
 		owner:         owner,
 		ipVersion:     ipVersion,
@@ -54,25 +60,20 @@ func New(data json.RawMessage, domain, owner string,
 		username:      extraSettings.Username,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
-func (p *Provider) isValid() error {
+func validateSettings(domain, owner, username, password string) (err error) {
 	switch {
-	case p.username == "":
+	case username == "":
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
-	case p.password == "":
+	case password == "":
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
-	case p.domain != defaultDomain && p.domain != "goip.it":
+	case domain != defaultDomain && domain != "goip.it":
 		return fmt.Errorf(`%w: %q must be "goip.de" or "goip.it"`,
-			errors.ErrDomainNotValid, p.domain)
-	case p.owner == "@" || p.owner == "*":
-		return fmt.Errorf("%w: %q", errors.ErrOwnerRootOrWildcard, p.owner)
+			errors.ErrDomainNotValid, domain)
+	case owner == "@" || owner == "*":
+		return fmt.Errorf("%w: %q", errors.ErrOwnerRootOrWildcard, owner)
 	}
 	return nil
 }

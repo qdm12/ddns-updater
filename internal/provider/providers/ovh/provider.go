@@ -59,7 +59,13 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, err
 	}
 
-	p = &Provider{
+	err = validateSettings(extraSettings.Mode, owner, extraSettings.AppKey,
+		extraSettings.ConsumerKey, extraSettings.AppSecret, extraSettings.Username, extraSettings.Password)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
+	}
+
+	return &Provider{
 		domain:        domain,
 		owner:         owner,
 		ipVersion:     ipVersion,
@@ -73,31 +79,27 @@ func New(data json.RawMessage, domain, owner string,
 		appSecret:     extraSettings.AppSecret,
 		consumerKey:   extraSettings.ConsumerKey,
 		timeNow:       time.Now,
-	}
-	err = p.isValid()
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
+	}, nil
 }
 
-func (p *Provider) isValid() error {
-	if p.mode == "api" {
+func validateSettings(mode, owner, appKey, consumerKey,
+	appSecret, username, password string) (err error) {
+	if mode == "api" {
 		switch {
-		case p.appKey == "":
+		case appKey == "":
 			return fmt.Errorf("%w", errors.ErrAppKeyNotSet)
-		case p.consumerKey == "":
+		case consumerKey == "":
 			return fmt.Errorf("%w", errors.ErrConsumerKeyNotSet)
-		case p.appSecret == "":
+		case appSecret == "":
 			return fmt.Errorf("%w", errors.ErrSecretNotSet)
 		}
 	} else {
 		switch {
-		case p.username == "":
+		case username == "":
 			return fmt.Errorf("%w", errors.ErrUsernameNotSet)
-		case p.password == "":
+		case password == "":
 			return fmt.Errorf("%w", errors.ErrPasswordNotSet)
-		case p.owner == "*":
+		case owner == "*":
 			return fmt.Errorf("%w", errors.ErrOwnerWildcard)
 		}
 	}

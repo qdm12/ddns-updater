@@ -29,31 +29,30 @@ type Provider struct {
 	signer     *signer
 }
 
-type settings struct {
-	AccessKey string  `json:"access_key"`
-	SecretKey string  `json:"secret_key"`
-	ZoneID    string  `json:"zone_id"`
-	TTL       *uint32 `json:"ttl,omitempty"`
-}
-
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	provider *Provider, err error) {
-	var providerSpecificSettings settings
+	var providerSpecificSettings struct {
+		AccessKey string  `json:"access_key"`
+		SecretKey string  `json:"secret_key"`
+		ZoneID    string  `json:"zone_id"`
+		TTL       *uint32 `json:"ttl,omitempty"`
+	}
 	err = json.Unmarshal(data, &providerSpecificSettings)
 	if err != nil {
 		return nil, fmt.Errorf("decoding provider specific settings: %w", err)
-	}
-
-	err = validateSettings(providerSpecificSettings, domain, owner)
-	if err != nil {
-		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
 
 	const defaultTTL = 300
 	ttl := uint32(defaultTTL)
 	if providerSpecificSettings.TTL != nil {
 		ttl = *providerSpecificSettings.TTL
+	}
+
+	err = validateSettings(domain, owner, providerSpecificSettings.AccessKey,
+		providerSpecificSettings.SecretKey, providerSpecificSettings.ZoneID)
+	if err != nil {
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
 
 	// Global resources needs signature to us-east-1 globalRegion
@@ -80,17 +79,17 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(providerSpecificSettings settings, domain, owner string) error {
+func validateSettings(domain, owner, accessKey, secretKey, zoneID string) error {
 	switch {
 	case domain == "":
 		return fmt.Errorf("%w", errors.ErrDomainNotSet)
 	case owner == "":
 		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
-	case providerSpecificSettings.AccessKey == "":
+	case accessKey == "":
 		return fmt.Errorf("%w", errors.ErrAccessKeyNotSet)
-	case providerSpecificSettings.SecretKey == "":
+	case secretKey == "":
 		return fmt.Errorf("%w", errors.ErrSecretKeyNotSet)
-	case providerSpecificSettings.ZoneID == "":
+	case zoneID == "":
 		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
 	}
 	return nil

@@ -10,7 +10,6 @@
     {
       "provider": "dynv6",
       "domain": "domain.com",
-      "owner": "@",
       "token": "token",
       "ip_version": "ipv4",
       "ipv6_suffix": "",
@@ -22,8 +21,7 @@
 
 ### Compulsory parameters
 
-- `"domain"`
-- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
+- `"domain"` is the domain to update. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`).
 - `"token"` that you can obtain [here](https://dynv6.com/keys#token)
 
 ### Optional parameters

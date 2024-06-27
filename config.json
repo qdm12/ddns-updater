@@ -3,7 +3,6 @@
         {
             "provider": "namecheap",
             "domain": "example.com",
-            "owner": "@",
             "password": "e5322165c1d74692bfa6d807100c0310"
         },
         {
@@ -13,8 +12,7 @@
         },
         {
             "provider": "godaddy",
-            "domain": "example.org",
-            "owner": "subdomain",
+            "domain": "subdomain.example.org",
             "key": "aaaaaaaaaaaaaaaa",
             "secret": "aaaaaaaaaaaaaaaa"
         },

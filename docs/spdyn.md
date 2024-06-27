@@ -10,7 +10,6 @@
     {
       "provider": "spdyn",
       "domain": "domain.com",
-      "owner": "@",
       "user": "user",
       "password": "password",
       "token": "token",
@@ -24,8 +23,7 @@
 
 ### Compulsory parameters
 
-- `"domain"`
-- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
+- `"domain"` is the domain to update. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`).
 
 #### Using user and password
 

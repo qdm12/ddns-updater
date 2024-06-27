@@ -12,16 +12,19 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider"
-	"github.com/qdm12/ddns-updater/internal/provider/constants"
+	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
+	"golang.org/x/net/publicsuffix"
 )
 
 type commonSettings struct {
 	Provider string `json:"provider"`
 	Domain   string `json:"domain"`
 	// Host is kept for retro-compatibility and is replaced by Owner.
-	Host       string       `json:"host,omitempty"`
-	Owner      string       `json:"owner"`
+	Host string `json:"host,omitempty"`
+	// Owner is kept for retro-compatibility and is determined from the
+	// Domain field.
+	Owner      string       `json:"owner,omitempty"`
 	IPVersion  string       `json:"ip_version"`
 	IPv6Suffix netip.Prefix `json:"ipv6_suffix,omitempty"`
 	// Retro values for warnings
@@ -155,24 +158,24 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 		common.Owner = common.Host
 	}
 
-	providerName := models.Provider(common.Provider)
-	if providerName == constants.DuckDNS { // only owner(s), no domain
-		if common.Domain != "" { // retro compatibility
-			if common.Owner == "" {
-				common.Owner = strings.TrimSuffix(common.Domain, ".duckdns.org")
-				warnings = append(warnings,
-					fmt.Sprintf("DuckDNS record should have %q specified as owner instead of %q as domain",
-						common.Owner, common.Domain))
-			} else {
-				warnings = append(warnings,
-					fmt.Sprintf("ignoring domain %q because owner %q is specified for DuckDNS record",
-						common.Domain, common.Owner))
-			}
-			common.Domain = "" // duckdns enforces empty domains
+	var domain string
+	var owners []string
+	if common.Owner != "" { // retro compatibility
+		owners = strings.Split(common.Owner, ",")
+		domain = common.Domain // single domain only
+		domains := make([]string, len(owners))
+		for i, owner := range owners {
+			domains[i] = utils.BuildURLQueryHostname(owner, common.Domain)
+		}
+		warnings = append(warnings,
+			fmt.Sprintf("you can specify the owner %q directly in the domain field as %q",
+				common.Owner, strings.Join(domains, ",")))
+	} else { // extract owner(s) from domain(s)
+		domain, owners, err = extractFromDomainField(common.Domain)
+		if err != nil {
+			return nil, nil, fmt.Errorf("extracting owners from domains: %w", err)
 		}
 	}
-
-	owners := strings.Split(common.Owner, ",")
 
 	if common.IPVersion == "" {
 		common.IPVersion = ipversion.IP4or6.String()
@@ -193,14 +196,43 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 				ipv6Suffix, ipVersion))
 	}
 
+	providerName := models.Provider(common.Provider)
 	providers = make([]provider.Provider, len(owners))
 	for i, owner := range owners {
 		owner = strings.TrimSpace(owner)
-		providers[i], err = provider.New(providerName, rawSettings, common.Domain,
+		providers[i], err = provider.New(providerName, rawSettings, domain,
 			owner, ipVersion, ipv6Suffix)
 		if err != nil {
 			return nil, warnings, err
 		}
 	}
 	return providers, warnings, nil
+}
+
+var (
+	ErrMultipleDomainsSpecified = errors.New("multiple domains specified")
+)
+
+func extractFromDomainField(domainField string) (domainRegistered string,
+	owners []string, err error) {
+	domains := strings.Split(domainField, ",")
+	owners = make([]string, len(domains))
+	for i, domain := range domains {
+		newDomainRegistered, err := publicsuffix.EffectiveTLDPlusOne(domain)
+		switch {
+		case err != nil:
+			return "", nil, fmt.Errorf("extracting effective TLD+1: %w", err)
+		case domainRegistered == "":
+			domainRegistered = newDomainRegistered
+		case domainRegistered != newDomainRegistered:
+			return "", nil, fmt.Errorf("%w: %q and %q",
+				ErrMultipleDomainsSpecified, domainRegistered, newDomainRegistered)
+		}
+		if domain == domainRegistered {
+			owners[i] = "@"
+			continue
+		}
+		owners[i] = strings.TrimSuffix(domain, "."+domainRegistered)
+	}
+	return domainRegistered, owners, nil
 }

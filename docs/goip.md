@@ -9,8 +9,7 @@
   "settings": [
     {
       "provider": "goip",
-      "domain": "goip.de",
-      "owner": "mysubdomain",
+      "domain": "mysubdomain.goip.de",
       "username": "username",
       "password": "password",
       "provider_ip": true,
@@ -24,7 +23,7 @@
 
 ### Compulsory parameters
 
-- `"owner"` is the resource record owner and can be for example `"example"` for `example.goip.de`.
+- `"domain"` is the domain to update. For example, for the owner/host `sub`, it would be `sub.goip.de`. The [eTLD+1](https://developer.mozilla.org/en-US/docs/Glossary/eTLD) must be `goip.de` or `goip.it`.
 - `"username"` is your goip.de username listed under "Routers"
 - `"password"` is your router account password
 

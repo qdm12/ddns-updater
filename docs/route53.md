@@ -10,7 +10,6 @@
     {
       "provider": "route53",
       "domain": "domain.com",
-      "owner": "@",
       "ip_version": "ipv4",
       "ipv6_suffix": "",
       "access_key": "ffffffffffffffffffff",
@@ -24,8 +23,7 @@
 
 ### Compulsory parameters
 
-- `"domain"`
-- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
+- `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
 - `"access_key"` is the `AWS_ACCESS_KEY`
 - `"secret_key"` is the `AWS_SECRET_ACCESS_KEY`
 - `"zone_id"` is identification of your hosted zone

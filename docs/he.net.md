@@ -10,7 +10,6 @@
     {
       "provider": "he",
       "domain": "domain.com",
-      "owner": "@",
       "password": "password",
       "provider_ip": true,
       "ip_version": "ipv4",
@@ -22,8 +21,7 @@
 
 ### Compulsory parameters
 
-- `"domain"`
-- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com` (untested)
+- `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard. (untested)
 - `"password"`
 
 ### Optional parameters

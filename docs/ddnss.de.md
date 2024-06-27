@@ -11,7 +11,6 @@
       "provider": "ddnss",
       "provider_ip": true,
       "domain": "domain.com",
-      "owner": "@",
       "username": "user",
       "password": "password",
       "dual_stack": false,
@@ -24,8 +23,7 @@
 
 ### Compulsory parameters
 
-- `"domain"`
-- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
+- `"domain"` is the domain to update. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`).
 - `"username"`
 - `"password"`
 

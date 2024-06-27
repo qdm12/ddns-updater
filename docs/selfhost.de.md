@@ -10,7 +10,6 @@
     {
       "provider": "selfhost.de",
       "domain": "domain.com",
-      "owner": "@",
       "username": "username",
       "password": "password",
       "provider_ip": true,
@@ -23,8 +22,7 @@
 
 ### Compulsory parameters
 
-- `"domain"`
-- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
+- `"domain"` is the domain to update. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`).
 - `"username"` is your DynDNS username
 - `"password"` is your DynDNS password
 

@@ -9,7 +9,7 @@
   "settings": [
     {
       "provider": "duckdns",
-      "owner": "sub",
+      "domain": "sub.duckdns.org",
       "token": "token",
       "ip_version": "ipv4",
       "ipv6_suffix": "",
@@ -21,7 +21,7 @@
 
 ### Compulsory parameters
 
-- `"owner"` is the resource record owner and can be for example `"sub"` for the domain `sub.duckdns.org`
+- `"domain"` is the domain to update. For example, for the owner/host `sub`, it would be `sub.duckdns.org`. The [eTLD+1](https://developer.mozilla.org/en-US/docs/Glossary/eTLD) must be `duckdns.org`.
 - `"token"`
 
 ### Optional parameters

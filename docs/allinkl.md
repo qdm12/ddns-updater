@@ -9,8 +9,7 @@
   "settings": [
     {
       "provider": "allinkl",
-      "domain": "domain.com",
-      "owner": "sub",
+      "domain": "sub.domain.com",
       "username": "dynXXXXXXX",
       "password": "password",
       "ip_version": "ipv4",
@@ -22,8 +21,7 @@
 
 ### Compulsory parameters
 
-- `"domain"`
-- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
+- `"domain"` is the domain to update. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`).
 - `"username"` username (usually starts with dyn followed by numbers)
 - `"password"` password in plain text
 

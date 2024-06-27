@@ -24,7 +24,7 @@
 
 ### Compulsory parameters
 
-- `"host"` is the full FQDN of your ddns address. sample.goip.de or something.goip.it
+- `"host"` is the host of your domain, for example `"example"` for `example.goip.de`.
 - `"username"` is your goip.de username listed under "Routers"
 - `"password"` is your router account password
 

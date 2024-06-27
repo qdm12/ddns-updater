@@ -38,7 +38,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, err
 	}
 
-	err = validateSettings(extraSettings.Token)
+	err = validateSettings(domain, extraSettings.Token)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -52,7 +52,12 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(token string) (err error) {
+func validateSettings(domain, token string) (err error) {
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+
 	if token == "" {
 		return fmt.Errorf("%w", errors.ErrTokenNotSet)
 	}

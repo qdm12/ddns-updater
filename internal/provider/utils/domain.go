@@ -1,6 +1,10 @@
 package utils
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/chmike/domain"
+)
 
 func BuildDomainName(owner, domain string) string {
 	if owner == "@" {
@@ -15,4 +19,8 @@ func BuildURLQueryHostname(owner, domain string) string {
 		return domain
 	}
 	return owner + "." + domain
+}
+
+func CheckDomain(domainString string) (err error) {
+	return domain.Check(domainString)
 }

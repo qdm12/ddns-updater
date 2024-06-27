@@ -59,7 +59,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, err
 	}
 
-	err = validateSettings(extraSettings.Mode, owner, extraSettings.AppKey,
+	err = validateSettings(domain, extraSettings.Mode, owner, extraSettings.AppKey,
 		extraSettings.ConsumerKey, extraSettings.AppSecret, extraSettings.Username, extraSettings.Password)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
@@ -82,8 +82,13 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(mode, owner, appKey, consumerKey,
+func validateSettings(domain, mode, owner, appKey, consumerKey,
 	appSecret, username, password string) (err error) {
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+
 	if mode == "api" {
 		switch {
 		case appKey == "":

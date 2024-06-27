@@ -45,7 +45,7 @@ func New(data json.RawMessage, domain, owner string,
 		clientKey = extraSettings.Password
 	}
 
-	err = validateSettings(extraSettings.Username, clientKey)
+	err = validateSettings(domain, extraSettings.Username, clientKey)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -60,7 +60,12 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(username, clientKey string) (err error) {
+func validateSettings(domain, username, clientKey string) (err error) {
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+
 	switch {
 	case username == "":
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)

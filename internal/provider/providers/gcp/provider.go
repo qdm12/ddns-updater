@@ -7,7 +7,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
+	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -36,7 +36,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("JSON decoding extra settings: %w", err)
 	}
 
-	err = validateSettings(extraSettings.Project, extraSettings.Zone, extraSettings.Credentials)
+	err = validateSettings(domain, extraSettings.Project, extraSettings.Zone, extraSettings.Credentials)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -52,14 +52,19 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(project, zone string, credentials json.RawMessage) (err error) {
+func validateSettings(domain, project, zone string, credentials json.RawMessage) (err error) {
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+
 	switch {
 	case project == "":
-		return fmt.Errorf("%w", ddnserrors.ErrGCPProjectNotSet)
+		return fmt.Errorf("%w", errors.ErrGCPProjectNotSet)
 	case zone == "":
-		return fmt.Errorf("%w", ddnserrors.ErrZoneIdentifierNotSet)
+		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
 	case len(credentials) == 0:
-		return fmt.Errorf("%w", ddnserrors.ErrCredentialsNotSet)
+		return fmt.Errorf("%w", errors.ErrCredentialsNotSet)
 	}
 	var creds struct {
 		Type string `json:"type"`
@@ -67,7 +72,7 @@ func validateSettings(project, zone string, credentials json.RawMessage) (err er
 	err = json.Unmarshal(credentials, &creds)
 	if err != nil || creds.Type == "" {
 		return fmt.Errorf("%w: 'type' JSON field value missing",
-			ddnserrors.ErrCredentialsNotValid)
+			errors.ErrCredentialsNotValid)
 	}
 
 	return nil

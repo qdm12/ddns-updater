@@ -20,6 +20,7 @@ import (
 )
 
 type Provider struct {
+	domain        string
 	owner         string
 	ipVersion     ipversion.IPVersion
 	ipv6Suffix    netip.Prefix
@@ -27,7 +28,7 @@ type Provider struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, _, owner string,
+func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
@@ -38,13 +39,17 @@ func New(data json.RawMessage, _, owner string,
 	if err != nil {
 		return nil, err
 	}
+	if domain == "" {
+		domain = "duckdns.org"
+	}
 
-	err = validateSettings(owner, extraSettings.Token)
+	err = validateSettings(domain, owner, extraSettings.Token)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
 
 	return &Provider{
+		domain:        domain,
 		owner:         owner,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
@@ -55,8 +60,10 @@ func New(data json.RawMessage, _, owner string,
 
 var tokenRegex = regexp.MustCompile(`^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$`)
 
-func validateSettings(owner, token string) (err error) {
+func validateSettings(domain, owner, token string) (err error) {
 	switch {
+	case domain != "duckdns.org":
+		return fmt.Errorf("%w: %s must be duckdns.org", errors.ErrDomainNotValid, domain)
 	case owner == "@", owner == "*":
 		return fmt.Errorf("%w: %q is not valid",
 			errors.ErrOwnerRootOrWildcard, owner)
@@ -68,11 +75,11 @@ func validateSettings(owner, token string) (err error) {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString("duckdns.org", p.owner, constants.DuckDNS, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.DuckDNS, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
-	return "duckdns.org"
+	return p.domain
 }
 
 func (p *Provider) Owner() string {
@@ -92,7 +99,7 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.owner, "duckdns.org")
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {

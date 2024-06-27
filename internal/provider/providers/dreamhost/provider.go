@@ -40,7 +40,7 @@ func New(data json.RawMessage, domain, owner string,
 		owner = "@" // default
 	}
 
-	err = validateSettings(extraSettings.Key)
+	err = validateSettings(domain, extraSettings.Key)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -56,7 +56,12 @@ func New(data json.RawMessage, domain, owner string,
 
 var keyRegex = regexp.MustCompile(`^[a-zA-Z0-9]{16}$`)
 
-func validateSettings(key string) (err error) {
+func validateSettings(domain, key string) (err error) {
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+
 	if !keyRegex.MatchString(key) {
 		return fmt.Errorf("%w: key %q does not match regex %s",
 			errors.ErrKeyNotValid, key, keyRegex)

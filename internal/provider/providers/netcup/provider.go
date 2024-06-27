@@ -37,7 +37,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("JSON decoding provider specific settings: %w", err)
 	}
 
-	err = validateSettings(owner, extraSettings.CustomerNumber,
+	err = validateSettings(domain, owner, extraSettings.CustomerNumber,
 		extraSettings.APIKey, extraSettings.Password)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
@@ -54,7 +54,12 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(owner, customerNumber, apiKey, password string) (err error) {
+func validateSettings(domain, owner, customerNumber, apiKey, password string) (err error) {
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+
 	switch {
 	case owner == "*":
 		return fmt.Errorf("%w", errors.ErrOwnerWildcard)

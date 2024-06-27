@@ -58,15 +58,18 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(domain, owner, username, password string) error {
+func validateSettings(domain, owner, username, password string) (err error) {
 	// TODO: update this switch to be as restrictive as possible
 	// to fail early for the user. Use errors already defined
 	// in the internal/provider/errors package, or add your own
 	// if really necessary. When returning an error, always use
 	// fmt.Errorf (to enforce the caller to use errors.Is()).
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+
 	switch {
-	case domain == "":
-		return fmt.Errorf("%w", errors.ErrDomainNotSet)
 	case owner == "":
 		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
 	// TODO: does the provider support wildcard owners? If not, disallow * owners

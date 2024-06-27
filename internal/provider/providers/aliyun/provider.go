@@ -42,7 +42,7 @@ func New(data json.RawMessage, domain, owner string,
 		region = extraSettings.Region
 	}
 
-	err = validateSettings(extraSettings.AccessKeyID, extraSettings.AccessSecret)
+	err = validateSettings(domain, extraSettings.AccessKeyID, extraSettings.AccessSecret)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -58,7 +58,12 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(accessKeyID, accessSecret string) (err error) {
+func validateSettings(domain, accessKeyID, accessSecret string) (err error) {
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+
 	switch {
 	case accessKeyID == "":
 		return fmt.Errorf("%w", errors.ErrAccessKeyIDNotSet)

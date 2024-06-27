@@ -37,7 +37,7 @@ func New(data json.RawMessage, domain, owner string) (
 		return nil, err
 	}
 
-	err = validateSettings(extraSettings.Password)
+	err = validateSettings(domain, extraSettings.Password)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -52,7 +52,12 @@ func New(data json.RawMessage, domain, owner string) (
 
 var passwordRegex = regexp.MustCompile(`^[a-f0-9]{32}$`)
 
-func validateSettings(password string) (err error) {
+func validateSettings(domain, password string) (err error) {
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+
 	if !passwordRegex.MatchString(password) {
 		return fmt.Errorf("%w: password %q does not match regex %q",
 			errors.ErrPasswordNotValid, password, passwordRegex)

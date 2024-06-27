@@ -79,10 +79,13 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(domain, owner, accessKey, secretKey, zoneID string) error {
+func validateSettings(domain, owner, accessKey, secretKey, zoneID string) (err error) {
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+
 	switch {
-	case domain == "":
-		return fmt.Errorf("%w", errors.ErrDomainNotSet)
 	case owner == "":
 		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
 	case accessKey == "":

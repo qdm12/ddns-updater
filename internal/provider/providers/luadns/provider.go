@@ -40,7 +40,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, err
 	}
 
-	err = validateSettings(extraSettings.Email, extraSettings.Token)
+	err = validateSettings(domain, extraSettings.Email, extraSettings.Token)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -59,7 +59,12 @@ var (
 	regexEmail = regexp.MustCompile(`[a-zA-Z0-9-_.+]+@[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,10}`)
 )
 
-func validateSettings(email, token string) (err error) {
+func validateSettings(domain, email, token string) (err error) {
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+
 	switch {
 	case !regexEmail.MatchString(email):
 		return fmt.Errorf("%w: email %q does not match regex %s",

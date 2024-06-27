@@ -45,7 +45,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, err
 	}
 
-	err = validateSettings(extraSettings.APIKey, extraSettings.PersonalAccessToken)
+	err = validateSettings(domain, extraSettings.APIKey, extraSettings.PersonalAccessToken)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -61,7 +61,12 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(apiKey, personalAccessToken string) (err error) {
+func validateSettings(domain, apiKey, personalAccessToken string) (err error) {
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+
 	if apiKey == "" && personalAccessToken == "" {
 		return fmt.Errorf("%w: API key and personal access token not set", errors.ErrKeyNotSet)
 	}

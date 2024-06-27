@@ -48,7 +48,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("parsing URL: %w", err)
 	}
 
-	err = validateSettings(parsedURL, extraSettings.IPv4Key, extraSettings.IPv6Key, extraSettings.SuccessRegex)
+	err = validateSettings(domain, parsedURL, extraSettings.IPv4Key, extraSettings.IPv6Key, extraSettings.SuccessRegex)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -65,8 +65,13 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(url *url.URL, ipv4Key, ipv6Key string,
-	successRegex regexp.Regexp) (err error) {
+func validateSettings(domain string, url *url.URL,
+	ipv4Key, ipv6Key string, successRegex regexp.Regexp) (err error) {
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+
 	switch {
 	case url.String() == "":
 		return fmt.Errorf("%w", errors.ErrURLNotSet)

@@ -2,8 +2,6 @@ cloud.google.com/go/compute/metadata v0.3.0 h1:Tz+eQXMEqDIKRsmY3cHTL6FVaynIjX2Qx
 cloud.google.com/go/compute/metadata v0.3.0/go.mod h1:zFmK7XCadkQkj6TtorcaGlCW1hT1fIilQDwofLpJ20k=
 github.com/breml/rootcerts v0.2.17 h1:0/M2BE2Apw0qEJCXDOkaiu7d5Sx5ObNfe1BkImJ4u1I=
 github.com/breml/rootcerts v0.2.17/go.mod h1:S/PKh+4d1HUn4HQovEB8hPJZO6pUZYrIhmXBhsegfXw=
-github.com/chmike/domain v1.0.1 h1:ug6h3a7LLAfAecBAysbCXWxP1Jo8iBKWNVDxcs1BNzA=
-github.com/chmike/domain v1.0.1/go.mod h1:h558M2qGKpYRUxHHNyey6puvXkZBjvjmseOla/d1VGQ=
 github.com/containrrr/shoutrrr v0.8.0 h1:mfG2ATzIS7NR2Ec6XL+xyoHzN97H8WPjir8aYzJUSec=
 github.com/containrrr/shoutrrr v0.8.0/go.mod h1:ioyQAyu1LJY6sILuNyKaQaw+9Ttik5QePU8atnAdO2o=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

@@ -120,8 +120,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
         "settings": [
             {
                 "provider": "namecheap",
-                "domain": "example.com",
-                "owner": "@",
+                "domain": "sub.example.com",
                 "password": "e5322165c1d74692bfa6d807100c0310"
             }
         ]
@@ -165,8 +164,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
         "settings": [
             {
                 "provider": "namecheap",
-                "domain": "example.com",
-                "owner": "@",
+                "domain": "sub.example.com",
                 "password": "e5322165c1d74692bfa6d807100c0310"
             }
         ]
@@ -256,7 +254,7 @@ Check the documentation for your DNS provider:
 
 Note that:
 
-- you can specify multiple hosts for the same domain using a comma separated list. For example with `"owner": "@,subdomain1,subdomain2",`.
+- you can specify multiple owners/hosts for the same domain using a comma separated list. For example with `"domain": "example.com,sub.example.com,sub2.example.com",`.
 
 ### Environment variables
 

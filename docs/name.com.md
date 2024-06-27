@@ -12,7 +12,6 @@
     {
       "provider": "name.com",
       "domain": "domain.com",
-      "owner": "@",
       "username": "username",
       "token": "token",
       "ttl": 300,
@@ -25,8 +24,7 @@
 
 ### Compulsory parameters
 
-- `"domain"`
-- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
+- `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
 - `"username"` is your account username
 - `"token"` which you can obtain from [www.name.com/account/settings/api](https://www.name.com/account/settings/api)
 

@@ -10,7 +10,6 @@
     {
       "provider": "dynu",
       "domain": "domain.com",
-      "owner": "@",
       "group": "group",
       "username": "username",
       "password": "password",
@@ -24,8 +23,7 @@
 
 ### Compulsory parameters
 
-- `"domain"`
-- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
+- `"domain"` is the domain to update. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`).
 - `"username"`
 - `"password"` could be plain text or password in MD5 or SHA256 format (There's also an option for setting a password for IP Update only)
 

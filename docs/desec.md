@@ -9,8 +9,7 @@
   "settings": [
     {
       "provider": "desec",
-      "domain": "dedyn.io",
-      "owner": "sub",
+      "domain": "sub.dedyn.io",
       "token": "token",
       "ip_version": "ipv4",
       "ipv6_suffix": "",
@@ -22,8 +21,7 @@
 
 ### Compulsory parameters
 
-- `"domain"`
-- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
+- `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
 - `"token"` is your token that you can create [here](https://desec.io/tokens)
 
 ### Optional parameters

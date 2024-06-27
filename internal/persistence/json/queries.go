@@ -9,14 +9,14 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-// StoreNewIP stores a new IP address for a certain domain and host.
-func (db *Database) StoreNewIP(domain, host string, ip netip.Addr, t time.Time) (err error) {
+// StoreNewIP stores a new IP address for a certain domain and owner.
+func (db *Database) StoreNewIP(domain, owner string, ip netip.Addr, t time.Time) (err error) {
 	db.Lock()
 	defer db.Unlock()
 
 	targetIndex := -1
 	for i, record := range db.data.Records {
-		if record.Domain == domain && record.Host == host {
+		if record.Domain == domain && record.Owner == owner {
 			targetIndex = i
 			break
 		}
@@ -26,7 +26,7 @@ func (db *Database) StoreNewIP(domain, host string, ip netip.Addr, t time.Time) 
 	if recordNotFound {
 		db.data.Records = append(db.data.Records, record{
 			Domain: domain,
-			Host:   host,
+			Owner:  owner,
 		})
 		targetIndex = len(db.data.Records) - 1
 	}
@@ -39,14 +39,14 @@ func (db *Database) StoreNewIP(domain, host string, ip netip.Addr, t time.Time) 
 	return db.write()
 }
 
-// GetEvents gets all the IP addresses history for a certain domain, host and
+// GetEvents gets all the IP addresses history for a certain domain, owner and
 // IP version, in the order from oldest to newest.
-func (db *Database) GetEvents(domain, host string,
+func (db *Database) GetEvents(domain, owner string,
 	ipVersion ipversion.IPVersion) (events []models.HistoryEvent, err error) {
 	db.RLock()
 	defer db.RUnlock()
 	for _, record := range db.data.Records {
-		if record.Domain == domain && record.Host == host {
+		if record.Domain == domain && record.Owner == owner {
 			return filterEvents(record.Events, ipVersion), nil
 		}
 	}

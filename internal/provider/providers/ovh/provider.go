@@ -21,7 +21,7 @@ import (
 
 type Provider struct {
 	domain        string
-	host          string
+	owner         string
 	ipVersion     ipversion.IPVersion
 	ipv6Suffix    netip.Prefix
 	username      string
@@ -36,7 +36,7 @@ type Provider struct {
 	serverDelta   time.Duration
 }
 
-func New(data json.RawMessage, domain, host string,
+func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
@@ -61,7 +61,7 @@ func New(data json.RawMessage, domain, host string,
 
 	p = &Provider{
 		domain:        domain,
-		host:          host,
+		owner:         owner,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		username:      extraSettings.Username,
@@ -97,23 +97,23 @@ func (p *Provider) isValid() error {
 			return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 		case p.password == "":
 			return fmt.Errorf("%w", errors.ErrPasswordNotSet)
-		case p.host == "*":
-			return fmt.Errorf("%w", errors.ErrHostWildcard)
+		case p.owner == "*":
+			return fmt.Errorf("%w", errors.ErrOwnerWildcard)
 		}
 	}
 	return nil
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.host, constants.OVH, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.OVH, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *Provider) Host() string {
-	return p.host
+func (p *Provider) Owner() string {
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -129,13 +129,13 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:      p.Host(),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://www.ovh.com/\">OVH DNS</a>",
 		IPVersion: p.ipVersion.String(),
 	}
@@ -151,7 +151,7 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
 	}
 	values := url.Values{}
 	values.Set("system", "dyndns")
-	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
+	values.Set("hostname", utils.BuildURLQueryHostname(p.owner, p.domain))
 	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
 	if !useProviderIP {
 		values.Set("myip", ip.String())
@@ -204,7 +204,7 @@ func (p *Provider) updateWithZoneDNS(ctx context.Context, client *http.Client, i
 		recordType = constants.AAAA
 	}
 	// subDomain filter of the ovh api expect an empty string to get @ record
-	subDomain := p.host
+	subDomain := p.owner
 	if subDomain == "@" {
 		subDomain = ""
 	}

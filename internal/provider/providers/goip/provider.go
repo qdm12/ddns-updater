@@ -20,7 +20,7 @@ import (
 
 type Provider struct {
 	domain        string
-	host          string
+	owner         string
 	ipVersion     ipversion.IPVersion
 	ipv6Suffix    netip.Prefix
 	username      string
@@ -30,7 +30,7 @@ type Provider struct {
 
 const defaultDomain = "goip.de"
 
-func New(data json.RawMessage, domain, host string,
+func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	if domain == "" {
@@ -48,7 +48,7 @@ func New(data json.RawMessage, domain, host string,
 	}
 	p = &Provider{
 		domain:        domain,
-		host:          host,
+		owner:         owner,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		username:      extraSettings.Username,
@@ -71,22 +71,22 @@ func (p *Provider) isValid() error {
 	case p.domain != defaultDomain && p.domain != "goip.it":
 		return fmt.Errorf(`%w: %q must be "goip.de" or "goip.it"`,
 			errors.ErrDomainNotValid, p.domain)
-	case p.host == "@" || p.host == "*":
-		return fmt.Errorf("%w: host %q is not valid", errors.ErrHostOnlySubdomain, p.host)
+	case p.owner == "@" || p.owner == "*":
+		return fmt.Errorf("%w: %q", errors.ErrOwnerRootOrWildcard, p.owner)
 	}
 	return nil
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.host, p.domain, constants.GoIP, p.ipVersion)
+	return utils.ToString(p.owner, p.domain, constants.GoIP, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *Provider) Host() string {
-	return p.host
+func (p *Provider) Owner() string {
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -102,13 +102,13 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:      p.Host(),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://www." + p.domain + "/\">" + p.domain + "</a>",
 		IPVersion: p.ipVersion.String(),
 	}

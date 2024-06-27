@@ -21,12 +21,12 @@ import (
 
 type Provider struct {
 	domain        string
-	host          string
+	owner         string
 	password      string
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string) (
+func New(data json.RawMessage, domain, owner string) (
 	p *Provider, err error) {
 	extraSettings := struct {
 		Password      string `json:"password"`
@@ -38,7 +38,7 @@ func New(data json.RawMessage, domain, host string) (
 	}
 	p = &Provider{
 		domain:        domain,
-		host:          host,
+		owner:         owner,
 		password:      extraSettings.Password,
 		useProviderIP: extraSettings.UseProviderIP,
 	}
@@ -60,15 +60,15 @@ func (p *Provider) isValid() error {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.host, constants.Namecheap, ipversion.IP4)
+	return utils.ToString(p.domain, p.owner, constants.Namecheap, ipversion.IP4)
 }
 
 func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *Provider) Host() string {
-	return p.host
+func (p *Provider) Owner() string {
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -84,13 +84,13 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:      p.Host(),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://namecheap.com\">Namecheap</a>",
 		IPVersion: ipversion.IP4.String(),
 	}
@@ -108,7 +108,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/update",
 	}
 	values := url.Values{}
-	values.Set("host", p.host)
+	values.Set("host", p.owner)
 	values.Set("domain", p.domain)
 	values.Set("password", p.password)
 	if !p.useProviderIP {

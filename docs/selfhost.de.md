@@ -10,7 +10,7 @@
     {
       "provider": "selfhost.de",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "username": "username",
       "password": "password",
       "provider_ip": true,
@@ -24,7 +24,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
 - `"username"` is your DynDNS username
 - `"password"` is your DynDNS password
 

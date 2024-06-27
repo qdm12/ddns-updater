@@ -22,7 +22,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("creating OAuth2 client: %w", err)
 	}
 
-	fqdn := fmt.Sprintf("%s.%s.", p.host, p.domain)
+	fqdn := fmt.Sprintf("%s.%s.", p.owner, p.domain)
 
 	recordResourceSet, err := p.getRRSet(ctx, client, fqdn, recordType)
 	rrSetFound := true

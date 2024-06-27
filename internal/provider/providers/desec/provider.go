@@ -20,14 +20,14 @@ import (
 
 type Provider struct {
 	domain        string
-	host          string
+	owner         string
 	ipVersion     ipversion.IPVersion
 	ipv6Suffix    netip.Prefix
 	token         string
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string,
+func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
@@ -38,12 +38,12 @@ func New(data json.RawMessage, domain, host string,
 	if err != nil {
 		return nil, err
 	}
-	if host == "" {
-		host = "@" // default
+	if owner == "" {
+		owner = "@" // default
 	}
 	p = &Provider{
 		domain:        domain,
-		host:          host,
+		owner:         owner,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		token:         extraSettings.Token,
@@ -64,15 +64,15 @@ func (p *Provider) isValid() error {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.host, constants.DeSEC, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.DeSEC, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *Provider) Host() string {
-	return p.host
+func (p *Provider) Owner() string {
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -88,13 +88,13 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:      p.Host(),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://desec.io/\">deSEC</a>",
 		IPVersion: p.ipVersion.String(),
 	}
@@ -108,7 +108,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/nic/update",
 	}
 	values := url.Values{}
-	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
+	values.Set("hostname", utils.BuildURLQueryHostname(p.owner, p.domain))
 	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
 	if useProviderIP {
 		values.Set("myip", ip.String())

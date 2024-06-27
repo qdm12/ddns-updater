@@ -11,7 +11,7 @@
       "provider": "ddnss",
       "provider_ip": true,
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "username": "user",
       "password": "password",
       "dual_stack": false,
@@ -25,7 +25,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
 - `"username"`
 - `"password"`
 

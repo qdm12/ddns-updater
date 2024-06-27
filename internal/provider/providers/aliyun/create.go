@@ -27,7 +27,7 @@ func (p *Provider) createRecord(ctx context.Context,
 	values := newURLValues(p.accessKeyID)
 	values.Set("Action", "AddDomainRecord")
 	values.Set("DomainName", p.domain)
-	values.Set("RR", p.host)
+	values.Set("RR", p.owner)
 	values.Set("Type", recordType)
 	values.Set("Value", ip.String())
 

@@ -10,7 +10,7 @@
     {
       "provider": "godaddy",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "key": "key",
       "secret": "secret",
       "ip_version": "ipv4",
@@ -23,7 +23,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
 - `"key"`
 - `"secret"`
 

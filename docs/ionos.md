@@ -10,7 +10,7 @@
     {
       "provider": "ionos",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "api_key": "api_key",
       "ip_version": "ipv4",
       "ipv6_suffix": ""
@@ -22,7 +22,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"` or `"*"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
 - `"api_key"` is your API key, obtained from [creating an API key](https://www.ionos.com/help/domains/configuring-your-ip-address/set-up-dynamic-dns-with-company-name/#c181598)
 
 ### Optional parameters

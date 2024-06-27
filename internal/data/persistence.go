@@ -19,7 +19,7 @@ func (db *Database) Update(id uint, record records.Record) (err error) {
 	if newCount > currentCount {
 		if err := db.persistentDB.StoreNewIP(
 			record.Provider.Domain(),
-			record.Provider.Host(),
+			record.Provider.Owner(),
 			record.History.GetCurrentIP(),
 			record.History.GetSuccessTime(),
 		); err != nil {

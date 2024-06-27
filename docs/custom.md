@@ -15,7 +15,7 @@ Feel free to open issues to extend its configuration options.
     {
       "provider": "custom",
       "domain": "example.com",
-      "host": "@",
+      "owner": "@",
       "url": "https://example.com/update?domain=example.com&host=@&username=username&client_key=client_key",
       "ipv4key": "ipv4",
       "ipv6key": "ipv6",
@@ -30,7 +30,7 @@ Feel free to open issues to extend its configuration options.
 ### Compulsory parameters
 
 - `"domain"` is the domain name to update
-- `"host"` is the host to update, which can be `"@"` (root), `"*"` or a subdomain
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
 - `"url"` is the URL to update your records and should contain all the information EXCEPT the IP address to update
 - `"ipv4key"` is the URL query parameter name for the IPv4 address, for example `ipv4` will be added to the URL with `&ipv4=1.2.3.4`.
 - `"ipv6key"` is the URL query parameter name for the IPv6 address, for example `ipv6` will be added to the URL with `&ipv6=::aaff`. Even if you don't use IPv6, this must be set to something.

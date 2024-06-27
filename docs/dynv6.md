@@ -10,7 +10,7 @@
     {
       "provider": "dynv6",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "token": "token",
       "ip_version": "ipv4",
       "ipv6_suffix": "",
@@ -23,7 +23,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
 - `"token"` that you can obtain [here](https://dynv6.com/keys#token)
 
 ### Optional parameters

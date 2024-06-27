@@ -29,7 +29,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip neti
 
 	values := url.Values{}
 	values.Set("zone_id", p.zoneIdentifier)
-	values.Set("name", p.host)
+	values.Set("name", p.owner)
 	values.Set("type", recordType)
 	values.Set("page", "1")
 	values.Set("per_page", "1")

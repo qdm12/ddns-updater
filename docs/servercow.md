@@ -10,7 +10,7 @@
       {
           "provider": "servercow",
           "domain": "domain.com",
-          "host": "",
+          "owner": "",
           "username": "servercow_username",
           "password": "servercow_password",
           "ttl": 600,
@@ -25,7 +25,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be `""`, a subdomain or `"*"` generally
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
 - `"username"` is the username for your DNS API User
 - `"password"` is the password for your DNS API User
 

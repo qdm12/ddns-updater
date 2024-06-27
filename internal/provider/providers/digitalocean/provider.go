@@ -19,13 +19,13 @@ import (
 
 type Provider struct {
 	domain     string
-	host       string
+	owner      string
 	ipVersion  ipversion.IPVersion
 	ipv6Suffix netip.Prefix
 	token      string
 }
 
-func New(data json.RawMessage, domain, host string,
+func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
@@ -37,7 +37,7 @@ func New(data json.RawMessage, domain, host string,
 	}
 	p = &Provider{
 		domain:     domain,
-		host:       host,
+		owner:      owner,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
 		token:      extraSettings.Token,
@@ -57,15 +57,15 @@ func (p *Provider) isValid() error {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.host, constants.DigitalOcean, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.DigitalOcean, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *Provider) Host() string {
-	return p.host
+func (p *Provider) Owner() string {
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -81,13 +81,13 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:      p.Host(),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://www.digitalocean.com/\">DigitalOcean</a>",
 		IPVersion: p.ipVersion.String(),
 	}
@@ -102,7 +102,7 @@ func (p *Provider) setCommonHeaders(request *http.Request) {
 func (p *Provider) getRecordID(ctx context.Context, recordType string, client *http.Client) (
 	recordID int, err error) {
 	values := url.Values{}
-	values.Set("name", utils.BuildURLQueryHostname(p.host, p.domain))
+	values.Set("name", utils.BuildURLQueryHostname(p.owner, p.domain))
 	values.Set("type", recordType)
 	u := url.URL{
 		Scheme:   "https",
@@ -173,7 +173,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Data string `json:"data"`
 	}{
 		Type: recordType,
-		Name: p.host,
+		Name: p.owner,
 		Data: ip.String(),
 	}
 	err = encoder.Encode(requestData)

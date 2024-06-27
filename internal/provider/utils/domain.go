@@ -2,17 +2,17 @@ package utils
 
 import "strings"
 
-func BuildDomainName(host, domain string) string {
-	if host == "@" {
+func BuildDomainName(owner, domain string) string {
+	if owner == "@" {
 		return domain
 	}
-	host = strings.ReplaceAll(host, "*", "any")
-	return host + "." + domain
+	owner = strings.ReplaceAll(owner, "*", "any")
+	return owner + "." + domain
 }
 
-func BuildURLQueryHostname(host, domain string) string {
-	if host == "@" {
+func BuildURLQueryHostname(owner, domain string) string {
+	if owner == "@" {
 		return domain
 	}
-	return host + "." + domain
+	return owner + "." + domain
 }

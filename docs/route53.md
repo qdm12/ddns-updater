@@ -10,7 +10,7 @@
     {
       "provider": "route53",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "ip_version": "ipv4",
       "ipv6_suffix": "",
       "access_key": "ffffffffffffffffffff",
@@ -25,7 +25,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"` or the wildcard `"*"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
 - `"access_key"` is the `AWS_ACCESS_KEY`
 - `"secret_key"` is the `AWS_SECRET_ACCESS_KEY`
 - `"zone_id"` is identification of your hosted zone

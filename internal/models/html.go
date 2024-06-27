@@ -10,7 +10,7 @@ type HTMLData struct {
 // It is exported so that the HTML template engine can render it.
 type HTMLRow struct {
 	Domain      string
-	Host        string
+	Owner       string
 	Provider    string
 	IPVersion   string
 	Status      string

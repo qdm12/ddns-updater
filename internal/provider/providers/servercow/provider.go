@@ -20,7 +20,7 @@ import (
 
 type Provider struct {
 	domain        string
-	host          string
+	owner         string
 	ipVersion     ipversion.IPVersion
 	ipv6Suffix    netip.Prefix
 	username      string
@@ -29,8 +29,13 @@ type Provider struct {
 	ttl           uint32
 }
 
-func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
+func New(data json.RawMessage, domain, owner string, ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
+	// retro compatibility
+	if owner == "" {
+		owner = "@"
+	}
+
 	extraSettings := struct {
 		Username      string `json:"username"`
 		Password      string `json:"password"`
@@ -44,7 +49,7 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 
 	p = &Provider{
 		domain:        domain,
-		host:          host,
+		owner:         owner,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		username:      extraSettings.Username,
@@ -60,27 +65,28 @@ func New(data json.RawMessage, domain, host string, ipVersion ipversion.IPVersio
 }
 
 func (p *Provider) isValid() error {
+	// v3: enforce owner is not empty
 	switch {
 	case p.username == "":
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case p.password == "":
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
-	case strings.Contains(p.host, "*"):
-		return fmt.Errorf("%w", errors.ErrHostWildcard)
+	case strings.Contains(p.owner, "*"):
+		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
 	}
 	return nil
 }
 
 func (p *Provider) String() string {
-	return utils.ToString("servercow.de", p.host, constants.Servercow, p.ipVersion)
+	return utils.ToString("servercow.de", p.owner, constants.Servercow, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *Provider) Host() string {
-	return p.host
+func (p *Provider) Owner() string {
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -96,13 +102,13 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:      p.Host(),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://servercow.de\">Servercow</a>",
 		IPVersion: p.ipVersion.String(),
 	}
@@ -119,9 +125,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/dns/v1/domains/" + p.domain,
 	}
 
-	updateHost := p.host
-	if updateHost == "@" {
-		updateHost = ""
+	name := p.owner
+	if name == "@" {
+		name = ""
 	}
 
 	requestData := struct {
@@ -131,7 +137,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		TTL     uint32 `json:"ttl"`
 	}{
 		Type:    recordType,
-		Name:    updateHost,
+		Name:    name,
 		Content: ip.String(),
 		TTL:     p.ttl,
 	}

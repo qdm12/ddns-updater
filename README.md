@@ -110,7 +110,7 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
             {
                 "provider": "namecheap",
                 "domain": "example.com",
-                "host": "@",
+                "owner": "@",
                 "password": "e5322165c1d74692bfa6d807100c0310"
             }
         ]
@@ -155,7 +155,7 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
             {
                 "provider": "namecheap",
                 "domain": "example.com",
-                "host": "@",
+                "owner": "@",
                 "password": "e5322165c1d74692bfa6d807100c0310"
             }
         ]
@@ -245,7 +245,7 @@ Check the documentation for your DNS provider:
 
 Note that:
 
-- you can specify multiple hosts for the same domain using a comma separated list. For example with `"host": "@,subdomain1,subdomain2",`.
+- you can specify multiple hosts for the same domain using a comma separated list. For example with `"owner": "@,subdomain1,subdomain2",`.
 
 ### Environment variables
 

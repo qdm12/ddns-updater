@@ -16,7 +16,7 @@ import (
 
 type Provider struct {
 	domain         string
-	host           string
+	owner          string
 	ipVersion      ipversion.IPVersion
 	ipv6Suffix     netip.Prefix
 	customerNumber string
@@ -24,7 +24,7 @@ type Provider struct {
 	password       string
 }
 
-func New(data json.RawMessage, domain, host string,
+func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	var extraSettings struct {
@@ -39,7 +39,7 @@ func New(data json.RawMessage, domain, host string,
 
 	p = &Provider{
 		domain:         domain,
-		host:           host,
+		owner:          owner,
 		ipVersion:      ipVersion,
 		ipv6Suffix:     ipv6Suffix,
 		customerNumber: extraSettings.CustomerNumber,
@@ -63,22 +63,22 @@ func (p *Provider) isValid() error {
 		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
 	case p.password == "":
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
-	case p.host == "*":
-		return fmt.Errorf("%w", errors.ErrHostWildcard)
+	case p.owner == "*":
+		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
 	}
 	return nil
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.host, constants.Netcup, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.Netcup, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *Provider) Host() string {
-	return p.host
+func (p *Provider) Owner() string {
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -94,13 +94,13 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:      p.Host(),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://www.netcup.eu/\">Netcup.eu</a>",
 		IPVersion: p.ipVersion.String(),
 	}
@@ -132,7 +132,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	found := false
 	for _, record = range updateResponse.DNSRecords {
-		if record.Hostname == p.host && record.Type == recordType {
+		if record.Hostname == p.owner && record.Type == recordType {
 			found = true
 			break
 		}

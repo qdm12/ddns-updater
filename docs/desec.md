@@ -10,7 +10,7 @@
     {
       "provider": "desec",
       "domain": "dedyn.io",
-      "host": "host",
+      "owner": "sub",
       "token": "token",
       "ip_version": "ipv4",
       "ipv6_suffix": "",
@@ -23,7 +23,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` can be `@` for the root domain or a subdomain or a wildcard subdomain (`*`), defaults to `@`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
 - `"token"` is your token that you can create [here](https://desec.io/tokens)
 
 ### Optional parameters

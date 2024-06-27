@@ -21,7 +21,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	values := newURLValues(p.accessKeyID)
 	values.Set("Action", "DescribeDomainRecords")
 	values.Set("DomainName", p.domain)
-	values.Set("RRKeyWord", p.host)
+	values.Set("RRKeyWord", p.owner)
 	values.Set("Type", recordType)
 
 	sign(http.MethodGet, values, p.accessSecret)

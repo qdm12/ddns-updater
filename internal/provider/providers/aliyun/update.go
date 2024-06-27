@@ -26,7 +26,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	values := newURLValues(p.accessKeyID)
 	values.Set("Action", "UpdateDomainRecord")
 	values.Set("RecordId", recordID)
-	values.Set("RR", p.host)
+	values.Set("RR", p.owner)
 	values.Set("Type", recordType)
 	values.Set("Value", ip.String())
 

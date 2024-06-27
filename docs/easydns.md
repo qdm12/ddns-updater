@@ -10,7 +10,7 @@
     {
       "provider": "easydns",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "username": "username",
       "token": "token",
       "ip_version": "ipv4",
@@ -24,7 +24,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"` or `"*"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
 - `"username"`
 - `"token"`
 

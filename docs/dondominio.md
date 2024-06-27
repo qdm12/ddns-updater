@@ -10,7 +10,7 @@
     {
       "provider": "dondominio",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "name": "something",
       "username": "username",
       "key": "key",
@@ -24,7 +24,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is the subdomain to update which can be `@`, `*` or a subdomain
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
 - `"name"` is the name of the service/hosting
 - `"username"`
 - `"password"`

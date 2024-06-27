@@ -10,7 +10,7 @@
     {
       "provider": "he",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "password": "password",
       "provider_ip": true,
       "ip_version": "ipv4",
@@ -23,7 +23,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"` or `"*"` (untested)
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com` (untested)
 - `"password"`
 
 ### Optional parameters

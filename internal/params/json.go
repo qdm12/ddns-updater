@@ -18,9 +18,11 @@ import (
 )
 
 type commonSettings struct {
-	Provider   string       `json:"provider"`
-	Domain     string       `json:"domain"`
-	Host       string       `json:"host"`
+	Provider string `json:"provider"`
+	Domain   string `json:"domain"`
+	// Host is kept for retro-compatibility and is replaced by Owner.
+	Host       string       `json:"host,omitempty"`
+	Owner      string       `json:"owner"`
 	IPVersion  string       `json:"ip_version"`
 	IPv6Suffix netip.Prefix `json:"ipv6_suffix,omitempty"`
 	// Retro values for warnings
@@ -162,22 +164,27 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 		}
 	}
 
+	if common.Owner == "" { // retro compatibility
+		common.Owner = common.Host
+	}
+
 	providerName := models.Provider(common.Provider)
-	if providerName == constants.DuckDNS { // only hosts, no domain
+	if providerName == constants.DuckDNS { // only owner(s), no domain
 		if common.Domain != "" { // retro compatibility
-			if common.Host == "" {
-				common.Host = strings.TrimSuffix(common.Domain, ".duckdns.org")
+			if common.Owner == "" {
+				common.Owner = strings.TrimSuffix(common.Domain, ".duckdns.org")
 				warnings = append(warnings,
-					fmt.Sprintf("DuckDNS record should have %q specified as host instead of %q as domain",
-						common.Host, common.Domain))
+					fmt.Sprintf("DuckDNS record should have %q specified as owner instead of %q as domain",
+						common.Owner, common.Domain))
 			} else {
 				warnings = append(warnings,
-					fmt.Sprintf("ignoring domain %q because host %q is specified for DuckDNS record",
-						common.Domain, common.Host))
+					fmt.Sprintf("ignoring domain %q because owner %q is specified for DuckDNS record",
+						common.Domain, common.Owner))
 			}
 		}
 	}
-	hosts := strings.Split(common.Host, ",")
+
+	owners := strings.Split(common.Owner, ",")
 
 	if common.IPVersion == "" {
 		common.IPVersion = ipversion.IP4or6.String()
@@ -198,11 +205,11 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 				ipv6Suffix, ipVersion))
 	}
 
-	providers = make([]provider.Provider, len(hosts))
-	for i, host := range hosts {
-		host = strings.TrimSpace(host)
+	providers = make([]provider.Provider, len(owners))
+	for i, owner := range owners {
+		owner = strings.TrimSpace(owner)
 		providers[i], err = provider.New(providerName, rawSettings, common.Domain,
-			host, ipVersion, ipv6Suffix)
+			owner, ipVersion, ipv6Suffix)
 		if err != nil {
 			return nil, warnings, err
 		}

@@ -77,7 +77,7 @@ In more detailed steps:
 
     ```go
     case constants.Example:
-      return example.New(data, domain, host, ipVersion, ipv6Suffix)
+      return example.New(data, domain, owner, ipVersion, ipv6Suffix)
     ```
 
 1. Copy the file [`docs/example.md`](../docs/example.md) to `docs/yourprovider.md` and modify it to fit the configuration and domain setup of your DNS provider. There are a few `<!-- ... -->` comments indicating what to change, please **remove them** when done.

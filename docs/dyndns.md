@@ -10,7 +10,7 @@
     {
       "provider": "dyn",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "username": "username",
       "client_key": "client_key",
       "ip_version": "ipv4",
@@ -23,7 +23,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"` or `"*"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
 - `"username"`
 - `"client_key"`
 

@@ -12,7 +12,7 @@
     {
       "provider": "name.com",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "username": "username",
       "token": "token",
       "ttl": 300,
@@ -26,7 +26,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain, `"@"` or `"*"` generally
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
 - `"username"` is your account username
 - `"token"` which you can obtain from [www.name.com/account/settings/api](https://www.name.com/account/settings/api)
 

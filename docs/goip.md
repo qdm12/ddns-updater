@@ -10,7 +10,7 @@
     {
       "provider": "goip",
       "domain": "goip.de",
-      "host": "mysubdomain",
+      "owner": "mysubdomain",
       "username": "username",
       "password": "password",
       "provider_ip": true,
@@ -24,7 +24,7 @@
 
 ### Compulsory parameters
 
-- `"host"` is the host of your domain, for example `"example"` for `example.goip.de`.
+- `"owner"` is the resource record owner and can be for example `"example"` for `example.goip.de`.
 - `"username"` is your goip.de username listed under "Routers"
 - `"password"` is your router account password
 

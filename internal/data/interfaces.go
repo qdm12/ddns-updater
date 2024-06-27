@@ -7,5 +7,5 @@ import (
 
 type PersistentDatabase interface {
 	Close() error
-	StoreNewIP(domain, host string, ip netip.Addr, t time.Time) (err error)
+	StoreNewIP(domain, owner string, ip netip.Addr, t time.Time) (err error)
 }

@@ -21,7 +21,7 @@ import (
 
 type Provider struct {
 	domain        string
-	host          string
+	owner         string
 	ipVersion     ipversion.IPVersion
 	ipv6Suffix    netip.Prefix
 	username      string
@@ -29,7 +29,7 @@ type Provider struct {
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, domain, host string,
+func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
@@ -43,7 +43,7 @@ func New(data json.RawMessage, domain, host string,
 	}
 	p = &Provider{
 		domain:        domain,
-		host:          host,
+		owner:         owner,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		username:      extraSettings.Username,
@@ -68,15 +68,15 @@ func (p *Provider) isValid() error {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.host, constants.DNSOMatic, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.DNSOMatic, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *Provider) Host() string {
-	return p.host
+func (p *Provider) Owner() string {
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -88,24 +88,24 @@ func (p *Provider) IPv6Suffix() netip.Prefix {
 }
 
 func (p *Provider) Proxied() bool {
-	return p.host == "all"
+	return p.owner == "all"
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:      p.Host(),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://www.dnsomatic.com/\">dnsomatic</a>",
 		IPVersion: p.ipVersion.String(),
 	}
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	// Multiple hosts can be updated in one query, see https://www.dnsomatic.com/docs/api
+	// Multiple hostnames can be updated in one query, see https://www.dnsomatic.com/docs/api
 	u := url.URL{
 		Scheme: "https",
 		Host:   "updates.dnsomatic.com",
@@ -118,11 +118,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		values.Set("myip", ip.String())
 	}
 	values.Set("wildcard", "NOCHG")
-	if p.host == "*" {
+	if p.owner == "*" {
 		values.Set("hostname", p.domain)
 		values.Set("wildcard", "ON")
 	} else {
-		values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
+		values.Set("hostname", utils.BuildURLQueryHostname(p.owner, p.domain))
 	}
 	values.Set("mx", "NOCHG")
 	values.Set("backmx", "NOCHG")

@@ -10,7 +10,7 @@
     {
       "provider": "strato",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "password": "password",
       "ip_version": "ipv4",
       "ipv6_suffix": "",
@@ -23,7 +23,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
 - `"password"` is your dyndns password
 
 ### Optional parameters

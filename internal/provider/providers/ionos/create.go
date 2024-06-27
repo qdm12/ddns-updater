@@ -31,7 +31,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	const defaultPrio = 0
 	recordsList := []apiRecord{
 		{
-			Name:     utils.BuildURLQueryHostname(p.host, p.domain),
+			Name:     utils.BuildURLQueryHostname(p.owner, p.domain),
 			Type:     recordType,
 			Content:  ip.String(),
 			TTL:      defaultTTL,

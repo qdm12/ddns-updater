@@ -10,7 +10,7 @@
     {
       "provider": "allinkl",
       "domain": "domain.com",
-      "host": "host",
+      "owner": "sub",
       "username": "dynXXXXXXX",
       "password": "password",
       "ip_version": "ipv4",
@@ -23,7 +23,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host (subdomain)
+- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
 - `"username"` username (usually starts with dyn followed by numbers)
 - `"password"` password in plain text
 

@@ -21,7 +21,7 @@ import (
 
 type Provider struct {
 	domain     string
-	host       string
+	owner      string
 	ipVersion  ipversion.IPVersion
 	ipv6Suffix netip.Prefix
 	zoneID     string
@@ -36,7 +36,7 @@ type settings struct {
 	TTL       *uint32 `json:"ttl,omitempty"`
 }
 
-func New(data json.RawMessage, domain, host string,
+func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	provider *Provider, err error) {
 	var providerSpecificSettings settings
@@ -45,7 +45,7 @@ func New(data json.RawMessage, domain, host string,
 		return nil, fmt.Errorf("decoding provider specific settings: %w", err)
 	}
 
-	err = validateSettings(providerSpecificSettings, domain, host)
+	err = validateSettings(providerSpecificSettings, domain, owner)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -71,7 +71,7 @@ func New(data json.RawMessage, domain, host string,
 
 	return &Provider{
 		domain:     domain,
-		host:       host,
+		owner:      owner,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
 		signer:     signer,
@@ -80,12 +80,12 @@ func New(data json.RawMessage, domain, host string,
 	}, nil
 }
 
-func validateSettings(providerSpecificSettings settings, domain, host string) error {
+func validateSettings(providerSpecificSettings settings, domain, owner string) error {
 	switch {
 	case domain == "":
 		return fmt.Errorf("%w", errors.ErrDomainNotSet)
-	case host == "":
-		return fmt.Errorf("%w", errors.ErrHostNotSet)
+	case owner == "":
+		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
 	case providerSpecificSettings.AccessKey == "":
 		return fmt.Errorf("%w", errors.ErrAccessKeyNotSet)
 	case providerSpecificSettings.SecretKey == "":
@@ -97,15 +97,15 @@ func validateSettings(providerSpecificSettings settings, domain, host string) er
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.host, constants.Route53, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.Route53, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *Provider) Host() string {
-	return p.host
+func (p *Provider) Owner() string {
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -121,13 +121,13 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:      p.Host(),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://aws.amazon.com/route53/\">Amazon Route 53</a>",
 		IPVersion: p.ipVersion.String(),
 	}

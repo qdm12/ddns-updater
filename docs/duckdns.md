@@ -9,7 +9,7 @@
   "settings": [
     {
       "provider": "duckdns",
-      "host": "host",
+      "owner": "sub",
       "token": "token",
       "ip_version": "ipv4",
       "ipv6_suffix": "",
@@ -21,7 +21,7 @@
 
 ### Compulsory parameters
 
-- `"host"` is your host, for example `subdomain` for `subdomain.duckdns.org`
+- `"owner"` is the resource record owner and can be for example `"sub"` for the domain `sub.duckdns.org`
 - `"token"`
 
 ### Optional parameters

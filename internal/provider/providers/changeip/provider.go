@@ -18,7 +18,7 @@ import (
 
 type Provider struct {
 	domain        string
-	host          string
+	owner         string
 	ipVersion     ipversion.IPVersion
 	ipv6Suffix    netip.Prefix
 	username      string
@@ -32,7 +32,7 @@ type settings struct {
 	UseProviderIP bool   `json:"provider_ip"`
 }
 
-func New(data json.RawMessage, domain, host string,
+func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	var providerSpecificSettings settings
@@ -40,13 +40,13 @@ func New(data json.RawMessage, domain, host string,
 	if err != nil {
 		return nil, fmt.Errorf("json decoding provider specific settings: %w", err)
 	}
-	err = validateSettings(domain, host, providerSpecificSettings)
+	err = validateSettings(domain, owner, providerSpecificSettings)
 	if err != nil {
 		return nil, fmt.Errorf("validating settings: %w", err)
 	}
 	return &Provider{
 		domain:        domain,
-		host:          host,
+		owner:         owner,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		username:      providerSpecificSettings.Username,
@@ -55,12 +55,12 @@ func New(data json.RawMessage, domain, host string,
 	}, nil
 }
 
-func validateSettings(domain, host string, settings settings) error {
+func validateSettings(domain, owner string, settings settings) error {
 	switch {
 	case domain == "":
 		return fmt.Errorf("%w", errors.ErrDomainNotSet)
-	case host == "":
-		return fmt.Errorf("%w", errors.ErrHostNotSet)
+	case owner == "":
+		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
 	case settings.Username == "":
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case settings.Password == "":
@@ -70,15 +70,15 @@ func validateSettings(domain, host string, settings settings) error {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.host, constants.Changeip, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.Changeip, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *Provider) Host() string {
-	return p.host
+func (p *Provider) Owner() string {
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -94,13 +94,13 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:      p.Host(),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://www.changeip.com\">changeip.com</a>",
 		IPVersion: p.ipVersion.String(),
 	}
@@ -113,7 +113,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/nic/update",
 	}
 	values := url.Values{}
-	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
+	values.Set("hostname", utils.BuildURLQueryHostname(p.owner, p.domain))
 	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
 	if !useProviderIP {
 		values.Set("ip", ip.String())

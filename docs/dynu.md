@@ -10,7 +10,7 @@
     {
       "provider": "dynu",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "group": "group",
       "username": "username",
       "password": "password",
@@ -25,7 +25,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
 - `"username"`
 - `"password"` could be plain text or password in MD5 or SHA256 format (There's also an option for setting a password for IP Update only)
 

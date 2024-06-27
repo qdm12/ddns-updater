@@ -64,6 +64,14 @@ func NewDatabase(dataDir string) (*Database, error) {
 		return nil, fmt.Errorf("closing database file: %w", err)
 	}
 
+	// Migration from older database using "host" instead of "owner".
+	for i := range data.Records {
+		if data.Records[i].Owner == "" {
+			data.Records[i].Owner = data.Records[i].Host
+			data.Records[i].Host = ""
+		}
+	}
+
 	err = checkData(data)
 	if err != nil {
 		return nil, fmt.Errorf("%s validation error: %w", filePath, err)
@@ -77,7 +85,7 @@ func NewDatabase(dataDir string) (*Database, error) {
 
 var (
 	ErrDomainEmpty         = errors.New("domain is empty")
-	ErrHostIsEmpty         = errors.New("host is empty")
+	ErrOwnerNotSet         = errors.New("owner is not set")
 	ErrIPRecordsMisordered = errors.New("IP records are not ordered correctly by time")
 	ErrIPEmpty             = errors.New("IP is empty")
 	ErrIPTimeEmpty         = errors.New("time of IP is empty")
@@ -89,16 +97,16 @@ func checkData(data dataModel) (err error) {
 		case record.Domain == "":
 			return fmt.Errorf("%w: for record %d of %d", ErrDomainEmpty,
 				i+1, len(data.Records))
-		case record.Host == "":
+		case record.Owner == "":
 			return fmt.Errorf("%w: for record %d of %d with domain %s",
-				ErrHostIsEmpty, i+1, len(data.Records), record.Domain)
+				ErrOwnerNotSet, i+1, len(data.Records), record.Domain)
 		}
 
 		err = checkHistoryEvents(record.Events)
 		if err != nil {
-			return fmt.Errorf("for record %d of %d with domain %s and host %s: "+
+			return fmt.Errorf("for record %d of %d with domain %s and owner %s: "+
 				"history events: %w", i+1, len(data.Records),
-				record.Domain, record.Host, err)
+				record.Domain, record.Owner, err)
 		}
 	}
 	return nil

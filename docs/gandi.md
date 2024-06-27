@@ -12,7 +12,7 @@ This provider uses Gandi v5 API
     {
       "provider": "gandi",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "personal_access_token": "token",
       "ttl": 3600,
       "ip_version": "ipv4",
@@ -25,7 +25,7 @@ This provider uses Gandi v5 API
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` which can be a subdomain, `@` or a wildcard `*`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
 - `"personal_access_token"`
 
 ### Optional parameters

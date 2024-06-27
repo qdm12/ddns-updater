@@ -57,7 +57,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 		if record.Host == "" {
 			record.Host = "@"
 		}
-		if record.Host == p.host && record.Type == recordType {
+		if record.Host == p.owner && record.Type == recordType {
 			return record.RecordID, nil
 		}
 	}

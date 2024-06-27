@@ -10,7 +10,7 @@
     {
       "provider": "infomaniak",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "username": "username",
       "password": "password",
       "ip_version": "ipv4",
@@ -24,7 +24,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
 - `"username"` for dyndns (**not** your infomaniak admin username!)
 - `"password"` for dyndns (**not** your infomaniak admin password!)
 

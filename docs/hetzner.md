@@ -11,7 +11,7 @@
       "provider": "hetzner",
       "zone_identifier": "some id",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "ttl": 600,
       "token": "yourtoken",
       "ip_version": "ipv4",
@@ -25,7 +25,7 @@
 
 - `"zone_identifier"` is the Zone ID of your site, from the domain overview page written as *Zone ID*
 - `"domain"`
-- `"host"` is your host and can be `"@"`, a subdomain or the wildcard `"*"`.
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
 - `"ttl"` optional integer value corresponding to a number of seconds
 - One of the following ([how to find API keys](https://docs.hetzner.com/cloud/api/getting-started/generating-api-token)):
   - API Token `"token"`, configured with DNS edit permissions for your DNS name's zone

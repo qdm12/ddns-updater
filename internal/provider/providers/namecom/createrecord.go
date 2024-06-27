@@ -33,7 +33,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 		Answer string  `json:"answer"`
 		TTL    *uint32 `json:"ttl,omitempty"`
 	}{
-		Host:   p.host,
+		Host:   p.owner,
 		Type:   recordType,
 		Answer: ip.String(),
 		TTL:    p.ttl,

@@ -10,7 +10,7 @@
     {
       "provider": "freedns",
       "domain": "domain.com",
-      "host": "host",
+      "owner": "sub",
       "token": "token",
       "ip_version": "ipv4",
       "ipv6_suffix": ""
@@ -22,7 +22,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host (subdomain)
+- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
 - `"token"` is the randomized update token you use to update your record
 
 ### Optional parameters

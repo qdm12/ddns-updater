@@ -10,7 +10,7 @@
     {
       "provider": "variomedia",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "email": "email@domain.com",
       "password": "password",
       "ip_version": "ipv4",
@@ -24,7 +24,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
 - `"email"`
 - `"password"` is your DNS settings password, not your account password ⚠️
 

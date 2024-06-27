@@ -17,7 +17,7 @@ import (
 
 type Provider struct {
 	domain       string
-	host         string
+	owner        string
 	ipVersion    ipversion.IPVersion
 	ipv6Suffix   netip.Prefix
 	ttl          uint32
@@ -25,7 +25,7 @@ type Provider struct {
 	secretAPIKey string
 }
 
-func New(data json.RawMessage, domain, host string,
+func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
@@ -39,7 +39,7 @@ func New(data json.RawMessage, domain, host string,
 	}
 	p = &Provider{
 		domain:       domain,
-		host:         host,
+		owner:        owner,
 		ipVersion:    ipVersion,
 		ipv6Suffix:   ipv6Suffix,
 		secretAPIKey: extraSettings.SecretAPIKey,
@@ -64,15 +64,15 @@ func (p *Provider) isValid() error {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.host, constants.Porkbun, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.Porkbun, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *Provider) Host() string {
-	return p.host
+func (p *Provider) Owner() string {
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -88,13 +88,13 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:      p.Host(),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://www.porkbun.com/\">Porkbun DNS</a>",
 		IPVersion: p.ipVersion.String(),
 	}

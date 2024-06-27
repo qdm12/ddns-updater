@@ -16,7 +16,7 @@ set the environment variable as `PERIOD=11m` to check your public IP address and
     {
       "provider": "zoneedit",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "username": "username",
       "token": "token",
       "ip_version": "ipv4",
@@ -30,7 +30,7 @@ set the environment variable as `PERIOD=11m` to check your public IP address and
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"` or `"*"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain, `"*"` for the wildcard, or for example `"sub"` for the subdomain `sub.domain.com`
 - `"username"`
 - `"token"`
 

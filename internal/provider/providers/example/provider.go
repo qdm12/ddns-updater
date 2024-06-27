@@ -20,7 +20,7 @@ import (
 
 type Provider struct {
 	domain string
-	host   string
+	owner  string
 	// TODO: remove ipVersion and ipv6Suffix if the provider does not support IPv6.
 	// Usually they do support IPv6 though.
 	ipVersion  ipversion.IPVersion
@@ -29,7 +29,7 @@ type Provider struct {
 	password   string
 }
 
-func New(data json.RawMessage, domain, host string,
+func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	provider *Provider, err error) {
 	var providerSpecificSettings settings
@@ -38,14 +38,14 @@ func New(data json.RawMessage, domain, host string,
 		return nil, fmt.Errorf("decoding provider specific settings: %w", err)
 	}
 
-	err = validateSettings(providerSpecificSettings, domain, host)
+	err = validateSettings(providerSpecificSettings, domain, owner)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
 
 	return &Provider{
 		domain:     domain,
-		host:       host,
+		owner:      owner,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
 		username:   providerSpecificSettings.Username,
@@ -59,7 +59,7 @@ type settings struct {
 	Password string `json:"password"`
 }
 
-func validateSettings(providerSpecificSettings settings, domain, host string) error {
+func validateSettings(providerSpecificSettings settings, domain, owner string) error {
 	// TODO: update this switch to be as restrictive as possible
 	// to fail early for the user. Use errors already defined
 	// in the internal/provider/errors package, or add your own
@@ -68,11 +68,11 @@ func validateSettings(providerSpecificSettings settings, domain, host string) er
 	switch {
 	case domain == "":
 		return fmt.Errorf("%w", errors.ErrDomainNotSet)
-	case host == "":
-		return fmt.Errorf("%w", errors.ErrHostNotSet)
-	// TODO: does the provider support wildcard hosts? If not, disallow * hosts
-	// case host == "*":
-	// 	return fmt.Errorf("%w", errors.ErrHostWildcard)
+	case owner == "":
+		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
+	// TODO: does the provider support wildcard owners? If not, disallow * owners
+	// case owner == "*":
+	// 	return fmt.Errorf("%w", errors.ErrOwnerWildcard)
 	case providerSpecificSettings.Username == "":
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case providerSpecificSettings.Password == "":
@@ -84,15 +84,15 @@ func validateSettings(providerSpecificSettings settings, domain, host string) er
 func (p *Provider) String() string {
 	// TODO update the name of the provider and add it to the
 	// internal/provider/constants package.
-	return utils.ToString(p.domain, p.host, constants.Dyn, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.Dyn, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *Provider) Host() string {
-	return p.host
+func (p *Provider) Owner() string {
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -108,13 +108,13 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, p.domain)
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain: fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:   p.Host(),
+		Owner:  p.Owner(),
 		// TODO: update the provider name and link below
 		Provider:  "<a href=\"https://dyn.com/\">Dyn DNS</a>",
 		IPVersion: p.ipVersion.String(),
@@ -132,7 +132,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/nic/update",
 	}
 	values := url.Values{}
-	values.Set("hostname", utils.BuildURLQueryHostname(p.host, p.domain))
+	values.Set("hostname", utils.BuildURLQueryHostname(p.owner, p.domain))
 	values.Set("myip", ip.String())
 	u.RawQuery = values.Encode()
 

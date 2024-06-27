@@ -20,8 +20,8 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 		Host:   "porkbun.com",
 		Path:   "/api/json/v3/dns/retrieveByNameType/" + p.domain + "/" + recordType + "/",
 	}
-	if p.host != "@" && p.host != "*" {
-		u.Path += p.host
+	if p.owner != "@" && p.owner != "*" {
+		u.Path += p.owner
 	}
 
 	postRecordsParams := struct {
@@ -93,7 +93,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 		APIKey:       p.apiKey,
 		Content:      ipStr,
 		Type:         recordType,
-		Name:         p.host,
+		Name:         p.owner,
 		TTL:          strconv.FormatUint(uint64(p.ttl), 10),
 	}
 	buffer := bytes.NewBuffer(nil)
@@ -143,7 +143,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 		Content:      ipStr,
 		Type:         recordType,
 		TTL:          strconv.FormatUint(uint64(p.ttl), 10),
-		Name:         p.host,
+		Name:         p.owner,
 	}
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
@@ -174,8 +174,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Delete%20Records%20by%20Domain,%20Subdomain%20and%20Type
 func (p *Provider) deleteAliasRecord(ctx context.Context, client *http.Client) (err error) {
 	var subdomain string
-	if p.host != "@" {
-		subdomain = p.host + "."
+	if p.owner != "@" {
+		subdomain = p.owner + "."
 	}
 	u := url.URL{
 		Scheme: "https",

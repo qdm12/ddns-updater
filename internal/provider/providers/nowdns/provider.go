@@ -72,7 +72,7 @@ func (p *Provider) Domain() string {
 	return p.domain
 }
 
-func (p *Provider) Host() string {
+func (p *Provider) Owner() string {
 	return "@"
 }
 
@@ -95,7 +95,7 @@ func (p *Provider) BuildDomainName() string {
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:      p.Host(),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://www.now-dns.com/\">Now-DNS</a>",
 		IPVersion: p.ipVersion.String(),
 	}

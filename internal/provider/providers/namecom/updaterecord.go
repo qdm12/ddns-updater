@@ -28,8 +28,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	}
 
 	host := ""
-	if p.host != "@" {
-		host = p.host
+	if p.owner != "@" {
+		host = p.owner
 	}
 	postRecordsParams := struct {
 		Host   string  `json:"host"`

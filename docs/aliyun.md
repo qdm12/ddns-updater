@@ -10,7 +10,7 @@
     {
       "provider": "aliyun",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "access_key_id": "your access_key_id",
       "access_secret": "your access_secret",
       "ip_version": "ipv4",
@@ -23,7 +23,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
 - `"access_key_id"`
 - `"access_secret"`
 

@@ -10,7 +10,7 @@
     {
       "provider": "spdyn",
       "domain": "domain.com",
-      "host": "@",
+      "owner": "@",
       "user": "user",
       "password": "password",
       "token": "token",
@@ -25,7 +25,7 @@
 ### Compulsory parameters
 
 - `"domain"`
-- `"host"` is your host and can be a subdomain or `"@"`
+- `"owner"` is the resource record owner and can be `"@"` for the root domain or for example `"sub"` for the subdomain `sub.domain.com`
 
 #### Using user and password
 

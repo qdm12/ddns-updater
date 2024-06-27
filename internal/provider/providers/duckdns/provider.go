@@ -20,14 +20,14 @@ import (
 )
 
 type Provider struct {
-	host          string
+	owner         string
 	ipVersion     ipversion.IPVersion
 	ipv6Suffix    netip.Prefix
 	token         string
 	useProviderIP bool
 }
 
-func New(data json.RawMessage, _, host string,
+func New(data json.RawMessage, _, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
@@ -39,7 +39,7 @@ func New(data json.RawMessage, _, host string,
 		return nil, err
 	}
 	p = &Provider{
-		host:          host,
+		owner:         owner,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
 		token:         extraSettings.Token,
@@ -59,23 +59,23 @@ func (p *Provider) isValid() error {
 	case !tokenRegex.MatchString(p.token):
 		return fmt.Errorf("%w: token %q does not match regex %q",
 			errors.ErrTokenNotValid, p.token, tokenRegex)
-	case p.host == "@", p.host == "*":
+	case p.owner == "@", p.owner == "*":
 		return fmt.Errorf("%w: %q is not valid",
-			errors.ErrHostOnlySubdomain, p.host)
+			errors.ErrOwnerRootOrWildcard, p.owner)
 	}
 	return nil
 }
 
 func (p *Provider) String() string {
-	return utils.ToString("duckdns.org", p.host, constants.DuckDNS, p.ipVersion)
+	return utils.ToString("duckdns.org", p.owner, constants.DuckDNS, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
 	return "duckdns.org"
 }
 
-func (p *Provider) Host() string {
-	return p.host
+func (p *Provider) Owner() string {
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -91,13 +91,13 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return utils.BuildDomainName(p.host, "duckdns.org")
+	return utils.BuildDomainName(p.owner, "duckdns.org")
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Host:      p.Host(),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://www.duckdns.org/\">DuckDNS</a>",
 		IPVersion: p.ipVersion.String(),
 	}
@@ -111,7 +111,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	values := url.Values{}
 	values.Set("verbose", "true")
-	values.Set("domains", p.host)
+	values.Set("domains", p.owner)
 	values.Set("token", p.token)
 	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
 	if !useProviderIP {

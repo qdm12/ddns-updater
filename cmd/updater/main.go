@@ -319,10 +319,10 @@ func readRecords(providers []provider.Provider, persistentDB *persistence.Databa
 	records = make([]recordslib.Record, len(providers))
 	for i, provider := range providers {
 		logger.Info("Reading history from database: domain " +
-			provider.Domain() + " host " + provider.Host() +
+			provider.Domain() + " owner " + provider.Owner() +
 			" " + provider.IPVersion().String())
 		events, err := persistentDB.GetEvents(provider.Domain(),
-			provider.Host(), provider.IPVersion())
+			provider.Owner(), provider.IPVersion())
 		if err != nil {
 			shoutrrrClient.Notify(err.Error())
 			return nil, err

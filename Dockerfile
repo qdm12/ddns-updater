@@ -62,7 +62,7 @@ RUN GOARCH="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -field a
     -X 'main.version=$VERSION' \
     -X 'main.date=$CREATED' \
     -X 'main.commit=$COMMIT' \
-    " -o app cmd/updater/main.go
+    " -o app cmd/ddns-updater/main.go
 
 FROM scratch
 EXPOSE 8000

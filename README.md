@@ -110,7 +110,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
 
 ### Binary programs
 
-1. Download the pre-built program for your platform from the assets of a release in the [releases page](https://github.com/qdm12/ddns-updater/releases). Note this is only available from [release v2.6.0](https://github.com/qdm12/ddns-updater/releases/tag/v2.6.0).
+1. Download the pre-built program for your platform from the assets of a release in the [releases page](https://github.com/qdm12/ddns-updater/releases). You can alternatively download, build and install the latest version of the program by installing [Go](https://golang.org/doc/install) and then run `go install github.com/qdm12/ddns-updater/cmd/ddns-updater@latest`.
 1. For Linux and MacOS, make the program executable with `chmod +x ddns-updater`.
 1. In the directory where the program is saved, create a directory `data`.
 1. Write a JSON configuration in `data/config.json`, for example:

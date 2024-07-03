@@ -42,6 +42,12 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, err
 	}
 
+	if ipVersion == ipversion.IP6 {
+		// Thanks to @NightFurySL2001
+		// See https://github.com/qdm12/ddns-updater/discussions/750
+		extraSettings.UseProviderIP = false
+	}
+
 	err = validateSettings(domain, owner, extraSettings.Username, extraSettings.Password)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)

@@ -32,7 +32,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("decoding ionos extra settings: %w", err)
 	}
 
-	err = validateSettings(domain, p.apiKey)
+	err = validateSettings(domain, extraSettings.APIKey)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}

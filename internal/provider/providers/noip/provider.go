@@ -41,6 +41,13 @@ func New(data json.RawMessage, domain, host string,
 	if err != nil {
 		return nil, err
 	}
+
+	if ipVersion == ipversion.IP6 {
+		// Thanks to @NightFurySL2001
+		// See https://github.com/qdm12/ddns-updater/discussions/750
+		extraSettings.UseProviderIP = false
+	}
+
 	p = &Provider{
 		domain:        domain,
 		host:          host,

@@ -119,12 +119,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		recordType = constants.AAAA
 	}
 	ipStr := ip.String()
-	recordIDs, err := p.getRecordIDs(ctx, client, recordType)
+	records, err := p.getRecords(ctx, client, recordType)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("getting record IDs: %w", err)
 	}
 
-	if len(recordIDs) == 0 {
+	if len(records) == 0 {
 		// ALIAS record needs to be deleted to allow creating an A record.
 		err = p.deleteALIASRecordIfNeeded(ctx, client)
 		if err != nil {
@@ -138,8 +138,14 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return ip, nil
 	}
 
-	for _, recordID := range recordIDs {
-		err = p.updateRecord(ctx, client, recordType, ipStr, recordID)
+	for _, record := range records {
+		if record.Content == ipStr {
+			// Skip update. Porkbun already has the IP correctly set.
+			// Porkbun will respond with a 400 error if we attempt to update a record to a value that is already set.
+			continue
+		}
+
+		err = p.updateRecord(ctx, client, recordType, ipStr, record.ID)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 		}
@@ -149,7 +155,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 }
 
 func (p *Provider) deleteALIASRecordIfNeeded(ctx context.Context, client *http.Client) (err error) {
-	aliasRecordIDs, err := p.getRecordIDs(ctx, client, "ALIAS")
+	aliasRecordIDs, err := p.getRecords(ctx, client, "ALIAS")
 	if err != nil {
 		return fmt.Errorf("getting ALIAS record IDs: %w", err)
 	} else if len(aliasRecordIDs) == 0 {

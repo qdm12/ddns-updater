@@ -12,9 +12,19 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
+type dnsRecord struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Content  string `json:"content"`
+	TTL      string `json:"ttl"`
+	Priority string `json:"prio"`
+	Notes    string `json:"notes"`
+}
+
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Retrieve%20Records%20by%20Domain,%20Subdomain%20and%20Type
-func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, recordType string) (
-	recordIDs []string, err error) {
+func (p *Provider) getRecords(ctx context.Context, client *http.Client, recordType string) (
+	records []dnsRecord, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "porkbun.com",
@@ -56,9 +66,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 	}
 
 	var responseData struct {
-		Records []struct {
-			ID string `json:"id"`
-		} `json:"records"`
+		Records []dnsRecord `json:"records"`
 	}
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&responseData)
@@ -66,11 +74,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 		return nil, fmt.Errorf("json decoding response body: %w", err)
 	}
 
-	for _, record := range responseData.Records {
-		recordIDs = append(recordIDs, record.ID)
-	}
-
-	return recordIDs, nil
+	return responseData.Records, nil
 }
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Create%20Record

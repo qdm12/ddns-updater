@@ -156,7 +156,7 @@ func (p *Provider) deleteALIASRecordIfNeeded(ctx context.Context, client *http.C
 		return nil
 	}
 
-	err = p.deleteAliasRecord(ctx, client)
+	err = p.deleteRecord(ctx, client, "ALIAS")
 	if err != nil {
 		return fmt.Errorf("deleting ALIAS record: %w", err)
 	}

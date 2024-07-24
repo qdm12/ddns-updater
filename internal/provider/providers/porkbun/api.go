@@ -172,7 +172,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 }
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Delete%20Records%20by%20Domain,%20Subdomain%20and%20Type
-func (p *Provider) deleteAliasRecord(ctx context.Context, client *http.Client) (err error) {
+func (p *Provider) deleteRecord(ctx context.Context, client *http.Client, recordType string) (err error) {
 	var subdomain string
 	if p.owner != "@" {
 		subdomain = p.owner
@@ -180,7 +180,7 @@ func (p *Provider) deleteAliasRecord(ctx context.Context, client *http.Client) (
 	u := url.URL{
 		Scheme: "https",
 		Host:   "porkbun.com",
-		Path:   "/api/json/v3/dns/deleteByNameType/" + p.domain + "/ALIAS/" + subdomain,
+		Path:   "/api/json/v3/dns/deleteByNameType/" + p.domain + "/" + recordType + "/" + subdomain,
 	}
 	postRecordsParams := struct {
 		SecretAPIKey string `json:"secretapikey"`

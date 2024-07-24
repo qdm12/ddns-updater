@@ -119,16 +119,31 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		recordType = constants.AAAA
 	}
 	ipStr := ip.String()
-	recordIDs, err := p.getRecordIDs(ctx, client, recordType)
+	records, err := p.getRecords(ctx, client, recordType)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("getting record IDs: %w", err)
 	}
 
-	if len(recordIDs) == 0 {
-		// ALIAS record needs to be deleted to allow creating an A record.
-		err = p.deleteALIASRecordIfNeeded(ctx, client)
-		if err != nil {
-			return netip.Addr{}, fmt.Errorf("deleting ALIAS record if needed: %w", err)
+	if len(records) == 0 {
+		// For new domains, Porkbun Creates 2 Default DNS Records which point to their "parked" domain page:
+		// ALIAS domain.tld -> pixie.porkbun.com
+		// CNAME *.domain.tld -> pixie.porkbun.com
+		// ALIAS and CNAME records conflict with A and AAAA records, and attempting to create an A or AAAA record
+		// will return a 400 error if they aren't first deleted.
+		porkbunParkedDomain := "pixie.porkbun.com"
+		switch {
+		case p.owner == "@":
+			// Delete ALIAS domain.tld -> pixie.porkbun.com record
+			err = p.deleteMatchingRecord(ctx, client, constants.ALIAS, porkbunParkedDomain)
+			if err != nil {
+				return netip.Addr{}, err
+			}
+		case p.owner == "*":
+			// Delete CNAME *.domain.tld -> pixie.porkbun.com record
+			err = p.deleteMatchingRecord(ctx, client, constants.CNAME, porkbunParkedDomain)
+			if err != nil {
+				return netip.Addr{}, err
+			}
 		}
 
 		err = p.createRecord(ctx, client, recordType, ipStr)
@@ -138,8 +153,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return ip, nil
 	}
 
-	for _, recordID := range recordIDs {
-		err = p.updateRecord(ctx, client, recordType, ipStr, recordID)
+	for _, record := range records {
+		err = p.updateRecord(ctx, client, recordType, ipStr, record.ID)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 		}
@@ -148,17 +163,31 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	return ip, nil
 }
 
-func (p *Provider) deleteALIASRecordIfNeeded(ctx context.Context, client *http.Client) (err error) {
-	aliasRecordIDs, err := p.getRecordIDs(ctx, client, "ALIAS")
+// Deletes the matching record for a specific recordType iff the content matches the expected content value.
+// Returns an error if there is a matching record but an unexpected content value.
+// If there is no matching record, there is nothing to do.
+func (p *Provider) deleteMatchingRecord(
+	ctx context.Context,
+	client *http.Client,
+	recordType string,
+	expectedContent string,
+) error {
+	records, err := p.getRecords(ctx, client, recordType)
 	if err != nil {
-		return fmt.Errorf("getting ALIAS record IDs: %w", err)
-	} else if len(aliasRecordIDs) == 0 {
-		return nil
+		return fmt.Errorf("getting %s records: %w", recordType, err)
 	}
 
-	err = p.deleteAliasRecord(ctx, client)
-	if err != nil {
-		return fmt.Errorf("deleting ALIAS record: %w", err)
+	if len(records) == 1 && records[0].Content == expectedContent {
+		err = p.deleteRecord(ctx, client, recordType)
+		if err != nil {
+			return fmt.Errorf("deleting %s record: %w", recordType, err)
+		}
+		return nil
+	} else if len(records) >= 1 {
+		// We have 1 or more matching records, but the expectedContent didn't match. Throw a conflicting record error.
+		return fmt.Errorf("deleting %s record: %w", recordType, errors.ErrConflictingRecord)
 	}
+
+	// No record found for recordType, nothing to do.
 	return nil
 }

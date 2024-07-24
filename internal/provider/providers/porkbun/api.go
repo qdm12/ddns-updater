@@ -11,9 +11,20 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
+// Leaving unused values commented out to improve resilience to API changes.
+type dnsRecord struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	// Type     string `json:"type"`
+	Content string `json:"content"`
+	// TTL      string `json:"ttl"`
+	// Priority string `json:"prio"`
+	// Notes    string `json:"notes"`
+}
+
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Retrieve%20Records%20by%20Domain,%20Subdomain%20and%20Type
-func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, recordType string) (
-	recordIDs []string, err error) {
+func (p *Provider) getRecords(ctx context.Context, client *http.Client, recordType string) (
+	records []dnsRecord, err error) {
 	url := "https://porkbun.com/api/json/v3/dns/retrieveByNameType/" + p.domain + "/" + recordType + "/"
 	if p.owner != "@" {
 		// Note Porkbun requires we send the unescaped '*' character.
@@ -29,9 +40,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 	}
 
 	type jsonResponseData struct {
-		Records []struct {
-			ID string `json:"id"`
-		} `json:"records"`
+		Records []dnsRecord `json:"records"`
 	}
 	const decodeBody = true
 	responseData, err := httpPost[jsonResponseData](ctx, client, url, postRecordsParams, decodeBody)
@@ -40,12 +49,7 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 			recordType, err)
 	}
 
-	recordIDs = make([]string, len(responseData.Records))
-	for i := range responseData.Records {
-		recordIDs[i] = responseData.Records[i].ID
-	}
-
-	return recordIDs, nil
+	return responseData.Records, nil
 }
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Create%20Record
@@ -107,8 +111,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 }
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Delete%20Records%20by%20Domain,%20Subdomain%20and%20Type
-func (p *Provider) deleteAliasRecord(ctx context.Context, client *http.Client) (err error) {
-	url := "https://porkbun.com/api/json/v3/dns/deleteByNameType/" + p.domain + "/ALIAS/"
+func (p *Provider) deleteRecord(ctx context.Context, client *http.Client, recordType string) (err error) {
+	url := "https://porkbun.com/api/json/v3/dns/deleteByNameType/" + p.domain + "/" + recordType + "/"
 	if p.owner != "@" {
 		// Note Porkbun requires we send the unescaped '*' character.
 		url += p.owner

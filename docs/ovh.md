@@ -33,7 +33,7 @@
 - `"api_endpoint"` default value is `"ovh-eu"`
 - `"app_key"` which you can create at [eu.api.ovh.com/createApp](https://eu.api.ovh.com/createApp/)
 - `"app_secret"`
-- `"consumer_key"`
+- `"consumer_key"` which you can get at [www.ovh.com/auth/api/createToken](https://www.ovh.com/auth/api/createToken)
 
 The ZoneDNS implementation allows you to update any record name including *.yourdomain.tld
 

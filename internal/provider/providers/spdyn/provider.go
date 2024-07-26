@@ -19,24 +19,22 @@ import (
 )
 
 type Provider struct {
-	domain        string
-	owner         string
-	ipVersion     ipversion.IPVersion
-	ipv6Suffix    netip.Prefix
-	user          string
-	password      string
-	token         string
-	useProviderIP bool
+	domain     string
+	owner      string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	user       string
+	password   string
+	token      string
 }
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
-		User          string `json:"user"`
-		Password      string `json:"password"`
-		Token         string `json:"token"`
-		UseProviderIP bool   `json:"provider_ip"`
+		User     string `json:"user"`
+		Password string `json:"password"`
+		Token    string `json:"token"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -49,14 +47,13 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	return &Provider{
-		domain:        domain,
-		owner:         owner,
-		ipVersion:     ipVersion,
-		ipv6Suffix:    ipv6Suffix,
-		user:          extraSettings.User,
-		password:      extraSettings.Password,
-		token:         extraSettings.Token,
-		useProviderIP: extraSettings.UseProviderIP,
+		domain:     domain,
+		owner:      owner,
+		ipVersion:  ipVersion,
+		ipv6Suffix: ipv6Suffix,
+		user:       extraSettings.User,
+		password:   extraSettings.Password,
+		token:      extraSettings.Token,
 	}, nil
 }
 
@@ -129,11 +126,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	hostname := utils.BuildURLQueryHostname(p.owner, p.domain)
 	values := url.Values{}
 	values.Set("hostname", hostname)
-	if p.useProviderIP {
-		values.Set("myip", "10.0.0.1")
-	} else {
-		values.Set("myip", ip.String())
-	}
+	values.Set("myip", ip.String())
 	if p.token != "" {
 		values.Set("user", hostname)
 		values.Set("pass", p.token)

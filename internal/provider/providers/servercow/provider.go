@@ -19,14 +19,13 @@ import (
 )
 
 type Provider struct {
-	domain        string
-	owner         string
-	ipVersion     ipversion.IPVersion
-	ipv6Suffix    netip.Prefix
-	username      string
-	password      string
-	useProviderIP bool
-	ttl           uint32
+	domain     string
+	owner      string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	username   string
+	password   string
+	ttl        uint32
 }
 
 func New(data json.RawMessage, domain, owner string, ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
@@ -37,10 +36,9 @@ func New(data json.RawMessage, domain, owner string, ipVersion ipversion.IPVersi
 	}
 
 	extraSettings := struct {
-		Username      string `json:"username"`
-		Password      string `json:"password"`
-		TTL           uint32 `json:"ttl"`
-		UseProviderIP bool   `json:"provider_ip"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+		TTL      uint32 `json:"ttl"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -53,14 +51,13 @@ func New(data json.RawMessage, domain, owner string, ipVersion ipversion.IPVersi
 	}
 
 	return &Provider{
-		domain:        domain,
-		owner:         owner,
-		ipVersion:     ipVersion,
-		ipv6Suffix:    ipv6Suffix,
-		username:      extraSettings.Username,
-		password:      extraSettings.Password,
-		useProviderIP: extraSettings.UseProviderIP,
-		ttl:           extraSettings.TTL,
+		domain:     domain,
+		owner:      owner,
+		ipVersion:  ipVersion,
+		ipv6Suffix: ipv6Suffix,
+		username:   extraSettings.Username,
+		password:   extraSettings.Password,
+		ttl:        extraSettings.TTL,
 	}, nil
 }
 

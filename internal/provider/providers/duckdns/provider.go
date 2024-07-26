@@ -21,12 +21,11 @@ import (
 )
 
 type Provider struct {
-	domain        string
-	owner         string
-	ipVersion     ipversion.IPVersion
-	ipv6Suffix    netip.Prefix
-	token         string
-	useProviderIP bool
+	domain     string
+	owner      string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	token      string
 }
 
 const eTLD = "duckdns.org"
@@ -52,8 +51,7 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	extraSettings := struct {
-		Token         string `json:"token"`
-		UseProviderIP bool   `json:"provider_ip"`
+		Token string `json:"token"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -66,12 +64,11 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	return &Provider{
-		domain:        domain,
-		owner:         owner,
-		ipVersion:     ipVersion,
-		ipv6Suffix:    ipv6Suffix,
-		token:         extraSettings.Token,
-		useProviderIP: extraSettings.UseProviderIP,
+		domain:     domain,
+		owner:      owner,
+		ipVersion:  ipVersion,
+		ipv6Suffix: ipv6Suffix,
+		token:      extraSettings.Token,
 	}, nil
 }
 
@@ -145,13 +142,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("verbose", "true")
 	values.Set("domains", p.BuildDomainName())
 	values.Set("token", p.token)
-	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
-	if !useProviderIP {
-		if ip.Is6() {
-			values.Set("ipv6", ip.String())
-		} else {
-			values.Set("ip", ip.String())
-		}
+	if ip.Is6() {
+		values.Set("ipv6", ip.String())
+	} else {
+		values.Set("ip", ip.String())
 	}
 	u.RawQuery = values.Encode()
 
@@ -195,7 +189,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 			return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoIP)
 		}
 		newIP = ips[0]
-		if !useProviderIP && newIP.Compare(ip) != 0 {
+		if newIP.Compare(ip) != 0 {
 			return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
 				errors.ErrIPReceivedMismatch, ip, newIP)
 		}

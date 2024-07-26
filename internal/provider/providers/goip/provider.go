@@ -20,13 +20,12 @@ import (
 )
 
 type Provider struct {
-	domain        string
-	owner         string
-	ipVersion     ipversion.IPVersion
-	ipv6Suffix    netip.Prefix
-	username      string
-	password      string
-	useProviderIP bool
+	domain     string
+	owner      string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	username   string
+	password   string
 }
 
 const defaultDomain = "goip.de"
@@ -52,9 +51,8 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	extraSettings := struct {
-		Username      string `json:"username"`
-		Password      string `json:"password"`
-		UseProviderIP bool   `json:"provider_ip"`
+		Username string `json:"username"`
+		Password string `json:"password"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -67,13 +65,12 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	return &Provider{
-		domain:        domain,
-		owner:         owner,
-		ipVersion:     ipVersion,
-		ipv6Suffix:    ipv6Suffix,
-		username:      extraSettings.Username,
-		password:      extraSettings.Password,
-		useProviderIP: extraSettings.UseProviderIP,
+		domain:     domain,
+		owner:      owner,
+		ipVersion:  ipVersion,
+		ipv6Suffix: ipv6Suffix,
+		username:   extraSettings.Username,
+		password:   extraSettings.Password,
 	}, nil
 }
 
@@ -149,11 +146,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("password", p.password)
 	values.Set("shortResponse", "true")
 	if ip.Is4() {
-		if !p.useProviderIP {
-			values.Set("ip", ip.String())
-		}
+		values.Set("ip", ip.String())
 	} else {
-		// IPv6 cannot be automatically detected
 		values.Set("ip6", ip.String())
 	}
 	u.RawQuery = values.Encode()

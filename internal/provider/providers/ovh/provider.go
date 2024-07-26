@@ -20,34 +20,32 @@ import (
 )
 
 type Provider struct {
-	domain        string
-	owner         string
-	ipVersion     ipversion.IPVersion
-	ipv6Suffix    netip.Prefix
-	username      string
-	password      string
-	useProviderIP bool
-	mode          string
-	apiURL        *url.URL
-	appKey        string
-	appSecret     string
-	consumerKey   string
-	timeNow       func() time.Time
-	serverDelta   time.Duration
+	domain      string
+	owner       string
+	ipVersion   ipversion.IPVersion
+	ipv6Suffix  netip.Prefix
+	username    string
+	password    string
+	mode        string
+	apiURL      *url.URL
+	appKey      string
+	appSecret   string
+	consumerKey string
+	timeNow     func() time.Time
+	serverDelta time.Duration
 }
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
-		Username      string `json:"username"`
-		Password      string `json:"password"`
-		UseProviderIP bool   `json:"provider_ip"`
-		Mode          string `json:"mode"`
-		APIEndpoint   string `json:"api_endpoint"`
-		AppKey        string `json:"app_key"`
-		AppSecret     string `json:"app_secret"`
-		ConsumerKey   string `json:"consumer_key"`
+		Username    string `json:"username"`
+		Password    string `json:"password"`
+		Mode        string `json:"mode"`
+		APIEndpoint string `json:"api_endpoint"`
+		AppKey      string `json:"app_key"`
+		AppSecret   string `json:"app_secret"`
+		ConsumerKey string `json:"consumer_key"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -66,19 +64,18 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	return &Provider{
-		domain:        domain,
-		owner:         owner,
-		ipVersion:     ipVersion,
-		ipv6Suffix:    ipv6Suffix,
-		username:      extraSettings.Username,
-		password:      extraSettings.Password,
-		useProviderIP: extraSettings.UseProviderIP,
-		mode:          extraSettings.Mode,
-		apiURL:        apiURL,
-		appKey:        extraSettings.AppKey,
-		appSecret:     extraSettings.AppSecret,
-		consumerKey:   extraSettings.ConsumerKey,
-		timeNow:       time.Now,
+		domain:      domain,
+		owner:       owner,
+		ipVersion:   ipVersion,
+		ipv6Suffix:  ipv6Suffix,
+		username:    extraSettings.Username,
+		password:    extraSettings.Password,
+		mode:        extraSettings.Mode,
+		apiURL:      apiURL,
+		appKey:      extraSettings.AppKey,
+		appSecret:   extraSettings.AppSecret,
+		consumerKey: extraSettings.ConsumerKey,
+		timeNow:     time.Now,
 	}, nil
 }
 
@@ -159,10 +156,7 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
 	values := url.Values{}
 	values.Set("system", "dyndns")
 	values.Set("hostname", utils.BuildURLQueryHostname(p.owner, p.domain))
-	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
-	if !useProviderIP {
-		values.Set("myip", ip.String())
-	}
+	values.Set("myip", ip.String())
 	u.RawQuery = values.Encode()
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)

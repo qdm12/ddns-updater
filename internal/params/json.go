@@ -28,8 +28,7 @@ type commonSettings struct {
 	IPVersion  string       `json:"ip_version"`
 	IPv6Suffix netip.Prefix `json:"ipv6_suffix,omitempty"`
 	// Retro values for warnings
-	IPMethod *string `json:"ip_method,omitempty"`
-	Delay    *uint64 `json:"delay,omitempty"`
+	ProviderIP *bool `json:"provider_ip,omitempty"`
 }
 
 // JSONProviders obtain the update settings from the JSON content,
@@ -194,6 +193,13 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 		warnings = append(warnings,
 			fmt.Sprintf("IPv6 suffix specified as %s but IP version is %s",
 				ipv6Suffix, ipVersion))
+	}
+
+	if common.ProviderIP != nil {
+		warning := fmt.Sprintf("for domain %s and ip version %s: "+
+			`the field "provider_ip" is deprecated and no longer used`,
+			domain, ipVersion)
+		warnings = append(warnings, warning)
 	}
 
 	providerName := models.Provider(common.Provider)

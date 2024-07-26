@@ -17,20 +17,18 @@ import (
 )
 
 type Provider struct {
-	domain        string
-	owner         string
-	ipVersion     ipversion.IPVersion
-	ipv6Suffix    netip.Prefix
-	key           string
-	useProviderIP bool
+	domain     string
+	owner      string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	key        string
 }
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
-		Key           string `json:"key"`
-		UseProviderIP bool   `json:"provider_ip"`
+		Key string `json:"key"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -43,12 +41,11 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	return &Provider{
-		domain:        domain,
-		owner:         owner,
-		ipVersion:     ipVersion,
-		ipv6Suffix:    ipv6Suffix,
-		key:           extraSettings.Key,
-		useProviderIP: extraSettings.UseProviderIP,
+		domain:     domain,
+		owner:      owner,
+		ipVersion:  ipVersion,
+		ipv6Suffix: ipv6Suffix,
+		key:        extraSettings.Key,
 	}, nil
 }
 
@@ -111,15 +108,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("h", utils.BuildURLQueryHostname(p.owner, p.domain))
 	values.Set("k", p.key)
 	updatingIP6 := ip.Is6()
-	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
-	if useProviderIP {
-		values.Set("auto", "")
+	if updatingIP6 {
+		values.Set("aaaa", ip.String())
 	} else {
-		if updatingIP6 {
-			values.Set("aaaa", ip.String())
-		} else {
-			values.Set("a", ip.String())
-		}
+		values.Set("a", ip.String())
 	}
 	u.RawQuery = values.Encode()
 
@@ -161,7 +153,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		newIP, err = netip.ParseAddr(ipString)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
-		} else if !useProviderIP && ip.Compare(newIP) != 0 {
+		} else if ip.Compare(newIP) != 0 {
 			return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
 				errors.ErrIPReceivedMismatch, ip, newIP)
 		}

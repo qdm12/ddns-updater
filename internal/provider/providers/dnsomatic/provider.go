@@ -20,22 +20,20 @@ import (
 )
 
 type Provider struct {
-	domain        string
-	owner         string
-	ipVersion     ipversion.IPVersion
-	ipv6Suffix    netip.Prefix
-	username      string
-	password      string
-	useProviderIP bool
+	domain     string
+	owner      string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	username   string
+	password   string
 }
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
-		Username      string `json:"username"`
-		Password      string `json:"password"`
-		UseProviderIP bool   `json:"provider_ip"`
+		Username string `json:"username"`
+		Password string `json:"password"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -48,13 +46,12 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	return &Provider{
-		domain:        domain,
-		owner:         owner,
-		ipVersion:     ipVersion,
-		ipv6Suffix:    ipv6Suffix,
-		username:      extraSettings.Username,
-		password:      extraSettings.Password,
-		useProviderIP: extraSettings.UseProviderIP,
+		domain:     domain,
+		owner:      owner,
+		ipVersion:  ipVersion,
+		ipv6Suffix: ipv6Suffix,
+		username:   extraSettings.Username,
+		password:   extraSettings.Password,
 	}, nil
 }
 
@@ -119,10 +116,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		User:   url.UserPassword(p.username, p.password),
 	}
 	values := url.Values{}
-	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
-	if useProviderIP {
-		values.Set("myip", ip.String())
-	}
+	values.Set("myip", ip.String())
 	values.Set("wildcard", "NOCHG")
 	if p.owner == "*" {
 		values.Set("hostname", p.domain)
@@ -186,7 +180,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	newIP = ips[0]
-	if !useProviderIP && ip.Compare(newIP) != 0 {
+	if ip.Compare(newIP) != 0 {
 		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
 			errors.ErrIPReceivedMismatch, ip, newIP)
 	}

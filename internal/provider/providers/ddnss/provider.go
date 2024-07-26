@@ -19,24 +19,22 @@ import (
 )
 
 type Provider struct {
-	domain        string
-	owner         string
-	ipVersion     ipversion.IPVersion
-	ipv6Suffix    netip.Prefix
-	username      string
-	password      string
-	dualStack     bool
-	useProviderIP bool
+	domain     string
+	owner      string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	username   string
+	password   string
+	dualStack  bool
 }
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
-		Username      string `json:"username"`
-		Password      string `json:"password"`
-		DualStack     bool   `json:"dual_stack"`
-		UseProviderIP bool   `json:"provider_ip"`
+		Username  string `json:"username"`
+		Password  string `json:"password"`
+		DualStack bool   `json:"dual_stack"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -49,14 +47,13 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	return &Provider{
-		domain:        domain,
-		owner:         owner,
-		ipVersion:     ipVersion,
-		ipv6Suffix:    ipv6Suffix,
-		username:      extraSettings.Username,
-		password:      extraSettings.Password,
-		dualStack:     extraSettings.DualStack,
-		useProviderIP: extraSettings.UseProviderIP,
+		domain:     domain,
+		owner:      owner,
+		ipVersion:  ipVersion,
+		ipv6Suffix: ipv6Suffix,
+		username:   extraSettings.Username,
+		password:   extraSettings.Password,
+		dualStack:  extraSettings.DualStack,
 	}, nil
 }
 
@@ -124,14 +121,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("user", p.username)
 	values.Set("pwd", p.password)
 	values.Set("host", utils.BuildURLQueryHostname(p.owner, p.domain))
-	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
-	if !useProviderIP {
-		ipKey := "ip"
-		if p.dualStack && ip.Is6() { // ipv6 update for dual stack
-			ipKey = "ip6"
-		}
-		values.Set(ipKey, ip.String())
+	ipKey := "ip"
+	if p.dualStack && ip.Is6() { // ipv6 update for dual stack
+		ipKey = "ip6"
 	}
+	values.Set(ipKey, ip.String())
 	u.RawQuery = values.Encode()
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)

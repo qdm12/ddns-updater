@@ -12,7 +12,6 @@
       "domain": "domain.com",
       "username": "username",
       "password": "password",
-      "provider_ip": true,
       "ip_version": "ipv4",
       "ipv6_suffix": ""
     }
@@ -25,7 +24,6 @@
 - `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
 - `"username"`
 - `"password"`
-- `"provider_ip"`
 
 ### Optional parameters
 

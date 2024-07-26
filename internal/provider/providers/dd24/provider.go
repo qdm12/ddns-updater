@@ -19,20 +19,18 @@ import (
 )
 
 type Provider struct {
-	domain        string
-	owner         string
-	ipVersion     ipversion.IPVersion
-	ipv6Suffix    netip.Prefix
-	password      string
-	useProviderIP bool
+	domain     string
+	owner      string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	password   string
 }
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	p *Provider, err error) {
 	extraSettings := struct {
-		Password      string `json:"password"`
-		UseProviderIP bool   `json:"provider_ip"`
+		Password string `json:"password"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -45,12 +43,11 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	return &Provider{
-		domain:        domain,
-		owner:         owner,
-		ipVersion:     ipVersion,
-		ipv6Suffix:    ipv6Suffix,
-		password:      extraSettings.Password,
-		useProviderIP: extraSettings.UseProviderIP,
+		domain:     domain,
+		owner:      owner,
+		ipVersion:  ipVersion,
+		ipv6Suffix: ipv6Suffix,
+		password:   extraSettings.Password,
 	}, nil
 }
 
@@ -113,12 +110,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values := url.Values{}
 	values.Set("hostname", p.BuildDomainName())
 	values.Set("password", p.password)
-	useProviderIP := p.useProviderIP && (ip.Is4() || !p.ipv6Suffix.IsValid())
-	if useProviderIP {
-		values.Set("ip", "auto")
-	} else {
-		values.Set("ip", ip.String())
-	}
+	values.Set("ip", ip.String())
 	u.RawQuery = values.Encode()
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)

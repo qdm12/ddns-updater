@@ -175,7 +175,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 func (p *Provider) deleteAliasRecord(ctx context.Context, client *http.Client) (err error) {
 	var subdomain string
 	if p.host != "@" {
-		subdomain = p.host + "."
+		subdomain = p.host
 	}
 	u := url.URL{
 		Scheme: "https",

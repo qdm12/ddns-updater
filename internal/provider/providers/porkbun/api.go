@@ -20,9 +20,6 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 		Host:   "porkbun.com",
 		Path:   "/api/json/v3/dns/retrieveByNameType/" + p.domain + "/" + recordType + "/",
 	}
-	if p.host != "@" && p.host != "*" {
-		u.Path += p.host
-	}
 
 	postRecordsParams := struct {
 		SecretAPIKey string `json:"secretapikey"`
@@ -38,7 +35,14 @@ func (p *Provider) getRecordIDs(ctx context.Context, client *http.Client, record
 		return nil, fmt.Errorf("json encoding request data: %w", err)
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
+	encodedRequestURL := u.String()
+	if p.host != "@" {
+		// add host after string-ing the URL to avoid encoding the '*' character,
+		// since Porkbun requires we send the unencoded '*' character.
+		encodedRequestURL += p.host
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, encodedRequestURL, buffer)
 	if err != nil {
 		return nil, fmt.Errorf("creating http request: %w", err)
 	}
@@ -173,14 +177,11 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Delete%20Records%20by%20Domain,%20Subdomain%20and%20Type
 func (p *Provider) deleteAliasRecord(ctx context.Context, client *http.Client) (err error) {
-	var subdomain string
-	if p.host != "@" {
-		subdomain = p.host
-	}
 	u := url.URL{
 		Scheme: "https",
 		Host:   "porkbun.com",
-		Path:   "/api/json/v3/dns/deleteByNameType/" + p.domain + "/ALIAS/" + subdomain,
+		// host is added below after string-ing the URL
+		Path: "/api/json/v3/dns/deleteByNameType/" + p.domain + "/ALIAS/",
 	}
 	postRecordsParams := struct {
 		SecretAPIKey string `json:"secretapikey"`
@@ -196,7 +197,14 @@ func (p *Provider) deleteAliasRecord(ctx context.Context, client *http.Client) (
 		return fmt.Errorf("json encoding request data: %w", err)
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
+	encodedRequestURL := u.String()
+	if p.host != "@" {
+		// add host after string-ing the URL to avoid encoding the '*' character,
+		// since Porkbun requires we send the unencoded '*' character.
+		encodedRequestURL += p.host
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, encodedRequestURL, buffer)
 	if err != nil {
 		return fmt.Errorf("creating http request: %w", err)
 	}

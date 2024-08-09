@@ -11,6 +11,7 @@
       "provider": "cloudflare",
       "zone_identifier": "some id",
       "domain": "domain.com",
+      "host": "@ or *",
       "ttl": 600,
       "token": "yourtoken",
       "ip_version": "ipv4",
@@ -23,8 +24,8 @@
 ### Compulsory parameters
 
 - `"zone_identifier"` is the Zone ID of your site, from the domain overview page written as *Zone ID*
-- `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
-See [this issue comment for context](https://github.com/qdm12/ddns-updater/issues/243#issuecomment-928313949). This is left as is for compatibility.
+- `"domain"` is the domain to update. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`).
+- `"host"` defines whether the domain root or the subdomain wildcard is udpated. `"@"` defines root `"domain.com"` and `"*"` defines all subdomains such as `"sub.domain.com"` OR `"test.sub.domain.com"`. Inaddition the wildcard can be used to define subdomains such as `"sub.*"` or other permutations as you desire which represents the example `"sub.test.domain.com"`.
 - `"ttl"` integer value for record TTL in seconds (specify 1 for automatic)
 - One of the following ([how to find API keys](https://developers.cloudflare.com/fundamentals/api/get-started/)):
   - Email `"email"` and Global API Key `"key"`

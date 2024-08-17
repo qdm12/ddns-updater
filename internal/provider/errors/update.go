@@ -7,7 +7,7 @@ var (
 	ErrAuth                      = errors.New("bad authentication")
 	ErrBadRequest                = errors.New("bad request sent")
 	ErrBannedAbuse               = errors.New("banned due to abuse")
-	ErrBannedUserAgent           = errors.New("user agend is banned")
+	ErrBannedUserAgent           = errors.New("user agent is banned")
 	ErrConflictingRecord         = errors.New("conflicting record")
 	ErrDNSServerSide             = errors.New("server side DNS error")
 	ErrDomainDisabled            = errors.New("record disabled")

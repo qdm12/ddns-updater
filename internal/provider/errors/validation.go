@@ -24,7 +24,6 @@ var (
 	ErrIPv6KeyNotSet          = errors.New("IPv6 key is not set")
 	ErrKeyNotSet              = errors.New("key is not set")
 	ErrKeyNotValid            = errors.New("key is not valid")
-	ErrNameNotSet             = errors.New("name is not set")
 	ErrPasswordNotSet         = errors.New("password is not set")
 	ErrPasswordNotValid       = errors.New("password is not valid")
 	ErrSecretKeyNotSet        = errors.New("secret key is not set")

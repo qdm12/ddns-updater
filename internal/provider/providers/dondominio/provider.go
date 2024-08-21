@@ -24,7 +24,6 @@ type Provider struct {
 	ipv6Suffix netip.Prefix
 	username   string
 	key        string
-	name       string
 }
 
 func New(data json.RawMessage, domain, host string,
@@ -34,7 +33,6 @@ func New(data json.RawMessage, domain, host string,
 		Username string `json:"username"`
 		Password string `json:"password"` // retro-compatibility
 		Key      string `json:"key"`
-		Name     string `json:"name"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -54,7 +52,6 @@ func New(data json.RawMessage, domain, host string,
 		ipv6Suffix: ipv6Suffix,
 		username:   extraSettings.Username,
 		key:        extraSettings.Key,
-		name:       extraSettings.Name,
 	}
 	err = p.isValid()
 	if err != nil {
@@ -69,8 +66,6 @@ func (p *Provider) isValid() error {
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case p.key == "":
 		return fmt.Errorf("%w", errors.ErrKeyNotSet)
-	case p.name == "":
-		return fmt.Errorf("%w", errors.ErrNameNotSet)
 	}
 	return nil
 }

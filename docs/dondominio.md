@@ -11,7 +11,6 @@
       "provider": "dondominio",
       "domain": "domain.com",
       "host": "@",
-      "name": "something",
       "username": "username",
       "key": "key",
       "ip_version": "ipv4",
@@ -25,7 +24,6 @@
 
 - `"domain"`
 - `"host"` is the subdomain to update which can be `@`, `*` or a subdomain
-- `"name"` is the name of the service/hosting
 - `"username"`
 - `"password"`
 

@@ -136,7 +136,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 			// Delete ALIAS domain.tld -> pixie.porkbun.com record
 			err = p.deleteMatchingRecord(ctx, client, constants.ALIAS, porkbunParkedDomain)
 			if err != nil {
-				return netip.Addr{}, err
+				return netip.Addr{}, fmt.Errorf("deleting default parked domain record: %w", err)
 			}
 		case p.owner == "*":
 			// Delete CNAME *.domain.tld -> pixie.porkbun.com record
@@ -163,31 +163,29 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	return ip, nil
 }
 
-// Deletes the matching record for a specific recordType iff the content matches the expected content value.
-// Returns an error if there is a matching record but an unexpected content value.
-// If there is no matching record, there is nothing to do.
-func (p *Provider) deleteMatchingRecord(
-	ctx context.Context,
-	client *http.Client,
-	recordType string,
-	expectedContent string,
-) error {
+// deleteMatchingRecord deletes an eventually present record matching a specific record type if the content matches the expected content value.
+// It returns an error if multiple records are found or if one record is found with an unexpected value.
+func (p *Provider) deleteMatchingRecord(ctx context.Context, client *http.Client, 
+    recordType, expectedContent string) (err error) {
 	records, err := p.getRecords(ctx, client, recordType)
 	if err != nil {
 		return fmt.Errorf("getting %s records: %w", recordType, err)
 	}
 
-	if len(records) == 1 && records[0].Content == expectedContent {
-		err = p.deleteRecord(ctx, client, recordType)
-		if err != nil {
-			return fmt.Errorf("deleting %s record: %w", recordType, err)
-		}
+	switch {
+	case len(records) == 0:
 		return nil
-	} else if len(records) >= 1 {
-		// We have 1 or more matching records, but the expectedContent didn't match. Throw a conflicting record error.
-		return fmt.Errorf("deleting %s record: %w", recordType, errors.ErrConflictingRecord)
+	case len(records) > 1:
+		return fmt.Errorf("%w: %d %s records are already set", errors.ErrConflictingRecord, recordType)
+	case records[0].Content != expectedContent:
+		return fmt.Errorf("%w: %s record has content %q mismatching expected content %q",
+			errors.ErrConflictingRecord, recordType, records[0].Content, expectedContent)
 	}
-
-	// No record found for recordType, nothing to do.
+	
+	// Single record with content matching expected content.
+	err = p.deleteRecord(ctx, client, recordType)
+	if err != nil {
+		return fmt.Errorf("deleting record: %w", err)
+	}
 	return nil
 }

@@ -42,21 +42,11 @@
 
 In case you don't have an A or AAAA record for your host and domain combination, it will be created by DDNS-Updater.
 
-## Conflicting default records
+Porkbun creates default DNS entries for new domains, which can conflict with creating a root or wildcard A/AAAA record. Therefore, ddns-updater automatically removes any conflicting default record before creating records, as described in the table below:
 
-Porkbun sets the following default DNS entries for new domains:
+| Record type | Owner | Record value | Situation requiring a removal |
+| --- | --- | --- | --- |
+| `ALIAS` | `@` | [pixie.porkbun.com](https://pixie.porkbun.com)  | Creating A or AAAA record for the root domain **or** wildcard domain |
+| `CNAME` | `*` | [pixie.porkbun.com](https://pixie.porkbun.com)  | Creating A or AAAA record for the wildcard domain |
 
-- ALIAS `domain.tld` -> `pixie.porkbun.com`
-- CNAME `*.domain.tld` -> `pixie.porkbun.com`
-
-`pixie.porkbun.com` is porkbun's Parked domain website.
-
-[Parked domain screenshot](https://github.com/user-attachments/assets/d73c4fbd-f6a9-48c9-9dcb-01818541ceb1)
-
-In-order to create an A or AAAA DNS record, when setting the `domain.tld` or `*.domain.tld`, if a respective ALIAS or CNAME record is already set to `pixie.porkbun.com`, the respective default record will be automatically deleted by DDNS-Updater and a new A or AAAA record will be created.
 More details is in [this comment by @everydaycombat](https://github.com/qdm12/ddns-updater/issues/546#issuecomment-1773960193).
-
->NOTE: DDNS-Updater will only attempt to delete the default records for `domain.tld` and `*.domain.tld`.
->
->If there are any other conflicting records set for other domains, DDNS-Updater will not check for them, and it will simply attempt to create an `A` or `AAAA` record.
->Porkbun's API error messages are extremely unhelpful (`400: something went wrong`), so it is recommended to check the domain record from the Porkbun Web-UI in the event of unexpected 400 API errors to ensure there are no conflicting records present.

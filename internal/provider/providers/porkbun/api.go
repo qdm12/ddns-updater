@@ -11,7 +11,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
-// Leaving unused values commented out to improve resilience to API changes.
 type dnsRecord struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`

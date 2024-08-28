@@ -162,7 +162,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	return ip, nil
 }
 
-// deleteMatchingRecord deletes an eventually present record matching a specific record type if the content matches the expected content value.
+// deleteMatchingRecord deletes an eventually present record matching a specific record type if the content matches
+// the expected content value.
 // It returns an error if multiple records are found or if one record is found with an unexpected value.
 func (p *Provider) deleteMatchingRecord(ctx context.Context, client *http.Client,
 	recordType, expectedContent string) (err error) {

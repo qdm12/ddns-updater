@@ -12,13 +12,13 @@ import (
 )
 
 type dnsRecord struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	// Type     string `json:"type"`
-	Content string `json:"content"`
-	// TTL      string `json:"ttl"`
-	// Priority string `json:"prio"`
-	// Notes    string `json:"notes"`
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Content  string `json:"content"`
+	TTL      string `json:"ttl"`
+	Priority string `json:"prio"`
+	Notes    string `json:"notes"`
 }
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Retrieve%20Records%20by%20Domain,%20Subdomain%20and%20Type

@@ -45,7 +45,7 @@ func main() {
 	buildInfo := models.BuildInformation{
 		Version: version,
 		Commit:  commit,
-		Date:    date,
+		Created: date,
 	}
 	logger := log.New()
 
@@ -272,7 +272,7 @@ func printSplash(buildInfo models.BuildInformation) {
 		Emails:       []string{"quentin.mcgaw@gmail.com"},
 		Version:      buildInfo.Version,
 		Commit:       buildInfo.Commit,
-		BuildDate:    buildInfo.Date,
+		Created:      buildInfo.Created,
 		Announcement: "Public IP dns provider GOOGLE, see https://github.com/qdm12/ddns-updater/issues/492",
 		AnnounceExp:  announcementExp,
 		// Sponsor information

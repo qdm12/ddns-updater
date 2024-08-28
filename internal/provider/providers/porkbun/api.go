@@ -22,12 +22,12 @@ type dnsRecord struct {
 }
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Retrieve%20Records%20by%20Domain,%20Subdomain%20and%20Type
-func (p *Provider) getRecords(ctx context.Context, client *http.Client, recordType string) (
+func (p *Provider) getRecords(ctx context.Context, client *http.Client, recordType, owner string) (
 	records []dnsRecord, err error) {
 	url := "https://porkbun.com/api/json/v3/dns/retrieveByNameType/" + p.domain + "/" + recordType + "/"
-	if p.owner != "@" {
+	if owner != "@" {
 		// Note Porkbun requires we send the unescaped '*' character.
-		url += p.owner
+		url += owner
 	}
 
 	postRecordsParams := struct {
@@ -53,7 +53,7 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client, recordTy
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Create%20Record
 func (p *Provider) createRecord(ctx context.Context, client *http.Client,
-	recordType, ipStr string) (err error) {
+	recordType, owner, ipStr string) (err error) {
 	url := "https://porkbun.com/api/json/v3/dns/create/" + p.domain
 	postRecordsParams := struct {
 		SecretAPIKey string `json:"secretapikey"`
@@ -67,7 +67,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 		APIKey:       p.apiKey,
 		Content:      ipStr,
 		Type:         recordType,
-		Name:         p.owner,
+		Name:         owner,
 		TTL:          strconv.FormatUint(uint64(p.ttl), 10),
 	}
 	const decodeBody = false
@@ -82,7 +82,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Edit%20Record%20by%20Domain%20and%20ID
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
-	recordType, ipStr, recordID string) (err error) {
+	recordType, owner, ipStr, recordID string) (err error) {
 	url := "https://porkbun.com/api/json/v3/dns/edit/" + p.domain + "/" + recordID
 	postRecordsParams := struct {
 		SecretAPIKey string `json:"secretapikey"`
@@ -97,7 +97,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 		Content:      ipStr,
 		Type:         recordType,
 		TTL:          strconv.FormatUint(uint64(p.ttl), 10),
-		Name:         p.owner,
+		Name:         owner,
 	}
 	const decodeBody = false
 	_, err = httpPost[struct{}](ctx, client, url, postRecordsParams, decodeBody)
@@ -110,11 +110,11 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 }
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Delete%20Records%20by%20Domain,%20Subdomain%20and%20Type
-func (p *Provider) deleteRecord(ctx context.Context, client *http.Client, recordType string) (err error) {
+func (p *Provider) deleteRecord(ctx context.Context, client *http.Client, recordType, owner string) (err error) {
 	url := "https://porkbun.com/api/json/v3/dns/deleteByNameType/" + p.domain + "/" + recordType + "/"
-	if p.owner != "@" {
+	if owner != "@" {
 		// Note Porkbun requires we send the unescaped '*' character.
-		url += p.owner
+		url += owner
 	}
 	postRecordsParams := struct {
 		SecretAPIKey string `json:"secretapikey"`

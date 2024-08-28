@@ -119,14 +119,14 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		recordType = constants.AAAA
 	}
 	ipStr := ip.String()
-	records, err := p.getRecords(ctx, client, recordType)
+	records, err := p.getRecords(ctx, client, recordType, p.owner)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("getting record IDs: %w", err)
 	}
 
 	if len(records) > 0 {
 		for _, record := range records {
-			err = p.updateRecord(ctx, client, recordType, ipStr, record.ID)
+			err = p.updateRecord(ctx, client, recordType, p.owner, ipStr, record.ID)
 			if err != nil {
 				return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 			}
@@ -143,19 +143,22 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	switch {
 	case p.owner == "@":
 		// Delete ALIAS domain.tld -> pixie.porkbun.com record
-		err = p.deleteMatchingRecord(ctx, client, constants.ALIAS, porkbunParkedDomain)
+		err = p.deleteMatchingRecord(ctx, client, constants.ALIAS, "@", porkbunParkedDomain)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("deleting default parked domain record: %w", err)
 		}
 	case p.owner == "*":
+		// Delete ALIAS domain.tld -> pixie.porkbun.com record
+		// Error is ignored as the ALIAS could be set to something besides the parked domain. Failure here is non-fatal.
+		_ = p.deleteMatchingRecord(ctx, client, constants.ALIAS, "@", porkbunParkedDomain)
 		// Delete CNAME *.domain.tld -> pixie.porkbun.com record
-		err = p.deleteMatchingRecord(ctx, client, constants.CNAME, porkbunParkedDomain)
+		err = p.deleteMatchingRecord(ctx, client, constants.CNAME, "*", porkbunParkedDomain)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("deleting default parked domain record: %w", err)
 		}
 	}
 
-	err = p.createRecord(ctx, client, recordType, ipStr)
+	err = p.createRecord(ctx, client, recordType, p.owner, ipStr)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 	}
@@ -166,8 +169,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 // the expected content value.
 // It returns an error if multiple records are found or if one record is found with an unexpected value.
 func (p *Provider) deleteMatchingRecord(ctx context.Context, client *http.Client,
-	recordType, expectedContent string) (err error) {
-	records, err := p.getRecords(ctx, client, recordType)
+	recordType, owner, expectedContent string) (err error) {
+	records, err := p.getRecords(ctx, client, recordType, owner)
 	if err != nil {
 		return fmt.Errorf("getting records: %w", err)
 	}
@@ -183,7 +186,7 @@ func (p *Provider) deleteMatchingRecord(ctx context.Context, client *http.Client
 	}
 
 	// Single record with content matching expected content.
-	err = p.deleteRecord(ctx, client, recordType)
+	err = p.deleteRecord(ctx, client, recordType, owner)
 	if err != nil {
 		return fmt.Errorf("deleting record: %w", err)
 	}

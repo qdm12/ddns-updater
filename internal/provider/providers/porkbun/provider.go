@@ -143,16 +143,16 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	switch {
 	case p.owner == "@":
 		// Delete ALIAS domain.tld -> pixie.porkbun.com record
-		err = p.deleteMatchingRecord(ctx, client, constants.ALIAS, "@", porkbunParkedDomain)
+		err = p.deleteSingleMatchingRecord(ctx, client, constants.ALIAS, "@", porkbunParkedDomain)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("deleting default parked domain record: %w", err)
 		}
 	case p.owner == "*":
 		// Delete ALIAS domain.tld -> pixie.porkbun.com record
 		// Error is ignored as the ALIAS could be set to something besides the parked domain. Failure here is non-fatal.
-		_ = p.deleteMatchingRecord(ctx, client, constants.ALIAS, "@", porkbunParkedDomain)
+		_ = p.deleteSingleMatchingRecord(ctx, client, constants.ALIAS, "@", porkbunParkedDomain)
 		// Delete CNAME *.domain.tld -> pixie.porkbun.com record
-		err = p.deleteMatchingRecord(ctx, client, constants.CNAME, "*", porkbunParkedDomain)
+		err = p.deleteSingleMatchingRecord(ctx, client, constants.CNAME, "*", porkbunParkedDomain)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("deleting default parked domain record: %w", err)
 		}
@@ -165,10 +165,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	return ip, nil
 }
 
-// deleteMatchingRecord deletes an eventually present record matching a specific record type if the content matches
-// the expected content value.
+// deleteSingleMatchingRecord deletes an eventually present record matching a specific record type if the content
+// matches the expected content value.
 // It returns an error if multiple records are found or if one record is found with an unexpected value.
-func (p *Provider) deleteMatchingRecord(ctx context.Context, client *http.Client,
+func (p *Provider) deleteSingleMatchingRecord(ctx context.Context, client *http.Client,
 	recordType, owner, expectedContent string) (err error) {
 	records, err := p.getRecords(ctx, client, recordType, owner)
 	if err != nil {

@@ -46,7 +46,7 @@ Porkbun creates default DNS entries for new domains, which can conflict with cre
 
 | Record type | Owner | Record value | Situation requiring a removal |
 | --- | --- | --- | --- |
-| `ALIAS` | `@` | [pixie.porkbun.com](https://pixie.porkbun.com)  | Creating A or AAAA record for the root domain **or** wildcard domain |
-| `CNAME` | `*` | [pixie.porkbun.com](https://pixie.porkbun.com)  | Creating A or AAAA record for the wildcard domain |
+| `ALIAS` | `@` | pixie.porkbun.com | Creating A or AAAA record for the root domain **or** wildcard domain |
+| `CNAME` | `*` | pixie.porkbun.com | Creating A or AAAA record for the wildcard domain |
 
 More details is in [this comment by @everydaycombat](https://github.com/qdm12/ddns-updater/issues/546#issuecomment-1773960193).

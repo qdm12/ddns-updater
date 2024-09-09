@@ -102,7 +102,7 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 	case constants.DNSPod:
 		return dnspod.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Domeneshop:
-		return domeneshop.New(data, domain, ipVersion, ipv6Suffix)
+		return domeneshop.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.DonDominio:
 		return dondominio.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Dreamhost:

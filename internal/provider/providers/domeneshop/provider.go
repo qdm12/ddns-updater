@@ -20,13 +20,14 @@ import (
 
 type Provider struct {
 	domain     string
+	owner  string
 	token      string
 	secret     string
 	ipVersion  ipversion.IPVersion
 	ipv6Suffix netip.Prefix
 }
 
-func New(data json.RawMessage, domain string,
+func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	provider *Provider, err error) {
 	var providerSpecificSettings struct {
@@ -38,7 +39,7 @@ func New(data json.RawMessage, domain string,
 		return nil, fmt.Errorf("json decoding provider specific settings: %w", err)
 	}
 
-	err = validateSettings(domain,
+	err = validateSettings(domain, owner,
 		providerSpecificSettings.Token, providerSpecificSettings.Secret)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
@@ -46,6 +47,7 @@ func New(data json.RawMessage, domain string,
 
 	return &Provider{
 		domain:     domain,
+		owner:      owner,
 		token:      providerSpecificSettings.Token,
 		secret:     providerSpecificSettings.Secret,
 		ipVersion:  ipVersion,
@@ -53,13 +55,17 @@ func New(data json.RawMessage, domain string,
 	}, nil
 }
 
-func validateSettings(domain, token, secret string) (err error) {
+func validateSettings(domain, owner, token, secret string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
 	}
 
 	switch {
+	case owner == "":
+		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
+	case owner == "*":
+		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
 	case token == "":
 		return fmt.Errorf("%w", errors.ErrTokenNotSet)
 	case secret == "":
@@ -69,7 +75,7 @@ func validateSettings(domain, token, secret string) (err error) {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.Owner(), constants.Domeneshop, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.Domeneshop, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
@@ -77,7 +83,7 @@ func (p *Provider) Domain() string {
 }
 
 func (p *Provider) Owner() string {
-	return ""
+	return p.owner
 }
 
 func (p *Provider) IPVersion() ipversion.IPVersion {
@@ -93,7 +99,7 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	return p.domain
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
@@ -114,7 +120,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/v0/dyndns/update",
 	}
 	values := url.Values{}
-	values.Set("hostname", p.domain)
+	values.Set("hostname", utils.BuildURLQueryHostname(p.owner, p.domain))
 	values.Set("myip", ip.String())
 	u.RawQuery = values.Encode()
 

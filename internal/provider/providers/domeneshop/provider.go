@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
-	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -20,7 +19,7 @@ import (
 
 type Provider struct {
 	domain     string
-	owner  string
+	owner      string
 	token      string
 	secret     string
 	ipVersion  ipversion.IPVersion
@@ -148,6 +147,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	switch response.StatusCode {
 	case http.StatusNoContent:
+		return ip, nil
 	case http.StatusNotFound:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrHostnameNotExists, utils.ToSingleLine(s))
 	default:
@@ -155,12 +155,4 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
 	}
 
-	switch {
-	case strings.HasPrefix(s, "Successful operation"):
-		return ip, nil
-	case strings.HasPrefix(s, "Domain not found"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrDomainNotFound)
-	default:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
-	}
 }

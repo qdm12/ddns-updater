@@ -15,6 +15,7 @@ const (
 	DigitalOcean models.Provider = "digitalocean"
 	DNSOMatic    models.Provider = "dnsomatic"
 	DNSPod       models.Provider = "dnspod"
+	Domeneshop   models.Provider = "domeneshop"
 	DonDominio   models.Provider = "dondominio"
 	Dreamhost    models.Provider = "dreamhost"
 	DuckDNS      models.Provider = "duckdns"
@@ -65,6 +66,7 @@ func ProviderChoices() []models.Provider {
 		DigitalOcean,
 		DNSOMatic,
 		DNSPod,
+		Domeneshop,
 		DonDominio,
 		Dreamhost,
 		DuckDNS,

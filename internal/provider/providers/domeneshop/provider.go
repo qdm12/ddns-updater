@@ -143,7 +143,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	s := string(b)
 
-	defer response.Body.Close()
 
 	switch response.StatusCode {
 	case http.StatusNoContent:

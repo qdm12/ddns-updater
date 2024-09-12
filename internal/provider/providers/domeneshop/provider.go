@@ -90,7 +90,7 @@ func (p *Provider) IPVersion() ipversion.IPVersion {
 }
 
 func (p *Provider) IPv6Suffix() netip.Prefix {
-	return netip.Prefix{}
+	return p.ipv6Suffix
 }
 
 func (p *Provider) Proxied() bool {

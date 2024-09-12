@@ -153,5 +153,4 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
 	}
-
 }

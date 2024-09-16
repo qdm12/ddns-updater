@@ -107,7 +107,10 @@ func (c *Config) Read(reader *reader.Reader,
 	}
 
 	c.Health.Read(reader)
-	c.Paths.read(reader)
+	err = c.Paths.read(reader)
+	if err != nil {
+		return fmt.Errorf("reading paths settings: %w", err)
+	}
 
 	err = c.Backup.read(reader)
 	if err != nil {

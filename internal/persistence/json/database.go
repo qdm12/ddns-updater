@@ -17,6 +17,7 @@ type Database struct {
 	data     dataModel
 	filepath string
 	mutex    sync.RWMutex
+	umask    fs.FileMode
 }
 
 func (db *Database) Close() error {
@@ -26,7 +27,7 @@ func (db *Database) Close() error {
 }
 
 // NewDatabase opens or creates the JSON file database.
-func NewDatabase(dataDir string) (*Database, error) {
+func NewDatabase(dataDir string, umask fs.FileMode) (*Database, error) {
 	filePath := filepath.Join(dataDir, "updates.json")
 
 	file, err := os.Open(filePath)
@@ -34,8 +35,8 @@ func NewDatabase(dataDir string) (*Database, error) {
 		if !errors.Is(err, os.ErrNotExist) {
 			return nil, fmt.Errorf("reading file: %w", err)
 		}
-		const perm fs.FileMode = 0700
-		err = os.MkdirAll(filepath.Dir(filePath), perm)
+		dirPerm := os.FileMode(0o777) - umask //nolint:gomnd
+		err = os.MkdirAll(filepath.Dir(filePath), dirPerm)
 		if err != nil {
 			return nil, fmt.Errorf("creating data directory: %w", err)
 		}
@@ -80,6 +81,7 @@ func NewDatabase(dataDir string) (*Database, error) {
 	return &Database{
 		data:     data,
 		filepath: filePath,
+		umask:    umask,
 	}, nil
 }
 
@@ -134,8 +136,8 @@ func checkHistoryEvents(events []models.HistoryEvent) (err error) {
 }
 
 func (db *Database) write() error {
-	const createPerms fs.FileMode = 0600
-	file, err := os.OpenFile(db.filepath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, createPerms)
+	filePerm := os.FileMode(0o666) - db.umask //nolint:gomnd
+	file, err := os.OpenFile(db.filepath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, filePerm)
 	if err != nil {
 		return fmt.Errorf("opening file: %w", err)
 	}

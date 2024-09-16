@@ -139,14 +139,14 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		return fmt.Errorf("setting up Shoutrrr: %w", err)
 	}
 
-	persistentDB, err := persistence.NewDatabase(*config.Paths.DataDir)
+	persistentDB, err := persistence.NewDatabase(*config.Paths.DataDir, config.Paths.Umask)
 	if err != nil {
 		shoutrrrClient.Notify(err.Error())
 		return err
 	}
 
 	jsonReader := jsonparams.NewReader(logger)
-	providers, warnings, err := jsonReader.JSONProviders(*config.Paths.Config)
+	providers, warnings, err := jsonReader.JSONProviders(*config.Paths.Config, config.Paths.Umask)
 	for _, w := range warnings {
 		logger.Warn(w)
 		shoutrrrClient.Notify(w)

@@ -103,6 +103,8 @@ ENV \
     SHOUTRRR_ADDRESSES= \
     SHOUTRRR_DEFAULT_TITLE="DDNS Updater" \
     TZ= \
+    # UMASK left empty so it dynamically defaults to the OS current umask
+    UMASK= \
     HEALTH_SERVER_ADDRESS=127.0.0.1:9999 \
     HEALTH_HEALTHCHECKSIO_BASE_URL=https://hc-ping.com \
     HEALTH_HEALTHCHECKSIO_UUID=

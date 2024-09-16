@@ -40,7 +40,8 @@ func Test_Settings_String(t *testing.T) {
 |   └── Server listening address: 127.0.0.1:9999
 ├── Paths
 |   ├── Data directory: ./data
-|   └── Config file: data/config.json
+|   ├── Config file: data/config.json
+|   └── Umask: -----w--w-
 ├── Backup: disabled
 └── Logger
     ├── Level: INFO

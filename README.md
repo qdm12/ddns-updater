@@ -409,7 +409,6 @@ You can use optional build arguments with `--build-arg KEY=VALUE` from the table
 - [Contribute with code](.github/CONTRIBUTING.md)
 - [Github workflows to know what's building](https://github.com/qdm12/ddns-updater/actions)
 - [List of issues and feature requests](https://github.com/qdm12/ddns-updater/issues)
-- [Kanban board](https://github.com/qdm12/ddns-updater/projects/1)
 
 ## License
 

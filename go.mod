@@ -1,6 +1,7 @@
 module github.com/qdm12/ddns-updater
 
 go 1.22
+toolchain go1.22.5
 
 require (
 	github.com/breml/rootcerts v0.2.18
@@ -14,7 +15,7 @@ require (
 	github.com/qdm12/gotree v0.2.0
 	github.com/qdm12/log v0.1.0
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/mod v0.18.0
+	golang.org/x/mod v0.21.0
 	golang.org/x/net v0.29.0
 	golang.org/x/oauth2 v0.23.0
 )

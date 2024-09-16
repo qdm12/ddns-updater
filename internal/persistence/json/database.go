@@ -16,12 +16,12 @@ import (
 type Database struct {
 	data     dataModel
 	filepath string
-	sync.RWMutex
+	mutex    sync.RWMutex
 }
 
 func (db *Database) Close() error {
-	db.Lock() // ensure a write operation finishes
-	defer db.Unlock()
+	db.mutex.Lock() // ensure a write operation finishes
+	defer db.mutex.Unlock()
 	return nil
 }
 

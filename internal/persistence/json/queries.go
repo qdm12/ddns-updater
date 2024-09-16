@@ -11,8 +11,8 @@ import (
 
 // StoreNewIP stores a new IP address for a certain domain and owner.
 func (db *Database) StoreNewIP(domain, owner string, ip netip.Addr, t time.Time) (err error) {
-	db.Lock()
-	defer db.Unlock()
+	db.mutex.Lock()
+	defer db.mutex.Unlock()
 
 	targetIndex := -1
 	for i, record := range db.data.Records {
@@ -43,8 +43,8 @@ func (db *Database) StoreNewIP(domain, owner string, ip netip.Addr, t time.Time)
 // IP version, in the order from oldest to newest.
 func (db *Database) GetEvents(domain, owner string,
 	ipVersion ipversion.IPVersion) (events []models.HistoryEvent, err error) {
-	db.RLock()
-	defer db.RUnlock()
+	db.mutex.RLock()
+	defer db.mutex.RUnlock()
 	for _, record := range db.data.Records {
 		if record.Domain == domain && record.Owner == owner {
 			return filterEvents(record.Events, ipVersion), nil

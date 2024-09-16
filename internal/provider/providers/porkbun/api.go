@@ -44,8 +44,8 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client, recordTy
 	const decodeBody = true
 	responseData, err := httpPost[jsonResponseData](ctx, client, url, postRecordsParams, decodeBody)
 	if err != nil {
-		return nil, fmt.Errorf("for record type %s: %w",
-			recordType, err)
+		return nil, fmt.Errorf("for record type %s and record owner %s: %w",
+			recordType, owner, err)
 	}
 
 	return responseData.Records, nil
@@ -73,8 +73,8 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	const decodeBody = false
 	_, err = httpPost[struct{}](ctx, client, url, postRecordsParams, decodeBody)
 	if err != nil {
-		return fmt.Errorf("for record type %s: %w",
-			recordType, err)
+		return fmt.Errorf("for record type %s and record owner %s: %w",
+			recordType, owner, err)
 	}
 
 	return nil
@@ -102,8 +102,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	const decodeBody = false
 	_, err = httpPost[struct{}](ctx, client, url, postRecordsParams, decodeBody)
 	if err != nil {
-		return fmt.Errorf("for record type %s and record id %s: %w",
-			recordType, recordID, err)
+		return fmt.Errorf("for record type %s, record owner %s and record id %s: %w",
+			recordType, owner, recordID, err)
 	}
 
 	return nil
@@ -127,7 +127,8 @@ func (p *Provider) deleteRecord(ctx context.Context, client *http.Client, record
 	const decodeBody = false
 	_, err = httpPost[struct{}](ctx, client, url, postRecordsParams, decodeBody)
 	if err != nil {
-		return err
+		return fmt.Errorf("for record type %s and record owner %s: %w",
+			recordType, owner, err)
 	}
 
 	return nil

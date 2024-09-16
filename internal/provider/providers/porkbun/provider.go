@@ -3,6 +3,7 @@ package porkbun
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -124,45 +125,54 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("getting record IDs: %w", err)
 	}
 
-	if len(records) > 0 {
-		for _, record := range records {
-			err = p.updateRecord(ctx, client, recordType, p.owner, ipStr, record.ID)
-			if err != nil {
-				return netip.Addr{}, fmt.Errorf("updating record: %w", err)
-			}
+	if len(records) == 0 {
+		err = p.deleteDefaultConflictingRecordsIfNeeded(ctx, client)
+		if err != nil {
+			return netip.Addr{}, fmt.Errorf("deleting default conflicting records: %w", err)
+		}
+
+		err = p.createRecord(ctx, client, recordType, p.owner, ipStr)
+		if err != nil {
+			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 		}
 		return ip, nil
 	}
 
-	// For new domains, Porkbun Creates 2 Default DNS Records which point to their "parked" domain page:
-	// ALIAS domain.tld -> pixie.porkbun.com
-	// CNAME *.domain.tld -> pixie.porkbun.com
-	// ALIAS and CNAME records conflict with A and AAAA records, and attempting to create an A or AAAA record
-	// will return a 400 error if they aren't first deleted.
-	porkbunParkedDomain := "pixie.porkbun.com"
-	switch {
-	case p.owner == "@":
-		// Delete ALIAS domain.tld -> pixie.porkbun.com record
-		err = p.deleteSingleMatchingRecord(ctx, client, constants.ALIAS, "@", porkbunParkedDomain)
+	for _, record := range records {
+		err = p.updateRecord(ctx, client, recordType, p.owner, ipStr, record.ID)
 		if err != nil {
-			return netip.Addr{}, fmt.Errorf("deleting default parked domain record: %w", err)
+			return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 		}
-	case p.owner == "*":
-		// Delete ALIAS domain.tld -> pixie.porkbun.com record
-		// Error is ignored as the ALIAS could be set to something besides the parked domain. Failure here is non-fatal.
-		_ = p.deleteSingleMatchingRecord(ctx, client, constants.ALIAS, "@", porkbunParkedDomain)
-		// Delete CNAME *.domain.tld -> pixie.porkbun.com record
-		err = p.deleteSingleMatchingRecord(ctx, client, constants.CNAME, "*", porkbunParkedDomain)
-		if err != nil {
-			return netip.Addr{}, fmt.Errorf("deleting default parked domain record: %w", err)
-		}
-	}
-
-	err = p.createRecord(ctx, client, recordType, p.owner, ipStr)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 	}
 	return ip, nil
+}
+
+// deleteDefaultConflictingRecordsIfNeeded deletes any default records that would conflict with a new record,
+// see https://github.com/qdm12/ddns-updater/blob/master/docs/porkbun.md#record-creation
+func (p *Provider) deleteDefaultConflictingRecordsIfNeeded(ctx context.Context, client *http.Client) (err error) {
+	const porkbunParkedDomain = "pixie.porkbun.com"
+	switch p.owner {
+	case "@":
+		err = p.deleteSingleMatchingRecord(ctx, client, constants.ALIAS, "@", porkbunParkedDomain)
+		if err != nil {
+			return fmt.Errorf("deleting default ALIAS @ parked domain record: %w", err)
+		}
+		return nil
+	case "*":
+		err = p.deleteSingleMatchingRecord(ctx, client, constants.CNAME, "*", porkbunParkedDomain)
+		if err != nil {
+			return fmt.Errorf("deleting default CNAME * parked domain record: %w", err)
+		}
+
+		err = p.deleteSingleMatchingRecord(ctx, client, constants.ALIAS, "@", porkbunParkedDomain)
+		if err == nil || stderrors.Is(err, errors.ErrConflictingRecord) {
+			// allow conflict ALIAS records to be set to something besides the parked domain
+			return nil
+		}
+		return fmt.Errorf("deleting default ALIAS @ parked domain record: %w", err)
+	default:
+		return nil
+	}
 }
 
 // deleteSingleMatchingRecord deletes an eventually present record matching a specific record type if the content

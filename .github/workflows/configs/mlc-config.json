@@ -26,6 +26,9 @@
     },
     {
       "pattern": "https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater"
+    },
+    {
+      "pattern": "^https://www.duckdns.org/$"
     }
   ],
   "timeout": "20s",

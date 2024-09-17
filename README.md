@@ -37,7 +37,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
 | Version | Readme link | Docs link |
 | --- | --- | --- |
 | Latest | [README](https://github.com/qdm12/ddns-updater/blob/master/README.md) | [docs/](https://github.com/qdm12/ddns-updater/tree/master/docs) |
-| `v2.7` | [README](https://github.com/qdm12/ddns-updater/blob/v2.7.0/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.7.0/docs) |
+| `v2.7` | [README](https://github.com/qdm12/ddns-updater/blob/v2.7.1/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.7.1/docs) |
 | `v2.6` | [README](https://github.com/qdm12/ddns-updater/blob/v2.6.1/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.6.1/docs) |
 | `v2.5` | [README](https://github.com/qdm12/ddns-updater/blob/v2.5/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.5/docs) |
 

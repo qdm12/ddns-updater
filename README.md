@@ -30,6 +30,17 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
 [![MIT](https://img.shields.io/github/license/qdm12/ddns-updater)](LICENSE)
 ![Visitors count](https://visitor-badge.laobi.icu/badge?page_id=ddns-updater.readme)
 
+## Versioned documentation
+
+This readme and the [docs/](docs/) directory are **versioned** to match the program version:
+
+| Version | Readme link | Docs link |
+| --- | --- | --- |
+| Latest | [README](https://github.com/qdm12/ddns-updater/blob/master/README.md) | [docs/](https://github.com/qdm12/ddns-updater/tree/master/docs) |
+| `v2.7` | [README](https://github.com/qdm12/ddns-updater/blob/v2.7.0/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.7.0/docs) |
+| `v2.6` | [README](https://github.com/qdm12/ddns-updater/blob/v2.6.1/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.6.1/docs) |
+| `v2.5` | [README](https://github.com/qdm12/ddns-updater/blob/v2.5/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.5/docs) |
+
 ## Features
 
 - Available as a Docker image [`qmcgaw/ddns-updater`](https://hub.docker.com/r/qmcgaw/ddns-updater) and [`ghcr.io/qdm12/ddns-updater`]((https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater))

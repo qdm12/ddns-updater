@@ -22,8 +22,8 @@
 ### Compulsory Parameters
 
 - `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
-- `"apikey"`
-- `"secretapikey"`
+- `"api_key"`
+- `"secret_api_key"`
 - `"ttl"` optional integer value corresponding to a number of seconds
 
 ### Optional parameters

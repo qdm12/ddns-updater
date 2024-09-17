@@ -262,7 +262,7 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 }
 
 func printSplash(buildInfo models.BuildInformation) {
-	announcementExp, err := time.Parse(time.RFC3339, "2023-07-15T00:00:00Z")
+	announcementExp, err := time.Parse(time.RFC3339, "2024-10-15T00:00:00Z")
 	if err != nil {
 		panic(err)
 	}
@@ -273,7 +273,7 @@ func printSplash(buildInfo models.BuildInformation) {
 		Version:      buildInfo.Version,
 		Commit:       buildInfo.Commit,
 		Created:      buildInfo.Created,
-		Announcement: "Public IP dns provider GOOGLE, see https://github.com/qdm12/ddns-updater/issues/492",
+		Announcement: "Public IP http provider GOOGLE is no longer working",
 		AnnounceExp:  announcementExp,
 		// Sponsor information
 		PaypalUser:    "qmcgaw",

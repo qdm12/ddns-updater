@@ -12,7 +12,6 @@ import (
 type Provider string
 
 const (
-	Google    Provider = "google"
 	Ifconfig  Provider = "ifconfig"
 	Ipify     Provider = "ipify"
 	Ipinfo    Provider = "ipinfo"
@@ -28,7 +27,6 @@ const (
 
 func ListProviders() []Provider {
 	return []Provider{
-		Google,
 		Ifconfig,
 		Ipify,
 		Ipinfo,
@@ -118,8 +116,6 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 		switch provider {
 		case Ipify:
 			url = "https://api64.ipify.org"
-		case Google:
-			url = "https://domains.google.com/checkip"
 		case Ifconfig:
 			url = "https://ifconfig.io/ip"
 		case Ipinfo:

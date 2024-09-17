@@ -9,7 +9,7 @@ require (
 	github.com/containrrr/shoutrrr v0.8.0
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/golang/mock v1.6.0
-	github.com/miekg/dns v1.1.61
+	github.com/miekg/dns v1.1.62
 	github.com/qdm12/goservices v0.1.0
 	github.com/qdm12/gosettings v0.4.4-rc1
 	github.com/qdm12/gosplash v0.2.0

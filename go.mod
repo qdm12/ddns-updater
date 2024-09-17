@@ -1,6 +1,7 @@
 module github.com/qdm12/ddns-updater
 
-go 1.22
+go 1.22.0
+
 toolchain go1.22.5
 
 require (

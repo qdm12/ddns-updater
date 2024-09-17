@@ -263,7 +263,12 @@ func (p *PubIP) read(r *reader.Reader, warner Warner) (err error) {
 		copy(httpIPProvidersTemp, p.HTTPIPProviders)
 		p.HTTPIPProviders = make([]string, 0, len(p.HTTPIPProviders))
 		for _, provider := range httpIPProvidersTemp {
-			if provider != "opendns" {
+			switch provider {
+			case "opendns": // no longer available, for a long time
+			case "google": // found no longer working on 2024.09.17
+				warner.Warnf("http provider google will be ignored " +
+					"since it is no longer supported by Google")
+			default:
 				p.HTTPIPProviders = append(p.HTTPIPProviders, provider)
 			}
 		}

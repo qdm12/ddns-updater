@@ -27,7 +27,7 @@ func Test_SetProviders(t *testing.T) {
 		expectedSettings settings
 		err              error
 	}{
-		"Google": {
+		"OpenDNS": {
 			initialSettings: settings{
 				providers: []Provider{Cloudflare},
 			},

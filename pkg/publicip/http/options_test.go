@@ -29,13 +29,13 @@ func Test_SetProvidersIP(t *testing.T) {
 		expectedSettings settings
 		err              error
 	}{
-		"Google": {
+		"Ipify": {
 			initialSettings: settings{
 				providersIP: []Provider{Ifconfig},
 			},
-			providers: []Provider{Google},
+			providers: []Provider{Ipify},
 			expectedSettings: settings{
-				providersIP: []Provider{Google},
+				providersIP: []Provider{Ipify},
 			},
 		},
 	}

@@ -19,7 +19,7 @@ func Test_ListProvidersForVersion(t *testing.T) {
 	}{
 		"ip4or6": {
 			version: ipversion.IP4or6,
-			providers: []Provider{Google, Ifconfig, Ipify, Ipinfo, Spdyn, Ipleak,
+			providers: []Provider{Ifconfig, Ipify, Ipinfo, Spdyn, Ipleak,
 				Icanhazip, Ident, Nnev, Wtfismyip, Seeip, Changeip},
 		},
 		"ip4": {
@@ -51,7 +51,7 @@ func Test_ValidateProvider(t *testing.T) {
 		err      error
 	}{
 		"valid": {
-			provider: Google,
+			provider: Ifconfig,
 			version:  ipversion.IP4or6,
 		},
 		"custom url": {
@@ -59,9 +59,9 @@ func Test_ValidateProvider(t *testing.T) {
 			version:  ipversion.IP4or6,
 		},
 		"invalid for ip version": {
-			provider: Google,
+			provider: Ifconfig,
 			version:  ipversion.IP4,
-			err:      errors.New(`provider does not support IP version: "google" for version ipv4`),
+			err:      errors.New(`provider does not support IP version: "ifconfig" for version ipv4`),
 		},
 		"unknown": {
 			provider: Provider("unknown"),

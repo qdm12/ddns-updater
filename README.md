@@ -305,7 +305,6 @@ You can otherwise customize it with the following:
   - `ipify` using [https://api64.ipify.org](https://api64.ipify.org)
   - `ifconfig` using [https://ifconfig.io/ip](https://ifconfig.io/ip)
   - `ipinfo` using [https://ipinfo.io/ip](https://ipinfo.io/ip)
-  - `google` using [https://domains.google.com/checkip](https://domains.google.com/checkip)
   - `spdyn` using [https://checkip.spdyn.de](https://checkip.spdyn.de/)
   - `ipleak` using [https://ipleak.net/json](https://ipleak.net/json)
   - `icanhazip` using [https://icanhazip.com](https://icanhazip.com)

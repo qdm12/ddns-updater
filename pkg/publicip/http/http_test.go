@@ -25,7 +25,7 @@ func Test_New(t *testing.T) {
 				timeout: 5 * time.Second,
 				ip4or6: &urlsRing{
 					banned: map[int]string{},
-					urls:   []string{"https://domains.google.com/checkip"},
+					urls:   []string{"https://api64.ipify.org"},
 				},
 				ip4: &urlsRing{
 					banned: map[int]string{},
@@ -39,7 +39,7 @@ func Test_New(t *testing.T) {
 		},
 		"with options": {
 			options: []Option{
-				SetProvidersIP(Google),
+				SetProvidersIP(Ifconfig),
 				SetProvidersIP4(Ipify),
 				SetProvidersIP6(Ipify),
 				SetTimeout(time.Second),
@@ -49,7 +49,7 @@ func Test_New(t *testing.T) {
 				timeout: time.Second,
 				ip4or6: &urlsRing{
 					banned: map[int]string{},
-					urls:   []string{"https://domains.google.com/checkip"},
+					urls:   []string{"https://ifconfig.io/ip"},
 				},
 				ip4: &urlsRing{
 					banned: map[int]string{},

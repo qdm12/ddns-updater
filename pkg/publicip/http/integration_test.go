@@ -17,7 +17,7 @@ func Test_integration(t *testing.T) {
 
 	client := &http.Client{}
 
-	fetcher, err := New(client, SetProvidersIP(Google))
+	fetcher, err := New(client, SetProvidersIP(Ipify))
 	require.NoError(t, err)
 
 	ctx := context.Background()

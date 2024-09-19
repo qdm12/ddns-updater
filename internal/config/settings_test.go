@@ -41,7 +41,7 @@ func Test_Settings_String(t *testing.T) {
 ├── Paths
 |   ├── Data directory: ./data
 |   ├── Config file: data/config.json
-|   └── Umask: -----w--w-
+|   └── Umask: system default
 ├── Backup: disabled
 └── Logger
     ├── Level: INFO

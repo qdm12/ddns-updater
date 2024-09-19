@@ -34,19 +34,19 @@ type commonSettings struct {
 // JSONProviders obtain the update settings from the JSON content,
 // first trying from the environment variable CONFIG and then from
 // the file config.json.
-func (r *Reader) JSONProviders(filePath string, umask fs.FileMode) (
+func (r *Reader) JSONProviders(filePath string) (
 	providers []provider.Provider, warnings []string, err error) {
-	providers, warnings, err = r.getProvidersFromEnv(filePath, umask)
+	providers, warnings, err = r.getProvidersFromEnv(filePath)
 	if providers != nil || warnings != nil || err != nil {
 		return providers, warnings, err
 	}
-	return r.getProvidersFromFile(filePath, umask)
+	return r.getProvidersFromFile(filePath)
 }
 
 var errWriteConfigToFile = errors.New("cannot write configuration to file")
 
 // getProvidersFromFile obtain the update settings from config.json.
-func (r *Reader) getProvidersFromFile(filePath string, umask fs.FileMode) (
+func (r *Reader) getProvidersFromFile(filePath string) (
 	providers []provider.Provider, warnings []string, err error) {
 	r.logger.Info("reading JSON config from file " + filePath)
 	bytes, err := r.readFile(filePath)
@@ -57,7 +57,7 @@ func (r *Reader) getProvidersFromFile(filePath string, umask fs.FileMode) (
 
 		r.logger.Info("file not found, creating an empty settings file")
 
-		filePerm := fs.FileMode(0o666) - umask //nolint:gomnd
+		const filePerm = fs.FileMode(0o666)
 		err = r.writeFile(filePath, []byte(`{}`), filePerm)
 		if err != nil {
 			err = fmt.Errorf("%w: %w", errWriteConfigToFile, err)
@@ -71,7 +71,7 @@ func (r *Reader) getProvidersFromFile(filePath string, umask fs.FileMode) (
 
 // getProvidersFromEnv obtain the update settings from the environment variable CONFIG.
 // If the settings are valid, they are written to the filePath.
-func (r *Reader) getProvidersFromEnv(filePath string, umask fs.FileMode) (
+func (r *Reader) getProvidersFromEnv(filePath string) (
 	providers []provider.Provider, warnings []string, err error) {
 	s := os.Getenv("CONFIG")
 	if s == "" {
@@ -92,7 +92,7 @@ func (r *Reader) getProvidersFromEnv(filePath string, umask fs.FileMode) (
 	if err != nil {
 		return providers, warnings, fmt.Errorf("%w: %w", errWriteConfigToFile, err)
 	}
-	filePerm := fs.FileMode(0o666) - umask //nolint:gomnd
+	const filePerm = fs.FileMode(0o666)
 	err = r.writeFile(filePath, buffer.Bytes(), filePerm)
 	if err != nil {
 		return providers, warnings, fmt.Errorf("%w: %w", errWriteConfigToFile, err)

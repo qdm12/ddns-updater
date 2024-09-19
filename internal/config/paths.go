@@ -14,14 +14,17 @@ import (
 type Paths struct {
 	DataDir *string
 	Config  *string
-	Umask   fs.FileMode
+	// Umask is the custom umask to use for the system, if different than zero.
+	// If it is set to zero, the system umask is unchanged.
+	// It cannot be nil in the internal state.
+	Umask *fs.FileMode
 }
 
 func (p *Paths) setDefaults() {
 	p.DataDir = gosettings.DefaultPointer(p.DataDir, "./data")
 	defaultConfig := filepath.Join(*p.DataDir, "config.json")
 	p.Config = gosettings.DefaultPointer(p.Config, defaultConfig)
-	p.Umask = gosettings.DefaultComparable(p.Umask, getCurrentUmask())
+	p.Umask = gosettings.DefaultPointer(p.Umask, fs.FileMode(0))
 }
 
 func (p Paths) Validate() (err error) {
@@ -36,7 +39,11 @@ func (p Paths) toLinesNode() *gotree.Node {
 	node := gotree.New("Paths")
 	node.Appendf("Data directory: %s", *p.DataDir)
 	node.Appendf("Config file: %s", *p.Config)
-	node.Appendf("Umask: %s", p.Umask.String())
+	umaskString := "system default"
+	if *p.Umask != 0 {
+		umaskString = p.Umask.String()
+	}
+	node.Appendf("Umask: %s", umaskString)
 	return node
 }
 
@@ -46,10 +53,11 @@ func (p *Paths) read(reader *reader.Reader) (err error) {
 
 	umaskString := reader.String("UMASK")
 	if umaskString != "" {
-		p.Umask, err = parseUmask(umaskString)
+		umask, err := parseUmask(umaskString)
 		if err != nil {
 			return fmt.Errorf("parse umask: %w", err)
 		}
+		p.Umask = &umask
 	}
 
 	return nil

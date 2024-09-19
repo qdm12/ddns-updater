@@ -26,6 +26,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/resolver"
 	"github.com/qdm12/ddns-updater/internal/server"
 	"github.com/qdm12/ddns-updater/internal/shoutrrr"
+	"github.com/qdm12/ddns-updater/internal/system"
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
 	"github.com/qdm12/goservices"
@@ -129,6 +130,10 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		return err
 	}
 
+	if *config.Paths.Umask > 0 {
+		system.SetUmask(*config.Paths.Umask)
+	}
+
 	shoutrrrSettings := shoutrrr.Settings{
 		Addresses:    config.Shoutrrr.Addresses,
 		DefaultTitle: config.Shoutrrr.DefaultTitle,
@@ -139,14 +144,14 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		return fmt.Errorf("setting up Shoutrrr: %w", err)
 	}
 
-	persistentDB, err := persistence.NewDatabase(*config.Paths.DataDir, config.Paths.Umask)
+	persistentDB, err := persistence.NewDatabase(*config.Paths.DataDir)
 	if err != nil {
 		shoutrrrClient.Notify(err.Error())
 		return err
 	}
 
 	jsonReader := jsonparams.NewReader(logger)
-	providers, warnings, err := jsonReader.JSONProviders(*config.Paths.Config, config.Paths.Umask)
+	providers, warnings, err := jsonReader.JSONProviders(*config.Paths.Config)
 	for _, w := range warnings {
 		logger.Warn(w)
 		shoutrrrClient.Notify(w)

@@ -44,6 +44,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/namecheap"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/namecom"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/netcup"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/netim"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/njalla"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/noip"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/nowdns"
@@ -146,6 +147,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return namecom.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Netcup:
 		return netcup.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Netim:
+		return netim.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Njalla:
 		return njalla.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.NoIP:

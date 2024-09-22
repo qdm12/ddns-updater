@@ -38,6 +38,7 @@ const (
 	Namecheap    models.Provider = "namecheap"
 	NameCom      models.Provider = "name.com"
 	Netcup       models.Provider = "netcup"
+	Netim        models.Provider = "netim"
 	Njalla       models.Provider = "njalla"
 	NoIP         models.Provider = "noip"
 	NowDNS       models.Provider = "nowdns"
@@ -87,6 +88,7 @@ func ProviderChoices() []models.Provider {
 		LuaDNS,
 		Namecheap,
 		NameCom,
+		Netim,
 		Njalla,
 		NoIP,
 		NowDNS,

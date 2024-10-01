@@ -50,8 +50,7 @@ RUN git init && \
     rm -rf .git/
 
 FROM --platform=$BUILDPLATFORM base AS build
-RUN mkdir -p /tmp/data && \
-    touch /tmp/isdocker
+RUN mkdir -p /tmp/data
 ARG VERSION=unknown
 ARG CREATED="an unknown date"
 ARG COMMIT=unknown
@@ -73,7 +72,6 @@ USER ${UID}:${GID}
 WORKDIR /updater
 ENTRYPOINT ["/updater/ddns-updater"]
 COPY --from=build --chown=${UID}:${GID} /tmp/data /updater/data
-COPY --from=build --chown=${UID}:${GID} /tmp/isdocker /updater/isdocker
 ENV \
     # Core
     CONFIG= \

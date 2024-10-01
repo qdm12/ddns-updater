@@ -352,7 +352,7 @@ func exitHealthchecksio(hioClient *healthchecksio.Client,
 func createHealthServer(db health.AllSelecter, resolver health.LookupIPer,
 	logger log.LoggerInterface, serverAddress string) (
 	healthServer goservices.Service, err error) {
-	if !health.IsDocker() {
+	if serverAddress == "" {
 		return noop.New("healthcheck server"), nil
 	}
 	isHealthy := health.MakeIsHealthy(db, resolver)

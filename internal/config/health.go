@@ -12,21 +12,26 @@ import (
 )
 
 type Health struct {
+	// ServerAddress is the listening address:port of the
+	// health server, which defaults to the empty string,
+	// meaning the server will not run.
 	ServerAddress         *string
 	HealthchecksioBaseURL string
 	HealthchecksioUUID    *string
 }
 
 func (h *Health) SetDefaults() {
-	h.ServerAddress = gosettings.DefaultPointer(h.ServerAddress, "127.0.0.1:9999")
+	h.ServerAddress = gosettings.DefaultPointer(h.ServerAddress, "")
 	h.HealthchecksioBaseURL = gosettings.DefaultComparable(h.HealthchecksioBaseURL, "https://hc-ping.com")
 	h.HealthchecksioUUID = gosettings.DefaultPointer(h.HealthchecksioUUID, "")
 }
 
 func (h Health) Validate() (err error) {
-	err = validate.ListeningAddress(*h.ServerAddress, os.Getuid())
-	if err != nil {
-		return fmt.Errorf("server listening address: %w", err)
+	if *h.ServerAddress != "" {
+		err = validate.ListeningAddress(*h.ServerAddress, os.Getuid())
+		if err != nil {
+			return fmt.Errorf("server listening address: %w", err)
+		}
 	}
 
 	_, err = url.Parse(h.HealthchecksioBaseURL)
@@ -43,7 +48,11 @@ func (h Health) String() string {
 
 func (h Health) toLinesNode() *gotree.Node {
 	node := gotree.New("Health")
-	node.Appendf("Server listening address: %s", *h.ServerAddress)
+	if *h.ServerAddress == "" {
+		node.Appendf("Server is disabled")
+	} else {
+		node.Appendf("Server listening address: %s", *h.ServerAddress)
+	}
 	if *h.HealthchecksioUUID != "" {
 		node.Appendf("Healthchecks.io base URL: %s", h.HealthchecksioBaseURL)
 		node.Appendf("Healthchecks.io UUID: %s", *h.HealthchecksioUUID)

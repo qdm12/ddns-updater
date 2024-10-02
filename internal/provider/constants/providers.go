@@ -52,7 +52,7 @@ const (
 	Spdyn        models.Provider = "spdyn"
 	Strato       models.Provider = "strato"
 	Variomedia   models.Provider = "variomedia"
-	Vultr		 models.Provider = "vultr"
+	Vultr        models.Provider = "vultr"
 	Zoneedit     models.Provider = "zoneedit"
 )
 
@@ -103,6 +103,7 @@ func ProviderChoices() []models.Provider {
 		Spdyn,
 		Strato,
 		Variomedia,
+		Vultr,
 		Zoneedit,
 	}
 }

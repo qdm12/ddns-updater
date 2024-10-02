@@ -93,6 +93,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - Spdyn
   - Strato.de
   - Variomedia.de
+  - Vultr
   - Zoneedit
   - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
 - Web user interface (Desktop)
@@ -256,6 +257,7 @@ Check the documentation for your DNS provider:
 - [Spdyn](docs/spdyn.md)
 - [Strato.de](docs/strato.md)
 - [Variomedia.de](docs/variomedia.md)
+- [Vultr](docs/vultr.md)
 - [Zoneedit](docs/zoneedit.md)
 
 Note that:

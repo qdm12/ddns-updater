@@ -186,7 +186,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	newIP, err = netip.ParseAddr(parsedJSON.Record.IP)
 	if err != nil {
-		fmt.Printf("potato malformed ip, %s", parsedJSON.Record.IP)
 		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
 	} else if newIP.Compare(ip) != 0 {
 		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",

@@ -3,6 +3,7 @@ package porkbun
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -119,46 +120,85 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		recordType = constants.AAAA
 	}
 	ipStr := ip.String()
-	recordIDs, err := p.getRecordIDs(ctx, client, recordType)
+	records, err := p.getRecords(ctx, client, recordType, p.owner)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("getting record IDs: %w", err)
 	}
 
-	if len(recordIDs) == 0 {
-		// ALIAS record needs to be deleted to allow creating an A record.
-		err = p.deleteALIASRecordIfNeeded(ctx, client)
+	if len(records) == 0 {
+		err = p.deleteDefaultConflictingRecordsIfNeeded(ctx, client)
 		if err != nil {
-			return netip.Addr{}, fmt.Errorf("deleting ALIAS record if needed: %w", err)
+			return netip.Addr{}, fmt.Errorf("deleting default conflicting records: %w", err)
 		}
 
-		err = p.createRecord(ctx, client, recordType, ipStr)
+		err = p.createRecord(ctx, client, recordType, p.owner, ipStr)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 		}
 		return ip, nil
 	}
 
-	for _, recordID := range recordIDs {
-		err = p.updateRecord(ctx, client, recordType, ipStr, recordID)
+	for _, record := range records {
+		err = p.updateRecord(ctx, client, recordType, p.owner, ipStr, record.ID)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 		}
 	}
-
 	return ip, nil
 }
 
-func (p *Provider) deleteALIASRecordIfNeeded(ctx context.Context, client *http.Client) (err error) {
-	aliasRecordIDs, err := p.getRecordIDs(ctx, client, "ALIAS")
-	if err != nil {
-		return fmt.Errorf("getting ALIAS record IDs: %w", err)
-	} else if len(aliasRecordIDs) == 0 {
+// deleteDefaultConflictingRecordsIfNeeded deletes any default records that would conflict with a new record,
+// see https://github.com/qdm12/ddns-updater/blob/master/docs/porkbun.md#record-creation
+func (p *Provider) deleteDefaultConflictingRecordsIfNeeded(ctx context.Context, client *http.Client) (err error) {
+	const porkbunParkedDomain = "pixie.porkbun.com"
+	switch p.owner {
+	case "@":
+		err = p.deleteSingleMatchingRecord(ctx, client, constants.ALIAS, "@", porkbunParkedDomain)
+		if err != nil {
+			return fmt.Errorf("deleting default ALIAS @ parked domain record: %w", err)
+		}
+		return nil
+	case "*":
+		err = p.deleteSingleMatchingRecord(ctx, client, constants.CNAME, "*", porkbunParkedDomain)
+		if err != nil {
+			return fmt.Errorf("deleting default CNAME * parked domain record: %w", err)
+		}
+
+		err = p.deleteSingleMatchingRecord(ctx, client, constants.ALIAS, "@", porkbunParkedDomain)
+		if err == nil || stderrors.Is(err, errors.ErrConflictingRecord) {
+			// allow conflict ALIAS records to be set to something besides the parked domain
+			return nil
+		}
+		return fmt.Errorf("deleting default ALIAS @ parked domain record: %w", err)
+	default:
 		return nil
 	}
+}
 
-	err = p.deleteAliasRecord(ctx, client)
+// deleteSingleMatchingRecord deletes an eventually present record matching a specific record type if the content
+// matches the expected content value.
+// It returns an error if multiple records are found or if one record is found with an unexpected value.
+func (p *Provider) deleteSingleMatchingRecord(ctx context.Context, client *http.Client,
+	recordType, owner, expectedContent string) (err error) {
+	records, err := p.getRecords(ctx, client, recordType, owner)
 	if err != nil {
-		return fmt.Errorf("deleting ALIAS record: %w", err)
+		return fmt.Errorf("getting records: %w", err)
+	}
+
+	switch {
+	case len(records) == 0:
+		return nil
+	case len(records) > 1:
+		return fmt.Errorf("%w: %d %s records are already set", errors.ErrConflictingRecord, len(records), recordType)
+	case records[0].Content != expectedContent:
+		return fmt.Errorf("%w: %s record has content %q mismatching expected content %q",
+			errors.ErrConflictingRecord, recordType, records[0].Content, expectedContent)
+	}
+
+	// Single record with content matching expected content.
+	err = p.deleteRecord(ctx, client, recordType, owner)
+	if err != nil {
+		return fmt.Errorf("deleting record: %w", err)
 	}
 	return nil
 }

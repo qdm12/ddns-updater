@@ -128,7 +128,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Type string `json:"type"`
 		IP   string `json:"data"`
 		Name string `json:"name"`
-		TTL  uint32 `json:"ttl"`
+		TTL  uint32 `json:"ttl,omitempty"`
 	}{
 		Type: recordType,
 		IP:   ip.String(),

@@ -22,7 +22,7 @@ type Provider struct {
 	owner      string
 	ipVersion  ipversion.IPVersion
 	ipv6Suffix netip.Prefix
-	token      string
+	apiKey      string
 	ttl        uint32
 }
 
@@ -30,7 +30,7 @@ func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	provider *Provider, err error) {
 	var providerSpecificSettings struct {
-		Token string `json:"token"`
+		APIKey string `json:"apiKey"`
 		TTL   uint32 `json:"ttl"`
 	}
 	err = json.Unmarshal(data, &providerSpecificSettings)
@@ -38,7 +38,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("json decoding provider specific settings: %w", err)
 	}
 
-	err = validateSettings(domain, owner, providerSpecificSettings.Token, providerSpecificSettings.TTL)
+	err = validateSettings(domain, providerSpecificSettings.APIKey)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -48,20 +48,20 @@ func New(data json.RawMessage, domain, owner string,
 		owner:      owner,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
-		token:      providerSpecificSettings.Token,
+		apiKey:     providerSpecificSettings.APIKey,
 		ttl: 		providerSpecificSettings.TTL,	
 	}, nil
 }
 
-func validateSettings(domain, owner, token string, ttl uint32) (err error) {
+func validateSettings(domain, apiKey string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
 	}
 
 	switch {
-	case token == "":
-		return fmt.Errorf("%w", errors.ErrTokenNotSet)
+	case apiKey == "":
+		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
 	}
 	return nil
 }
@@ -107,7 +107,7 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
-	headers.SetAuthBearer(request, p.token)
+	headers.SetAuthBearer(request, p.apiKey)
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {

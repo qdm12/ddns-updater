@@ -10,7 +10,7 @@
     {
       "provider": "vultr",
       "domain": "potato.example.com",
-      "token": "AAAAAAAAAAAAAAA",
+      "apiKey": "AAAAAAAAAAAAAAA",
       "ttl": 300,
       "ip_version": "ipv4"
     }
@@ -21,7 +21,7 @@
 ### Compulsory parameters
 
 - `"domain"` is the domain to update. It can be `example.com` (root domain) or `potato.example.com` (subdomain of `example.com`). In case of a wildcard, this only works if there are no existing wildcard records of any type. If there is, it should error out.
-- `"token"` is your API key, can be obtained from the [account settings](https://my.vultr.com/settings/#settingsapi), this is used as a bearer token to authenticate your request
+- `"apiKey"` is your API key, can be obtained from the [account settings](https://my.vultr.com/settings/#settingsapi), this is used as a bearer token to authenticate your request
 
 ### Optional parameters
 

@@ -1,4 +1,4 @@
-# Variomedia
+# Vultr
 
 ## Configuration
 

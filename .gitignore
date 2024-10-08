@@ -1,1 +1,4 @@
 /data
+.vscode
+app
+cmd/ddns-updater/data/

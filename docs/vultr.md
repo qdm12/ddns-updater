@@ -9,8 +9,7 @@
   "settings": [
     {
       "provider": "vultr",
-      "domain": "example.com",
-      "owner": "potato",
+      "domain": "potato.example.com",
       "token": "AAAAAAAAAAAAAAA",
       "ttl": 300,
       "ip_version": "ipv4"

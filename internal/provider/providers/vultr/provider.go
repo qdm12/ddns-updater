@@ -30,7 +30,7 @@ func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	provider *Provider, err error) {
 	var providerSpecificSettings struct {
-		APIKey string `json:"apiKey"`
+		APIKey string `json:"apikey"`
 		TTL   uint32 `json:"ttl"`
 	}
 	err = json.Unmarshal(data, &providerSpecificSettings)

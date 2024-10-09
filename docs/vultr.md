@@ -10,7 +10,7 @@
     {
       "provider": "vultr",
       "domain": "potato.example.com",
-      "apiKey": "AAAAAAAAAAAAAAA",
+      "apikey": "AAAAAAAAAAAAAAA",
       "ttl": 300,
       "ip_version": "ipv4"
     }

@@ -21,6 +21,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/digitalocean"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/dnsomatic"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/dnspod"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/domeneshop"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/dondominio"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/dreamhost"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/duckdns"
@@ -100,6 +101,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return dnsomatic.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.DNSPod:
 		return dnspod.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Domeneshop:
+		return domeneshop.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.DonDominio:
 		return dondominio.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Dreamhost:

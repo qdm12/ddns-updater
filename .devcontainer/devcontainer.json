@@ -1,16 +1,51 @@
 {
+    // See https://containers.dev/implementors/json_reference/
+    // User defined settings
+    "containerEnv": {
+        "TZ": ""
+    },
+    // Fixed settings
     "name": "ddns-dev",
-    "dockerComposeFile": [
-        "docker-compose.yml"
-    ],
-    "service": "vscode",
-    "runServices": [
-        "vscode"
-    ],
-    "shutdownAction": "stopCompose",
     "postCreateCommand": "~/.windows.sh && go mod download && go mod tidy",
+    "dockerComposeFile": "docker-compose.yml",
+    "overrideCommand": true,
+    "service": "vscode",
     "workspaceFolder": "/workspace",
-    // "overrideCommand": "",
+    "mounts": [
+        // Source code
+        {
+            "source": "../",
+            "target": "/workspace",
+            "type": "bind"
+        },
+        // Zsh commands history persistence
+        {
+            "source": "${localEnv:HOME}/.zsh_history",
+            "target": "/root/.zsh_history",
+            "type": "bind"
+        },
+        // Git configuration file
+        {
+            "source": "${localEnv:HOME}/.gitconfig",
+            "target": "/root/.gitconfig",
+            "type": "bind"
+        },
+        // SSH directory for Linux, OSX and WSL
+        // On Linux and OSX, a symlink /mnt/ssh <-> ~/.ssh is
+        // created in the container. On Windows, files are copied
+        // from /mnt/ssh to ~/.ssh to fix permissions.
+        {
+            "source": "${localEnv:HOME}/.ssh",
+            "target": "/mnt/ssh",
+            "type": "bind"
+        },
+        // Docker socket to access the host Docker server
+        {
+            "source": "/var/run/docker.sock",
+            "target": "/var/run/docker.sock",
+            "type": "bind"
+        }
+    ],
     "customizations": {
         "vscode": {
             "extensions": [

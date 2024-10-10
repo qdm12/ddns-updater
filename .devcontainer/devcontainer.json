@@ -58,7 +58,7 @@
                 "go.lintOnSave": "package",
                 "[go]": {
                     "editor.codeActionsOnSave": {
-                        "source.organizeImports": true
+                        "source.organizeImports": "always"
                     }
                 },
                 "gopls": {

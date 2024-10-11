@@ -24,7 +24,7 @@ type dnsRecord struct {
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Retrieve%20Records%20by%20Domain,%20Subdomain%20and%20Type
 func (p *Provider) getRecords(ctx context.Context, client *http.Client, recordType, owner string) (
 	records []dnsRecord, err error) {
-	url := "https://porkbun.com/api/json/v3/dns/retrieveByNameType/" + p.domain + "/" + recordType + "/"
+	url := "https://api.porkbun.com/api/json/v3/dns/retrieveByNameType/" + p.domain + "/" + recordType + "/"
 	if owner != "@" {
 		// Note Porkbun requires we send the unescaped '*' character.
 		url += owner
@@ -54,7 +54,7 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client, recordTy
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Create%20Record
 func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	recordType, owner, ipStr string) (err error) {
-	url := "https://porkbun.com/api/json/v3/dns/create/" + p.domain
+	url := "https://api.porkbun.com/api/json/v3/dns/create/" + p.domain
 	postRecordsParams := struct {
 		SecretAPIKey string `json:"secretapikey"`
 		APIKey       string `json:"apikey"`
@@ -83,7 +83,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Edit%20Record%20by%20Domain%20and%20ID
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	recordType, owner, ipStr, recordID string) (err error) {
-	url := "https://porkbun.com/api/json/v3/dns/edit/" + p.domain + "/" + recordID
+	url := "https://api.porkbun.com/api/json/v3/dns/edit/" + p.domain + "/" + recordID
 	postRecordsParams := struct {
 		SecretAPIKey string `json:"secretapikey"`
 		APIKey       string `json:"apikey"`
@@ -111,7 +111,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Delete%20Records%20by%20Domain,%20Subdomain%20and%20Type
 func (p *Provider) deleteRecord(ctx context.Context, client *http.Client, recordType, owner string) (err error) {
-	url := "https://porkbun.com/api/json/v3/dns/deleteByNameType/" + p.domain + "/" + recordType + "/"
+	url := "https://api.porkbun.com/api/json/v3/dns/deleteByNameType/" + p.domain + "/" + recordType + "/"
 	if owner != "@" {
 		// Note Porkbun requires we send the unescaped '*' character.
 		url += owner

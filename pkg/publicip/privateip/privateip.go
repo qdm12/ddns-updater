@@ -12,25 +12,50 @@ type Settings struct {
 	Enabled bool
 }
 
-// Fetcher struct to represent the private IP fetcher.
-type Fetcher struct {
-	settings Settings
+// InterfaceRetriever defines methods to retrieve network interfaces and their addresses.
+type InterfaceRetriever interface {
+	Interfaces() ([]net.Interface, error)
+	Addrs(iface net.Interface) ([]net.Addr, error)
 }
 
-// New creates a new instance of the Private Fetcher.
-func New(settings Settings) (*Fetcher, error) {
+// RealInterfaceRetriever is the production implementation of InterfaceRetriever.
+type RealInterfaceRetriever struct{}
+
+// Interfaces retrieves the list of network interfaces.
+func (rir RealInterfaceRetriever) Interfaces() ([]net.Interface, error) {
+	return net.Interfaces()
+}
+
+// Addrs retrieves the addresses for a given network interface.
+func (rir RealInterfaceRetriever) Addrs(iface net.Interface) ([]net.Addr, error) {
+	return iface.Addrs()
+}
+
+// Fetcher struct to represent the private IP fetcher.
+type Fetcher struct {
+	settings           Settings
+	interfaceRetriever InterfaceRetriever
+}
+
+// New creates a new instance of the Private Fetcher with dependency injection.
+func New(settings Settings, retriever InterfaceRetriever) (*Fetcher, error) {
 	if !settings.Enabled {
 		return nil, fmt.Errorf("private IP fetcher is disabled")
 	}
 
+	if retriever == nil {
+		return nil, fmt.Errorf("interface retriever cannot be nil")
+	}
+
 	return &Fetcher{
-		settings: settings,
+		settings:           settings,
+		interfaceRetriever: retriever,
 	}, nil
 }
 
 // IP fetches the private IP address of the machine.
 func (f *Fetcher) IP(ctx context.Context) (netip.Addr, error) {
-	interfaces, err := net.Interfaces()
+	interfaces, err := f.interfaceRetriever.Interfaces()
 	if err != nil {
 		return netip.Addr{}, err
 	}
@@ -40,7 +65,7 @@ func (f *Fetcher) IP(ctx context.Context) (netip.Addr, error) {
 			continue
 		}
 
-		addrs, err := iface.Addrs()
+		addrs, err := f.interfaceRetriever.Addrs(iface)
 		if err != nil {
 			return netip.Addr{}, err
 		}

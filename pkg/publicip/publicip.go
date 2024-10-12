@@ -57,7 +57,11 @@ func NewFetcher(
 	}
 
 	if settings.privateIP.Enabled {
-		subFetcher, err := privateip.New(privateip.Settings{Enabled: true})
+		// Instantiate the InterfaceRetriever
+		retriever := privateip.RealInterfaceRetriever{}
+
+		// Pass both Settings and the retriever to privateip.New
+		subFetcher, err := privateip.New(privateip.Settings{Enabled: true}, retriever)
 		if err != nil {
 			return nil, err
 		}

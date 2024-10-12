@@ -7,6 +7,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/pkg/publicip/dns"
 	"github.com/qdm12/ddns-updater/pkg/publicip/http"
+	"github.com/qdm12/ddns-updater/pkg/publicip/privateip"
 )
 
 type ipFetcher interface {
@@ -24,10 +25,14 @@ type Fetcher struct {
 
 var ErrNoFetchTypeSpecified = errors.New("at least one fetcher type must be specified")
 
-func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f *Fetcher, err error) {
+func NewFetcher(
+	dnsSettings DNSSettings,
+	httpSettings HTTPSettings,
+	privateIPSettings PrivateIPSettings) (f *Fetcher, err error) {
 	settings := settings{
-		dns:  dnsSettings,
-		http: httpSettings,
+		dns:       dnsSettings,
+		http:      httpSettings,
+		privateIP: privateIPSettings,
 	}
 
 	fetcher := &Fetcher{
@@ -45,6 +50,14 @@ func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f *Fetcher,
 
 	if settings.http.Enabled {
 		subFetcher, err := http.New(settings.http.Client, settings.http.Options...)
+		if err != nil {
+			return nil, err
+		}
+		fetcher.fetchers = append(fetcher.fetchers, subFetcher)
+	}
+
+	if settings.privateIP.Enabled {
+		subFetcher, err := privateip.New(privateip.Settings{Enabled: true})
 		if err != nil {
 			return nil, err
 		}

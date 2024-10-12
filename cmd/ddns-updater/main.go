@@ -187,8 +187,11 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		Enabled: *config.PubIP.DNSEnabled,
 		Options: config.PubIP.ToDNSPOptions(),
 	}
+	privateIPSettings := publicip.PrivateIPSettings{
+		Enabled: *config.PubIP.PrivateIPEnabled,
+	}
 
-	ipGetter, err := publicip.NewFetcher(dnsSettings, httpSettings)
+	ipGetter, err := publicip.NewFetcher(dnsSettings, httpSettings, privateIPSettings)
 	if err != nil {
 		return err
 	}

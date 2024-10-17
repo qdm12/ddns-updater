@@ -35,6 +35,7 @@ const (
 	INWX         models.Provider = "inwx"
 	Ionos        models.Provider = "ionos"
 	Linode       models.Provider = "linode"
+	Loopia       models.Provider = "loopia"
 	LuaDNS       models.Provider = "luadns"
 	Namecheap    models.Provider = "namecheap"
 	NameCom      models.Provider = "name.com"
@@ -86,6 +87,7 @@ func ProviderChoices() []models.Provider {
 		INWX,
 		Ionos,
 		Linode,
+		Loopia,
 		LuaDNS,
 		Namecheap,
 		NameCom,

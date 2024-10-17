@@ -76,6 +76,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - INWX
   - Ionos
   - Linode
+  - Loopia
   - LuaDNS
   - Name.com
   - Namecheap
@@ -239,6 +240,7 @@ Check the documentation for your DNS provider:
 - [INWX](docs/inwx.md)
 - [Ionos](docs/ionos.md)
 - [Linode](docs/linode.md)
+- [Loopia](docs/loopia.md)
 - [LuaDNS](docs/luadns.md)
 - [Name.com](docs/name.com.md)
 - [Namecheap](docs/namecheap.md)

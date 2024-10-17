@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -57,6 +58,19 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	}
 	defer response.Body.Close()
 
+	switch response.StatusCode {
+	case http.StatusCreated:
+	case http.StatusBadRequest:
+		return fmt.Errorf("%w: %s", errors.ErrBadRequest, parseJSONError(response.Body))
+	case http.StatusUnauthorized, http.StatusForbidden:
+		return fmt.Errorf("%w: %s", errors.ErrAuth, parseJSONError(response.Body))
+	case http.StatusNotFound:
+		return fmt.Errorf("%w: %s", errors.ErrDomainNotFound, parseJSONError(response.Body))
+	default:
+		return fmt.Errorf("%w: %s: %s", errors.ErrHTTPStatusNotValid,
+			response.Status, utils.BodyToSingleLine(response.Body))
+	}
+
 	decoder := json.NewDecoder(response.Body)
 	var parsedJSON struct {
 		Error  string
@@ -68,15 +82,6 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 		return fmt.Errorf("json decoding response body: %w", err)
 	}
 
-	if parsedJSON.Error != "" {
-		return fmt.Errorf("API Error: %s", parsedJSON.Error)
-	}
-
-	if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
-	}
-
 	newIP, err := netip.ParseAddr(parsedJSON.Record.IP)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
@@ -85,4 +90,16 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 			errors.ErrIPReceivedMismatch, ip, newIP)
 	}
 	return nil
+}
+
+func parseJSONError(body io.Reader) (message string) {
+	var parsedJSON struct {
+		Error string `json:"error"`
+	}
+	decoder := json.NewDecoder(body)
+	err := decoder.Decode(&parsedJSON)
+	if err != nil {
+		return "<json decoding error: " + err.Error() + ">"
+	}
+	return parsedJSON.Error
 }

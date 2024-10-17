@@ -1,13 +1,11 @@
 package vultr
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/netip"
-	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -22,7 +20,7 @@ type Provider struct {
 	owner      string
 	ipVersion  ipversion.IPVersion
 	ipv6Suffix netip.Prefix
-	apiKey      string
+	apiKey     string
 	ttl        uint32
 }
 
@@ -31,7 +29,7 @@ func New(data json.RawMessage, domain, owner string,
 	provider *Provider, err error) {
 	var providerSpecificSettings struct {
 		APIKey string `json:"apikey"`
-		TTL   uint32 `json:"ttl"`
+		TTL    uint32 `json:"ttl"`
 	}
 	err = json.Unmarshal(data, &providerSpecificSettings)
 	if err != nil {
@@ -49,7 +47,7 @@ func New(data json.RawMessage, domain, owner string,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
 		apiKey:     providerSpecificSettings.APIKey,
-		ttl: 		providerSpecificSettings.TTL,	
+		ttl:        providerSpecificSettings.TTL,
 	}, nil
 }
 
@@ -111,80 +109,34 @@ func (p *Provider) setHeaders(request *http.Request) {
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	recordType := constants.A
-	if ip.Is6() {
-		recordType = constants.AAAA
-	}
 
-	u := url.URL{
-		Scheme: "https",
-		Host:   "api.vultr.com",
-		Path:   fmt.Sprintf("/v2/domains/%s/records", p.domain),
-	}
+	r, err := p.getRecord(ctx, client)
 
-	requestData := struct {
-		Type string `json:"type"`
-		IP   string `json:"data"`
-		Name string `json:"name"`
-		TTL  uint32 `json:"ttl,omitempty"`
-	}{
-		Type: recordType,
-		IP:   ip.String(),
-		Name: p.owner,
-		TTL:  p.ttl,
-	}
-
-	buffer := bytes.NewBuffer(nil)
-	encoder := json.NewEncoder(buffer)
-	err = encoder.Encode(requestData)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("json encoding request data: %w", err)
+		return netip.Addr{}, fmt.Errorf("error getting records for %s: %w", p.domain, err)
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buffer)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
-	}
-	p.setHeaders(request)
+	/*
+		1. if there's no record, create it
+		2. if it exists and ip is different, update it
+		3. if it exists and ip is the same, do nothing
+	*/
 
-	response, err := client.Do(request)
-	if err != nil {
-		return netip.Addr{}, err
-	}
-	defer response.Body.Close()
-
-	decoder := json.NewDecoder(response.Body)
-	var parsedJSON struct {
-		Error string
-		Status uint32
-		Record struct {
-			ID   string `json:"id"`
-			Type string `json:"type"`
-			IP   string `json:"data"`
-			Name string `json:"name"`
-			TTL  uint32 `json:"ttl"`
+	if r == (Record{}) {
+		err := p.createRecord(ctx, client, ip)
+		if err != nil {
+			return netip.Addr{}, fmt.Errorf("error creating record: %w", err)
 		}
-	}
-	err = decoder.Decode(&parsedJSON)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
+		return ip, nil
 	}
 
-	if parsedJSON.Error != "" {
-		return netip.Addr{}, fmt.Errorf("API Error: %s", parsedJSON.Error)
+	if r.IP != ip.String() {
+		newIp, err := p.updateRecord(ctx, client, ip, r)
+		if err != nil {
+			return netip.Addr{}, fmt.Errorf("error updating record %s: %w", p.BuildDomainName(), err)
+		}
+		return newIp, nil
 	}
 
-	if response.StatusCode != http.StatusCreated {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
-	}
-
-	newIP, err = netip.ParseAddr(parsedJSON.Record.IP)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
-	} else if newIP.Compare(ip) != 0 {
-		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
-	}
-	return newIP, nil
+	return ip, nil
 }

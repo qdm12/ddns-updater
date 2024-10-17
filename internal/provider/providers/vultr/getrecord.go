@@ -18,6 +18,8 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client) (r Record
 		Host:   "api.vultr.com",
 		Path:   fmt.Sprintf("/v2/domains/%s/records", p.domain),
 	}
+
+	// max return of get records is 500 records
 	values := url.Values{}
 	values.Set("per_page", "500")
 	u.RawQuery = values.Encode()
@@ -35,6 +37,8 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client) (r Record
 	defer response.Body.Close()
 
 	decoder := json.NewDecoder(response.Body)
+
+	// todo: implement pagination
 	var parsedJSON struct {
 		Error   string
 		Status  uint32

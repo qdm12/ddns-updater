@@ -110,7 +110,12 @@ func (p *Provider) setHeaders(request *http.Request) {
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	r, err := p.getRecord(ctx, client)
+	recordType := constants.A
+	if ip.Is6() {
+		recordType = constants.AAAA
+	}
+
+	r, err := p.getRecord(ctx, client, recordType)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("error getting records for %s: %w", p.domain, err)
 	}

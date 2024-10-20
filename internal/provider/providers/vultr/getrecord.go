@@ -7,13 +7,14 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
 // https://www.vultr.com/api/#tag/dns/operation/list-dns-domain-records
-func (p *Provider) getRecord(ctx context.Context, client *http.Client) (r Record, err error) {
+func (p *Provider) getRecord(ctx context.Context, client *http.Client,
+	recordType string,
+) (r Record, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.vultr.com",
@@ -68,7 +69,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client) (r Record
 
 	var existingRecord Record
 	for _, rec := range parsedJSON.Records {
-		if rec.Name == p.owner && (rec.Type == constants.A || rec.Type == constants.AAAA) {
+		if rec.Name == p.owner && rec.Type == recordType {
 			existingRecord = rec
 			break
 		}

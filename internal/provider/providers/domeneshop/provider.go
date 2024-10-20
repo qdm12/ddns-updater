@@ -61,8 +61,6 @@ func validateSettings(domain, owner, token, secret string) (err error) {
 	}
 
 	switch {
-	case owner == "":
-		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
 	case owner == "*":
 		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
 	case token == "":

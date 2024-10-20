@@ -42,7 +42,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("json decoding provider specific settings: %w", err)
 	}
 
-	err = validateSettings(domain, owner,
+	err = validateSettings(domain,
 		providerSpecificSettings.Username, providerSpecificSettings.Password)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
@@ -58,7 +58,7 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(domain, owner, username, password string) (err error) {
+func validateSettings(domain, username, password string) (err error) {
 	// TODO: update this switch to be as restrictive as possible
 	// to fail early for the user. Use errors already defined
 	// in the internal/provider/errors package, or add your own
@@ -70,8 +70,6 @@ func validateSettings(domain, owner, username, password string) (err error) {
 	}
 
 	switch {
-	case owner == "":
-		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
 	// TODO: does the provider support wildcard owners? If not, disallow * owners
 	// case owner == "*":
 	// 	return fmt.Errorf("%w", errors.ErrOwnerWildcard)

@@ -122,23 +122,23 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	recordID, existingIP, err := p.getRecord(ctx, client, recordType)
 	if err != nil {
-		if stderrors.Is(err, errors.ErrRecordNotFound) {
-			err := p.createRecord(ctx, client, ip)
-			if err != nil {
-				return netip.Addr{}, fmt.Errorf("error creating record: %w", err)
-			}
-			return ip, nil
+		if !stderrors.Is(err, errors.ErrRecordNotFound) {
+			return netip.Addr{}, fmt.Errorf("error getting records for %s: %w", p.domain, err)
 		}
-		return netip.Addr{}, fmt.Errorf("error getting records for %s: %w", p.domain, err)
-	}
-
-	if existingIP != ip {
-		err := p.updateRecord(ctx, client, recordID, ip)
+		err = p.createRecord(ctx, client, ip)
 		if err != nil {
-			return netip.Addr{}, fmt.Errorf("error updating record %s: %w", p.BuildDomainName(), err)
+			return netip.Addr{}, fmt.Errorf("error creating record: %w", err)
 		}
 		return ip, nil
 	}
 
+	if existingIP == ip {
+		return ip, nil
+	}
+
+	err = p.updateRecord(ctx, client, recordID, ip)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("error updating record %s: %w", p.BuildDomainName(), err)
+	}
 	return ip, nil
 }

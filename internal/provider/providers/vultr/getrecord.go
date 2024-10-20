@@ -14,7 +14,7 @@ import (
 
 // https://www.vultr.com/api/#tag/dns/operation/list-dns-domain-records
 func (p *Provider) getRecord(ctx context.Context, client *http.Client,
-	recordType string) (recordID string, existingIP netip.Addr, err error,
+	recordType string) (recordID string, recordIP netip.Addr, err error,
 ) {
 	u := url.URL{
 		Scheme: "https",
@@ -59,28 +59,25 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client,
 		} `json:"meta"`
 	}
 	err = decoder.Decode(&parsedJSON)
-	if err != nil {
+	switch {
+	case err != nil:
 		return "", netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
-	}
-
-	if parsedJSON.Error != "" {
+	case parsedJSON.Error != "":
 		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, parsedJSON.Error)
-	}
-
-	if response.StatusCode != http.StatusOK {
+	case response.StatusCode != http.StatusOK:
 		return "", netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
-	for _, rec := range parsedJSON.Records {
-		if rec.Name != p.owner || rec.Type != recordType {
+	for _, record := range parsedJSON.Records {
+		if record.Name != p.owner || record.Type != recordType {
 			continue
 		}
-		existingIP, err = netip.ParseAddr(rec.Data)
+		recordIP, err = netip.ParseAddr(record.Data)
 		if err != nil {
 			return "", netip.Addr{}, fmt.Errorf("parsing existing IP: %w", err)
 		}
-		return rec.ID, existingIP, nil
+		return record.ID, recordIP, nil
 	}
 
 	return "", netip.Addr{}, fmt.Errorf("%w: in %d records", errors.ErrRecordNotFound, len(parsedJSON.Records))

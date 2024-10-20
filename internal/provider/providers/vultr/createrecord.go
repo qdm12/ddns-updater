@@ -72,26 +72,9 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 			response.Status, utils.BodyToSingleLine(response.Body))
 	}
 
-	decoder := json.NewDecoder(response.Body)
-	var parsedJSON struct {
-		Error  string `json:"error"`
-		Record struct {
-			Data string `json:"data"`
-		} `json:"record"`
-	}
-	err = decoder.Decode(&parsedJSON)
-	if err != nil {
-		return fmt.Errorf("json decoding response body: %w", err)
-	} else if parsedJSON.Error != "" {
-		return fmt.Errorf("%w: %s", errors.ErrUnsuccessful, parsedJSON.Error)
-	}
-
-	newIP, err := netip.ParseAddr(parsedJSON.Record.Data)
-	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
-	} else if newIP.Compare(ip) != 0 {
-		return fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
+	errorMessage := parseJSONError(response.Body)
+	if errorMessage != "" {
+		return fmt.Errorf("%w: %s", errors.ErrUnsuccessful, errorMessage)
 	}
 	return nil
 }

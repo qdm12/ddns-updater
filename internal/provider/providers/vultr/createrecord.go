@@ -94,14 +94,20 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	return nil
 }
 
+// parseJSONErrorOrFullBody parses the json error from a response body
+// and returns it if it is not empty. If the json decoding fails OR
+// the error parsed is empty, the entire body is returned on a single line.
 func parseJSONError(body io.Reader) (message string) {
+	allData, err := io.ReadAll(body)
+	if err != nil {
+		return "failed reading body: " + err.Error()
+	}
 	var parsedJSON struct {
 		Error string `json:"error"`
 	}
-	decoder := json.NewDecoder(body)
-	err := decoder.Decode(&parsedJSON)
-	if err != nil {
-		return "<json decoding error: " + err.Error() + ">"
+	err = json.Unmarshal(allData, &parsedJSON)
+	if err != nil || parsedJSON.Error == "" {
+		return utils.ToSingleLine(string(allData))
 	}
 	return parsedJSON.Error
 }

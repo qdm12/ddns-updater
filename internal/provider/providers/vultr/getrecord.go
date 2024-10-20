@@ -70,12 +70,20 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client,
 	switch {
 	case err != nil:
 		return "", netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
-	case parsedJSON.Error != "":
-		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, parsedJSON.Error)
+	case response.StatusCode == http.StatusBadRequest:
+		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrBadRequest, parsedJSON.Error)
+	case response.StatusCode == http.StatusUnauthorized:
+		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrAuth, parsedJSON.Error)
+	case response.StatusCode == http.StatusNotFound:
+		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrDomainNotFound, parsedJSON.Error)
 	case response.StatusCode != http.StatusOK:
 		return "", netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, parseJSONErrorOrFullBody(bodyBytes))
+	case parsedJSON.Error != "":
+		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, parsedJSON.Error)
 	}
+
+	// Status is OK (200) and error field is empty
 
 	for _, record := range parsedJSON.Records {
 		if record.Name != p.owner || record.Type != recordType {

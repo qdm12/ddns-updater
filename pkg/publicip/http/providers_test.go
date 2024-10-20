@@ -33,7 +33,6 @@ func Test_ListProvidersForVersion(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			providers := ListProvidersForVersion(testCase.version)
@@ -71,7 +70,6 @@ func Test_ValidateProvider(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			err := ValidateProvider(testCase.provider, testCase.version)

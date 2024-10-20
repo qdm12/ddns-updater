@@ -135,7 +135,7 @@ func (s *Service) getRecordIDsToUpdate(ctx context.Context, records []librecords
 	for i, record := range records {
 		shouldUpdate := s.shouldUpdateRecord(ctx, record, ip, ipv4, ipv6)
 		if shouldUpdate {
-			id := uint(i)
+			id := uint(i) //nolint:gosec
 			recordIDs[id] = struct{}{}
 		}
 	}
@@ -281,7 +281,7 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 	now := s.timeNow()
 
 	for i, record := range records {
-		id := uint(i)
+		id := uint(i) //nolint:gosec
 		_, requireUpdate := recordIDs[id]
 		if requireUpdate || record.Status != constants.UNSET {
 			continue

@@ -134,7 +134,8 @@ func (p *Provider) deleteRecord(ctx context.Context, client *http.Client, record
 	return nil
 }
 
-func httpPost[T any](ctx context.Context, client *http.Client, //nolint:ireturn
+//nolint:ireturn
+func httpPost[T any](ctx context.Context, client *http.Client,
 	url string, requestData any, decodeBody bool) (responseData T, err error) {
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)

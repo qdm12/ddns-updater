@@ -8,7 +8,7 @@ issues:
       linters:
         - containedctx
         - dupl
-        - goerr113
+        - err113
     - text: Function `exitHealthchecksio` should pass the context parameter
       linters:
         - contextcheck
@@ -25,17 +25,17 @@ linters:
     - bodyclose
     - containedctx
     - contextcheck
+    - copyloopvar
     - decorder
     - dogsled
     - dupl
     - dupword
     - durationcheck
+    - err113
     - errchkjson
     - errname
     - errorlint
-    - execinquery
     - exhaustive
-    - exportloopref
     - forcetypeassert
     - gci
     - gocheckcompilerdirectives
@@ -47,10 +47,8 @@ linters:
     - gocritic
     - gocyclo
     - godot
-    - goerr113
     - goheader
     - goimports
-    - gomnd
     - gomoddirectives
     - goprintffuncname
     - gosec
@@ -64,6 +62,7 @@ linters:
     - maintidx
     - makezero
     - misspell
+    - mnd
     - musttag
     - nakedret
     - nestif

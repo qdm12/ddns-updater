@@ -11,7 +11,7 @@ require (
 	github.com/qdm12/goservices v0.1.0
 	github.com/qdm12/gosettings v0.4.4-rc1
 	github.com/qdm12/gosplash v0.2.0
-	github.com/qdm12/gotree v0.2.0
+	github.com/qdm12/gotree v0.3.0
 	github.com/qdm12/log v0.1.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/mod v0.21.0

@@ -31,7 +31,6 @@ func Test_IPv4(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -68,7 +67,6 @@ func Test_IPv6(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

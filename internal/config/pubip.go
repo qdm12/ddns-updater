@@ -70,28 +70,28 @@ func (p *PubIP) toLinesNode() (node *gotree.Node) {
 
 	node.Appendf("HTTP enabled: %s", gosettings.BoolToYesNo(p.HTTPEnabled))
 	if *p.HTTPEnabled {
-		childNode := node.Appendf("HTTP IP providers")
+		childNode := node.Append("HTTP IP providers")
 		for _, provider := range p.HTTPIPProviders {
-			childNode.Appendf(provider)
+			childNode.Append(provider)
 		}
 
-		childNode = node.Appendf("HTTP IPv4 providers")
+		childNode = node.Append("HTTP IPv4 providers")
 		for _, provider := range p.HTTPIPv4Providers {
-			childNode.Appendf(provider)
+			childNode.Append(provider)
 		}
 
-		childNode = node.Appendf("HTTP IPv6 providers")
+		childNode = node.Append("HTTP IPv6 providers")
 		for _, provider := range p.HTTPIPv6Providers {
-			childNode.Appendf(provider)
+			childNode.Append(provider)
 		}
 	}
 
 	node.Appendf("DNS enabled: %s", gosettings.BoolToYesNo(p.DNSEnabled))
 	if *p.DNSEnabled {
 		node.Appendf("DNS timeout: %s", p.DNSTimeout)
-		childNode := node.Appendf("DNS over TLS providers")
+		childNode := node.Append("DNS over TLS providers")
 		for _, provider := range p.DNSProviders {
-			childNode.Appendf(provider)
+			childNode.Append(provider)
 		}
 	}
 

@@ -164,11 +164,11 @@ type (
 )
 
 func (p *Provider) defaultURLValues() (values url.Values) {
-	uuid := make([]byte, 16) //nolint:gomnd
+	uuid := make([]byte, 16) //nolint:mnd
 	_, _ = io.ReadFull(rand.Reader, uuid)
-	//nolint:gomnd
+	//nolint:mnd
 	uuid[6] = (uuid[6] & 0x0f) | 0x40 // Version 4
-	//nolint:gomnd
+	//nolint:mnd
 	uuid[8] = (uuid[8] & 0x3f) | 0x80 // Variant is 10
 	values = url.Values{}
 	values.Set("key", p.key)

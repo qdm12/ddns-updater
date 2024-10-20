@@ -64,7 +64,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client,
 	}
 
 	if parsedJSON.Error != "" {
-		return "", netip.Addr{}, fmt.Errorf("API Error: %s", parsedJSON.Error)
+		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, parsedJSON.Error)
 	}
 
 	if response.StatusCode != http.StatusOK {

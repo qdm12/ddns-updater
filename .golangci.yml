@@ -37,6 +37,7 @@ linters:
     - errname
     - errorlint
     - exhaustive
+    - fatcontext
     - forcetypeassert
     - gci
     - gocheckcompilerdirectives
@@ -59,10 +60,12 @@ linters:
     - importas
     - inamedparam
     - interfacebloat
+    - intrange
     - ireturn
     - lll
     - maintidx
     - makezero
+    - mirror
     - misspell
     - mnd
     - musttag

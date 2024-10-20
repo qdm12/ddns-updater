@@ -21,7 +21,7 @@ func tryAndRepeatGettingIP(ctx context.Context, getIPFunc getIPFunc,
 	const tries = 3
 	logMessagePrefix := "obtaining " + version.String() + " address"
 	errs := make([]error, 0, tries)
-	for try := 0; try < tries; try++ {
+	for try := range tries {
 		ip, err = getIPFunc(ctx)
 		if err != nil {
 			errs = append(errs, err)

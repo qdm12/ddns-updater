@@ -37,8 +37,7 @@ type provider interface {
 	get(ctx context.Context, ip netip.Addr) (result Result, err error)
 }
 
-//nolint:ireturn
-func newProvider(providerName Provider, client *http.Client) provider {
+func newProvider(providerName Provider, client *http.Client) provider { //nolint:ireturn
 	switch providerName {
 	case Ipinfo:
 		return newIpinfo(client)

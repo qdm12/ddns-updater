@@ -54,7 +54,7 @@ func NewService(db Database, updater UpdaterInterface, ipGetter PublicIPFetcher,
 func (s *Service) lookupIPsResilient(ctx context.Context, hostname string, tries int) (
 	ipv4 netip.Addr, ipv6 netip.Addr, err error,
 ) {
-	for i := 0; i < tries; i++ {
+	for range tries {
 		ipv4, ipv6, err = s.lookupIPs(ctx, hostname)
 		if err == nil {
 			return ipv4, ipv6, nil

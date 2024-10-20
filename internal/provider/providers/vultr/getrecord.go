@@ -43,7 +43,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client,
 
 	// todo: implement pagination
 	var parsedJSON struct {
-		Error   string
+		Error   string `json:"error"`
 		Records []struct {
 			ID   string `json:"id"`
 			Name string `json:"name"`

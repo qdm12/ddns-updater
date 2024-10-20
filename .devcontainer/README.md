@@ -9,6 +9,7 @@ It works on Linux, Windows (WSL2) and OSX.
 - [VS code](https://code.visualstudio.com/download) installed
 - [VS code dev containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) installed
 - [Docker](https://www.docker.com/products/docker-desktop) installed and running
+- [Docker Compose](https://docs.docker.com/compose/install/) installed
 
 ## Setup
 
@@ -16,9 +17,10 @@ It works on Linux, Windows (WSL2) and OSX.
 
     ```sh
     touch ~/.gitconfig ~/.zsh_history
+    mkdir -p ~/.ssh
     ```
 
-1. **For OSX hosts**: ensure your home directory `~` is accessible by Docker.
+1. **For OSX hosts**: ensure the project directory and your home directory `~` are accessible by Docker.
 1. Open the command palette in Visual Studio Code (CTRL+SHIFT+P).
 1. Select `Dev-Containers: Open Folder in Container...` and choose the project directory.
 
@@ -33,7 +35,7 @@ Changes you can make are notably:
 
 - Changes to the Docker image in [Dockerfile](Dockerfile)
 - Changes to VSCode **settings** and **extensions** in [devcontainer.json](devcontainer.json).
-- Change the entrypoint script by adding in [devcontainer.json](devcontainer.json) a bind mount to a shell script to `/root/.welcome.sh` to replace the [current welcome script](https://github.com/qdm12/godevcontainer/blob/master/shell/.welcome.sh). For example:
+- Change the entrypoint script by adding a bind mount in [devcontainer.json](devcontainer.json) of a shell script to `/root/.welcome.sh` to replace the [current welcome script](https://github.com/qdm12/godevcontainer/blob/master/shell/.welcome.sh). For example:
 
     ```json
     // Welcome script

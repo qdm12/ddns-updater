@@ -3,6 +3,7 @@ package vultr
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -109,6 +110,10 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetAuthBearer(request, p.apiKey)
 }
 
+// Update does the following:
+// 1. if there's no record, create it.
+// 2. if it exists and ip is different, update it.
+// 3. if it exists and ip is the same, do nothing.
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A
 	if ip.Is6() {
@@ -117,21 +122,14 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	r, err := p.getRecord(ctx, client, recordType)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("error getting records for %s: %w", p.domain, err)
-	}
-
-	/*
-		1. if there's no record, create it
-		2. if it exists and ip is different, update it
-		3. if it exists and ip is the same, do nothing
-	*/
-
-	if r == (Record{}) {
-		err := p.createRecord(ctx, client, ip)
-		if err != nil {
-			return netip.Addr{}, fmt.Errorf("error creating record: %w", err)
+		if stderrors.Is(err, errors.ErrRecordNotFound) {
+			err := p.createRecord(ctx, client, ip)
+			if err != nil {
+				return netip.Addr{}, fmt.Errorf("error creating record: %w", err)
+			}
+			return ip, nil
 		}
-		return ip, nil
+		return netip.Addr{}, fmt.Errorf("error getting records for %s: %w", p.domain, err)
 	}
 
 	if r.Data != ip.String() {

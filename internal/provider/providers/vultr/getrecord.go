@@ -67,13 +67,11 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client,
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
-	var existingRecord Record
 	for _, rec := range parsedJSON.Records {
 		if rec.Name == p.owner && rec.Type == recordType {
-			existingRecord = rec
-			break
+			return rec, nil
 		}
 	}
 
-	return existingRecord, nil
+	return Record{}, fmt.Errorf("%w: in %d records", errors.ErrRecordNotFound, len(parsedJSON.Records))
 }

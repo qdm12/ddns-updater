@@ -26,7 +26,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	provider *Provider, err error) {
+	provider *Provider, err error,
+) {
 	var providerSpecificSettings struct {
 		APIKey string `json:"apikey"`
 		TTL    uint32 `json:"ttl"`
@@ -109,9 +110,7 @@ func (p *Provider) setHeaders(request *http.Request) {
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-
 	r, err := p.getRecord(ctx, client)
-
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("error getting records for %s: %w", p.domain, err)
 	}

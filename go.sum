@@ -43,8 +43,6 @@ github.com/qdm12/gosettings v0.4.4-rc1 h1:VT+6O6ww3Cn5v5/LgY2zlXoiCkZzbaLDWaA8uf
 github.com/qdm12/gosettings v0.4.4-rc1/go.mod h1:CPrt2YC4UsURTrslmhxocVhMCW03lIrqdH2hzIf5prg=
 github.com/qdm12/gosplash v0.2.0 h1:DOxCEizbW6ZG+FgpH2oK1atT6bM8MHL9GZ2ywSS4zZY=
 github.com/qdm12/gosplash v0.2.0/go.mod h1:k+1PzhO0th9cpX4q2Nneu4xTsndXqrM/x7NTIYmJ4jo=
-github.com/qdm12/gotree v0.2.0 h1:+58ltxkNLUyHtATFereAcOjBVfY6ETqRex8XK90Fb/c=
-github.com/qdm12/gotree v0.2.0/go.mod h1:1SdFaqKZuI46U1apbXIf25pDMNnrPuYLEqMF/qL4lY4=
 github.com/qdm12/gotree v0.3.0 h1:Q9f4C571EFK7ZEsPkEL2oGZX7I+ZhVxhh1ZSydW+5yI=
 github.com/qdm12/gotree v0.3.0/go.mod h1:iz06uXmRR4Aq9v6tX7mosXStO/yGHxRA1hbyD0UVeYw=
 github.com/qdm12/log v0.1.0 h1:jYBd/xscHYpblzZAd2kjZp2YmuYHjAAfbTViJWxoPTw=

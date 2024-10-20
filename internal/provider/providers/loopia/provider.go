@@ -154,10 +154,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	switch {
 	case strings.HasPrefix(s, "nohost"):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
-	case strings.HasPrefix(s, "badrequest"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBadRequest)
-	case strings.HasPrefix(s, "911"):
-		// returned for multiple issues, bad ip, bad request formats, etc
+	case strings.HasPrefix(s, "badrequest"),
+		strings.HasPrefix(s, "911"):
+		// 911 is returned for multiple issues: bad ip, bad request formats, etc
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBadRequest)
 	case strings.HasPrefix(s, "badauth"):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)

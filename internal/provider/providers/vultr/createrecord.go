@@ -30,12 +30,12 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 
 	requestData := struct {
 		Type string `json:"type"`
-		IP   string `json:"data"`
+		Data string `json:"data"`
 		Name string `json:"name"`
 		TTL  uint32 `json:"ttl,omitempty"`
 	}{
 		Type: recordType,
-		IP:   ip.String(),
+		Data: ip.String(),
 		Name: p.owner,
 		TTL:  p.ttl,
 	}
@@ -83,7 +83,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 		return fmt.Errorf("json decoding response body: %w", err)
 	}
 
-	newIP, err := netip.ParseAddr(parsedJSON.Record.IP)
+	newIP, err := netip.ParseAddr(parsedJSON.Record.Data)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
 	} else if newIP.Compare(ip) != 0 {

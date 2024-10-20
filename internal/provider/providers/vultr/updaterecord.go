@@ -22,11 +22,11 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client, ip net
 	}
 
 	requestData := struct {
-		IP   string `json:"data"`
+		Data string `json:"data"`
 		Name string `json:"name"`
 		TTL  uint32 `json:"ttl,omitempty"`
 	}{
-		IP:   ip.String(),
+		Data: ip.String(),
 		Name: p.owner,
 		TTL:  p.ttl,
 	}

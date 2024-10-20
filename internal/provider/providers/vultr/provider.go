@@ -129,7 +129,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return ip, nil
 	}
 
-	if r.IP != ip.String() {
+	if r.Data != ip.String() {
 		newIp, err := p.updateRecord(ctx, client, ip, r)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("error updating record %s: %w", p.BuildDomainName(), err)

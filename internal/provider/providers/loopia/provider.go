@@ -163,9 +163,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	case strings.HasPrefix(s, constants.Notfqdn):
 		return netip.Addr{}, fmt.Errorf("%w", errors.Notfqdn)
-	case strings.HasPrefix(s, "good"):
-		return ip, nil
-	case strings.HasPrefix(s, "nochg"):
+	case strings.HasPrefix(s, "good"), strings.HasPrefix(s, "nochg"):
 		return ip, nil
 	default:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)

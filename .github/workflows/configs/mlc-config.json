@@ -29,6 +29,9 @@
     },
     {
       "pattern": "^https://www.duckdns.org/$"
+    },
+    {
+      "pattern": "^https://my.vultr.com/settings/#settingsapi$"
     }
   ],
   "timeout": "20s",

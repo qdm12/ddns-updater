@@ -59,8 +59,7 @@ func validateSettings(domain, apiKey string) (err error) {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
 	}
 
-	switch {
-	case apiKey == "":
+	if apiKey == "" {
 		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
 	}
 	return nil

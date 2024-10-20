@@ -152,7 +152,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	switch {
-	case strings.HasPrefix(s, "nohost"):
+	case strings.HasPrefix(s, "nohost"),
+		strings.HasPrefix(s, constants.Notfqdn):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case strings.HasPrefix(s, "badrequest"),
 		strings.HasPrefix(s, "911"):
@@ -160,8 +161,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBadRequest)
 	case strings.HasPrefix(s, "badauth"):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
-	case strings.HasPrefix(s, constants.Notfqdn):
-		return netip.Addr{}, fmt.Errorf("%w", errors.Notfqdn)
 	case strings.HasPrefix(s, "good"), strings.HasPrefix(s, "nochg"):
 		return ip, nil
 	default:

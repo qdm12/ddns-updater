@@ -62,11 +62,11 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	switch response.StatusCode {
 	case http.StatusCreated:
 	case http.StatusBadRequest:
-		return fmt.Errorf("%w: %s", errors.ErrBadRequest, parseJSONError(response.Body))
+		return fmt.Errorf("%w: %s", errors.ErrBadRequest, parseJSONErrorOrFullBody(response.Body))
 	case http.StatusUnauthorized, http.StatusForbidden:
-		return fmt.Errorf("%w: %s", errors.ErrAuth, parseJSONError(response.Body))
+		return fmt.Errorf("%w: %s", errors.ErrAuth, parseJSONErrorOrFullBody(response.Body))
 	case http.StatusNotFound:
-		return fmt.Errorf("%w: %s", errors.ErrDomainNotFound, parseJSONError(response.Body))
+		return fmt.Errorf("%w: %s", errors.ErrDomainNotFound, parseJSONErrorOrFullBody(response.Body))
 	default:
 		return fmt.Errorf("%w: %s: %s", errors.ErrHTTPStatusNotValid,
 			response.Status, utils.BodyToSingleLine(response.Body))
@@ -82,6 +82,8 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	err = decoder.Decode(&parsedJSON)
 	if err != nil {
 		return fmt.Errorf("json decoding response body: %w", err)
+	} else if parsedJSON.Error != "" {
+		return fmt.Errorf("%w: %s", errors.ErrUnsuccessful, parsedJSON.Error)
 	}
 
 	newIP, err := netip.ParseAddr(parsedJSON.Record.Data)
@@ -97,7 +99,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 // parseJSONErrorOrFullBody parses the json error from a response body
 // and returns it if it is not empty. If the json decoding fails OR
 // the error parsed is empty, the entire body is returned on a single line.
-func parseJSONError(body io.Reader) (message string) {
+func parseJSONErrorOrFullBody(body io.Reader) (message string) {
 	allData, err := io.ReadAll(body)
 	if err != nil {
 		return "failed reading body: " + err.Error()
@@ -107,6 +109,24 @@ func parseJSONError(body io.Reader) (message string) {
 	}
 	err = json.Unmarshal(allData, &parsedJSON)
 	if err != nil || parsedJSON.Error == "" {
+		return utils.ToSingleLine(string(allData))
+	}
+	return parsedJSON.Error
+}
+
+// parseJSONError parses the json error from a response body
+// and returns it directly. If the json decoding fails, the
+// entire body is returned on a single line.
+func parseJSONError(body io.Reader) (message string) {
+	allData, err := io.ReadAll(body)
+	if err != nil {
+		return "failed reading body: " + err.Error()
+	}
+	var parsedJSON struct {
+		Error string `json:"error"`
+	}
+	err = json.Unmarshal(allData, &parsedJSON)
+	if err != nil {
 		return utils.ToSingleLine(string(allData))
 	}
 	return parsedJSON.Error

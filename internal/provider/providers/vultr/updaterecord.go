@@ -57,5 +57,10 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
+	errorMessage := parseJSONError(response.Body)
+	if errorMessage != "" {
+		return fmt.Errorf("%w: %s", errors.ErrUnsuccessful, errorMessage)
+	}
+
 	return nil
 }

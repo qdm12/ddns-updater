@@ -23,7 +23,7 @@ func extractAPIError(response *http.Response) (err error) {
 		}
 		apiError.Message = string(b)
 	}
-	queryID := response.Header.Get("X-Ovh-QueryID")
+	queryID := response.Header.Get("X-Ovh-Queryid")
 
 	_ = response.Body.Close()
 

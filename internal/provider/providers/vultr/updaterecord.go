@@ -14,7 +14,7 @@ import (
 )
 
 // https://www.vultr.com/api/#tag/dns/operation/update-dns-domain-record
-func (p *Provider) updateRecord(ctx context.Context, client *http.Client, ip netip.Addr, r Record) (newIp netip.Addr, err error) {
+func (p *Provider) updateRecord(ctx context.Context, client *http.Client, ip netip.Addr, r Record) (err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.vultr.com",
@@ -35,25 +35,25 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client, ip net
 	encoder := json.NewEncoder(buffer)
 	err = encoder.Encode(requestData)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("json encoding request data: %w", err)
+		return fmt.Errorf("json encoding request data: %w", err)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPatch, u.String(), buffer)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
+		return fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return netip.Addr{}, err
+		return err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusNoContent {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
+		return fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
-	return ip, nil
+	return nil
 }

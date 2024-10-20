@@ -36,7 +36,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Key            string `json:"key"`
 		Token          string `json:"token"`
@@ -165,7 +166,8 @@ func (p *Provider) setHeaders(request *http.Request) {
 // Obtain domain ID.
 // See https://api.cloudflare.com/#dns-records-for-a-zone-list-dns-records.
 func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP netip.Addr) (
-	identifier string, upToDate bool, err error) {
+	identifier string, upToDate bool, err error,
+) {
 	recordType := constants.A
 	if newIP.Is6() {
 		recordType = constants.AAAA

@@ -28,7 +28,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Key string `json:"key"`
 	}{}
@@ -178,7 +179,8 @@ func (p *Provider) defaultURLValues() (values url.Values) {
 }
 
 func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
-	records dreamHostRecords, err error) {
+	records dreamHostRecords, err error,
+) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.dreamhost.com",

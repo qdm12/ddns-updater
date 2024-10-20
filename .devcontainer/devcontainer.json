@@ -97,6 +97,7 @@
                     }
                 },
                 "gopls": {
+                    "formatting.gofumpt": true,
                     "usePlaceholders": false,
                     "staticcheck": true,
                     "vulncheck": "Imports"

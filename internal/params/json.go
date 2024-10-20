@@ -35,7 +35,8 @@ type commonSettings struct {
 // first trying from the environment variable CONFIG and then from
 // the file config.json.
 func (r *Reader) JSONProviders(filePath string) (
-	providers []provider.Provider, warnings []string, err error) {
+	providers []provider.Provider, warnings []string, err error,
+) {
 	providers, warnings, err = r.getProvidersFromEnv(filePath)
 	if providers != nil || warnings != nil || err != nil {
 		return providers, warnings, err
@@ -47,7 +48,8 @@ var errWriteConfigToFile = errors.New("cannot write configuration to file")
 
 // getProvidersFromFile obtain the update settings from config.json.
 func (r *Reader) getProvidersFromFile(filePath string) (
-	providers []provider.Provider, warnings []string, err error) {
+	providers []provider.Provider, warnings []string, err error,
+) {
 	r.logger.Info("reading JSON config from file " + filePath)
 	bytes, err := r.readFile(filePath)
 	if err != nil {
@@ -72,7 +74,8 @@ func (r *Reader) getProvidersFromFile(filePath string) (
 // getProvidersFromEnv obtain the update settings from the environment variable CONFIG.
 // If the settings are valid, they are written to the filePath.
 func (r *Reader) getProvidersFromEnv(filePath string) (
-	providers []provider.Provider, warnings []string, err error) {
+	providers []provider.Provider, warnings []string, err error,
+) {
 	s := os.Getenv("CONFIG")
 	if s == "" {
 		return nil, nil, nil
@@ -107,7 +110,8 @@ var (
 )
 
 func extractAllSettings(jsonBytes []byte) (
-	allProviders []provider.Provider, warnings []string, err error) {
+	allProviders []provider.Provider, warnings []string, err error,
+) {
 	config := struct {
 		CommonSettings []commonSettings `json:"settings"`
 	}{}
@@ -141,13 +145,12 @@ func extractAllSettings(jsonBytes []byte) (
 	return allProviders, warnings, nil
 }
 
-var (
-	ErrProviderNoLongerSupported = errors.New("provider no longer supported")
-)
+var ErrProviderNoLongerSupported = errors.New("provider no longer supported")
 
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	retroGlobalIPv6Suffix netip.Prefix) (
-	providers []provider.Provider, warnings []string, err error) {
+	providers []provider.Provider, warnings []string, err error,
+) {
 	if common.Provider == "google" {
 		return nil, nil, fmt.Errorf("%w: %s", ErrProviderNoLongerSupported, common.Provider)
 	}
@@ -214,12 +217,11 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	return providers, warnings, nil
 }
 
-var (
-	ErrMultipleDomainsSpecified = errors.New("multiple domains specified")
-)
+var ErrMultipleDomainsSpecified = errors.New("multiple domains specified")
 
 func extractFromDomainField(domainField string) (domainRegistered string,
-	owners []string, err error) {
+	owners []string, err error,
+) {
 	domains := strings.Split(domainField, ",")
 	owners = make([]string, len(domains))
 	for i, domain := range domains {

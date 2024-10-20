@@ -37,7 +37,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Username    string `json:"username"`
 		Password    string `json:"password"`
@@ -80,7 +81,8 @@ func New(data json.RawMessage, domain, owner string,
 }
 
 func validateSettings(domain, mode, owner, appKey, consumerKey,
-	appSecret, username, password string) (err error) {
+	appSecret, username, password string,
+) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
@@ -146,7 +148,8 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
-	ip netip.Addr) (newIP netip.Addr, err error) {
+	ip netip.Addr,
+) (newIP netip.Addr, err error) {
 	u := url.URL{
 		Scheme: "https",
 		User:   url.UserPassword(p.username, p.password),
@@ -198,7 +201,8 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
 }
 
 func (p *Provider) updateWithZoneDNS(ctx context.Context, client *http.Client, ip netip.Addr) (
-	newIP netip.Addr, err error) {
+	newIP netip.Addr, err error,
+) {
 	ipStr := ip.Unmap().String()
 	recordType := constants.A
 	if ip.Is6() {

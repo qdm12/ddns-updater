@@ -27,7 +27,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
@@ -106,7 +107,8 @@ func (p *Provider) setCommonHeaders(request *http.Request) {
 }
 
 func (p *Provider) getRecordID(ctx context.Context, recordType string, client *http.Client) (
-	recordID int, err error) {
+	recordID int, err error,
+) {
 	values := url.Values{}
 	values.Set("name", utils.BuildURLQueryHostname(p.owner, p.domain))
 	values.Set("type", recordType)

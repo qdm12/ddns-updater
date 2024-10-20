@@ -13,7 +13,8 @@ import (
 )
 
 func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
-	recordType string) (recordID string, err error) {
+	recordType string,
+) (recordID string, err error) {
 	u := &url.URL{
 		Scheme: "https",
 		Host:   "dns.aliyuncs.com",

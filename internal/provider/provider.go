@@ -78,7 +78,8 @@ var ErrProviderUnknown = errors.New("unknown provider")
 
 //nolint:gocyclo
 func New(providerName models.Provider, data json.RawMessage, domain, owner string, //nolint:ireturn
-	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (provider Provider, err error) {
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix,
+) (provider Provider, err error) {
 	switch providerName {
 	case constants.Aliyun:
 		return aliyun.New(data, domain, owner, ipVersion, ipv6Suffix)

@@ -111,7 +111,8 @@ func (p *PubIP) ToHTTPOptions() (options []http.Option) {
 }
 
 func stringsToHTTPProviders(providers []string, ipVersion ipversion.IPVersion) (
-	updatedProviders []http.Provider) {
+	updatedProviders []http.Provider,
+) {
 	updatedProvidersSet := make(map[string]struct{}, len(providers))
 	for _, provider := range providers {
 		if provider != all {
@@ -158,9 +159,7 @@ func (p *PubIP) ToDNSPOptions() (options []dns.Option) {
 	}
 }
 
-var (
-	ErrNoPublicIPDNSProvider = errors.New("no public IP DNS provider specified")
-)
+var ErrNoPublicIPDNSProvider = errors.New("no public IP DNS provider specified")
 
 func (p PubIP) validateDNSProviders() (err error) {
 	if len(p.DNSProviders) == 0 {
@@ -194,7 +193,8 @@ var (
 )
 
 func validateHTTPIPProviders(providerStrings []string,
-	version ipversion.IPVersion) (err error) {
+	version ipversion.IPVersion,
+) (err error) {
 	if len(providerStrings) == 0 {
 		return fmt.Errorf("%w", ErrNoPublicIPHTTPProvider)
 	}

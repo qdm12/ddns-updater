@@ -47,6 +47,7 @@ linters:
     - gocritic
     - gocyclo
     - godot
+    - gofumpt
     - goheader
     - goimports
     - gomoddirectives

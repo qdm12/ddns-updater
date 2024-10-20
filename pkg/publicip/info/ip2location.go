@@ -19,7 +19,8 @@ type ip2Location struct {
 }
 
 func (p *ip2Location) get(ctx context.Context, ip netip.Addr) (
-	result Result, err error) {
+	result Result, err error,
+) {
 	result.Source = string(Ipinfo)
 
 	url := "https://api.ip2location.io/"

@@ -13,7 +13,8 @@ import (
 )
 
 func doJSONHTTP(ctx context.Context, client *http.Client,
-	jsonRequestBody, jsonResponseDataTarget any) (err error) {
+	jsonRequestBody, jsonResponseDataTarget any,
+) (err error) {
 	endpointURL := url.URL{
 		Scheme:   "https",
 		Host:     "ccp.netcup.net",

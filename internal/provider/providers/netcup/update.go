@@ -11,7 +11,8 @@ import (
 
 func (p *Provider) getRecordToUpdate(ctx context.Context,
 	client *http.Client, session string, ip netip.Addr) (
-	record dnsRecord, err error) {
+	record dnsRecord, err error,
+) {
 	recordSet, err := p.infoDNSRecords(ctx, client, session)
 	if err != nil {
 		return record, fmt.Errorf("getting DNS records: %w", err)
@@ -37,7 +38,8 @@ func (p *Provider) getRecordToUpdate(ctx context.Context,
 }
 
 func (p *Provider) updateDNSRecords(ctx context.Context, client *http.Client,
-	session string, recordSet dnsRecordSet) (response dnsRecordSet, err error) {
+	session string, recordSet dnsRecordSet,
+) (response dnsRecordSet, err error) {
 	type jsonParam struct {
 		APIKey         string       `json:"apikey"`
 		APISessionID   string       `json:"apisessionid"`

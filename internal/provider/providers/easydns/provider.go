@@ -29,7 +29,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Username string `json:"username"`
 		Token    string `json:"token"`
@@ -107,7 +108,8 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (
-	newIP netip.Addr, err error) {
+	newIP netip.Addr, err error,
+) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.cp.easydns.com",

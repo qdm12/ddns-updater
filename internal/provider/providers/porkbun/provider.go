@@ -28,7 +28,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		SecretAPIKey string `json:"secret_api_key"`
 		APIKey       string `json:"api_key"`
@@ -179,7 +180,8 @@ func (p *Provider) deleteDefaultConflictingRecordsIfNeeded(ctx context.Context, 
 // matches the expected content value.
 // It returns an error if multiple records are found or if one record is found with an unexpected value.
 func (p *Provider) deleteSingleMatchingRecord(ctx context.Context, client *http.Client,
-	recordType, owner, expectedContent string) (err error) {
+	recordType, owner, expectedContent string,
+) (err error) {
 	records, err := p.getRecords(ctx, client, recordType, owner)
 	if err != nil {
 		return fmt.Errorf("getting records: %w", err)

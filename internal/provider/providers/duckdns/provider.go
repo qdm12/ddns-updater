@@ -32,7 +32,8 @@ const eTLD = "duckdns.org"
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	// Note domain is of the form:
 	// - for retro-compatibility: "", "duckdns.org"
 	// - domain.duckdns.org since duckdns.org is an eTLD.

@@ -31,7 +31,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		URL          string        `json:"url"`
 		IPv4Key      string        `json:"ipv4key"`
@@ -66,7 +67,8 @@ func New(data json.RawMessage, domain, owner string,
 }
 
 func validateSettings(domain string, url *url.URL,
-	ipv4Key, ipv6Key string, successRegex regexp.Regexp) (err error) {
+	ipv4Key, ipv6Key string, successRegex regexp.Regexp,
+) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)

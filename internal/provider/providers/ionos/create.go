@@ -15,7 +15,8 @@ import (
 )
 
 func (p *Provider) createRecord(ctx context.Context, client *http.Client,
-	zoneID string, ip netip.Addr) (err error) {
+	zoneID string, ip netip.Addr,
+) (err error) {
 	recordType := constants.A
 	if ip.Is6() {
 		recordType = constants.AAAA

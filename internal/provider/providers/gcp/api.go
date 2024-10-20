@@ -25,7 +25,8 @@ type recordResourceSet struct {
 }
 
 func (p *Provider) getRRSet(ctx context.Context, client *http.Client, fqdn, recordType string) (
-	rrSet *recordResourceSet, err error) {
+	rrSet *recordResourceSet, err error,
+) {
 	urlPath := fmt.Sprintf("/dns/v1/projects/%s/managedZones/%s/rrsets/%s/%s",
 		p.project, p.zone, fqdn, recordType)
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, makeAPIURL(urlPath), nil)
@@ -66,7 +67,8 @@ func (p *Provider) getRRSet(ctx context.Context, client *http.Client, fqdn, reco
 }
 
 func (p *Provider) createRRSet(ctx context.Context, client *http.Client, fqdn, recordType string,
-	ip netip.Addr) (err error) {
+	ip netip.Addr,
+) (err error) {
 	urlPath := fmt.Sprintf("/dns/v1/projects/%s/managedZones/%s/rrsets", p.project, p.zone)
 	body := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(body)
@@ -100,7 +102,8 @@ func (p *Provider) createRRSet(ctx context.Context, client *http.Client, fqdn, r
 }
 
 func (p *Provider) patchRRSet(ctx context.Context, client *http.Client, fqdn, recordType string,
-	ip netip.Addr) (err error) {
+	ip netip.Addr,
+) (err error) {
 	urlPath := fmt.Sprintf("/dns/v1/projects/%s/managedZones/%s/rrsets/%s/%s",
 		p.project, p.zone, fqdn, recordType)
 	body := bytes.NewBuffer(nil)

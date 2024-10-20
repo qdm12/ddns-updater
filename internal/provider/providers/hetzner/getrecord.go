@@ -15,7 +15,8 @@ import (
 
 // See https://dns.hetzner.com/api-docs#operation/GetZones.
 func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip netip.Addr) (
-	identifier string, upToDate bool, err error) {
+	identifier string, upToDate bool, err error,
+) {
 	recordType := constants.A
 	if ip.Is6() {
 		recordType = constants.AAAA

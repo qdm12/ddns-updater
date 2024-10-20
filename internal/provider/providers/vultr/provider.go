@@ -120,7 +120,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		recordType = constants.AAAA
 	}
 
-	r, err := p.getRecord(ctx, client, recordType)
+	recordID, existingIP, err := p.getRecord(ctx, client, recordType)
 	if err != nil {
 		if stderrors.Is(err, errors.ErrRecordNotFound) {
 			err := p.createRecord(ctx, client, ip)
@@ -132,8 +132,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("error getting records for %s: %w", p.domain, err)
 	}
 
-	if r.Data != ip.String() {
-		err := p.updateRecord(ctx, client, ip, r)
+	if existingIP != ip {
+		err := p.updateRecord(ctx, client, recordID, ip)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("error updating record %s: %w", p.BuildDomainName(), err)
 		}

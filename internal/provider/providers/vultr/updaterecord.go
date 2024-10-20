@@ -14,11 +14,13 @@ import (
 )
 
 // https://www.vultr.com/api/#tag/dns/operation/update-dns-domain-record
-func (p *Provider) updateRecord(ctx context.Context, client *http.Client, ip netip.Addr, r Record) (err error) {
+func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
+	recordID string, ip netip.Addr,
+) (err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.vultr.com",
-		Path:   fmt.Sprintf("/v2/domains/%s/records/%s", p.domain, r.ID),
+		Path:   fmt.Sprintf("/v2/domains/%s/records/%s", p.domain, recordID),
 	}
 
 	requestData := struct {

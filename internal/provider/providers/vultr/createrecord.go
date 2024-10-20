@@ -76,7 +76,9 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	var parsedJSON struct {
 		Error  string
 		Status uint32
-		Record Record
+		Record struct {
+			Data string `json:"data"`
+		} `json:"record"`
 	}
 	err = decoder.Decode(&parsedJSON)
 	if err != nil {

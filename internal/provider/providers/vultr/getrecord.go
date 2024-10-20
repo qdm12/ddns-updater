@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
-	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
 // https://www.vultr.com/api/#tag/dns/operation/list-dns-domain-records
@@ -37,9 +37,17 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client,
 	if err != nil {
 		return "", netip.Addr{}, err
 	}
-	defer response.Body.Close()
 
-	decoder := json.NewDecoder(response.Body)
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		_ = response.Body.Close()
+		return "", netip.Addr{}, fmt.Errorf("reading response body: %w", err)
+	}
+
+	err = response.Body.Close()
+	if err != nil {
+		return "", netip.Addr{}, fmt.Errorf("closing response body: %w", err)
+	}
 
 	// todo: implement pagination
 	var parsedJSON struct {
@@ -58,7 +66,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client,
 			} `json:"links"`
 		} `json:"meta"`
 	}
-	err = decoder.Decode(&parsedJSON)
+	err = json.Unmarshal(bodyBytes, &parsedJSON)
 	switch {
 	case err != nil:
 		return "", netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
@@ -66,7 +74,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client,
 		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, parsedJSON.Error)
 	case response.StatusCode != http.StatusOK:
 		return "", netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, parseJSONErrorOrFullBody(bodyBytes))
 	}
 
 	for _, record := range parsedJSON.Records {

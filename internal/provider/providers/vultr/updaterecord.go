@@ -5,12 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
-	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
 // https://www.vultr.com/api/#tag/dns/operation/update-dns-domain-record
@@ -50,14 +50,25 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	if err != nil {
 		return err
 	}
-	defer response.Body.Close()
+
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		_ = response.Body.Close()
+		return fmt.Errorf("reading response body: %w", err)
+	}
+
+	err = response.Body.Close()
+	if err != nil {
+		return fmt.Errorf("closing response body: %w", err)
+	}
 
 	if response.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+			errors.ErrHTTPStatusNotValid, response.StatusCode,
+			parseJSONErrorOrFullBody(bodyBytes))
 	}
 
-	errorMessage := parseJSONError(response.Body)
+	errorMessage := parseJSONError(bodyBytes)
 	if errorMessage != "" {
 		return fmt.Errorf("%w: %s", errors.ErrUnsuccessful, errorMessage)
 	}

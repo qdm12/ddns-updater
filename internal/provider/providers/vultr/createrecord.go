@@ -57,22 +57,32 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	if err != nil {
 		return err
 	}
-	defer response.Body.Close()
+
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		_ = response.Body.Close()
+		return fmt.Errorf("reading response body: %w", err)
+	}
+
+	err = response.Body.Close()
+	if err != nil {
+		return fmt.Errorf("closing response body: %w", err)
+	}
 
 	switch response.StatusCode {
 	case http.StatusCreated:
 	case http.StatusBadRequest:
-		return fmt.Errorf("%w: %s", errors.ErrBadRequest, parseJSONErrorOrFullBody(response.Body))
+		return fmt.Errorf("%w: %s", errors.ErrBadRequest, parseJSONErrorOrFullBody(bodyBytes))
 	case http.StatusUnauthorized, http.StatusForbidden:
-		return fmt.Errorf("%w: %s", errors.ErrAuth, parseJSONErrorOrFullBody(response.Body))
+		return fmt.Errorf("%w: %s", errors.ErrAuth, parseJSONErrorOrFullBody(bodyBytes))
 	case http.StatusNotFound:
-		return fmt.Errorf("%w: %s", errors.ErrDomainNotFound, parseJSONErrorOrFullBody(response.Body))
+		return fmt.Errorf("%w: %s", errors.ErrDomainNotFound, parseJSONErrorOrFullBody(bodyBytes))
 	default:
 		return fmt.Errorf("%w: %s: %s", errors.ErrHTTPStatusNotValid,
-			response.Status, utils.BodyToSingleLine(response.Body))
+			response.Status, parseJSONErrorOrFullBody(bodyBytes))
 	}
 
-	errorMessage := parseJSONError(response.Body)
+	errorMessage := parseJSONError(bodyBytes)
 	if errorMessage != "" {
 		return fmt.Errorf("%w: %s", errors.ErrUnsuccessful, errorMessage)
 	}
@@ -82,17 +92,13 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 // parseJSONErrorOrFullBody parses the json error from a response body
 // and returns it if it is not empty. If the json decoding fails OR
 // the error parsed is empty, the entire body is returned on a single line.
-func parseJSONErrorOrFullBody(body io.Reader) (message string) {
-	allData, err := io.ReadAll(body)
-	if err != nil {
-		return "failed reading body: " + err.Error()
-	}
+func parseJSONErrorOrFullBody(body []byte) (message string) {
 	var parsedJSON struct {
 		Error string `json:"error"`
 	}
-	err = json.Unmarshal(allData, &parsedJSON)
+	err := json.Unmarshal(body, &parsedJSON)
 	if err != nil || parsedJSON.Error == "" {
-		return utils.ToSingleLine(string(allData))
+		return utils.ToSingleLine(string(body))
 	}
 	return parsedJSON.Error
 }
@@ -100,17 +106,13 @@ func parseJSONErrorOrFullBody(body io.Reader) (message string) {
 // parseJSONError parses the json error from a response body
 // and returns it directly. If the json decoding fails, the
 // entire body is returned on a single line.
-func parseJSONError(body io.Reader) (message string) {
-	allData, err := io.ReadAll(body)
-	if err != nil {
-		return "failed reading body: " + err.Error()
-	}
+func parseJSONError(body []byte) (message string) {
 	var parsedJSON struct {
 		Error string `json:"error"`
 	}
-	err = json.Unmarshal(allData, &parsedJSON)
+	err := json.Unmarshal(body, &parsedJSON)
 	if err != nil {
-		return utils.ToSingleLine(string(allData))
+		return utils.ToSingleLine(string(body))
 	}
 	return parsedJSON.Error
 }

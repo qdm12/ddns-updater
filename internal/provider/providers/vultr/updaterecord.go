@@ -13,6 +13,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
+// https://www.vultr.com/api/#tag/dns/operation/update-dns-domain-record
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client, ip netip.Addr, r Record) (newIp netip.Addr, err error) {
 	u := url.URL{
 		Scheme: "https",

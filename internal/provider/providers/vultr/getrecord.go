@@ -12,6 +12,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
+// https://www.vultr.com/api/#tag/dns/operation/list-dns-domain-records
 func (p *Provider) getRecord(ctx context.Context, client *http.Client) (r Record, err error) {
 	u := url.URL{
 		Scheme: "https",

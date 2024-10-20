@@ -15,6 +15,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
+// https://www.vultr.com/api/#tag/dns/operation/create-dns-domain-record
 func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip netip.Addr) (err error) {
 	recordType := constants.A
 	if ip.Is6() {

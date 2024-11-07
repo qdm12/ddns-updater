@@ -125,17 +125,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
-	const defaultTTL uint32 = 3600
-	ttl := defaultTTL
-	if p.ttl != 0 {
-		ttl = p.ttl
-	}
 	requestData := struct {
 		Values [1]string `json:"rrset_values"`
-		TTL    uint32    `json:"rrset_ttl"`
+		TTL    uint32    `json:"rrset_ttl,omitempty"`
 	}{
 		Values: [1]string{ip.Unmap().String()},
-		TTL:    ttl,
+		TTL:    p.ttl,
 	}
 	err = encoder.Encode(requestData)
 	if err != nil {

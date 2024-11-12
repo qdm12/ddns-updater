@@ -57,7 +57,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 		if err != nil || data.Code != "InvalidDomainName.NoExist" {
 			return "", fmt.Errorf("%w: %d: %s",
 				errors.ErrHTTPStatusNotValid, response.StatusCode,
-				utils.BodyToSingleLine(response.Body))
+				utils.ToSingleLine(string(bodyBytes)))
 		}
 
 		return "", fmt.Errorf("%w", errors.ErrRecordNotFound)

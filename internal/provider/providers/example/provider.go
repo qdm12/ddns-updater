@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -154,11 +153,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	// TODO handle the encoding of the response body properly. Often it can be JSON,
 	// see other provider code for examples on how to decode JSON.
-	b, err := io.ReadAll(response.Body)
+	s, err := utils.ReadAndCleanBody(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
+		return netip.Addr{}, fmt.Errorf("reading response: %w", err)
 	}
-	s := string(b)
 
 	// TODO handle every possible status codes from the provider API.
 	// If undocumented, try them out by sending bogus HTTP requests to see

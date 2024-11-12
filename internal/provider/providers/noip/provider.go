@@ -146,10 +146,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	s := string(b)
 
-	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)
-	}
-
 	switch s {
 	case "":
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoResult)
@@ -167,7 +163,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	}
 
-	if !strings.Contains(s, "nochg") && !strings.Contains(s, "good") {
+	if response.StatusCode != http.StatusOK {
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)
+	} else if !strings.Contains(s, "nochg") && !strings.Contains(s, "good") {
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
 	}
 

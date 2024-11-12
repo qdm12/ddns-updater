@@ -121,7 +121,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		RawQuery: url.Values{
 			"user":   {p.username},
 			"apikey": {p.key},
-			"host":   {p.BuildDomainName()},
+			"host":   {utils.BuildURLQueryHostname(p.owner, p.domain)},
 			"ip":     {ip.String()},
 			"lang":   {"en"},
 		}.Encode(),

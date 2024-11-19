@@ -9,7 +9,7 @@
   "settings": [
     {
       "provider": "goip",
-      "domain": "mydomain.goip.de",
+      "domain": "sub.mydomain.goip.de",
       "username": "username",
       "password": "password",
       "ip_version": "",
@@ -23,6 +23,10 @@
 ### Compulsory parameters
 
 - `"domain"` is the domain to update. For example, for the owner/host `sub`, it would be `sub.goip.de`. The [eTLD](https://developer.mozilla.org/en-US/docs/Glossary/eTLD) must be `goip.de` or `goip.it`.
+- `"domain"` is the domain to update. The [eTLD](https://developer.mozilla.org/en-US/docs/Glossary/eTLD) must be `goip.de` or `goip.it`. For example:
+  - for the root owner/host `@`, it would be `mydomain.goip.de`
+  - for the owner/host `sub`, it would be `sub.mydomain.goip.de`
+  - for multiple domains, it can be `sub1.mydomain.goip.de,sub2.mydomain.goip.de` BUT it cannot be `a.goip.de,b.goip.de`, since the effective domains would be `a.goip.de` and `b.goip.de`
 - `"username"` is your goip.de username listed under "Routers"
 - `"password"` is your router account password
 

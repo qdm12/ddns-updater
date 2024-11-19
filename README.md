@@ -263,6 +263,7 @@ Check the documentation for your DNS provider:
 Note that:
 
 - you can specify multiple owners/hosts for the same domain using a comma separated list. For example with `"domain": "example.com,sub.example.com,sub2.example.com",`.
+⚠️ this is a bit different for DuckDNS and GoIP, see their respective documentation.
 
 ### Environment variables
 

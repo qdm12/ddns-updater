@@ -20,7 +20,7 @@
 
 ### Compulsory parameters
 
-- `"domain"` is the domain to update. For example, for the owner/host `sub`, it would be `sub.duckdns.org`. The [eTLD+1](https://developer.mozilla.org/en-US/docs/Glossary/eTLD) must be `duckdns.org`.
+- `"domain"` is the domain to update. For example, for the owner/host `sub`, it would be `sub.duckdns.org`. The [eTLD](https://developer.mozilla.org/en-US/docs/Glossary/eTLD) must be `duckdns.org`.
 - `"token"`
 
 ### Optional parameters

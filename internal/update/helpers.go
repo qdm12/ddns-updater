@@ -32,14 +32,22 @@ func (s *Service) logInfoNoLookupUpdate(hostname, ipKind string, lastIP, ip neti
 		ipKind, hostname, lastIP, ipKind, ip))
 }
 
-func (s *Service) logDebugLookupSkip(hostname, ipKind string, recordIP, ip netip.Addr) {
+func (s *Service) logDebugLookupSkip(hostname, ipKind string, recordIPs []netip.Addr, ip netip.Addr) {
 	s.logger.Debug(fmt.Sprintf("%s address of %s is %s and your %s address"+
-		" is %s, skipping update", ipKind, hostname, recordIP, ipKind, ip))
+		" is %s, skipping update", ipKind, hostname, ipsToString(recordIPs), ipKind, ip))
 }
 
-func (s *Service) logInfoLookupUpdate(hostname, ipKind string, recordIP, ip netip.Addr) {
-	s.logger.Info(fmt.Sprintf("%s address of %s is %s and your %s address  is %s",
-		ipKind, hostname, recordIP, ipKind, ip))
+func (s *Service) logInfoLookupUpdate(hostname, ipKind string, recordIPs []netip.Addr, ip netip.Addr) {
+	s.logger.Info(fmt.Sprintf("%s address of %s is %s and your %s address is %s",
+		ipKind, hostname, ipsToString(recordIPs), ipKind, ip))
+}
+
+func ipsToString(ips []netip.Addr) string {
+	ipStrings := make([]string, len(ips))
+	for i, ip := range ips {
+		ipStrings[i] = ip.String()
+	}
+	return strings.Join(ipStrings, ", ")
 }
 
 type joinedErrors struct { //nolint:errname

@@ -66,20 +66,20 @@ func (s *Service) lookupIPsResilient(ctx context.Context, hostname string, tries
 func (s *Service) lookupIPs(ctx context.Context, hostname string) (
 	ipv4, ipv6 []netip.Addr, err error,
 ) {
-	netIPs, err := s.resolver.LookupIP(ctx, "ip", hostname)
+	ips, err := s.resolver.LookupNetIP(ctx, "ip", hostname)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	ipv4 = make([]netip.Addr, 0, len(netIPs))
-	ipv6 = make([]netip.Addr, 0, len(netIPs))
-	for _, netIP := range netIPs {
+	ipv4 = make([]netip.Addr, 0, len(ips))
+	ipv6 = make([]netip.Addr, 0, len(ips))
+	for _, ip := range ips {
 		switch {
-		case netIP == nil:
-		case netIP.To4() != nil:
-			ipv4 = append(ipv4, netip.AddrFrom4([4]byte(netIP.To4())))
+		case !ip.IsValid():
+		case ip.Is4():
+			ipv4 = append(ipv4, ip)
 		default: // IPv6
-			ipv6 = append(ipv6, netip.AddrFrom16([16]byte(netIP.To16())))
+			ipv6 = append(ipv6, ip)
 		}
 	}
 

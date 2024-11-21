@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/netip"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
@@ -51,39 +52,53 @@ func NewService(db Database, updater UpdaterInterface, ipGetter PublicIPFetcher,
 	}
 }
 
-func (s *Service) lookupIPsResilient(ctx context.Context, hostname string, tries int) (
+func (s *Service) lookupIPsResilient(ctx context.Context, hostname string, tries uint) (
 	ipv4, ipv6 []netip.Addr, err error,
 ) {
-	for range tries {
-		ipv4, ipv6, err = s.lookupIPs(ctx, hostname)
-		if err == nil {
-			return ipv4, ipv6, nil
+	type result struct {
+		network string
+		ips     []netip.Addr
+		err     error
+	}
+	results := make(chan result)
+	networks := []string{"ip4", "ip6"}
+	lookupCtx, cancel := context.WithCancel(ctx)
+	for _, network := range networks {
+		go func(ctx context.Context, network string, results chan<- result) {
+			for range tries {
+				ips, err := s.resolver.LookupNetIP(ctx, network, hostname)
+				if err != nil {
+					if strings.HasSuffix(err.Error(), "no such host") {
+						results <- result{network: network} // no IP address for this network
+						return
+					}
+					continue // retry
+				}
+				results <- result{network: network, ips: ips, err: err}
+				return
+			}
+		}(lookupCtx, network, results)
+	}
+
+	for range networks {
+		result := <-results
+		if result.err != nil {
+			if err == nil {
+				cancel()
+				err = fmt.Errorf("looking up %s addresses: %w", result.network, result.err)
+			}
+			continue
+		}
+		switch result.network {
+		case "ip4":
+			ipv4 = result.ips
+		case "ip6":
+			ipv6 = result.ips
 		}
 	}
-	return nil, nil, err
-}
+	cancel()
 
-func (s *Service) lookupIPs(ctx context.Context, hostname string) (
-	ipv4, ipv6 []netip.Addr, err error,
-) {
-	ips, err := s.resolver.LookupNetIP(ctx, "ip", hostname)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	ipv4 = make([]netip.Addr, 0, len(ips))
-	ipv6 = make([]netip.Addr, 0, len(ips))
-	for _, ip := range ips {
-		switch {
-		case !ip.IsValid():
-		case ip.Is4():
-			ipv4 = append(ipv4, ip)
-		default: // IPv6
-			ipv6 = append(ipv6, ip)
-		}
-	}
-
-	return ipv4, ipv6, nil
+	return ipv4, ipv6, err
 }
 
 func doIPVersion(records []librecords.Record) (doIP, doIPv4, doIPv6 bool) {

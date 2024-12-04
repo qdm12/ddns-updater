@@ -9,8 +9,9 @@ import (
 
 type settings struct {
 	// If both dns and http are enabled it will cycle between both of them.
-	dns  DNSSettings
-	http HTTPSettings
+	dns       DNSSettings
+	http      HTTPSettings
+	privateIP PrivateIPSettings
 }
 
 type DNSSettings struct {
@@ -22,4 +23,8 @@ type HTTPSettings struct {
 	Enabled bool
 	Client  *http.Client
 	Options []iphttp.Option
+}
+
+type PrivateIPSettings struct {
+	Enabled bool
 }

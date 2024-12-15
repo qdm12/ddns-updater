@@ -85,7 +85,7 @@ func validateSettings(domain, key string, ttl *uint32) (err error) {
 	case ttl != nil && *ttl < minTTL:
 		return fmt.Errorf("%w: %d must be at least %d", errors.ErrTTLTooLow, *ttl, minTTL)
 	case ttl != nil && *ttl > maxTTL:
-		return fmt.Errorf("%w: %d must be at least %d", errors.ErrTTLTooHigh, *ttl, maxTTL)
+		return fmt.Errorf("%w: %d must be at most %d", errors.ErrTTLTooHigh, *ttl, maxTTL)
 	}
 	return nil
 }
@@ -151,7 +151,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, newIP netip.
 		}
 	}
 
-	// return the new IP (whether updated or unchanged)
 	return newIP, nil
 }
 
@@ -180,7 +179,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, recordTyp
 		return &record.ID, ip, nil
 	}
 
-	return nil, netip.Addr{}, fmt.Errorf("%w: no matching records found", errors.ErrRecordNotFound)
+	return nil, netip.Addr{}, fmt.Errorf("%w", errors.ErrRecordNotFound)
 }
 
 // https://www.namesilo.com/api-reference#dns/dns-add-record
@@ -268,7 +267,7 @@ func (p *Provider) sendAPIRequest(ctx context.Context, client *http.Client, url 
 
 	err = p.validateResponseCode(parsedResponse.Reply.Code, parsedResponse.Reply.Detail)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validating reply code: %w", err)
 	}
 	return &parsedResponse, nil
 }
@@ -300,6 +299,5 @@ func (p *Provider) validateResponseCode(code json.Number, detail string) error {
 		return fmt.Errorf("%w: %d: %s", err, parsedCode, detail)
 	}
 
-	// Unknown response code
 	return fmt.Errorf("%w: %d: %s", errors.ErrUnknownResponse, parsedCode, detail)
 }

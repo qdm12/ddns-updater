@@ -23,7 +23,7 @@
 ### Compulsory parameters
 
 - `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
-- `"key"` is the NameSilo API Key obtained using domain setup instructions below. Example: `71dZaE8c2Aa926Ca2E8c1`.
+- `"key"` is the NameSilo API Key obtained using the domain setup instructions below. For example: `71dZaE8c2Aa926Ca2E8c1`.
 
 ### Optional parameters
 
@@ -34,7 +34,6 @@
 ## Domain setup
 
 1. Login to the [Namesilo API Manager](https://www.namesilo.com/account/api-manager) with your account credentials.
-
 1. Generate an API key. The generated API key will look similar to `71dZaE8c2Aa926Ca2E8c1`.
     - (do _not_ check the "Generate key for read-only access" box)
 
@@ -44,7 +43,6 @@
 ## Testing
 
 1. Go to the [NameSilo Domain Manager](https://www.namesilo.com/account_domains.php).
-
 1. Choose "Manage DNS for this domain" (the globe icon) for the domain you wish to test.
     [![Manage DNS for this domain](../readme/namesilo3.png)](https://www.namesilo.com/account_domains.php)
 

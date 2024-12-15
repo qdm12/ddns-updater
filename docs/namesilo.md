@@ -1,6 +1,6 @@
 # NameSilo
 
-[![NameSilo Website](../readme/namesilo.png)](https://www.namesilo.com)
+[![NameSilo Website](../readme/namesilo.jpg)](https://www.namesilo.com)
 
 ## Configuration
 
@@ -37,14 +37,14 @@
 1. Generate an API key. The generated API key will look similar to `71dZaE8c2Aa926Ca2E8c1`.
     - (do _not_ check the "Generate key for read-only access" box)
 
-    [![Before NameSilo API Key](../readme/namesilo1.png)](https://www.namesilo.com/account/api-manager)
-    [![After NameSilo API Key](../readme/namesilo2.png)](https://www.namesilo.com/account/api-manager)
+    [![Before NameSilo API Key](../readme/namesilo1.jpg)](https://www.namesilo.com/account/api-manager)
+    [![After NameSilo API Key](../readme/namesilo2.jpg)](https://www.namesilo.com/account/api-manager)
 
 ## Testing
 
 1. Go to the [NameSilo Domain Manager](https://www.namesilo.com/account_domains.php).
 1. Choose "Manage DNS for this domain" (the globe icon) for the domain you wish to test.
-    [![Manage DNS for this domain](../readme/namesilo3.png)](https://www.namesilo.com/account_domains.php)
+    [![Manage DNS for this domain](../readme/namesilo3.jpg)](https://www.namesilo.com/account_domains.php)
 
 1. Change the IP address of the host to `127.0.0.1`.
 1. Run the ddns-updater.

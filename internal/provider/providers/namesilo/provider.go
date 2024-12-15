@@ -28,7 +28,7 @@ type Provider struct {
 	ttl        *uint32
 }
 
-type APIResponse struct {
+type apiResponse struct {
 	Reply struct {
 		Code    json.Number `json:"code"`
 		Detail  string      `json:"detail"`
@@ -139,15 +139,22 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, newIP netip.
 
 	// retrieve the current DNS record for the given IP type
 	recordID, currentIP, err := p.getRecord(ctx, client, recordType)
-	if err != nil && !stderrors.Is(err, errors.ErrRecordNotFound) {
+
+	if stderrors.Is(err, errors.ErrRecordNotFound) {
+		// create a new record
+		if err := p.createRecord(ctx, client, recordType, newIP); err != nil {
+			return netip.Addr{}, fmt.Errorf("error adding record for %s: %w", p.BuildDomainName(), err)
+		}
+		return newIP, nil
+	} else if err != nil {
 		return netip.Addr{}, fmt.Errorf("error retrieving records for %s: %w", p.domain, err)
 	}
 
 	// if the current IP is different from the new IP, update the record
 	if currentIP != newIP {
-		// pass the recordID for updating, or nil for creating a new record
-		if err := p.createOrUpdateRecord(ctx, client, recordID, recordType, newIP); err != nil {
-			return netip.Addr{}, fmt.Errorf("error setting record for %s: %w", p.BuildDomainName(), err)
+		// update the record by recordID
+		if err := p.updateRecord(ctx, client, recordID, newIP); err != nil {
+			return netip.Addr{}, fmt.Errorf("error updating record for %s: %w", p.BuildDomainName(), err)
 		}
 	}
 
@@ -183,14 +190,45 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, recordTyp
 }
 
 // https://www.namesilo.com/api-reference#dns/dns-add-record
-// https://www.namesilo.com/api-reference#dns/dns-update-record
-func (p *Provider) createOrUpdateRecord(
+func (p *Provider) createRecord(
 	ctx context.Context,
 	client *http.Client,
-	recordID *string,
 	recordType string,
 	ip netip.Addr,
 ) error {
+	// create new record
+	path := "/api/dnsAddRecord"
+	queryParams := p.buildRecordParams(ip)
+	queryParams.Set("rrtype", recordType)
+
+	url := p.createRequestURL(path, queryParams)
+
+	// if the operation was successful, err will be nil
+	_, err := p.sendAPIRequest(ctx, client, url)
+	return err
+}
+
+// https://www.namesilo.com/api-reference#dns/dns-update-record
+func (p *Provider) updateRecord(
+	ctx context.Context,
+	client *http.Client,
+	recordID *string,
+	ip netip.Addr,
+) error {
+	// update record by id
+	path := "/api/dnsUpdateRecord"
+	queryParams := p.buildRecordParams(ip)
+	queryParams.Set("rrid", *recordID)
+
+	url := p.createRequestURL(path, queryParams)
+
+	// if the operation was successful, err will be nil
+	_, err := p.sendAPIRequest(ctx, client, url)
+	return err
+}
+
+// Create and populate common query params for requests that modify a single record (ie. add or update).
+func (p *Provider) buildRecordParams(ip netip.Addr) url.Values {
 	name := p.owner
 	if name == "@" {
 		name = ""
@@ -204,22 +242,7 @@ func (p *Provider) createOrUpdateRecord(
 		queryParams.Set("rrttl", strconv.FormatUint(uint64(*p.ttl), 10))
 	}
 
-	var path string
-	if recordID == nil {
-		// create new record
-		path = "/api/dnsAddRecord"
-		queryParams.Set("rrtype", recordType)
-	} else {
-		// update record by id
-		path = "/api/dnsUpdateRecord"
-		queryParams.Set("rrid", *recordID)
-	}
-
-	url := p.createRequestURL(path, queryParams)
-
-	// if the operation was successful, err will be nil
-	_, err := p.sendAPIRequest(ctx, client, url)
-	return err
+	return queryParams
 }
 
 func (p *Provider) createRequestURL(path string, queryParams url.Values) string {
@@ -236,7 +259,7 @@ func (p *Provider) createRequestURL(path string, queryParams url.Values) string 
 	return baseURL.String()
 }
 
-func (p *Provider) sendAPIRequest(ctx context.Context, client *http.Client, url string) (*APIResponse, error) {
+func (p *Provider) sendAPIRequest(ctx context.Context, client *http.Client, url string) (*apiResponse, error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating http request: %w", err)
@@ -259,7 +282,7 @@ func (p *Provider) sendAPIRequest(ctx context.Context, client *http.Client, url 
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(string(data)))
 	}
 
-	var parsedResponse APIResponse
+	var parsedResponse apiResponse
 	err = json.Unmarshal(data, &parsedResponse)
 	if err != nil {
 		return nil, fmt.Errorf("json decoding response body: %w", err)

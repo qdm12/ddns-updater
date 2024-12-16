@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	github.com/breml/rootcerts v0.2.18
 	github.com/containrrr/shoutrrr v0.8.0
-	github.com/go-chi/chi/v5 v5.1.0
+	github.com/go-chi/chi/v5 v5.2.0
 	github.com/golang/mock v1.6.0
 	github.com/miekg/dns v1.1.62
 	github.com/qdm12/goservices v0.1.0

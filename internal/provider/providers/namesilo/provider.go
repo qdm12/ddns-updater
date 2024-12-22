@@ -209,8 +209,7 @@ func (p *Provider) updateRecord(
 	recordID *string,
 	ip netip.Addr,
 ) error {
-	// update record by id
-	path := "/api/dnsUpdateRecord"
+	const path = "/api/dnsUpdateRecord"
 	queryParams := p.buildRecordParams(ip)
 	queryParams.Set("rrid", *recordID)
 

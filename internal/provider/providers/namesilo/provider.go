@@ -215,7 +215,6 @@ func (p *Provider) updateRecord(
 
 	url := p.createRequestURL(path, queryParams)
 
-	// if the operation was successful, err will be nil
 	_, err := p.sendAPIRequest(ctx, client, url)
 	return err
 }

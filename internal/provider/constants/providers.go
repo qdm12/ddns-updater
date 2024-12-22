@@ -37,6 +37,7 @@ const (
 	Linode       models.Provider = "linode"
 	Loopia       models.Provider = "loopia"
 	LuaDNS       models.Provider = "luadns"
+	Myaddr       models.Provider = "myaddr"
 	Namecheap    models.Provider = "namecheap"
 	NameCom      models.Provider = "name.com"
 	Netcup       models.Provider = "netcup"
@@ -90,6 +91,7 @@ func ProviderChoices() []models.Provider {
 		Linode,
 		Loopia,
 		LuaDNS,
+		Myaddr,
 		Namecheap,
 		NameCom,
 		Njalla,

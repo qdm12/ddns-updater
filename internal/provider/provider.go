@@ -43,6 +43,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/linode"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/loopia"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/luadns"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/myaddr"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/namecheap"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/namecom"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/netcup"
@@ -73,6 +74,10 @@ type Provider interface {
 	IPVersion() ipversion.IPVersion
 	IPv6Suffix() netip.Prefix
 	Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error)
+}
+
+type Initializer interface {
+	Init(ctx context.Context, client *http.Client) error
 }
 
 var ErrProviderUnknown = errors.New("unknown provider")
@@ -148,6 +153,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return loopia.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.LuaDNS:
 		return luadns.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Myaddr:
+		return myaddr.New(data, ipVersion, ipv6Suffix)
 	case constants.Namecheap:
 		return namecheap.New(data, domain, owner)
 	case constants.NameCom:
@@ -185,4 +192,11 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrProviderUnknown, providerName)
 	}
+}
+
+func Init(provider Provider, ctx context.Context, client *http.Client) error {
+	if initializer, ok := provider.(Initializer); ok {
+		return initializer.Init(ctx, client)
+	}
+	return nil
 }

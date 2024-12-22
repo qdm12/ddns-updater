@@ -137,7 +137,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, newIP netip.
 		recordType = constants.AAAA
 	}
 
-	// retrieve the current DNS record for the given IP type
 	recordID, currentIP, err := p.getRecord(ctx, client, recordType)
 
 	if stderrors.Is(err, errors.ErrRecordNotFound) {

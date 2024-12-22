@@ -192,7 +192,7 @@ func (p *Provider) createRecord(
 	recordType string,
 	ip netip.Addr,
 ) error {
-	path := "/api/dnsAddRecord"
+	const path = "/api/dnsAddRecord"
 	queryParams := p.buildRecordParams(ip)
 	queryParams.Set("rrtype", recordType)
 

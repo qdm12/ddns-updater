@@ -141,7 +141,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, newIP netip.
 
 	if stderrors.Is(err, errors.ErrRecordNotFound) {
 		if err := p.createRecord(ctx, client, recordType, newIP); err != nil {
-			return netip.Addr{}, fmt.Errorf("error adding record for %s: %w", p.BuildDomainName(), err)
+			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 		}
 		return newIP, nil
 	} else if err != nil {

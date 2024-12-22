@@ -148,9 +148,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, newIP netip.
 		return netip.Addr{}, fmt.Errorf("retrieving records: %w", err)
 	}
 
-	// if the current IP is different from the new IP, update the record
 	if currentIP != newIP {
-		// update the record by recordID
 		if err := p.updateRecord(ctx, client, recordID, newIP); err != nil {
 			return netip.Addr{}, fmt.Errorf("error updating record for %s: %w", p.BuildDomainName(), err)
 		}

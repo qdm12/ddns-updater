@@ -23,6 +23,7 @@ const (
 	Wtfismyip Provider = "wtfismyip"
 	Seeip     Provider = "seeip"
 	Changeip  Provider = "changeip"
+	Addrtools Provider = "addrtools"
 )
 
 func ListProviders() []Provider {
@@ -38,6 +39,7 @@ func ListProviders() []Provider {
 		Wtfismyip,
 		Seeip,
 		Changeip,
+		Addrtools,
 	}
 }
 
@@ -92,6 +94,8 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 			url = "https://ipv4.wtfismyip.com/text"
 		case Seeip:
 			url = "https://ipv4.seeip.org"
+		case Addrtools:
+			url = "https://myipv4.addr.tools"
 		}
 
 	case ipversion.IP6:
@@ -110,6 +114,8 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 			url = "https://ipv6.wtfismyip.com/text"
 		case Seeip:
 			url = "https://ipv6.seeip.org"
+		case Addrtools:
+			url = "https://myipv6.addr.tools"
 		}
 
 	case ipversion.IP4or6:
@@ -136,6 +142,8 @@ func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) 
 			url = "https://api.seeip.org"
 		case Changeip:
 			url = "https://ip.changeip.com"
+		case Addrtools:
+			url = "https://myip.addr.tools"
 		}
 	}
 

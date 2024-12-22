@@ -199,7 +199,6 @@ func (p *Provider) createRecord(
 
 	url := p.createRequestURL(path, queryParams)
 
-	// if the operation was successful, err will be nil
 	_, err := p.sendAPIRequest(ctx, client, url)
 	return err
 }

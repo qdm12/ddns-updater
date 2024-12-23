@@ -9,6 +9,7 @@
   "settings": [
     {
       "provider": "myaddr",
+      "domain": "your-name.myaddr.tools",
       "key": "key",
       "ip_version": "ipv4",
       "ipv6_suffix": ""
@@ -19,6 +20,7 @@
 
 ### Compulsory parameters
 
+- `"domain"` - the domain resolved to check if an update is required (should most likely be "*your-name*.myaddr.tools")
 - `"key"` - the private key corresponding to the domain to update
 
 ### Optional parameters

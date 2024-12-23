@@ -76,10 +76,6 @@ type Provider interface {
 	Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error)
 }
 
-type Initializer interface {
-	Init(ctx context.Context, client *http.Client) error
-}
-
 var ErrProviderUnknown = errors.New("unknown provider")
 
 //nolint:gocyclo
@@ -154,7 +150,7 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 	case constants.LuaDNS:
 		return luadns.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Myaddr:
-		return myaddr.New(data, ipVersion, ipv6Suffix)
+		return myaddr.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Namecheap:
 		return namecheap.New(data, domain, owner)
 	case constants.NameCom:
@@ -192,11 +188,4 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrProviderUnknown, providerName)
 	}
-}
-
-func Init(provider Provider, ctx context.Context, client *http.Client) error {
-	if initializer, ok := provider.(Initializer); ok {
-		return initializer.Init(ctx, client)
-	}
-	return nil
 }

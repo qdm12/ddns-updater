@@ -171,13 +171,11 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 		warnings = append(warnings,
 			fmt.Sprintf("you can specify the owner %q directly in the domain field as %q",
 				common.Owner, strings.Join(domains, ",")))
-	} else if common.Domain != "" { // extract owner(s) from domain(s)
+	} else { // extract owner(s) from domain(s)
 		domain, owners, err = extractFromDomainField(common.Domain)
 		if err != nil {
 			return nil, nil, fmt.Errorf("extracting owners from domains: %w", err)
 		}
-	} else { // domain(s) not specified
-		owners = make([]string, 1) // required to enter provider initialization loop below
 	}
 
 	if common.IPVersion == "" {

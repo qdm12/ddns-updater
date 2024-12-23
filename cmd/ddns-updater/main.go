@@ -167,14 +167,6 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	client := &http.Client{Timeout: config.Client.Timeout}
 	defer client.CloseIdleConnections()
 
-	for _, p := range providers {
-		err = provider.Init(p, ctx, client)
-		if err != nil {
-			shoutrrrClient.Notify(err.Error())
-			return err
-		}
-	}
-
 	err = health.CheckHTTP(ctx, client)
 	if err != nil {
 		logger.Warn(err.Error())

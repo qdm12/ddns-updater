@@ -109,16 +109,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	defer response.Body.Close()
 	switch response.StatusCode {
 	case http.StatusOK:
-		// update was successful
 		return ip, nil
 	case http.StatusBadRequest:
-		// bad request
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrBadRequest, utils.BodyToSingleLine(response.Body))
 	case http.StatusNotFound:
-		// registration not found
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrKeyNotValid, utils.BodyToSingleLine(response.Body))
 	default:
-		// unexpected HTTP status
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}

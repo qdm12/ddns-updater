@@ -19,8 +19,6 @@ var (
 	ErrGCPProjectNotSet       = errors.New("GCP project is not set")
 	ErrDomainNotValid         = errors.New("domain is not valid")
 	ErrOwnerWildcard          = errors.New(`owner cannot be "*"`)
-	ErrIPv4KeyNotSet          = errors.New("IPv4 key is not set")
-	ErrIPv6KeyNotSet          = errors.New("IPv6 key is not set")
 	ErrKeyNotSet              = errors.New("key is not set")
 	ErrKeyNotValid            = errors.New("key is not valid")
 	ErrPasswordNotSet         = errors.New("password is not set")

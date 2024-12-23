@@ -49,7 +49,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("parsing URL: %w", err)
 	}
 
-	err = validateSettings(domain, parsedURL, extraSettings.IPv4Key, extraSettings.IPv6Key, extraSettings.SuccessRegex)
+	err = validateSettings(domain, parsedURL, extraSettings.SuccessRegex)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -67,7 +67,7 @@ func New(data json.RawMessage, domain, owner string,
 }
 
 func validateSettings(domain string, url *url.URL,
-	ipv4Key, ipv6Key string, successRegex regexp.Regexp,
+	successRegex regexp.Regexp,
 ) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
@@ -79,10 +79,6 @@ func validateSettings(domain string, url *url.URL,
 		return fmt.Errorf("%w", errors.ErrURLNotSet)
 	case url.Scheme != "https":
 		return fmt.Errorf("%w: %s", errors.ErrURLNotHTTPS, url.Scheme)
-	case ipv4Key == "":
-		return fmt.Errorf("%w", errors.ErrIPv4KeyNotSet)
-	case ipv6Key == "":
-		return fmt.Errorf("%w", errors.ErrIPv6KeyNotSet)
 	case successRegex.String() == "":
 		return fmt.Errorf("%w", errors.ErrSuccessRegexNotSet)
 	default:
@@ -138,7 +134,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	if ip.Is6() {
 		ipKey = p.ipv6Key
 	}
-	values.Set(ipKey, ip.String())
+	if ipKey != "" {
+		values.Set(ipKey, ip.String())
+	}
 	p.url.RawQuery = values.Encode()
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, p.url.String(), nil)

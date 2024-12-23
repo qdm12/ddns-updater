@@ -21,23 +21,16 @@ func Test_ListProvidersForVersion(t *testing.T) {
 			version: ipversion.IP4or6,
 			providers: []Provider{
 				Ifconfig, Ipify, Ipinfo, Spdyn, Ipleak,
-				Icanhazip, Ident, Nnev, Wtfismyip, Seeip,
-				Changeip, Addrtools,
+				Icanhazip, Ident, Nnev, Wtfismyip, Seeip, Changeip,
 			},
 		},
 		"ip4": {
 			version:   ipversion.IP4,
-			providers: []Provider{
-				Ipify, Ipleak, Icanhazip, Ident, Nnev,
-				Wtfismyip, Seeip, Addrtools,
-			},
+			providers: []Provider{Ipify, Ipleak, Icanhazip, Ident, Nnev, Wtfismyip, Seeip},
 		},
 		"ip6": {
 			version:   ipversion.IP6,
-			providers: []Provider{
-				Ipify, Ipleak, Icanhazip, Ident, Nnev,
-				Wtfismyip, Seeip, Addrtools,
-			},
+			providers: []Provider{Ipify, Ipleak, Icanhazip, Ident, Nnev, Wtfismyip, Seeip},
 		},
 	}
 

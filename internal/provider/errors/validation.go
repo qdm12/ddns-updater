@@ -30,6 +30,7 @@ var (
 	ErrTokenNotValid          = errors.New("token is not valid")
 	ErrTTLNotSet              = errors.New("TTL is not set")
 	ErrTTLTooLow              = errors.New("TTL is too low")
+	ErrTTLTooHigh             = errors.New("TTL is too high")
 	ErrURLNotHTTPS            = errors.New("url is not https")
 	ErrURLNotSet              = errors.New("url is not set")
 	ErrUsernameNotSet         = errors.New("username is not set")

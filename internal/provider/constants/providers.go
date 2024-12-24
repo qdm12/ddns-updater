@@ -40,6 +40,7 @@ const (
 	Myaddr       models.Provider = "myaddr"
 	Namecheap    models.Provider = "namecheap"
 	NameCom      models.Provider = "name.com"
+	NameSilo     models.Provider = "namesilo"
 	Netcup       models.Provider = "netcup"
 	Njalla       models.Provider = "njalla"
 	NoIP         models.Provider = "noip"
@@ -94,6 +95,7 @@ func ProviderChoices() []models.Provider {
 		Myaddr,
 		Namecheap,
 		NameCom,
+		NameSilo,
 		Njalla,
 		NoIP,
 		NowDNS,

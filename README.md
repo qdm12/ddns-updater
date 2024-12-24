@@ -81,6 +81,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - Myaddr
   - Name.com
   - Namecheap
+  - NameSilo
   - Netcup
   - NoIP
   - Now-DNS
@@ -247,6 +248,7 @@ Check the documentation for your DNS provider:
 - [Myaddr](docs/myaddr.md)
 - [Name.com](docs/name.com.md)
 - [Namecheap](docs/namecheap.md)
+- [NameSilo](docs/namesilo.md)
 - [Netcup](docs/netcup.md)
 - [NoIP](docs/noip.md)
 - [Now-DNS](docs/nowdns.md)

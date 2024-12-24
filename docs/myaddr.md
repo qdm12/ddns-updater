@@ -20,7 +20,7 @@
 
 ### Compulsory parameters
 
-- `"domain"` - the **single** domain to update; note the `key` below updates all records and subdomains for this domain. It should be `your-name*.myaddr.tools`.
+- `"domain"` - the **single** domain to update; note the `key` below updates all records and subdomains for this domain. It should be `your-name.myaddr.tools`.
 - `"key"` - the private key corresponding to the domain to update
 
 ### Optional parameters

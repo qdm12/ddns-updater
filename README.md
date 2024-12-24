@@ -325,6 +325,7 @@ You can otherwise customize it with the following:
   - `wtfismyip` using [https://wtfismyip.com/text](https://wtfismyip.com/text)
   - `seeip` using [https://api.seeip.org](https://api.seeip.org)
   - `changeip` using [https://ip.changeip.com](https://ip.changeip.com)
+  - `addrtools` using [https://myip.addr.tools](https://myip.addr.tools)
   - You can also specify an HTTPS URL with prefix `url:` for example `url:https://ipinfo.io/ip`
 - `PUBLICIPV4_HTTP_PROVIDERS` gets your public IPv4 address only. It can be one or more of the following:
   - `ipleak` using [https://ipv4.ipleak.net/json](https://ipv4.ipleak.net/json)
@@ -334,6 +335,7 @@ You can otherwise customize it with the following:
   - `nnev` using [https://ip4.nnev.de](https://ip4.nnev.de)
   - `wtfismyip` using [https://ipv4.wtfismyip.com/text](https://ipv4.wtfismyip.com/text)
   - `seeip` using [https://ipv4.seeip.org](https://ipv4.seeip.org)
+  - `addrtools` using [https://myipv4.addr.tools](https://myipv4.addr.tools)
   - You can also specify an HTTPS URL with prefix `url:` for example `url:https://ipinfo.io/ip`
 - `PUBLICIPV6_HTTP_PROVIDERS` gets your public IPv6 address only. It can be one or more of the following:
   - `ipleak` using [https://ipv6.ipleak.net/json](https://ipv6.ipleak.net/json)
@@ -343,6 +345,7 @@ You can otherwise customize it with the following:
   - `nnev` using [https://ip6.nnev.de](https://ip6.nnev.de)
   - `wtfismyip` using [https://ipv6.wtfismyip.com/text](https://ipv6.wtfismyip.com/text)
   - `seeip` using [https://ipv6.seeip.org](https://ipv6.seeip.org)
+  - `addrtools` using [https://myipv6.addr.tools](https://myipv6.addr.tools)
   - You can also specify an HTTPS URL with prefix `url:` for example `url:https://ipinfo.io/ip`
 - `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see #136). It can be one or more of the following:
   - `cloudflare`

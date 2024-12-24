@@ -26,14 +26,14 @@ func Test_ListProvidersForVersion(t *testing.T) {
 			},
 		},
 		"ip4": {
-			version:   ipversion.IP4,
+			version: ipversion.IP4,
 			providers: []Provider{
 				Ipify, Ipleak, Icanhazip, Ident, Nnev,
 				Wtfismyip, Seeip, Addrtools,
 			},
 		},
 		"ip6": {
-			version:   ipversion.IP6,
+			version: ipversion.IP6,
 			providers: []Provider{
 				Ipify, Ipleak, Icanhazip, Ident, Nnev,
 				Wtfismyip, Seeip, Addrtools,

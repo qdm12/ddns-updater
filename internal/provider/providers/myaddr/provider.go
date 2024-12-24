@@ -33,12 +33,9 @@ func New(data json.RawMessage, domain, owner string, ipVersion ipversion.IPVersi
 	if err != nil {
 		return nil, fmt.Errorf("json decoding provider specific settings: %w", err)
 	}
-	err = utils.CheckDomain(domain)
+	err = validateSettings(domain, providerSpecificSettings.Key)
 	if err != nil {
-		return nil, fmt.Errorf("validating provider specific settings: %w: %w", errors.ErrDomainNotValid, err)
-	}
-	if providerSpecificSettings.Key == "" {
-		return nil, fmt.Errorf("validating provider specific settings: %w", errors.ErrKeyNotSet)
+		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
 	return &Provider{
 		domain:     domain,
@@ -47,6 +44,17 @@ func New(data json.RawMessage, domain, owner string, ipVersion ipversion.IPVersi
 		ipv6Suffix: ipv6Suffix,
 		key:        providerSpecificSettings.Key,
 	}, nil
+}
+
+func validateSettings(domain, key string) (err error) {
+	err = utils.CheckDomain(domain)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+	}
+	if key == "" {
+		return fmt.Errorf("%w", errors.ErrKeyNotSet)
+	}
+	return nil
 }
 
 func (p *Provider) String() string {

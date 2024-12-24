@@ -25,7 +25,9 @@ type Provider struct {
 	key        string
 }
 
-func New(data json.RawMessage, domain, owner string, ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (*Provider, error) {
+func New(data json.RawMessage, domain, owner string,
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix,
+) (*Provider, error) {
 	var providerSpecificSettings struct {
 		Key string `json:"key"`
 	}

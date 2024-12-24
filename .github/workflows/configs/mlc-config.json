@@ -32,6 +32,9 @@
     },
     {
       "pattern": "^https://my.vultr.com/settings/#settingsapi$"
+    },
+    {
+      "pattern": "^https://www.namesilo.com"
     }
   ],
   "timeout": "20s",

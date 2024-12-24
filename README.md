@@ -78,6 +78,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - Linode
   - Loopia
   - LuaDNS
+  - Myaddr
   - Name.com
   - Namecheap
   - Netcup
@@ -243,6 +244,7 @@ Check the documentation for your DNS provider:
 - [Linode](docs/linode.md)
 - [Loopia](docs/loopia.md)
 - [LuaDNS](docs/luadns.md)
+- [Myaddr](docs/myaddr.md)
 - [Name.com](docs/name.com.md)
 - [Namecheap](docs/namecheap.md)
 - [Netcup](docs/netcup.md)

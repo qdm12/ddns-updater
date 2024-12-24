@@ -12,6 +12,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider"
+	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"golang.org/x/net/publicsuffix"
@@ -145,7 +146,10 @@ func extractAllSettings(jsonBytes []byte) (
 	return allProviders, warnings, nil
 }
 
-var ErrProviderNoLongerSupported = errors.New("provider no longer supported")
+var (
+	ErrProviderNoLongerSupported = errors.New("provider no longer supported")
+	ErrProviderMultipleDomains   = errors.New("provider does not support multiple domains")
+)
 
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	retroGlobalIPv6Suffix netip.Prefix) (
@@ -176,6 +180,11 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 		if err != nil {
 			return nil, nil, fmt.Errorf("extracting owners from domains: %w", err)
 		}
+	}
+
+	if common.Provider == string(constants.Myaddr) && len(owners) > 1 {
+		return nil, nil, fmt.Errorf("%w: %s for parent domain %q",
+			ErrProviderMultipleDomains, common.Provider, domain)
 	}
 
 	if common.IPVersion == "" {

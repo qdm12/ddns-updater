@@ -24,8 +24,7 @@ func getLatestRelease() (string, error) {
 	return release.TagName, nil
 }
 
-// Add a function to get the current version
 func getCurrentVersion() string {
 	// Replace with actual logic to get the current version
-	return "v1.0.0"
+	return "v2.9.0"
 }

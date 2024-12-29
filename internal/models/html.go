@@ -3,7 +3,10 @@ package models
 // HTMLData is a list of HTML fields to be rendered.
 // It is exported so that the HTML template engine can render it.
 type HTMLData struct {
-	Rows []HTMLRow
+	Rows            []HTMLRow
+	Version         string
+	UpdateAvailable bool
+	LatestVersion   string
 }
 
 // HTMLRow contains HTML fields to be rendered

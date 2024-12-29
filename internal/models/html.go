@@ -4,6 +4,7 @@ package models
 // It is exported so that the HTML template engine can render it.
 type HTMLData struct {
 	Rows []HTMLRow
+	Version string
 }
 
 // HTMLRow contains HTML fields to be rendered

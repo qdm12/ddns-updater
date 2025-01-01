@@ -103,6 +103,7 @@ func ProviderChoices() []models.Provider {
 		OVH,
 		Porkbun,
 		Route53,
+		Scaleway,
 		SelfhostDe,
 		Spdyn,
 		Strato,

@@ -174,6 +174,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return porkbun.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Route53:
 		return route53.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Scaleway:
+		return scaleway.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.SelfhostDe:
 		return selfhostde.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Servercow:

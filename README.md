@@ -34,13 +34,13 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
 
 This readme and the [docs/](docs/) directory are **versioned** to match the program version:
 
-| Version | Readme link | Docs link |
-| --- | --- | --- |
-| Latest | [README](https://github.com/qdm12/ddns-updater/blob/master/README.md) | [docs/](https://github.com/qdm12/ddns-updater/tree/master/docs) |
-| `v2.8` | [README](https://github.com/qdm12/ddns-updater/blob/v2.8.0/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.8.0/docs) |
-| `v2.7` | [README](https://github.com/qdm12/ddns-updater/blob/v2.7.1/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.7.1/docs) |
-| `v2.6` | [README](https://github.com/qdm12/ddns-updater/blob/v2.6.1/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.6.1/docs) |
-| `v2.5` | [README](https://github.com/qdm12/ddns-updater/blob/v2.5.0/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.5.0/docs) |
+| Version | Readme link                                                           | Docs link                                                       |
+|---------|-----------------------------------------------------------------------|-----------------------------------------------------------------|
+| Latest  | [README](https://github.com/qdm12/ddns-updater/blob/master/README.md) | [docs/](https://github.com/qdm12/ddns-updater/tree/master/docs) |
+| `v2.8`  | [README](https://github.com/qdm12/ddns-updater/blob/v2.8.0/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.8.0/docs) |
+| `v2.7`  | [README](https://github.com/qdm12/ddns-updater/blob/v2.7.1/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.7.1/docs) |
+| `v2.6`  | [README](https://github.com/qdm12/ddns-updater/blob/v2.6.1/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.6.1/docs) |
+| `v2.5`  | [README](https://github.com/qdm12/ddns-updater/blob/v2.5.0/README.md) | [docs/](https://github.com/qdm12/ddns-updater/blob/v2.5.0/docs) |
 
 ## Features
 
@@ -90,6 +90,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - OVH
   - Porkbun
   - Route53
+  - Scaleway
   - Selfhost.de
   - Servercow.de
   - Spdyn
@@ -256,6 +257,7 @@ Check the documentation for your DNS provider:
 - [OpenDNS](docs/opendns.md)
 - [OVH](docs/ovh.md)
 - [Porkbun](docs/porkbun.md)
+- [Scaleway](docs/scaleway.md)
 - [Selfhost.de](docs/selfhost.de.md)
 - [Servercow.de](docs/servercow.md)
 - [Spdyn](docs/spdyn.md)
@@ -273,35 +275,35 @@ Note that:
 
 🆕 There are now flags equivalent for each variable below, for example `--log-level`.
 
-| Environment variable | Default | Description |
-| --- | --- | --- |
-| `CONFIG` | | One line JSON object containing the entire config (takes precedence over config.json file) if specified |
-| `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
-| `PUBLICIP_FETCHERS` | `all` | Comma separated fetcher types to obtain the public IP address from `http` and `dns` |
-| `PUBLICIP_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IP address (ipv4 or ipv6). See the [Public IP section](#public-ip) |
-| `PUBLICIPV4_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IPv4 address only. See the [Public IP section](#public-ip) |
-| `PUBLICIPV6_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IPv6 address only. See the [Public IP section](#public-ip) |
-| `PUBLICIP_DNS_PROVIDERS` | `all` | Comma separated providers to obtain the public IP address (IPv4 and/or IPv6). See the [Public IP section](#public-ip) |
-| `PUBLICIP_DNS_TIMEOUT` | `3s` | Public IP DNS query timeout |
-| `UPDATE_COOLDOWN_PERIOD` | `5m` | Duration to cooldown between updates for each record. This is useful to avoid being rate limited or banned. |
-| `HTTP_TIMEOUT` | `10s` | Timeout for all HTTP requests |
-| `SERVER_ENABLED` | `yes` | Enable the web server and web UI |
-| `LISTENING_ADDRESS` | `:8000` | Internal TCP listening port for the web UI |
-| `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
-| `HEALTH_SERVER_ADDRESS` | `127.0.0.1:9999` | Health server listening address |
-| `HEALTH_HEALTHCHECKSIO_BASE_URL` | `https://hc-ping.com` | Base URL for the [healthchecks.io](https://healthchecks.io) server |
-| `HEALTH_HEALTHCHECKSIO_UUID` | | UUID to idenfity with the [healthchecks.io](https://healthchecks.io) server |
-| `DATADIR` | `/updater/data` | Directory to read and write data files from internally |
-| `CONFIG_FILEPATH` | `/updater/data/config.json` | Path to the JSON configuration file |
-| `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file |
-| `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`. |
-| `RESOLVER_ADDRESS` | Your network DNS | A plaintext DNS address to use to resolve your domain names defined in your settings only. For example it can be `1.1.1.1:53`. This is useful for split dns, see [#389](https://github.com/qdm12/ddns-updater/issues/389) |
-| `LOG_LEVEL` | `info` | Level of logging, `debug`, `info`, `warning` or `error` |
-| `LOG_CALLER` | `hidden` | Show caller per log line, `hidden` or `short` |
-| `SHOUTRRR_ADDRESSES` |  | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/v0.8/services/overview/) (notification services) |
-| `SHOUTRRR_DEFAULT_TITLE` | `DDNS Updater` | Default title for Shoutrrr notifications |
-| `TZ` | | Timezone to have accurate times, i.e. `America/Montreal` |
-| `UMASK` | System current umask | Umask to set for the program in octal, i.e. `0022` |
+| Environment variable             | Default                     | Description                                                                                                                                                                                                               |
+|----------------------------------|-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CONFIG`                         |                             | One line JSON object containing the entire config (takes precedence over config.json file) if specified                                                                                                                   |
+| `PERIOD`                         | `5m`                        | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration)                                                                                                                   |
+| `PUBLICIP_FETCHERS`              | `all`                       | Comma separated fetcher types to obtain the public IP address from `http` and `dns`                                                                                                                                       |
+| `PUBLICIP_HTTP_PROVIDERS`        | `all`                       | Comma separated providers to obtain the public IP address (ipv4 or ipv6). See the [Public IP section](#public-ip)                                                                                                         |
+| `PUBLICIPV4_HTTP_PROVIDERS`      | `all`                       | Comma separated providers to obtain the public IPv4 address only. See the [Public IP section](#public-ip)                                                                                                                 |
+| `PUBLICIPV6_HTTP_PROVIDERS`      | `all`                       | Comma separated providers to obtain the public IPv6 address only. See the [Public IP section](#public-ip)                                                                                                                 |
+| `PUBLICIP_DNS_PROVIDERS`         | `all`                       | Comma separated providers to obtain the public IP address (IPv4 and/or IPv6). See the [Public IP section](#public-ip)                                                                                                     |
+| `PUBLICIP_DNS_TIMEOUT`           | `3s`                        | Public IP DNS query timeout                                                                                                                                                                                               |
+| `UPDATE_COOLDOWN_PERIOD`         | `5m`                        | Duration to cooldown between updates for each record. This is useful to avoid being rate limited or banned.                                                                                                               |
+| `HTTP_TIMEOUT`                   | `10s`                       | Timeout for all HTTP requests                                                                                                                                                                                             |
+| `SERVER_ENABLED`                 | `yes`                       | Enable the web server and web UI                                                                                                                                                                                          |
+| `LISTENING_ADDRESS`              | `:8000`                     | Internal TCP listening port for the web UI                                                                                                                                                                                |
+| `ROOT_URL`                       | `/`                         | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy)                                                                                                      |
+| `HEALTH_SERVER_ADDRESS`          | `127.0.0.1:9999`            | Health server listening address                                                                                                                                                                                           |
+| `HEALTH_HEALTHCHECKSIO_BASE_URL` | `https://hc-ping.com`       | Base URL for the [healthchecks.io](https://healthchecks.io) server                                                                                                                                                        |
+| `HEALTH_HEALTHCHECKSIO_UUID`     |                             | UUID to idenfity with the [healthchecks.io](https://healthchecks.io) server                                                                                                                                               |
+| `DATADIR`                        | `/updater/data`             | Directory to read and write data files from internally                                                                                                                                                                    |
+| `CONFIG_FILEPATH`                | `/updater/data/config.json` | Path to the JSON configuration file                                                                                                                                                                                       |
+| `BACKUP_PERIOD`                  | `0`                         | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file                                                                                                             |
+| `BACKUP_DIRECTORY`               | `/updater/data`             | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`.                                                                                                                                                     |
+| `RESOLVER_ADDRESS`               | Your network DNS            | A plaintext DNS address to use to resolve your domain names defined in your settings only. For example it can be `1.1.1.1:53`. This is useful for split dns, see [#389](https://github.com/qdm12/ddns-updater/issues/389) |
+| `LOG_LEVEL`                      | `info`                      | Level of logging, `debug`, `info`, `warning` or `error`                                                                                                                                                                   |
+| `LOG_CALLER`                     | `hidden`                    | Show caller per log line, `hidden` or `short`                                                                                                                                                                             |
+| `SHOUTRRR_ADDRESSES`             |                             | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/v0.8/services/overview/) (notification services)                                                                                  |
+| `SHOUTRRR_DEFAULT_TITLE`         | `DDNS Updater`              | Default title for Shoutrrr notifications                                                                                                                                                                                  |
+| `TZ`                             |                             | Timezone to have accurate times, i.e. `America/Montreal`                                                                                                                                                                  |
+| `UMASK`                          | System current umask        | Umask to set for the program in octal, i.e. `0022`                                                                                                                                                                        |
 
 #### Public IP
 
@@ -409,13 +411,13 @@ docker build -t qmcgaw/ddns-updater https://github.com/qdm12/ddns-updater.git
 
 You can use optional build arguments with `--build-arg KEY=VALUE` from the table below:
 
-| Build argument | Default | Description |
-| --- | --- | --- |
-| `UID` | `1000` | User ID running the container |
-| `GID` | `1000` | User group ID running the container |
-| `VERSION` | `unknown` | Version of the program and Docker image |
-| `CREATED` | `an unknown date` | Build date of the program and Docker image |
-| `COMMIT` | `unknown` | Commit hash of the program and Docker image |
+| Build argument | Default           | Description                                 |
+|----------------|-------------------|---------------------------------------------|
+| `UID`          | `1000`            | User ID running the container               |
+| `GID`          | `1000`            | User group ID running the container         |
+| `VERSION`      | `unknown`         | Version of the program and Docker image     |
+| `CREATED`      | `an unknown date` | Build date of the program and Docker image  |
+| `COMMIT`       | `unknown`         | Commit hash of the program and Docker image |
 
 ## Development and contributing
 

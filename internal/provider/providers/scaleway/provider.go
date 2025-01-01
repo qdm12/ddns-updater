@@ -1,13 +1,13 @@
 package scaleway
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/netip"
 	"net/url"
-	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -18,12 +18,10 @@ import (
 )
 
 type Provider struct {
-	domain string
-	owner  string
-	ipVersion  ipversion.IPVersion
-	ipv6Suffix netip.Prefix
-	projectID   string
-	accessKey   string
+	domain 		string
+	owner  		string
+	ipVersion  	ipversion.IPVersion
+	ipv6Suffix 	netip.Prefix
 	secretKey   string
 }
 
@@ -32,8 +30,6 @@ func New(data json.RawMessage, domain, owner string,
 	provider *Provider, err error,
 ) {
 	var providerSpecificSettings struct {
-        ProjectID string `json:"project_id"`
-        AccessKey string `json:"access_key"`
         SecretKey string `json:"secret_key"`
     }
 	err = json.Unmarshal(data, &providerSpecificSettings)
@@ -42,7 +38,7 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	err = validateSettings(domain,
-		providerSpecificSettings.ProjectID, providerSpecificSettings.AccessKey, providerSpecificSettings.SecretKey)
+		providerSpecificSettings.SecretKey)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -52,23 +48,17 @@ func New(data json.RawMessage, domain, owner string,
 		owner:      owner,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
-        projectID:  providerSpecificSettings.ProjectID,
-		accessKey:  providerSpecificSettings.AccessKey,
         secretKey:  providerSpecificSettings.SecretKey,
 	}, nil
 }
 
-func validateSettings(domain, projectID, accessKey, secretKey string) (err error) {
+func validateSettings(domain, secretKey string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
 	}
 
 	switch {
-    case projectID == "":
-        return fmt.Errorf("%w", errors.ErrAccessKeyIDNotSet)
-    case accessKey == "":
-        return fmt.Errorf("%w", errors.ErrAccessKeyNotSet)
     case secretKey == "":
         return fmt.Errorf("%w", errors.ErrSecretKeyNotSet)
     }
@@ -113,64 +103,67 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 // Update updates the DNS record for the domain using Scaleway's API.
-// API documentation: https://www.scaleway.com/en/developers/api/domains-and-dns/
+// API documentation: https://www.scaleway.com/en/developers/api/domains-and-dns/#path-records-update-records-within-a-dns-zone
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	// Construct the URL for the API request
+    // Construct the URL for the API request
     u := url.URL{
         Scheme: "https",
         Host:   "api.scaleway.com",
         Path:   fmt.Sprintf("/domain/v2beta1/dns-zones/%s/records", p.domain),
+        RawQuery: fmt.Sprintf("A=%s", ip.String()),
     }
 
-	// Prepare the request body
-    requestBody := fmt.Sprintf(`{
-        "records": [{
-            "name": "%s",
-            "type": "A",
-            "content": "%s",
-            "ttl": 300
-        }]
-    }`, p.domain, ip.String())
+    // Prepare the request body
+    requestBody := map[string]interface{}{
+        "changes": []map[string]interface{}{
+            {
+                "set": map[string]interface{}{
+                    "id_fields": map[string]interface{}{
+                        "name": "",
+                        "type": "A",
+                    },
+                    "records": []map[string]interface{}{
+                        {
+                            "data": ip.String(),
+                            "ttl":  300,
+                        },
+                    },
+                },
+            },
+        },
+    }
+    requestBodyBytes, err := json.Marshal(requestBody)
+    if err != nil {
+        return netip.Addr{}, fmt.Errorf("json marshal: %w", err)
+    }
 
-	// Create the HTTP request
-    request, err := http.NewRequestWithContext(ctx, http.MethodPatch, u.String(), strings.NewReader(requestBody))
+    // Create the HTTP request
+    request, err := http.NewRequestWithContext(ctx, http.MethodPatch, u.String(), bytes.NewReader(requestBodyBytes))
     if err != nil {
         return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
     }
-
-    // Set the necessary headers
     request.Header.Set("Content-Type", "application/json")
+    request.Header.Set("Accept", "application/json")
     request.Header.Set("X-Auth-Token", p.secretKey)
     headers.SetUserAgent(request)
 
     // Send the request
     response, err := client.Do(request)
     if err != nil {
-        return netip.Addr{}, err
+        return netip.Addr{}, fmt.Errorf("doing http request: %w", err)
     }
     defer response.Body.Close()
 
     // Read and clean the response body
-    s, err := utils.ReadAndCleanBody(response.Body)
-    if err != nil {
-        return netip.Addr{}, fmt.Errorf("reading response: %w", err)
-    }
+	s, err := utils.ReadAndCleanBody(response.Body)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("reading response: %w", err)
+	}
 
-    // Handle the response status code
     if response.StatusCode != http.StatusOK {
         return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-            errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
     }
 
-    // Handle the response body
-    switch {
-    case strings.Contains(s, "Record not found"):
-        return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
-    case strings.Contains(s, "Invalid request"):
-        return netip.Addr{}, fmt.Errorf("%w", errors.ErrBadRequest)
-    case strings.Contains(s, "success"):
-        return ip, nil
-    default:
-        return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
-    }
+    return ip, nil
 }

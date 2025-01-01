@@ -55,6 +55,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/ovh"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/porkbun"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/route53"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/scaleway"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/selfhostde"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/servercow"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/spdyn"

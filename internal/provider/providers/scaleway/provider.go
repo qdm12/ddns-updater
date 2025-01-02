@@ -126,36 +126,46 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	if ip.Is6() {
 		field_type = "AAAA"
 	}
-    requestBody := map[string]interface{}{
-        "changes": []map[string]interface{}{
-            {
-                "set": map[string]interface{}{
-                    "id_fields": map[string]interface{}{
-                        "name": p.field_name,
-                        "type": field_type,
-                    },
-                    "records": []map[string]interface{}{
-                        {
-                            "data": ip.String(),
-                            "ttl":  p.ttl,
-                        },
-                    },
-                },
-            },
-        },
-    }
-    requestBodyBytes, err := json.Marshal(requestBody)
+	type recordJSON struct {
+		Data string `json:"data"`
+		TTL  uint16    `json:"ttl"`
+	}
+	type changeJSON struct{
+		Set struct {
+			IDFields struct {
+				Name string `json:"name"`
+				Type string `json:"type"`
+			} `json:"id_fields"`
+			Records []recordJSON `json:"records"`
+		} `json:"set"`
+	}
+	var change changeJSON
+	change.Set.IDFields.Name = p.field_name
+	change.Set.IDFields.Type = field_type
+	change.Set.Records = []recordJSON{{
+		Data: ip.String(),
+		TTL:  p.ttl,
+	}}
+	requestBody := struct {
+		Changes []changeJSON `json:"changes"`
+	}{
+		Changes: []changeJSON{change},
+	}
+
+	buffer := bytes.NewBuffer(nil)
+    encoder := json.NewEncoder(buffer)
+    err = encoder.Encode(requestBody)
     if err != nil {
-        return netip.Addr{}, fmt.Errorf("json marshal: %w", err)
+        return netip.Addr{}, fmt.Errorf("json encoding request body: %w", err)
     }
 
-    request, err := http.NewRequestWithContext(ctx, http.MethodPatch, u.String(), bytes.NewReader(requestBodyBytes))
+    request, err := http.NewRequestWithContext(ctx, http.MethodPatch, u.String(), buffer)
     if err != nil {
         return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
     }
-    request.Header.Set("Content-Type", "application/json")
-    request.Header.Set("Accept", "application/json")
-    request.Header.Set("X-Auth-Token", p.secretKey)
+    headers.SetContentType(request, "application/json")
+    headers.SetAccept(request, "application/json")
+	headers.SetXAuthToken(request, p.secretKey)
     headers.SetUserAgent(request)
 
     response, err := client.Do(request)

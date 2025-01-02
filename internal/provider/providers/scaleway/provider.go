@@ -24,7 +24,7 @@ type Provider struct {
 	ipv6Suffix 	netip.Prefix
 	secretKey   string
 	field_name	string
-	ttl		 	int
+	ttl		 	uint16
 }
 
 func New(data json.RawMessage, domain, owner string,
@@ -34,7 +34,7 @@ func New(data json.RawMessage, domain, owner string,
 	var providerSpecificSettings struct {
         SecretKey	string	`json:"secret_key"`
 		FieldName	string	`json:"field_name"`
-		TTL			int		`json:"ttl"`
+		TTL			uint16	`json:"ttl"`
     }
 	err = json.Unmarshal(data, &providerSpecificSettings)
 	if err != nil {
@@ -114,7 +114,7 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 // Update updates the DNS record for the domain using Scaleway's API.
-// API documentation: https://www.scaleway.com/en/developers/api/domains-and-dns/#path-records-update-records-within-a-dns-zone
+// See: https://www.scaleway.com/en/developers/api/domains-and-dns/#path-records-update-records-within-a-dns-zone
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
     // Construct the URL for the API request
     u := url.URL{

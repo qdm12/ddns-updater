@@ -15,7 +15,6 @@ If something is unclear in the documentation below, please refer to the [scalewa
             "secret_key": "<SECRET_KEY>",
             "ip_version": "ipv4",
             "ipv6_suffix": "",
-            "field_type": "A",
             "field_name": "www",
             "ttl": 450
         

@@ -23,7 +23,6 @@ type Provider struct {
 	ipVersion  	ipversion.IPVersion
 	ipv6Suffix 	netip.Prefix
 	secretKey   string
-	field_type  string
 	field_name	string
 	ttl		 	int
 }
@@ -34,7 +33,6 @@ func New(data json.RawMessage, domain, owner string,
 ) {
 	var providerSpecificSettings struct {
         SecretKey	string	`json:"secret_key"`
-        FieldType	string	`json:"field_type"`
 		FieldName	string	`json:"field_name"`
 		TTL			int		`json:"ttl"`
     }
@@ -43,16 +41,12 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("json decoding provider specific settings: %w", err)
 	}
 
-    if providerSpecificSettings.FieldType == "" {
-        providerSpecificSettings.FieldType = "A"
-    }
-
 	if providerSpecificSettings.TTL == 0 {
         providerSpecificSettings.TTL = 3600
     }
 
 	err = validateSettings(domain,
-		providerSpecificSettings.SecretKey, providerSpecificSettings.FieldType)
+		providerSpecificSettings.SecretKey)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -63,13 +57,12 @@ func New(data json.RawMessage, domain, owner string,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
         secretKey:  providerSpecificSettings.SecretKey,
-		field_type: providerSpecificSettings.FieldType,
 		field_name: providerSpecificSettings.FieldName,
 		ttl:		providerSpecificSettings.TTL,
 	}, nil
 }
 
-func validateSettings(domain, secretKey, fieldType string) (err error) {
+func validateSettings(domain, secretKey string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
@@ -79,10 +72,6 @@ func validateSettings(domain, secretKey, fieldType string) (err error) {
     case secretKey == "":
         return fmt.Errorf("%w", errors.ErrSecretKeyNotSet)
     }
-	
-	if fieldType != "A" && fieldType != "AAAA" {
-		return fmt.Errorf("field_type can only be A or AAAA. %w: %s", errors.ErrBadRequest, fieldType)
-	}
 
 	return nil
 }
@@ -136,13 +125,17 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
     }
 
     // Prepare the request body
+	field_type := "A"
+	if ip.Is6() {
+		field_type = "AAAA"
+	}
     requestBody := map[string]interface{}{
         "changes": []map[string]interface{}{
             {
                 "set": map[string]interface{}{
                     "id_fields": map[string]interface{}{
                         "name": p.field_name,
-                        "type": p.field_type,
+                        "type": field_type,
                     },
                     "records": []map[string]interface{}{
                         {

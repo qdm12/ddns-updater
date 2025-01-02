@@ -11,13 +11,13 @@ If something is unclear in the documentation below, please refer to the [scalewa
     "settings": [
         {
             "provider": "scaleway",
-            "domain": "munchkin-academia.eu",   // corresponds to the `dns-zone` in the API documentation
+            "domain": "munchkin-academia.eu",
             "secret_key": "<SECRET_KEY>",
             "ip_version": "ipv4",
             "ipv6_suffix": "",
-            "field_type": "A",     // optional, it will default to "A"
-            "field_name": "www",   // optional, it will default to "" (equivalent to "@")
-            "ttl": 450             // optional, it will default to 3600
+            "field_type": "A",
+            "field_name": "www",
+            "ttl": 450
         
         }
     ]

@@ -116,7 +116,6 @@ func (p *Provider) HTML() models.HTMLRow {
 // Update updates the DNS record for the domain using Scaleway's API.
 // See: https://www.scaleway.com/en/developers/api/domains-and-dns/#path-records-update-records-within-a-dns-zone
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-    // Construct the URL for the API request
     u := url.URL{
         Scheme: "https",
         Host:   "api.scaleway.com",
@@ -124,7 +123,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
         RawQuery: fmt.Sprintf("A=%s", ip.String()),
     }
 
-    // Prepare the request body
 	field_type := "A"
 	if ip.Is6() {
 		field_type = "AAAA"
@@ -152,7 +150,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
         return netip.Addr{}, fmt.Errorf("json marshal: %w", err)
     }
 
-    // Create the HTTP request
     request, err := http.NewRequestWithContext(ctx, http.MethodPatch, u.String(), bytes.NewReader(requestBodyBytes))
     if err != nil {
         return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
@@ -162,14 +159,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
     request.Header.Set("X-Auth-Token", p.secretKey)
     headers.SetUserAgent(request)
 
-    // Send the request
     response, err := client.Do(request)
     if err != nil {
         return netip.Addr{}, fmt.Errorf("doing http request: %w", err)
     }
     defer response.Body.Close()
 
-    // Read and clean the response body
 	s, err := utils.ReadAndCleanBody(response.Body)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("reading response: %w", err)

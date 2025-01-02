@@ -120,7 +120,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
         Scheme: "https",
         Host:   "api.scaleway.com",
         Path:   fmt.Sprintf("/domain/v2beta1/dns-zones/%s/records", p.domain),
-        RawQuery: fmt.Sprintf("A=%s", ip.String()),
     }
 
 	field_type := "A"

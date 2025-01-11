@@ -17,7 +17,6 @@ If something is unclear in the documentation below, please refer to the [scalewa
             "ipv6_suffix": "",
             "field_name": "www",
             "ttl": 450
-        
         }
     ]
 }
@@ -25,7 +24,7 @@ If something is unclear in the documentation below, please refer to the [scalewa
 
 ### Compulsory parameters
 
-- `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard. This fields corresponds to the `dns-zone` in the scaleway API documentation.
+- `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard. This field corresponds to the `dns-zone` in the scaleway API documentation.
 - `"secret_key"`
 
 ### Optional parameters

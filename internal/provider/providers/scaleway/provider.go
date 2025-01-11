@@ -68,8 +68,7 @@ func validateSettings(domain, secretKey string) (err error) {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
 	}
 
-	switch {
-    case secretKey == "":
+	if secretKey == "" {
         return fmt.Errorf("%w", errors.ErrSecretKeyNotSet)
     }
 
@@ -114,7 +113,7 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 // Update updates the DNS record for the domain using Scaleway's API.
-// See: https://www.scaleway.com/en/developers/api/domains-and-dns/#path-records-update-records-within-a-dns-zone
+// See https://www.scaleway.com/en/developers/api/domains-and-dns/#path-records-update-records-within-a-dns-zone
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
     u := url.URL{
         Scheme: "https",

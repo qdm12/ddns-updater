@@ -23,7 +23,6 @@ type Provider struct {
 	ipVersion  ipversion.IPVersion
 	ipv6Suffix netip.Prefix
 	secretKey  string
-	field_name string
 	ttl        uint16
 }
 
@@ -33,7 +32,6 @@ func New(data json.RawMessage, domain, owner string,
 ) {
 	var providerSpecificSettings struct {
 		SecretKey string `json:"secret_key"`
-		FieldName string `json:"field_name"`
 		TTL       uint16 `json:"ttl"`
 	}
 	err = json.Unmarshal(data, &providerSpecificSettings)
@@ -57,7 +55,6 @@ func New(data json.RawMessage, domain, owner string,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
 		secretKey:  providerSpecificSettings.SecretKey,
-		field_name: providerSpecificSettings.FieldName,
 		ttl:        providerSpecificSettings.TTL,
 	}, nil
 }
@@ -127,6 +124,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	type recordJSON struct {
 		Data string `json:"data"`
+		Name string `json:"name"`
 		TTL  uint16 `json:"ttl"`
 	}
 	type changeJSON struct {
@@ -139,10 +137,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		} `json:"set"`
 	}
 	var change changeJSON
-	change.Set.IDFields.Name = p.field_name
+	change.Set.IDFields.Name = p.owner
 	change.Set.IDFields.Type = fieldType
 	change.Set.Records = []recordJSON{{
 		Data: ip.String(),
+		Name: p.owner,
 		TTL:  p.ttl,
 	}}
 	requestBody := struct {

@@ -15,7 +15,6 @@ If something is unclear in the documentation below, please refer to the [scalewa
             "secret_key": "<SECRET_KEY>",
             "ip_version": "ipv4",
             "ipv6_suffix": "",
-            "field_name": "www",
             "ttl": 450
         }
     ]
@@ -24,14 +23,13 @@ If something is unclear in the documentation below, please refer to the [scalewa
 
 ### Compulsory parameters
 
-- `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard. This field corresponds to the `dns-zone` in the scaleway API documentation.
+- `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard. This field is used to extract the `dns-zone`, `id_fields.name`, and `records.name`, and used to make the scaleway API call. For example. if your domain is `example.com`, and you set as `"domain`" `sub.example.com`, then the API call will be made with `dns-zone = example.com`, `id_fields.name = sub`, and `records.name = sub`.
 - `"secret_key"`
 
 ### Optional parameters
 
 - `"ip_version"` can be `"ipv4"` or `"ipv6"`. It defaults to `"ipv4"`.
 - `"ipv6_suffix"` is the suffix to append to the IPv6 address. It defaults to `""`.
-- `"field_name"` is the name of the DNS record to update. For example, it could be `"www"`, `"@"` or `"*"` for the wildcard. It defaults to to `""` (equivalent to `"@"`).
 - `"ttl"` is the TTL of the DNS record to update. It defaults to `3600`.
 
 ## Domain setup

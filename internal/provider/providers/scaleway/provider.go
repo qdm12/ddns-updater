@@ -18,13 +18,13 @@ import (
 )
 
 type Provider struct {
-	domain 		string
-	owner  		string
-	ipVersion  	ipversion.IPVersion
-	ipv6Suffix 	netip.Prefix
-	secretKey   string
-	field_name	string
-	ttl		 	uint16
+	domain     string
+	owner      string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	secretKey  string
+	field_name string
+	ttl        uint16
 }
 
 func New(data json.RawMessage, domain, owner string,
@@ -32,18 +32,18 @@ func New(data json.RawMessage, domain, owner string,
 	provider *Provider, err error,
 ) {
 	var providerSpecificSettings struct {
-        SecretKey	string	`json:"secret_key"`
-		FieldName	string	`json:"field_name"`
-		TTL			uint16	`json:"ttl"`
-    }
+		SecretKey string `json:"secret_key"`
+		FieldName string `json:"field_name"`
+		TTL       uint16 `json:"ttl"`
+	}
 	err = json.Unmarshal(data, &providerSpecificSettings)
 	if err != nil {
 		return nil, fmt.Errorf("json decoding provider specific settings: %w", err)
 	}
 
 	if providerSpecificSettings.TTL == 0 {
-        providerSpecificSettings.TTL = 3600
-    }
+		providerSpecificSettings.TTL = 3600
+	}
 
 	err = validateSettings(domain,
 		providerSpecificSettings.SecretKey)
@@ -56,9 +56,9 @@ func New(data json.RawMessage, domain, owner string,
 		owner:      owner,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
-        secretKey:  providerSpecificSettings.SecretKey,
+		secretKey:  providerSpecificSettings.SecretKey,
 		field_name: providerSpecificSettings.FieldName,
-		ttl:		providerSpecificSettings.TTL,
+		ttl:        providerSpecificSettings.TTL,
 	}, nil
 }
 
@@ -69,8 +69,8 @@ func validateSettings(domain, secretKey string) (err error) {
 	}
 
 	if secretKey == "" {
-        return fmt.Errorf("%w", errors.ErrSecretKeyNotSet)
-    }
+		return fmt.Errorf("%w", errors.ErrSecretKeyNotSet)
+	}
 
 	return nil
 }
@@ -105,8 +105,8 @@ func (p *Provider) BuildDomainName() string {
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain: fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Owner:  p.Owner(),
+		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
+		Owner:     p.Owner(),
 		Provider:  "<a href=\"https://www.scaleway.com/\">Scaleway</a>",
 		IPVersion: p.ipVersion.String(),
 	}
@@ -115,21 +115,21 @@ func (p *Provider) HTML() models.HTMLRow {
 // Update updates the DNS record for the domain using Scaleway's API.
 // See https://www.scaleway.com/en/developers/api/domains-and-dns/#path-records-update-records-within-a-dns-zone
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-    u := url.URL{
-        Scheme: "https",
-        Host:   "api.scaleway.com",
-        Path:   fmt.Sprintf("/domain/v2beta1/dns-zones/%s/records", p.domain),
-    }
+	u := url.URL{
+		Scheme: "https",
+		Host:   "api.scaleway.com",
+		Path:   fmt.Sprintf("/domain/v2beta1/dns-zones/%s/records", p.domain),
+	}
 
-	field_type := "A"
+	fieldType := "A"
 	if ip.Is6() {
-		field_type = "AAAA"
+		fieldType = "AAAA"
 	}
 	type recordJSON struct {
 		Data string `json:"data"`
-		TTL  uint16    `json:"ttl"`
+		TTL  uint16 `json:"ttl"`
 	}
-	type changeJSON struct{
+	type changeJSON struct {
 		Set struct {
 			IDFields struct {
 				Name string `json:"name"`
@@ -140,7 +140,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	var change changeJSON
 	change.Set.IDFields.Name = p.field_name
-	change.Set.IDFields.Type = field_type
+	change.Set.IDFields.Type = fieldType
 	change.Set.Records = []recordJSON{{
 		Data: ip.String(),
 		TTL:  p.ttl,
@@ -152,36 +152,36 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	buffer := bytes.NewBuffer(nil)
-    encoder := json.NewEncoder(buffer)
-    err = encoder.Encode(requestBody)
-    if err != nil {
-        return netip.Addr{}, fmt.Errorf("json encoding request body: %w", err)
-    }
+	encoder := json.NewEncoder(buffer)
+	err = encoder.Encode(requestBody)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("json encoding request body: %w", err)
+	}
 
-    request, err := http.NewRequestWithContext(ctx, http.MethodPatch, u.String(), buffer)
-    if err != nil {
-        return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
-    }
-    headers.SetContentType(request, "application/json")
-    headers.SetAccept(request, "application/json")
+	request, err := http.NewRequestWithContext(ctx, http.MethodPatch, u.String(), buffer)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
+	}
+	headers.SetContentType(request, "application/json")
+	headers.SetAccept(request, "application/json")
 	headers.SetXAuthToken(request, p.secretKey)
-    headers.SetUserAgent(request)
+	headers.SetUserAgent(request)
 
-    response, err := client.Do(request)
-    if err != nil {
-        return netip.Addr{}, fmt.Errorf("doing http request: %w", err)
-    }
-    defer response.Body.Close()
+	response, err := client.Do(request)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("doing http request: %w", err)
+	}
+	defer response.Body.Close()
 
 	s, err := utils.ReadAndCleanBody(response.Body)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("reading response: %w", err)
 	}
 
-    if response.StatusCode != http.StatusOK {
-        return netip.Addr{}, fmt.Errorf("%w: %d: %s",
+	if response.StatusCode != http.StatusOK {
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
-    }
+	}
 
-    return ip, nil
+	return ip, nil
 }

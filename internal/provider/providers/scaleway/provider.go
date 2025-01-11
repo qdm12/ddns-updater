@@ -178,6 +178,15 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	if response.StatusCode != http.StatusOK {
+		var errorResponse struct {
+			Message string `json:"message"`
+			Type    string `json:"type"`
+		}
+		if jsonErr := json.Unmarshal([]byte(s), &errorResponse); jsonErr == nil {
+			if errorResponse.Type == "denied_authentication" {
+				return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrAuth, errorResponse.Message)
+			}
+		}
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
 	}

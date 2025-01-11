@@ -6,13 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-)
 
-type Record struct {
-	Type    string `json:"type"`
-	Name    string `json:"name"`
-	Address string `json:"address"`
-}
+	"github.com/qdm12/ddns-updater/internal/provider/errors"
+)
 
 func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
 	records []Record, err error) {
@@ -23,6 +19,7 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
 	}
 
 	values := url.Values{}
+	// pagination values, mandatory for the API
 	values.Set("take", "100")
 	values.Set("skip", "0")
 	u.RawQuery = values.Encode()
@@ -38,6 +35,39 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
 		return nil, err
 	}
 	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		var apiError APIError
+		if err := json.NewDecoder(response.Body).Decode(&apiError); err != nil {
+			return nil, fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
+		}
+
+		switch response.StatusCode {
+		case http.StatusUnauthorized:
+			return nil, fmt.Errorf("%w: invalid API credentials", errors.ErrAuth)
+		case http.StatusNotFound:
+			if apiError.Detail == "SOA record for domain "+p.domain+" not found." {
+				return nil, fmt.Errorf("%w: domain %s must be configured in Spaceship first",
+					errors.ErrDomainNotFound, p.domain)
+			}
+			return nil, fmt.Errorf("%w: %s", errors.ErrRecordResourceSetNotFound, apiError.Detail)
+		case http.StatusBadRequest:
+			var details string
+			for _, d := range apiError.Data {
+				if d.Field != "" {
+					details += fmt.Sprintf(" %s: %s;", d.Field, d.Details)
+				} else {
+					details += fmt.Sprintf(" %s;", d.Details)
+				}
+			}
+			return nil, fmt.Errorf("%w:%s", errors.ErrBadRequest, details)
+		case http.StatusTooManyRequests:
+			return nil, fmt.Errorf("%w: rate limit exceeded", errors.ErrRateLimit)
+		default:
+			return nil, fmt.Errorf("%w: %d: %s",
+				errors.ErrHTTPStatusNotValid, response.StatusCode, apiError.Detail)
+		}
+	}
 
 	var recordsResponse struct {
 		Items []Record `json:"items"`

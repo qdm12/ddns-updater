@@ -2,7 +2,8 @@
 
 ## Configuration
 
-Docs can be found for the spaceship API [here](https://docs.spaceship.dev/).
+Docs can be found for the [spaceship API](https://docs.spaceship.dev/).
+
 ### Example
 
 ```json
@@ -12,8 +13,8 @@ Docs can be found for the spaceship API [here](https://docs.spaceship.dev/).
       "provider": "spaceship",
       "domain": "example.com",
       "host": "subdomain",
-      "apikey": "YOUR_API_KEY",
-      "apisecret": "YOUR_API_SECRET",
+      "api_key": "YOUR_API_KEY",
+      "api_secret": "YOUR_API_SECRET",
       "ip_version": "ipv4"
     }
   ]
@@ -22,9 +23,9 @@ Docs can be found for the spaceship API [here](https://docs.spaceship.dev/).
 
 ### Compulsory parameters
 
-- `"domain"` is the domain to update. It can be a root domain (i.e. `example.com`) or a subdomain (i.e. `subdomain.example.com`).
-- `"apikey"` is your API key which can be obtained from [API Manager](https://www.spaceship.com/application/api-manager/).
-- `"apisecret"` is your API secret which is provided along with your API key in the API Manager.
+- `"domain"` is the domain to update. It can be a root domain (i.e. `example.com`) or a subdomain (i.e. `subdomain.example.com`), or a wildcard (i.e. `*.example.com`). In case of a wildcard, it only works if there is no existing wildcard records of any record type.
+- `"api_key"` is your API key which can be obtained from [API Manager](https://www.spaceship.com/application/api-manager/).
+- `"api_secret"` is your API secret which is provided along with your API key in the API Manager.
 
 ### Optional parameters
 

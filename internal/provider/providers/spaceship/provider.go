@@ -28,8 +28,8 @@ func New(data json.RawMessage, domain, owner string,
 	p *Provider, err error,
 ) {
 	extraSettings := struct {
-		APIKey    string `json:"apikey"`
-		APISecret string `json:"apisecret"`
+		APIKey    string `json:"api_key"`
+		APISecret string `json:"api_secret"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {

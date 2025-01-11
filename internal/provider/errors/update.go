@@ -20,6 +20,7 @@ var (
 	ErrIPReceivedMismatch        = errors.New("mismatching IP address received")
 	ErrIPSentMalformed           = errors.New("malformed IP address sent")
 	ErrNoService                 = errors.New("no service")
+	ErrRateLimit                 = errors.New("rate limit exceeded")
 	ErrPrivateIPSent             = errors.New("private IP cannot be routed")
 	ErrReceivedNoIP              = errors.New("received no IP address in response")
 	ErrReceivedNoResult          = errors.New("received no result in response")

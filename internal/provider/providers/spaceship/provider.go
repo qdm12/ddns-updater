@@ -121,7 +121,7 @@ func (p *Provider) handleAPIError(response *http.Response) error {
 	}
 
 	// Extract error code from header if present
-	errorCode := response.Header.Get("spaceship-error-code")
+	errorCode := response.Header.Get("Spaceship-Error-Code")
 
 	switch response.StatusCode {
 	case http.StatusUnauthorized:

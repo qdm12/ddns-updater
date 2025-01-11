@@ -57,6 +57,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/route53"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/selfhostde"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/servercow"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/spaceship"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/spdyn"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/strato"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/variomedia"
@@ -178,6 +179,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return selfhostde.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Servercow:
 		return servercow.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Spaceship:
+		return spaceship.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Spdyn:
 		return spdyn.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Strato:

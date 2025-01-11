@@ -51,6 +51,7 @@ const (
 	Route53      models.Provider = "route53"
 	SelfhostDe   models.Provider = "selfhost.de"
 	Servercow    models.Provider = "servercow"
+	Spaceship    models.Provider = "spaceship"
 	Spdyn        models.Provider = "spdyn"
 	Strato       models.Provider = "strato"
 	Variomedia   models.Provider = "variomedia"
@@ -104,6 +105,7 @@ func ProviderChoices() []models.Provider {
 		Porkbun,
 		Route53,
 		SelfhostDe,
+		Spaceship,
 		Spdyn,
 		Strato,
 		Variomedia,

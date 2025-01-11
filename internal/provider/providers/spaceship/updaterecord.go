@@ -22,6 +22,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	var existingRecord Record
 
+	// Check exact matches for both type and name
 	for _, record := range records {
 		if record.Type == recordType && record.Name == p.owner {
 			existingRecord = record

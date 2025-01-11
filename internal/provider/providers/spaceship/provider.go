@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/netip"
 
-	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
+	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
@@ -96,9 +96,12 @@ func (p *Provider) BuildDomainName() string {
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
-		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
-		Owner:     p.Owner(),
-		Provider:  fmt.Sprintf("<a href=\"https://www.spaceship.com/application/advanced-dns-application/manage/%s\">Spaceship</a>", p.domain),
+		Domain: fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
+		Owner:  p.Owner(),
+		Provider: fmt.Sprintf(
+			"<a href=\"https://www.spaceship.com/application/advanced-dns-application/manage/%s\">Spaceship</a>",
+			p.domain,
+		),
 		IPVersion: p.ipVersion.String(),
 	}
 }
@@ -109,4 +112,58 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetAccept(request, "application/json")
 	request.Header.Set("X-Api-Key", p.apiKey)
 	request.Header.Set("X-Api-Secret", p.apiSecret)
+}
+
+func (p *Provider) handleAPIError(response *http.Response) error {
+	var apiError APIError
+	if err := json.NewDecoder(response.Body).Decode(&apiError); err != nil {
+		return fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
+	}
+
+	// Extract error code from header if present
+	errorCode := response.Header.Get("spaceship-error-code")
+
+	switch response.StatusCode {
+	case http.StatusUnauthorized:
+		return fmt.Errorf("%w: invalid API credentials", errors.ErrAuth)
+	case http.StatusForbidden:
+		return fmt.Errorf("%w: missing required permission dnsRecords:write", errors.ErrAuth)
+	case http.StatusNotFound:
+		if apiError.Detail == "SOA record for domain "+p.domain+" not found." {
+			return fmt.Errorf("%w: domain %s must be configured in Spaceship first",
+				errors.ErrDomainNotFound, p.domain)
+		}
+		return fmt.Errorf("%w: %s", errors.ErrRecordResourceSetNotFound, apiError.Detail)
+	case http.StatusBadRequest:
+		var details string
+		for _, d := range apiError.Data {
+			if d.Field != "" {
+				details += fmt.Sprintf(" %s: %s;", d.Field, d.Details)
+			} else {
+				details += fmt.Sprintf(" %s;", d.Details)
+			}
+		}
+		// Add error code if present
+		if errorCode != "" {
+			details = fmt.Sprintf(" (code: %s)%s", errorCode, details)
+		}
+		return fmt.Errorf("%w:%s", errors.ErrBadRequest, details)
+	case http.StatusTooManyRequests:
+		// Rate limit is 300 requests within 300 seconds per user and domain
+		return fmt.Errorf("%w: rate limit exceeded (300 requests/300 seconds)", errors.ErrRateLimit)
+	case http.StatusInternalServerError:
+		if errorCode != "" {
+			return fmt.Errorf("%w: internal server error (code: %s): %s",
+				errors.ErrHTTPStatusNotValid, errorCode, apiError.Detail)
+		}
+		return fmt.Errorf("%w: %d: %s",
+			errors.ErrHTTPStatusNotValid, response.StatusCode, apiError.Detail)
+	default:
+		if errorCode != "" {
+			return fmt.Errorf("%w: %d (code: %s): %s",
+				errors.ErrHTTPStatusNotValid, response.StatusCode, errorCode, apiError.Detail)
+		}
+		return fmt.Errorf("%w: %d: %s",
+			errors.ErrHTTPStatusNotValid, response.StatusCode, apiError.Detail)
+	}
 }

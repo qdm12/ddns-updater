@@ -10,12 +10,11 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
-func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
-	records []Record, err error) {
+func (p *Provider) getRecords(ctx context.Context, client *http.Client) (records []Record, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "spaceship.dev",
-		Path:   fmt.Sprintf("/api/v1/dns/records/%s", p.domain),
+		Path:   "/api/v1/dns/records/" + p.domain,
 	}
 
 	values := url.Values{}

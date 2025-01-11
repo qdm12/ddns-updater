@@ -7,16 +7,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
-	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
 func (p *Provider) deleteRecord(ctx context.Context, client *http.Client, record Record) error {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "spaceship.dev",
-		Path:   fmt.Sprintf("/api/v1/dns/records/%s", p.domain),
+		Path:   "/api/v1/dns/records/" + p.domain,
 	}
 
 	deleteData := []Record{record}
@@ -39,9 +36,7 @@ func (p *Provider) deleteRecord(ctx context.Context, client *http.Client, record
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode,
-			utils.BodyToSingleLine(response.Body))
+		return p.handleAPIError(response)
 	}
 
 	return nil

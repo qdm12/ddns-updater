@@ -2,6 +2,7 @@
 
 ## Configuration
 
+Docs can be found for the spaceship API [here](https://docs.spaceship.dev/).
 ### Example
 
 ```json

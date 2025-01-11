@@ -32,7 +32,6 @@ If something is unclear in the documentation below, please refer to the [scalewa
 
 - `"ip_version"` can be `"ipv4"` or `"ipv6"`. It defaults to `"ipv4"`.
 - `"ipv6_suffix"` is the suffix to append to the IPv6 address. It defaults to `""`.
-- `"field_type"` is the type of DNS record to update. It can be `"A"` or `"AAAA"`. It defaults to `"A"`.
 - `"field_name"` is the name of the DNS record to update. For example, it could be `"www"`, `"@"` or `"*"` for the wildcard. It defaults to to `""` (equivalent to `"@"`).
 - `"ttl"` is the TTL of the DNS record to update. It defaults to `3600`.
 

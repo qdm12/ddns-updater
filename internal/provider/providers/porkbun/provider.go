@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
+	"time"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -140,6 +141,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	for _, record := range records {
 		err = p.updateRecord(ctx, client, recordType, p.owner, ipStr, record.ID)
+		time.Sleep(time.Second)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 		}

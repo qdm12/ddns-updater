@@ -23,9 +23,7 @@ type Client struct {
 	uuid       string
 }
 
-var (
-	ErrStatusCode = errors.New("bad status code")
-)
+var ErrStatusCode = errors.New("bad status code")
 
 type State string
 

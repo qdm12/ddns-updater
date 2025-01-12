@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -31,7 +30,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	provider *Provider, err error) {
+	provider *Provider, err error,
+) {
 	var providerSpecificSettings struct {
 		// TODO adapt to the provider specific settings.
 		Username string `json:"username"`
@@ -42,7 +42,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("json decoding provider specific settings: %w", err)
 	}
 
-	err = validateSettings(domain, owner,
+	err = validateSettings(domain,
 		providerSpecificSettings.Username, providerSpecificSettings.Password)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
@@ -58,7 +58,7 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(domain, owner, username, password string) (err error) {
+func validateSettings(domain, username, password string) (err error) {
 	// TODO: update this switch to be as restrictive as possible
 	// to fail early for the user. Use errors already defined
 	// in the internal/provider/errors package, or add your own
@@ -70,8 +70,6 @@ func validateSettings(domain, owner, username, password string) (err error) {
 	}
 
 	switch {
-	case owner == "":
-		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
 	// TODO: does the provider support wildcard owners? If not, disallow * owners
 	// case owner == "*":
 	// 	return fmt.Errorf("%w", errors.ErrOwnerWildcard)
@@ -154,11 +152,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	// TODO handle the encoding of the response body properly. Often it can be JSON,
 	// see other provider code for examples on how to decode JSON.
-	b, err := io.ReadAll(response.Body)
+	s, err := utils.ReadAndCleanBody(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
+		return netip.Addr{}, fmt.Errorf("reading response: %w", err)
 	}
-	s := string(b)
 
 	// TODO handle every possible status codes from the provider API.
 	// If undocumented, try them out by sending bogus HTTP requests to see

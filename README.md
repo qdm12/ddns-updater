@@ -76,9 +76,12 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - INWX
   - Ionos
   - Linode
+  - Loopia
   - LuaDNS
+  - Myaddr
   - Name.com
   - Namecheap
+  - NameSilo
   - Netcup
   - NoIP
   - Now-DNS
@@ -92,6 +95,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - Spdyn
   - Strato.de
   - Variomedia.de
+  - Vultr
   - Zoneedit
   - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
 - Web user interface (Desktop)
@@ -239,9 +243,12 @@ Check the documentation for your DNS provider:
 - [INWX](docs/inwx.md)
 - [Ionos](docs/ionos.md)
 - [Linode](docs/linode.md)
+- [Loopia](docs/loopia.md)
 - [LuaDNS](docs/luadns.md)
+- [Myaddr](docs/myaddr.md)
 - [Name.com](docs/name.com.md)
 - [Namecheap](docs/namecheap.md)
+- [NameSilo](docs/namesilo.md)
 - [Netcup](docs/netcup.md)
 - [NoIP](docs/noip.md)
 - [Now-DNS](docs/nowdns.md)
@@ -254,11 +261,13 @@ Check the documentation for your DNS provider:
 - [Spdyn](docs/spdyn.md)
 - [Strato.de](docs/strato.md)
 - [Variomedia.de](docs/variomedia.md)
+- [Vultr](docs/vultr.md)
 - [Zoneedit](docs/zoneedit.md)
 
 Note that:
 
 - you can specify multiple owners/hosts for the same domain using a comma separated list. For example with `"domain": "example.com,sub.example.com,sub2.example.com",`.
+⚠️ this is a bit different for DuckDNS and GoIP, see their respective documentation.
 
 ### Environment variables
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -32,7 +31,8 @@ const defaultDomain = "goip.de"
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	// Note domain is of the form:
 	// - for retro-compatibility: "", "goip.de" or "goip.it"
 	// - domain.goip.de or domain.goip.it since goip.de and goip.it are eTLDs.
@@ -170,15 +170,15 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 			utils.BodyToSingleLine(response.Body))
 	}
 
-	b, err := io.ReadAll(response.Body)
+	s, err := utils.ReadAndCleanBody(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
+		return netip.Addr{}, fmt.Errorf("reading response: %w", err)
 	}
-	s := string(b)
+
 	switch {
 	case strings.HasPrefix(s, p.BuildDomainName()+" ("+ip.String()+")"):
 		return ip, nil
-	case strings.HasPrefix(strings.ToLower(s), "zugriff verweigert"):
+	case strings.HasPrefix(s, "zugriff verweigert"):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	default:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, utils.ToSingleLine(s))

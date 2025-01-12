@@ -35,9 +35,12 @@ const (
 	INWX         models.Provider = "inwx"
 	Ionos        models.Provider = "ionos"
 	Linode       models.Provider = "linode"
+	Loopia       models.Provider = "loopia"
 	LuaDNS       models.Provider = "luadns"
+	Myaddr       models.Provider = "myaddr"
 	Namecheap    models.Provider = "namecheap"
 	NameCom      models.Provider = "name.com"
+	NameSilo     models.Provider = "namesilo"
 	Netcup       models.Provider = "netcup"
 	Njalla       models.Provider = "njalla"
 	NoIP         models.Provider = "noip"
@@ -51,6 +54,7 @@ const (
 	Spdyn        models.Provider = "spdyn"
 	Strato       models.Provider = "strato"
 	Variomedia   models.Provider = "variomedia"
+	Vultr        models.Provider = "vultr"
 	Zoneedit     models.Provider = "zoneedit"
 )
 
@@ -86,9 +90,12 @@ func ProviderChoices() []models.Provider {
 		INWX,
 		Ionos,
 		Linode,
+		Loopia,
 		LuaDNS,
+		Myaddr,
 		Namecheap,
 		NameCom,
+		NameSilo,
 		Njalla,
 		NoIP,
 		NowDNS,
@@ -100,6 +107,7 @@ func ProviderChoices() []models.Provider {
 		Spdyn,
 		Strato,
 		Variomedia,
+		Vultr,
 		Zoneedit,
 	}
 }

@@ -19,7 +19,8 @@ type ipinfo struct {
 }
 
 func (p *ipinfo) get(ctx context.Context, ip netip.Addr) (
-	result Result, err error) {
+	result Result, err error,
+) {
 	result.Source = string(Ipinfo)
 
 	url := "https://ipinfo.io/"

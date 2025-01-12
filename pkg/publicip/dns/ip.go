@@ -11,9 +11,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-var (
-	ErrIPNotFoundForVersion = errors.New("IP addresses found but not for IP version")
-)
+var ErrIPNotFoundForVersion = errors.New("IP addresses found but not for IP version")
 
 func (f *Fetcher) IP(ctx context.Context) (publicIP netip.Addr, err error) {
 	publicIPs, err := f.ip(ctx, "tcp")
@@ -52,7 +50,8 @@ func (f *Fetcher) IP6(ctx context.Context) (publicIP netip.Addr, err error) {
 }
 
 func (f *Fetcher) ip(ctx context.Context, network string) (
-	publicIPs []netip.Addr, err error) {
+	publicIPs []netip.Addr, err error,
+) {
 	index := int(atomic.AddUint32(f.ring.counter, 1)) % len(f.ring.providers)
 	providerData := f.ring.providers[index].data()
 

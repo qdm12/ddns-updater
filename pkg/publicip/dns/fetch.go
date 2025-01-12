@@ -20,7 +20,8 @@ var (
 )
 
 func fetch(ctx context.Context, client Client, network string,
-	providerData providerData) (publicIPs []netip.Addr, err error) {
+	providerData providerData,
+) (publicIPs []netip.Addr, err error) {
 	var serverHost string
 	switch network {
 	case "tcp":
@@ -80,9 +81,7 @@ func fetch(ctx context.Context, client Client, network string,
 	return publicIPs, nil
 }
 
-var (
-	ErrTooManyTXTRecords = errors.New("too many TXT records")
-)
+var ErrTooManyTXTRecords = errors.New("too many TXT records")
 
 func handleAnswerTXT(answer dns.RR) (publicIP netip.Addr, err error) {
 	answerTXT, ok := answer.(*dns.TXT)

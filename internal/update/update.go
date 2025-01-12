@@ -22,7 +22,8 @@ type Updater struct {
 }
 
 func NewUpdater(db Database, client *http.Client, shoutrrrClient ShoutrrrClient,
-	logger DebugLogger, timeNow func() time.Time) *Updater {
+	logger DebugLogger, timeNow func() time.Time,
+) *Updater {
 	client = makeLogClient(client, logger)
 	return &Updater{
 		db:             db,

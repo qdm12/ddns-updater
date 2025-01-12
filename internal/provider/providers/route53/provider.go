@@ -31,7 +31,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	provider *Provider, err error) {
+	provider *Provider, err error,
+) {
 	var providerSpecificSettings struct {
 		AccessKey string  `json:"access_key"`
 		SecretKey string  `json:"secret_key"`
@@ -49,7 +50,7 @@ func New(data json.RawMessage, domain, owner string,
 		ttl = *providerSpecificSettings.TTL
 	}
 
-	err = validateSettings(domain, owner, providerSpecificSettings.AccessKey,
+	err = validateSettings(domain, providerSpecificSettings.AccessKey,
 		providerSpecificSettings.SecretKey, providerSpecificSettings.ZoneID)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
@@ -79,15 +80,13 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(domain, owner, accessKey, secretKey, zoneID string) (err error) {
+func validateSettings(domain, accessKey, secretKey, zoneID string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
 	}
 
 	switch {
-	case owner == "":
-		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
 	case accessKey == "":
 		return fmt.Errorf("%w", errors.ErrAccessKeyNotSet)
 	case secretKey == "":

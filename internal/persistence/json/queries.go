@@ -42,7 +42,8 @@ func (db *Database) StoreNewIP(domain, owner string, ip netip.Addr, t time.Time)
 // GetEvents gets all the IP addresses history for a certain domain, owner and
 // IP version, in the order from oldest to newest.
 func (db *Database) GetEvents(domain, owner string,
-	ipVersion ipversion.IPVersion) (events []models.HistoryEvent, err error) {
+	ipVersion ipversion.IPVersion,
+) (events []models.HistoryEvent, err error) {
 	db.mutex.RLock()
 	defer db.mutex.RUnlock()
 	for _, record := range db.data.Records {

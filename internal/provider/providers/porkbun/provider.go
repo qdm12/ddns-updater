@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
-	"time"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -29,7 +28,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		SecretAPIKey string `json:"secret_api_key"`
 		APIKey       string `json:"api_key"`
@@ -141,7 +141,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	for _, record := range records {
 		err = p.updateRecord(ctx, client, recordType, p.owner, ipStr, record.ID)
-		time.Sleep(time.Second)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 		}
@@ -181,7 +180,8 @@ func (p *Provider) deleteDefaultConflictingRecordsIfNeeded(ctx context.Context, 
 // matches the expected content value.
 // It returns an error if multiple records are found or if one record is found with an unexpected value.
 func (p *Provider) deleteSingleMatchingRecord(ctx context.Context, client *http.Client,
-	recordType, owner, expectedContent string) (err error) {
+	recordType, owner, expectedContent string,
+) (err error) {
 	records, err := p.getRecords(ctx, client, recordType, owner)
 	if err != nil {
 		return fmt.Errorf("getting records: %w", err)

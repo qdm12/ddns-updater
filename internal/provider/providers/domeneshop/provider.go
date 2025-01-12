@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -28,7 +27,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	provider *Provider, err error) {
+	provider *Provider, err error,
+) {
 	var providerSpecificSettings struct {
 		Token  string `json:"token"`
 		Secret string `json:"secret"`
@@ -61,8 +61,6 @@ func validateSettings(domain, owner, token, secret string) (err error) {
 	}
 
 	switch {
-	case owner == "":
-		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
 	case owner == "*":
 		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
 	case token == "":
@@ -137,19 +135,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	defer response.Body.Close()
 
-	b, err := io.ReadAll(response.Body)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
-	}
-	s := string(b)
-
 	switch response.StatusCode {
 	case http.StatusNoContent:
 		return ip, nil
 	case http.StatusNotFound:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrHostnameNotExists, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrHostnameNotExists, utils.BodyToSingleLine(response.Body))
 	default:
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 }

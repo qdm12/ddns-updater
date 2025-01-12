@@ -28,7 +28,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Key string `json:"key"`
 	}{}
@@ -164,11 +165,11 @@ type (
 )
 
 func (p *Provider) defaultURLValues() (values url.Values) {
-	uuid := make([]byte, 16) //nolint:gomnd
+	uuid := make([]byte, 16) //nolint:mnd
 	_, _ = io.ReadFull(rand.Reader, uuid)
-	//nolint:gomnd
+	//nolint:mnd
 	uuid[6] = (uuid[6] & 0x0f) | 0x40 // Version 4
-	//nolint:gomnd
+	//nolint:mnd
 	uuid[8] = (uuid[8] & 0x3f) | 0x80 // Variant is 10
 	values = url.Values{}
 	values.Set("key", p.key)
@@ -178,7 +179,8 @@ func (p *Provider) defaultURLValues() (values url.Values) {
 }
 
 func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
-	records dreamHostRecords, err error) {
+	records dreamHostRecords, err error,
+) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.dreamhost.com",

@@ -34,7 +34,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		PersonalAccessToken string `json:"personal_access_token"`
 		APIKey              string `json:"key"`
@@ -110,6 +111,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// See https://api.gandi.net/docs/livedns/#v5-livedns-domains-fqdn-records
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A
 	if ip.Is6() {
@@ -118,23 +120,18 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	u := url.URL{
 		Scheme: "https",
-		Host:   "dns.api.gandi.net",
-		Path:   fmt.Sprintf("/api/v5/domains/%s/records/%s/%s", p.domain, p.owner, recordType),
+		Host:   "api.gandi.net",
+		Path:   fmt.Sprintf("v5/livedns/domains/%s/records/%s/%s", p.domain, p.owner, recordType),
 	}
 
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
-	const defaultTTL uint32 = 3600
-	ttl := defaultTTL
-	if p.ttl != 0 {
-		ttl = p.ttl
-	}
 	requestData := struct {
 		Values [1]string `json:"rrset_values"`
-		TTL    uint32    `json:"rrset_ttl"`
+		TTL    uint32    `json:"rrset_ttl,omitempty"`
 	}{
 		Values: [1]string{ip.Unmap().String()},
-		TTL:    ttl,
+		TTL:    p.ttl,
 	}
 	err = encoder.Encode(requestData)
 	if err != nil {

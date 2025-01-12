@@ -24,7 +24,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		APIKey string `json:"api_key"`
 	}{}
@@ -97,7 +98,8 @@ func (p *Provider) HTML() models.HTMLRow {
 
 // See https://developer.hosting.ionos.com/docs/dns
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (
-	newIP netip.Addr, err error) {
+	newIP netip.Addr, err error,
+) {
 	zones, err := p.getZones(ctx, client)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("getting zones: %w", err)

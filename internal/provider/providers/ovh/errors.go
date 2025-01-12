@@ -10,20 +10,20 @@ import (
 )
 
 func extractAPIError(response *http.Response) (err error) {
-	decoder := json.NewDecoder(response.Body)
+	b, err := io.ReadAll(response.Body)
+	if err != nil {
+		_ = response.Body.Close()
+		return fmt.Errorf("reading response body: %w", err)
+	}
+
 	var apiError struct {
 		Message string `json:"Message"`
 	}
-	err = decoder.Decode(&apiError)
+	err = json.Unmarshal(b, &apiError)
 	if err != nil {
-		b, err := io.ReadAll(response.Body)
-		if err != nil {
-			_ = response.Body.Close()
-			return fmt.Errorf("reading response body: %w", err)
-		}
 		apiError.Message = string(b)
 	}
-	queryID := response.Header.Get("X-Ovh-QueryID")
+	queryID := response.Header.Get("X-Ovh-Queryid")
 
 	_ = response.Body.Close()
 

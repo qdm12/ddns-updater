@@ -47,7 +47,8 @@ type loggingRoundTripper struct {
 }
 
 func (lrt *loggingRoundTripper) RoundTrip(request *http.Request) (
-	response *http.Response, err error) {
+	response *http.Response, err error,
+) {
 	lrt.logger.Debug(requestToString(request))
 
 	response, err = lrt.proxied.RoundTrip(request)
@@ -102,7 +103,8 @@ func headerToString(header http.Header) (s string) {
 }
 
 func readAndResetBody(body io.ReadCloser) (
-	newBody io.ReadCloser, bodyString string) {
+	newBody io.ReadCloser, bodyString string,
+) {
 	b, err := io.ReadAll(body)
 	if err != nil {
 		bodyString = "error reading body: " + err.Error()

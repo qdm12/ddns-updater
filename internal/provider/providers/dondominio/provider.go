@@ -28,7 +28,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Username string `json:"username"`
 		Password string `json:"password"` // retro-compatibility
@@ -120,7 +121,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		RawQuery: url.Values{
 			"user":   {p.username},
 			"apikey": {p.key},
-			"host":   {p.BuildDomainName()},
+			"host":   {utils.BuildURLQueryHostname(p.owner, p.domain)},
 			"ip":     {ip.String()},
 			"lang":   {"en"},
 		}.Encode(),

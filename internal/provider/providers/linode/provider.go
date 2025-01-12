@@ -29,7 +29,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Token string `json:"token"`
 	}{}
@@ -206,7 +207,8 @@ func (p *Provider) getDomainID(ctx context.Context, client *http.Client) (domain
 }
 
 func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
-	domainID int, recordType string) (recordID int, err error) {
+	domainID int, recordType string,
+) (recordID int, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.linode.com",
@@ -254,7 +256,8 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 }
 
 func (p *Provider) createRecord(ctx context.Context, client *http.Client,
-	domainID int, recordType string, ip netip.Addr) (err error) {
+	domainID int, recordType string, ip netip.Addr,
+) (err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.linode.com",
@@ -316,7 +319,8 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 }
 
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
-	domainID, recordID int, ip netip.Addr) (err error) {
+	domainID, recordID int, ip netip.Addr,
+) (err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.linode.com",

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -32,7 +31,8 @@ const eTLD = "duckdns.org"
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	// Note domain is of the form:
 	// - for retro-compatibility: "", "duckdns.org"
 	// - domain.duckdns.org since duckdns.org is an eTLD.
@@ -161,11 +161,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	defer response.Body.Close()
 
-	b, err := io.ReadAll(response.Body)
+	s, err := utils.ReadAndCleanBody(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
+		return netip.Addr{}, fmt.Errorf("reading response: %w", err)
 	}
-	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
@@ -176,9 +175,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	switch {
 	case len(s) < minChars:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrResponseTooShort, s)
-	case s[0:minChars] == "KO":
+	case s[0:minChars] == "ko":
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
-	case s[0:minChars] == "OK":
+	case s[0:minChars] == "ok":
 		var ips []netip.Addr
 		if ip.Is6() {
 			ips = ipextract.IPv6(s)

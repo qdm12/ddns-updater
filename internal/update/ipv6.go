@@ -6,7 +6,8 @@ import (
 )
 
 func ipv6WithSuffix(publicIP netip.Addr, ipv6Suffix netip.Prefix) (
-	updateIP netip.Addr) {
+	updateIP netip.Addr,
+) {
 	if !publicIP.IsValid() || !publicIP.Is6() || !ipv6Suffix.IsValid() {
 		return publicIP
 	}

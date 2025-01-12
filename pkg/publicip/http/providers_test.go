@@ -19,8 +19,10 @@ func Test_ListProvidersForVersion(t *testing.T) {
 	}{
 		"ip4or6": {
 			version: ipversion.IP4or6,
-			providers: []Provider{Ifconfig, Ipify, Ipinfo, Spdyn, Ipleak,
-				Icanhazip, Ident, Nnev, Wtfismyip, Seeip, Changeip},
+			providers: []Provider{
+				Ifconfig, Ipify, Ipinfo, Spdyn, Ipleak,
+				Icanhazip, Ident, Nnev, Wtfismyip, Seeip, Changeip,
+			},
 		},
 		"ip4": {
 			version:   ipversion.IP4,
@@ -33,7 +35,6 @@ func Test_ListProvidersForVersion(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			providers := ListProvidersForVersion(testCase.version)
@@ -71,7 +72,6 @@ func Test_ValidateProvider(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			err := ValidateProvider(testCase.provider, testCase.version)

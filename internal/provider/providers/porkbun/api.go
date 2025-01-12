@@ -23,7 +23,8 @@ type dnsRecord struct {
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Retrieve%20Records%20by%20Domain,%20Subdomain%20and%20Type
 func (p *Provider) getRecords(ctx context.Context, client *http.Client, recordType, owner string) (
-	records []dnsRecord, err error) {
+	records []dnsRecord, err error,
+) {
 	url := "https://api.porkbun.com/api/json/v3/dns/retrieveByNameType/" + p.domain + "/" + recordType + "/"
 	if owner != "@" {
 		// Note Porkbun requires we send the unescaped '*' character.
@@ -53,7 +54,8 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client, recordTy
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Create%20Record
 func (p *Provider) createRecord(ctx context.Context, client *http.Client,
-	recordType, owner, ipStr string) (err error) {
+	recordType, owner, ipStr string,
+) (err error) {
 	url := "https://api.porkbun.com/api/json/v3/dns/create/" + p.domain
 	postRecordsParams := struct {
 		SecretAPIKey string `json:"secretapikey"`
@@ -82,7 +84,8 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 
 // See https://porkbun.com/api/json/v3/documentation#DNS%20Edit%20Record%20by%20Domain%20and%20ID
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
-	recordType, owner, ipStr, recordID string) (err error) {
+	recordType, owner, ipStr, recordID string,
+) (err error) {
 	url := "https://api.porkbun.com/api/json/v3/dns/edit/" + p.domain + "/" + recordID
 	postRecordsParams := struct {
 		SecretAPIKey string `json:"secretapikey"`
@@ -134,8 +137,10 @@ func (p *Provider) deleteRecord(ctx context.Context, client *http.Client, record
 	return nil
 }
 
-func httpPost[T any](ctx context.Context, client *http.Client, //nolint:ireturn
-	url string, requestData any, decodeBody bool) (responseData T, err error) {
+//nolint:ireturn
+func httpPost[T any](ctx context.Context, client *http.Client,
+	url string, requestData any, decodeBody bool,
+) (responseData T, err error) {
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
 	err = encoder.Encode(requestData)

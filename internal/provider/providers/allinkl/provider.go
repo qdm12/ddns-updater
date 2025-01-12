@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -30,7 +29,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -137,11 +137,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	defer response.Body.Close()
 
-	b, err := io.ReadAll(response.Body)
+	s, err := utils.ReadAndCleanBody(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
+		return netip.Addr{}, fmt.Errorf("reading response: %w", err)
 	}
-	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid,

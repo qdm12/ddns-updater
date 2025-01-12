@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -37,7 +36,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Username    string `json:"username"`
 		Password    string `json:"password"`
@@ -80,7 +80,8 @@ func New(data json.RawMessage, domain, owner string,
 }
 
 func validateSettings(domain, mode, owner, appKey, consumerKey,
-	appSecret, username, password string) (err error) {
+	appSecret, username, password string,
+) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
@@ -146,7 +147,8 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
-	ip netip.Addr) (newIP netip.Addr, err error) {
+	ip netip.Addr,
+) (newIP netip.Addr, err error) {
 	u := url.URL{
 		Scheme: "https",
 		User:   url.UserPassword(p.username, p.password),
@@ -171,11 +173,10 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
 	}
 	defer response.Body.Close()
 
-	b, err := io.ReadAll(response.Body)
+	s, err := utils.ReadAndCleanBody(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
+		return netip.Addr{}, fmt.Errorf("reading response: %w", err)
 	}
-	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)
@@ -198,7 +199,8 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
 }
 
 func (p *Provider) updateWithZoneDNS(ctx context.Context, client *http.Client, ip netip.Addr) (
-	newIP netip.Addr, err error) {
+	newIP netip.Addr, err error,
+) {
 	ipStr := ip.Unmap().String()
 	recordType := constants.A
 	if ip.Is6() {

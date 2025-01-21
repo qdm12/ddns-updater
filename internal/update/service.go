@@ -77,6 +77,7 @@ func (s *Service) lookupIPsResilient(ctx context.Context, hostname string, tries
 				results <- result{network: network, ips: ips, err: err}
 				return
 			}
+			results <- result{network: network} // retries exceeded
 		}(lookupCtx, network, results)
 	}
 

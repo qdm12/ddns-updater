@@ -1,16 +1,26 @@
 package transip
 
 import (
+	"bytes"
 	"context"
+	"crypto"
+	"crypto/rsa"
+	"crypto/sha512"
+	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"net/http"
 	"net/netip"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Provider struct {
@@ -57,11 +67,17 @@ func validateSettings(domain, username string, key string) (err error) {
 	}
 
 	if username == "" {
-		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+		return errors.ErrUsernameNotSet
 	}
+
 	if key == "" {
-		return fmt.Errorf("%w", errors.ErrKeyNotSet)
+		return errors.ErrKeyNotSet
 	}
+
+	if _, err := parsePrivateKey(key); err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrKeyNotValid, err)
+	}
+
 	return nil
 }
 
@@ -101,7 +117,95 @@ func (p *Provider) HTML() models.HTMLRow {
 		IPVersion: p.ipVersion.String(),
 	}
 }
+
+func parsePrivateKey(keyString string) (*rsa.PrivateKey, error) {
+	pemData := strings.ReplaceAll(keyString, "\n", "")
+	pemData = strings.ReplaceAll(pemData, "-----BEGIN PRIVATE KEY-----", "")
+	pemData = strings.ReplaceAll(pemData, "-----END PRIVATE KEY-----", "")
+	pemData = strings.TrimSpace(pemData)
+
+	decodedKey, err := base64.StdEncoding.DecodeString(pemData)
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := x509.ParsePKCS8PrivateKey(decodedKey)
+	if err != nil {
+		return nil, err
+	}
+
+	if rsaKey, ok := key.(*rsa.PrivateKey); ok {
+		return rsaKey, nil
+	}
+
+	return nil, fmt.Errorf("not an RSA private key")
+}
+
+func (p *Provider) createAccessToken(ctx context.Context, client *http.Client) (string, error) {
+	requestBody, err := json.Marshal(map[string]any{
+		"login":      p.username,
+		"nonce":      strconv.FormatInt(time.Now().UnixNano(), 10),
+		"global_key": true,
+		"read_only":  true, // TODO: set to false
+		"label":      "ddns-updater",
+	})
+	if err != nil {
+		return "", fmt.Errorf("json encoding request body: %w", err)
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.transip.nl/v6/auth", bytes.NewReader(requestBody))
+	if err != nil {
+		return "", fmt.Errorf("creating http request: %w", err)
+	}
+	headers.SetContentType(request, "application/json")
+
+	privateKey, err := parsePrivateKey(p.key)
+	if err != nil {
+		return "", fmt.Errorf("parsing private key: %w", err)
+	}
+
+	hashedBody := sha512.Sum512(requestBody)
+	signature, err := rsa.SignPKCS1v15(nil, privateKey, crypto.SHA512, hashedBody[:])
+	if err != nil {
+		return "", fmt.Errorf("signing request: %w", err)
+	}
+	request.Header.Set("Signature", base64.StdEncoding.EncodeToString(signature))
+
+	response, err := client.Do(request)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusCreated {
+		return "", fmt.Errorf("%w: %d: %s",
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+	}
+
+	decoder := json.NewDecoder(response.Body)
+	var result struct {
+		Token string `json:"token"`
+	}
+	err = decoder.Decode(&result)
+	if err != nil {
+		return "", fmt.Errorf("json decoding response body: %w", err)
+	}
+
+	return result.Token, nil
+}
+
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	//TODO implement me
-	panic("implement me")
+	//recordType := constants.A
+	//if ip.Is6() {
+	//	recordType = constants.AAAA
+	//}
+
+	_, err = p.createAccessToken(ctx, client)
+	if err != nil {
+		return netip.Addr{}, err
+	}
+
+	// TODO
+
+	return netip.Addr{}, fmt.Errorf("implement me")
 }

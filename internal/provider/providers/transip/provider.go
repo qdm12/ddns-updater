@@ -146,8 +146,8 @@ func (p *Provider) createAccessToken(ctx context.Context, client *http.Client) (
 		"login":      p.username,
 		"nonce":      strconv.FormatInt(time.Now().UnixNano(), 10),
 		"global_key": true,
-		"read_only":  true, // TODO: set to false
-		"label":      "ddns-updater",
+		"read_only":  false,
+		"label":      fmt.Sprintf("ddns-updater %d", time.Now().Unix()),
 	})
 	if err != nil {
 		return "", fmt.Errorf("json encoding request body: %w", err)
@@ -196,17 +196,49 @@ func (p *Provider) createAccessToken(ctx context.Context, client *http.Client) (
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	//recordType := constants.A
-	//if ip.Is6() {
-	//	recordType = constants.AAAA
-	//}
+	recordType := constants.A
+	if ip.Is6() {
+		recordType = constants.AAAA
+	}
 
-	_, err = p.createAccessToken(ctx, client)
+	token, err := p.createAccessToken(ctx, client)
 	if err != nil {
 		return netip.Addr{}, err
 	}
 
-	// TODO
+	// TODO: List DNS entries, check if a new one should be created or one should be updated.
 
-	return netip.Addr{}, fmt.Errorf("implement me")
+	requestBody, err := json.Marshal(map[string]any{
+		"dnsEntry": map[string]any{
+			"name":    p.owner,
+			"expire":  300, // TODO: Use expire from existing entry.
+			"type":    recordType,
+			"content": ip.String(),
+		},
+	})
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("json encoding request body: %w", err)
+	}
+
+	url := fmt.Sprintf("https://api.transip.nl/v6/domains/%s/dns", p.domain)
+	request, err := http.NewRequestWithContext(ctx, http.MethodPatch, url, bytes.NewReader(requestBody))
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
+	}
+	headers.SetUserAgent(request)
+	headers.SetContentType(request, "application/json")
+	headers.SetAuthBearer(request, token)
+
+	response, err := client.Do(request)
+	if err != nil {
+		return netip.Addr{}, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusNoContent {
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+	}
+
+	return ip, nil
 }

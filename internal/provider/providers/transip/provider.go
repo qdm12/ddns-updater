@@ -157,6 +157,7 @@ func (p *Provider) createAccessToken(ctx context.Context, client *http.Client) (
 	if err != nil {
 		return "", fmt.Errorf("creating http request: %w", err)
 	}
+	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
 
 	privateKey, err := parsePrivateKey(p.key)

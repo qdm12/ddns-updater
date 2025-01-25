@@ -119,6 +119,7 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 func parsePrivateKey(keyString string) (*rsa.PrivateKey, error) {
+	// Remove the begin and end markers, remove whitespace, and trim.
 	pemData := strings.ReplaceAll(keyString, "\n", "")
 	pemData = strings.ReplaceAll(pemData, "-----BEGIN PRIVATE KEY-----", "")
 	pemData = strings.ReplaceAll(pemData, "-----END PRIVATE KEY-----", "")
@@ -165,6 +166,7 @@ func (p *Provider) createAccessToken(ctx context.Context, client *http.Client) (
 		return "", fmt.Errorf("parsing private key: %w", err)
 	}
 
+	// Sign the request body, put the signature in a header.
 	hashedBody := sha512.Sum512(requestBody)
 	signature, err := rsa.SignPKCS1v15(nil, privateKey, crypto.SHA512, hashedBody[:])
 	if err != nil {
@@ -183,11 +185,10 @@ func (p *Provider) createAccessToken(ctx context.Context, client *http.Client) (
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
-	decoder := json.NewDecoder(response.Body)
 	var result struct {
 		Token string `json:"token"`
 	}
-	err = decoder.Decode(&result)
+	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		return "", fmt.Errorf("json decoding response body: %w", err)
 	}
@@ -206,39 +207,79 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, err
 	}
 
-	// TODO: List DNS entries, check if a new one should be created or one should be updated.
+	dnsApiUrl := fmt.Sprintf("https://api.transip.nl/v6/domains/%s/dns", p.domain)
 
+	// List the existing DNS entries.
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, dnsApiUrl, nil)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
+	}
+	headers.SetUserAgent(request)
+	headers.SetAuthBearer(request, token)
+	response, err := client.Do(request)
+	if err != nil {
+		return netip.Addr{}, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
+			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+	}
+	var entries struct {
+		DnsEntries []dnsEntry `json:"dnsEntries"`
+	}
+	err = json.NewDecoder(response.Body).Decode(&entries)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
+	}
+
+	// Construct the basis of the new/updated entry.
+	updatedEntry := dnsEntry{
+		Name:    p.owner,
+		Expire:  300,
+		Type:    recordType,
+		Content: ip.String(),
+	}
+	postOrPatch := http.MethodPost
+
+	// Check if there is a matching entry, based on the name and type.
+	for _, entry := range entries.DnsEntries {
+		if entry.Name == p.owner && entry.Type == recordType {
+			postOrPatch = http.MethodPatch
+			updatedEntry.Expire = entry.Expire
+		}
+	}
+
+	// Create or update the entry.
 	requestBody, err := json.Marshal(map[string]any{
-		"dnsEntry": map[string]any{
-			"name":    p.owner,
-			"expire":  300, // TODO: Use expire from existing entry.
-			"type":    recordType,
-			"content": ip.String(),
-		},
+		"dnsEntry": updatedEntry,
 	})
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("json encoding request body: %w", err)
 	}
-
-	url := fmt.Sprintf("https://api.transip.nl/v6/domains/%s/dns", p.domain)
-	request, err := http.NewRequestWithContext(ctx, http.MethodPatch, url, bytes.NewReader(requestBody))
+	request, err = http.NewRequestWithContext(ctx, postOrPatch, dnsApiUrl, bytes.NewReader(requestBody))
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
 	}
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
 	headers.SetAuthBearer(request, token)
-
-	response, err := client.Do(request)
+	response, err = client.Do(request)
 	if err != nil {
 		return netip.Addr{}, err
 	}
 	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusNoContent {
+	if response.StatusCode != http.StatusNoContent && response.StatusCode != http.StatusCreated {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	return ip, nil
+}
+
+type dnsEntry struct {
+	Name    string `json:"name"`
+	Expire  int    `json:"expire"`
+	Type    string `json:"type"`
+	Content string `json:"content"`
 }

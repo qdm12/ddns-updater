@@ -34,6 +34,7 @@ const (
 	Infomaniak   models.Provider = "infomaniak"
 	INWX         models.Provider = "inwx"
 	Ionos        models.Provider = "ionos"
+	IPv64        models.Provider = "ipv64"
 	Linode       models.Provider = "linode"
 	Loopia       models.Provider = "loopia"
 	LuaDNS       models.Provider = "luadns"
@@ -89,6 +90,7 @@ func ProviderChoices() []models.Provider {
 		Infomaniak,
 		INWX,
 		Ionos,
+		IPv64,
 		Linode,
 		Loopia,
 		LuaDNS,

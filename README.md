@@ -242,6 +242,7 @@ Check the documentation for your DNS provider:
 - [Infomaniak](docs/infomaniak.md)
 - [INWX](docs/inwx.md)
 - [Ionos](docs/ionos.md)
+- [IPv64](docs/ipv64.md)
 - [Linode](docs/linode.md)
 - [Loopia](docs/loopia.md)
 - [LuaDNS](docs/luadns.md)

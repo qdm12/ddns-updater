@@ -108,10 +108,17 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Scheme: "https",
 		User:   url.UserPassword(p.BuildDomainName(), p.token),
 		Host:   "update.dedyn.io",
-		Path:   "/nic/update",
+		Path:   "",
 	}
 	values := url.Values{}
 	values.Set("hostname", utils.BuildURLQueryHostname(p.owner, p.domain))
+	if ip.Is6() {
+		values.Set("myipv6", ip.String())
+		values.Set("myipv4", "preserve")
+	} else {
+		values.Set("myipv4", ip.String())
+		values.Set("myipv6", "preserve")
+	}
 	values.Set("myip", ip.String())
 	u.RawQuery = values.Encode()
 

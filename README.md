@@ -239,6 +239,7 @@ Check the documentation for your DNS provider:
 - [GoDaddy](docs/godaddy.md)
 - [GoIP.de](docs/goip.md)
 - [He.net](docs/he.net.md)
+- [Hetzner](docs/hetzner.md)
 - [Infomaniak](docs/infomaniak.md)
 - [INWX](docs/inwx.md)
 - [Ionos](docs/ionos.md)

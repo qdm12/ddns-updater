@@ -103,7 +103,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	u := url.URL{
 		Scheme: "https",
 		Host:   "njal.la",
-		Path:   "/update",
+		Path:   "/update/",
 	}
 	values := url.Values{}
 	values.Set("h", utils.BuildURLQueryHostname(p.owner, p.domain))

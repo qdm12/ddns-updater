@@ -1,6 +1,7 @@
 package config
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,7 +15,7 @@ func Test_Settings_String(t *testing.T) {
 
 	s := defaultSettings.String()
 
-	const expected = `Settings summary:
+	var expected = `Settings summary:
 ├── HTTP client
 |   └── Timeout: 20s
 ├── Update
@@ -40,7 +41,7 @@ func Test_Settings_String(t *testing.T) {
 |   └── Server is disabled
 ├── Paths
 |   ├── Data directory: ./data
-|   ├── Config file: data/config.json
+|   ├── Config file: ` + filepath.Join("data", "config.json") + `
 |   └── Umask: system default
 ├── Backup: disabled
 └── Logger

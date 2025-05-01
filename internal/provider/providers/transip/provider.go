@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -19,7 +20,6 @@ import (
 	"net/http"
 	"net/netip"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -119,18 +119,12 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 func parsePrivateKey(keyString string) (*rsa.PrivateKey, error) {
-	// Remove the begin and end markers, remove whitespace, and trim.
-	pemData := strings.ReplaceAll(keyString, "\n", "")
-	pemData = strings.ReplaceAll(pemData, "-----BEGIN PRIVATE KEY-----", "")
-	pemData = strings.ReplaceAll(pemData, "-----END PRIVATE KEY-----", "")
-	pemData = strings.TrimSpace(pemData)
-
-	decodedKey, err := base64.StdEncoding.DecodeString(pemData)
-	if err != nil {
-		return nil, err
+	block, _ := pem.Decode([]byte(keyString))
+	if block == nil || block.Type != "PRIVATE KEY" {
+		return nil, fmt.Errorf("failed to decode PEM block containing private key")
 	}
 
-	key, err := x509.ParsePKCS8PrivateKey(decodedKey)
+	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}

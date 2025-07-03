@@ -22,6 +22,10 @@ func SetAuthSSOKey(request *http.Request, key, secret string) {
 	request.Header.Set("Authorization", "sso-key "+key+":"+secret)
 }
 
+func SetAuthorization(request *http.Request, token string) {
+	request.Header.Set("Authorization", token)
+}
+
 func SetOauth(request *http.Request, value string) {
 	request.Header.Set("Oauth", value)
 }

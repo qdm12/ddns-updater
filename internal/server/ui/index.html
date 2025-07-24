@@ -73,7 +73,14 @@
               <td data-label="Domain">{{.Domain}}</td>
               <td data-label="Owner">{{.Owner}}</td>
               <td data-label="Provider">{{.Provider}}</td>
-              <td data-label="IP Version">{{.IPVersion}}</td>
+              <td data-label="IP Version">
+                {{if eq .IPVersion "ipv4 or ipv6"}}
+                  <span class="ip-version-badge">ipv4</span>
+                  <span class="ip-version-badge ipv6">ipv6</span>
+                {{else}}
+                  <span class="ip-version-badge{{if eq .IPVersion "ipv6"}} ipv6{{end}}">{{.IPVersion}}</span>
+                {{end}}
+              </td>
               <td data-label="Update Status">{{.Status}}</td>
               <td data-label="Current IP">{{.CurrentIP}}</td>
               <td data-label="Previous IPs">{{.PreviousIPs}}</td>

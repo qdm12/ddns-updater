@@ -356,6 +356,44 @@ body {
   border-bottom-right-radius: var(--radius-xl);
 }
 
+/* IP Version styling */
+.ip-version-badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-3);
+  border: 2px solid var(--color-accent-primary);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--color-accent-light), rgba(59, 130, 246, 0.1));
+  color: var(--color-accent-primary);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal) var(--ease-out);
+}
+
+.ip-version-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent-hover);
+  background: linear-gradient(135deg, var(--color-accent-light), rgba(37, 99, 235, 0.15));
+}
+
+.ip-version-badge.ipv6 {
+  border-color: var(--color-info);
+  color: var(--color-info);
+  background: linear-gradient(135deg, var(--color-info-light), rgba(139, 92, 246, 0.1));
+}
+
+.ip-version-badge.ipv6:hover {
+  border-color: #7c3aed;
+  background: linear-gradient(135deg, var(--color-info-light), rgba(124, 58, 237, 0.15));
+}
+
+.ip-version-badge + .ip-version-badge {
+  margin-left: var(--space-2);
+}
+
 .modern-table tbody tr:last-child td {
   border-bottom: none;
 }

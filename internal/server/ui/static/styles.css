@@ -218,7 +218,8 @@ html, body {
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-primary);
   box-shadow: var(--shadow-lg);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   position: relative;
 }
 
@@ -226,6 +227,7 @@ html, body {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
+  table-layout: auto;
 }
 
 .modern-table th {
@@ -241,6 +243,7 @@ html, body {
   position: sticky;
   top: 0;
   z-index: 10;
+  white-space: nowrap;
 }
 
 .modern-table th:first-child {
@@ -257,6 +260,9 @@ html, body {
   border-bottom: 1px solid var(--border-primary);
   transition: background-color 0.2s ease;
   vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .modern-table tbody tr {

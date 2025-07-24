@@ -17,9 +17,9 @@
         <div class="title-section">
           <h1 class="title">
             <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L3 7L12 12L21 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-              <path d="M3 17L12 22L21 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-              <path d="M3 12L12 17L21 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M12 2L3 7L12 12L21 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+              <path d="M3 17L12 22L21 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+              <path d="M3 12L12 17L21 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
             </svg>
             DDNS Updater
           </h1>
@@ -28,19 +28,25 @@
         <div class="header-controls">
           <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
             <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
-              <path d="m12 1 0 2m0 18 0 2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12l2 0m18 0 2 0M4.22 19.78l1.42-1.42m12.72-12.72 1.42-1.42" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" />
+              <path
+                d="m12 1 0 2m0 18 0 2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12l2 0m18 0 2 0M4.22 19.78l1.42-1.42m12.72-12.72 1.42-1.42"
+                stroke="currentColor" stroke-width="2" />
             </svg>
             <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="none">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2"/>
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" />
             </svg>
           </button>
           <button class="refresh-btn" onclick="window.location.reload()" aria-label="Refresh page">
             <svg viewBox="0 0 24 24" fill="none">
-              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M21 3v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M3 21v-5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M21 3v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M3 21v-5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
             </svg>
           </button>
         </div>
@@ -50,30 +56,30 @@
     <main class="main-content">
       <div class="table-container">
         <table class="modern-table" role="table">
-    <thead>
-      <tr>
-        <th>Domain</th>
-        <th>Owner</th>
-        <th>Provider</th>
-        <th>IP Version</th>
-        <th>Update Status</th>
-        <th>Current IP</th>
-        <th>Previous IPs<small> (reverse chronological order)</small></th>
-      </tr>
-    </thead>
-    <tbody>
-      {{range .Rows}}
-      <tr>
-        <td data-label="Domain">{{.Domain}}</td>
-        <td data-label="Owner">{{.Owner}}</td>
-        <td data-label="Provider">{{.Provider}}</td>
-        <td data-label="IP Version">{{.IPVersion}}</td>
-        <td data-label="Update Status">{{.Status}}</td>
-        <td data-label="Current IP">{{.CurrentIP}}</td>
-        <td data-label="Previous IPs">{{.PreviousIPs}}</td>
-      </tr>
-      {{end}}
-        </tbody>
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>Owner</th>
+              <th>Provider</th>
+              <th>IP Version</th>
+              <th>Update Status</th>
+              <th>Current IP</th>
+              <th>Previous IPs<small> (reverse chronological order)</small></th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range .Rows}}
+            <tr>
+              <td data-label="Domain">{{.Domain}}</td>
+              <td data-label="Owner">{{.Owner}}</td>
+              <td data-label="Provider">{{.Provider}}</td>
+              <td data-label="IP Version">{{.IPVersion}}</td>
+              <td data-label="Update Status">{{.Status}}</td>
+              <td data-label="Current IP">{{.CurrentIP}}</td>
+              <td data-label="Previous IPs">{{.PreviousIPs}}</td>
+            </tr>
+            {{end}}
+          </tbody>
         </table>
       </div>
     </main>
@@ -82,18 +88,12 @@
         <div class="footer-links">
           <a href="https://github.com/qdm12/ddns-updater" class="footer-link">
             <svg class="github-icon" viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
+              <path
+                d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z">
+              </path>
             </svg>
             GitHub
           </a>
-        </div>
-        <div class="version-info">
-          <span class="version-badge">{{.Version}}</span>
-          {{if .UpdateAvailable}}
-          <span class="update-badge">
-            <a href="https://github.com/qdm12/ddns-updater/releases/latest">Update Available: {{.LatestVersion}}</a>
-          </span>
-          {{end}}
         </div>
       </div>
     </footer>
@@ -103,25 +103,25 @@
     // Dark mode toggle functionality
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
-    
+
     // Check for saved theme preference or default to system preference
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
+
     if (savedTheme) {
       body.setAttribute('data-theme', savedTheme);
     } else if (systemPrefersDark) {
       body.setAttribute('data-theme', 'dark');
     }
-    
+
     themeToggle.addEventListener('click', () => {
       const currentTheme = body.getAttribute('data-theme');
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      
+
       body.setAttribute('data-theme', newTheme);
       localStorage.setItem('theme', newTheme);
     });
-    
+
     // Auto-refresh every 30 seconds
     setInterval(() => {
       const lastUpdate = performance.now();
@@ -132,7 +132,6 @@
           const newDoc = parser.parseFromString(html, 'text/html');
           const newTable = newDoc.querySelector('.modern-table tbody');
           const currentTable = document.querySelector('.modern-table tbody');
-          
           if (newTable && currentTable && newTable.innerHTML !== currentTable.innerHTML) {
             currentTable.innerHTML = newTable.innerHTML;
           }

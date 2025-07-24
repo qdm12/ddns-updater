@@ -22,10 +22,13 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 	if r.Status == "" {
 		row.Status = NotAvailable
 	} else {
-		row.Status = fmt.Sprintf("%s %s, %s",
-			convertStatus(r.Status),
-			message,
+		statusHTML := convertStatus(r.Status)
+		if message != "" {
+			statusHTML += fmt.Sprintf(` <span class="status-details">%s</span>`, message)
+		}
+		statusHTML += fmt.Sprintf(`, <span class="status-timestamp">%s</span>`, 
 			time.Since(r.Time).Round(time.Second).String()+" ago")
+		row.Status = statusHTML
 	}
 	currentIP := r.History.GetCurrentIP()
 	if currentIP.IsValid() {

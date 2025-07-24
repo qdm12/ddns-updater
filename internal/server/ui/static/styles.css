@@ -356,7 +356,10 @@ body {
   border-bottom-right-radius: var(--radius-xl);
 }
 
-/* IP Version styling */
+/* ==========================================================================
+   IP Version Badge Components - Production Ready
+   ========================================================================== */
+
 .ip-version-badge {
   display: inline-block;
   padding: var(--space-1) var(--space-3);
@@ -370,28 +373,106 @@ body {
   letter-spacing: 0.05em;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-normal) var(--ease-out);
+  /* Accessibility improvements */
+  cursor: default;
+  user-select: none;
+  /* Performance optimizations */
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+  /* Browser compatibility */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.ip-version-badge:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-accent-hover);
-  background: linear-gradient(135deg, var(--color-accent-light), rgba(37, 99, 235, 0.15));
+/* Hover states with reduced motion support */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ip-version-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-accent-hover);
+    background: linear-gradient(135deg, var(--color-accent-light), rgba(37, 99, 235, 0.15));
+  }
 }
 
+/* Reduced motion fallback */
+@media (prefers-reduced-motion: reduce) {
+  .ip-version-badge {
+    transition: color var(--transition-normal) var(--ease-out),
+                background-color var(--transition-normal) var(--ease-out),
+                border-color var(--transition-normal) var(--ease-out);
+  }
+  
+  .ip-version-badge:hover {
+    border-color: var(--color-accent-hover);
+    background: linear-gradient(135deg, var(--color-accent-light), rgba(37, 99, 235, 0.15));
+  }
+}
+
+/* IPv6 specific styling */
 .ip-version-badge.ipv6 {
   border-color: var(--color-info);
   color: var(--color-info);
   background: linear-gradient(135deg, var(--color-info-light), rgba(139, 92, 246, 0.1));
 }
 
-.ip-version-badge.ipv6:hover {
-  border-color: #7c3aed;
-  background: linear-gradient(135deg, var(--color-info-light), rgba(124, 58, 237, 0.15));
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ip-version-badge.ipv6:hover {
+    border-color: #7c3aed;
+    background: linear-gradient(135deg, var(--color-info-light), rgba(124, 58, 237, 0.15));
+  }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .ip-version-badge.ipv6:hover {
+    border-color: #7c3aed;
+    background: linear-gradient(135deg, var(--color-info-light), rgba(124, 58, 237, 0.15));
+  }
+}
+
+/* Spacing between multiple badges */
 .ip-version-badge + .ip-version-badge {
-  margin-left: var(--space-2);
+  margin-inline-start: var(--space-2);
+}
+
+/* Focus states for accessibility */
+.ip-version-badge:focus-visible {
+  outline: 2px solid var(--color-accent-primary);
+  outline-offset: 2px;
+}
+
+.ip-version-badge.ipv6:focus-visible {
+  outline-color: var(--color-info);
+}
+
+/* ==========================================================================
+   Table Column Specific Styling - Production Ready
+   ========================================================================== */
+
+/* Previous IPs column - optimized for content display */
+.modern-table td:last-child {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: initial;
+  min-width: 12rem;
+  max-width: 20rem;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.4;
+}
+
+/* Better text breaking for IP addresses */
+@supports (word-break: break-word) {
+  .modern-table td:last-child {
+    word-break: break-word;
+  }
+}
+
+/* Fallback for older browsers */
+@supports not (word-break: break-word) {
+  .modern-table td:last-child {
+    word-break: break-all;
+  }
 }
 
 .modern-table tbody tr:last-child td {
@@ -461,6 +542,97 @@ body {
   background: var(--color-warning-light);
   color: var(--color-warning);
   border: 1px solid var(--color-warning);
+}
+
+/* ==========================================================================
+   Status Details Components - Production Ready
+   ========================================================================== */
+
+/* Status details styling (e.g., "no IP change for 22d") */
+.status-details {
+  display: inline-block;
+  margin-inline-start: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-sm);
+  /* Performance optimizations */
+  backface-visibility: hidden;
+  /* Accessibility */
+  user-select: none;
+  /* Browser compatibility */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Status timestamp styling (e.g., "2s ago") */
+.status-timestamp {
+  display: inline-block;
+  margin-inline-start: var(--space-1);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  font-style: italic;
+  /* Accessibility */
+  user-select: none;
+  /* Browser compatibility */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Responsive adjustments for mobile */
+@media (width <= 48rem) {
+  .status-details,
+  .status-timestamp {
+    display: block;
+    margin-inline-start: 0;
+    margin-top: var(--space-1);
+  }
+  
+  /* Improve mobile table readability */
+  .ip-version-badge + .ip-version-badge {
+    margin-inline-start: 0;
+    margin-top: var(--space-1);
+    display: block;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .ip-version-badge {
+    border-width: 3px;
+    font-weight: var(--font-weight-bold);
+  }
+  
+  .status-details {
+    border-width: 2px;
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+/* Print styles */
+@media print {
+  .ip-version-badge,
+  .status-details {
+    background: transparent !important;
+    color: black !important;
+    border: 1px solid black !important;
+    box-shadow: none !important;
+  }
+  
+  .status-timestamp {
+    color: #666 !important;
+  }
+}
+
+/* Performance: Contain layout shifts */
+.ip-version-badge,
+.status-details,
+.status-timestamp {
+  contain: layout style;
 }
 
 /* ==========================================================================

@@ -55,16 +55,16 @@
 
     <main class="main-content">
       <div class="table-container">
-        <table class="modern-table" role="table">
+        <table class="modern-table" role="table" aria-label="DDNS Records Status">
           <thead>
             <tr>
-              <th>Domain</th>
-              <th>Owner</th>
-              <th>Provider</th>
-              <th>IP Version</th>
-              <th>Update Status</th>
-              <th>Current IP</th>
-              <th>Previous IPs</th>
+              <th scope="col">Domain</th>
+              <th scope="col">Owner</th>
+              <th scope="col">Provider</th>
+              <th scope="col">IP Version</th>
+              <th scope="col">Update Status</th>
+              <th scope="col">Current IP</th>
+              <th scope="col">Previous IPs</th>
             </tr>
           </thead>
           <tbody>
@@ -75,10 +75,10 @@
               <td data-label="Provider">{{.Provider}}</td>
               <td data-label="IP Version">
                 {{if eq .IPVersion "ipv4 or ipv6"}}
-                  <span class="ip-version-badge">ipv4</span>
-                  <span class="ip-version-badge ipv6">ipv6</span>
+                  <span class="ip-version-badge" role="img" aria-label="IPv4 supported">ipv4</span>
+                  <span class="ip-version-badge ipv6" role="img" aria-label="IPv6 supported">ipv6</span>
                 {{else}}
-                  <span class="ip-version-badge{{if eq .IPVersion "ipv6"}} ipv6{{end}}">{{.IPVersion}}</span>
+                  <span class="ip-version-badge{{if eq .IPVersion "ipv6"}} ipv6{{end}}" role="img" aria-label="{{.IPVersion}} supported">{{.IPVersion}}</span>
                 {{end}}
               </td>
               <td data-label="Update Status">{{.Status}}</td>

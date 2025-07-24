@@ -122,22 +122,6 @@
       localStorage.setItem('theme', newTheme);
     });
 
-    // Auto-refresh every 30 seconds
-    setInterval(() => {
-      const lastUpdate = performance.now();
-      fetch(window.location.href)
-        .then(response => response.text())
-        .then(html => {
-          const parser = new DOMParser();
-          const newDoc = parser.parseFromString(html, 'text/html');
-          const newTable = newDoc.querySelector('.modern-table tbody');
-          const currentTable = document.querySelector('.modern-table tbody');
-          if (newTable && currentTable && newTable.innerHTML !== currentTable.innerHTML) {
-            currentTable.innerHTML = newTable.innerHTML;
-          }
-        })
-        .catch(error => console.log('Refresh failed:', error));
-    }, 30000);
   </script>
 </body>
 

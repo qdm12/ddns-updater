@@ -40,8 +40,9 @@ func newHandler(ctx context.Context, rootURL string,
 		ctx:           ctx,
 		db:            db,
 		indexTemplate: indexTemplate,
-		timeNow:       time.Now,
-		runner:        runner,
+		// TODO build information
+		timeNow: time.Now,
+		runner:  runner,
 	}
 
 	router := chi.NewRouter()

@@ -408,49 +408,12 @@ a:hover {
   fill: currentColor;
 }
 
-.version-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.version-badge {
-  background: var(--accent-light);
-  color: var(--accent-primary);
-  padding: 0.25rem 0.75rem;
-  border-radius: var(--radius-md);
-  font-size: 0.75rem;
-  font-weight: 600;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  border: 1px solid var(--accent-primary);
-}
-
-.update-badge {
-  background: var(--warning-light);
-  color: var(--warning);
-  padding: 0.25rem 0.75rem;
-  border-radius: var(--radius-md);
-  font-size: 0.75rem;
-  font-weight: 600;
-  border: 1px solid var(--warning);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
 .credits {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
   color: var(--text-secondary);
-}
-
-.credits span:nth-child(2) {
-  color: var(--text-muted);
 }
 
 /* Responsive Design */

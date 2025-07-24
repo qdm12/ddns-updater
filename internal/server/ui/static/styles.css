@@ -218,8 +218,7 @@ html, body {
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-primary);
   box-shadow: var(--shadow-lg);
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
   position: relative;
 }
 

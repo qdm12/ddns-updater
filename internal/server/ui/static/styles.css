@@ -9,20 +9,20 @@
   --color-bg-tertiary: #f1f5f9;
   --color-bg-elevated: #ffffff;
   --color-bg-overlay: rgb(255 255 255 / 0.95);
-  
+
   --color-text-primary: #0f172a;
   --color-text-secondary: #475569;
   --color-text-tertiary: #64748b;
   --color-text-muted: #94a3b8;
-  
+
   --color-border-primary: #e2e8f0;
   --color-border-secondary: #cbd5e1;
   --color-border-accent: #3b82f6;
-  
+
   --color-accent-primary: #3b82f6;
   --color-accent-hover: #2563eb;
   --color-accent-light: #dbeafe;
-  
+
   --color-success: #10b981;
   --color-success-light: #d1fae5;
   --color-warning: #f59e0b;
@@ -31,14 +31,14 @@
   --color-error-light: #fee2e2;
   --color-info: #8b5cf6;
   --color-info-light: #ede9fe;
-  
+
   /* Elevation System */
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  
+
   /* Border Radius Scale */
   --radius-xs: 0.25rem;
   --radius-sm: 0.375rem;
@@ -46,7 +46,7 @@
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
-  
+
   /* Spacing Scale */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -57,7 +57,7 @@
   --space-8: 2rem;
   --space-10: 2.5rem;
   --space-12: 3rem;
-  
+
   /* Typography Scale */
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -67,16 +67,16 @@
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
   --font-size-4xl: 2.25rem;
-  
+
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  
+
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.625;
-  
+
   /* Timing Functions */
   --transition-fast: 150ms;
   --transition-normal: 200ms;
@@ -93,23 +93,23 @@
   --color-bg-tertiary: #334155;
   --color-bg-elevated: #1e293b;
   --color-bg-overlay: rgb(15 23 42 / 0.95);
-  
+
   --color-text-primary: #f8fafc;
   --color-text-secondary: #cbd5e1;
   --color-text-tertiary: #94a3b8;
   --color-text-muted: #64748b;
-  
+
   --color-border-primary: #334155;
   --color-border-secondary: #475569;
-  
+
   --color-accent-hover: #60a5fa;
   --color-accent-light: #1e3a8a;
-  
+
   --color-success-light: #064e3b;
   --color-warning-light: #451a03;
   --color-error-light: #450a0a;
   --color-info-light: #3c1d5b;
-  
+
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
@@ -131,7 +131,8 @@
 
 html {
   scroll-behavior: smooth;
-  font-size: 100%; /* Use browser default 16px */
+  font-size: 100%;
+  /* Use browser default 16px */
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
 }
@@ -144,8 +145,8 @@ body {
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
   min-height: 100vh;
-  transition: background-color var(--transition-normal) var(--ease-out), 
-              color var(--transition-normal) var(--ease-out);
+  transition: background-color var(--transition-normal) var(--ease-out),
+    color var(--transition-normal) var(--ease-out);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -264,11 +265,21 @@ body {
 }
 
 /* Theme toggle icon switching */
-.sun-icon { display: block; }
-.moon-icon { display: none; }
+.sun-icon {
+  display: block;
+}
 
-[data-theme="dark"] .sun-icon { display: none; }
-[data-theme="dark"] .moon-icon { display: block; }
+.moon-icon {
+  display: none;
+}
+
+[data-theme="dark"] .sun-icon {
+  display: none;
+}
+
+[data-theme="dark"] .moon-icon {
+  display: block;
+}
 
 /* ==========================================================================
    Main Content Area
@@ -398,10 +409,10 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .ip-version-badge {
     transition: color var(--transition-normal) var(--ease-out),
-                background-color var(--transition-normal) var(--ease-out),
-                border-color var(--transition-normal) var(--ease-out);
+      background-color var(--transition-normal) var(--ease-out),
+      border-color var(--transition-normal) var(--ease-out);
   }
-  
+
   .ip-version-badge:hover {
     border-color: var(--color-accent-hover);
     background: linear-gradient(135deg, var(--color-accent-light), rgba(37, 99, 235, 0.15));
@@ -430,7 +441,7 @@ body {
 }
 
 /* Spacing between multiple badges */
-.ip-version-badge + .ip-version-badge {
+.ip-version-badge+.ip-version-badge {
   margin-inline-start: var(--space-2);
 }
 
@@ -457,23 +468,9 @@ body {
   max-width: 20rem;
   word-break: break-word;
   overflow-wrap: break-word;
-  hyphens: auto;
   line-height: 1.4;
 }
 
-/* Better text breaking for IP addresses */
-@supports (word-break: break-word) {
-  .modern-table td:last-child {
-    word-break: break-word;
-  }
-}
-
-/* Fallback for older browsers */
-@supports not (word-break: break-word) {
-  .modern-table td:last-child {
-    word-break: break-all;
-  }
-}
 
 .modern-table tbody tr:last-child td {
   border-bottom: none;
@@ -529,13 +526,18 @@ body {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   animation: shimmer 1.5s infinite;
 }
 
 @keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 100%;
+  }
 }
 
 .unset {
@@ -545,55 +547,13 @@ body {
 }
 
 /* ==========================================================================
-   Status Details Components - Production Ready
+   Responsive Design - Mobile Adjustments
    ========================================================================== */
+@media (width <=48rem) {
 
-/* Status details styling (e.g., "no IP change for 22d") */
-.status-details {
-  display: inline-block;
-  margin-inline-start: var(--space-2);
-  padding: var(--space-1) var(--space-2);
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  border: 1px solid var(--color-border-secondary);
-  border-radius: var(--radius-sm);
-  /* Performance optimizations */
-  backface-visibility: hidden;
-  /* Accessibility */
-  user-select: none;
-  /* Browser compatibility */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
 
-/* Status timestamp styling (e.g., "2s ago") */
-.status-timestamp {
-  display: inline-block;
-  margin-inline-start: var(--space-1);
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  font-style: italic;
-  /* Accessibility */
-  user-select: none;
-  /* Browser compatibility */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Responsive adjustments for mobile */
-@media (width <= 48rem) {
-  .status-details,
-  .status-timestamp {
-    display: block;
-    margin-inline-start: 0;
-    margin-top: var(--space-1);
-  }
-  
   /* Improve mobile table readability */
-  .ip-version-badge + .ip-version-badge {
+  .ip-version-badge+.ip-version-badge {
     margin-inline-start: 0;
     margin-top: var(--space-1);
     display: block;
@@ -606,32 +566,20 @@ body {
     border-width: 3px;
     font-weight: var(--font-weight-bold);
   }
-  
-  .status-details {
-    border-width: 2px;
-    font-weight: var(--font-weight-semibold);
-  }
 }
 
 /* Print styles */
 @media print {
-  .ip-version-badge,
-  .status-details {
+  .ip-version-badge {
     background: transparent !important;
     color: black !important;
     border: 1px solid black !important;
     box-shadow: none !important;
   }
-  
-  .status-timestamp {
-    color: #666 !important;
-  }
 }
 
 /* Performance: Contain layout shifts */
-.ip-version-badge,
-.status-details,
-.status-timestamp {
+.ip-version-badge {
   contain: layout style;
 }
 
@@ -718,44 +666,44 @@ a:hover {
    Responsive Design
    ========================================================================== */
 
-@media (width <= 64rem) {
+@media (width <=64rem) {
   .header {
     padding: var(--space-4) var(--space-6);
   }
-  
+
   .main-content {
     padding: var(--space-6);
   }
-  
+
   .title {
     font-size: var(--font-size-2xl);
   }
-  
+
   .logo-icon {
     inline-size: var(--space-8);
     block-size: var(--space-8);
   }
 }
 
-@media (width <= 48rem) {
+@media (width <=48rem) {
   .header-content {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-4);
   }
-  
+
   .header-controls {
     align-self: flex-end;
   }
-  
+
   .main-content {
     padding: var(--space-4);
   }
-  
+
   .title {
     font-size: var(--font-size-xl);
   }
-  
+
   .footer-content {
     flex-direction: column;
     text-align: center;
@@ -764,7 +712,7 @@ a:hover {
 }
 
 /* Mobile table styles */
-@media (width <= 40rem) {
+@media (width <=40rem) {
   .table-container {
     border-radius: var(--radius-lg);
     overflow: visible;
@@ -772,7 +720,7 @@ a:hover {
     background: transparent;
     border: none;
   }
-  
+
   .modern-table,
   .modern-table thead,
   .modern-table tbody,
@@ -781,13 +729,13 @@ a:hover {
   .modern-table tr {
     display: block;
   }
-  
+
   .modern-table thead tr {
     position: absolute;
     top: -9999px;
     left: -9999px;
   }
-  
+
   .modern-table tbody tr {
     background: var(--color-bg-elevated);
     border: 1px solid var(--color-border-primary);
@@ -797,12 +745,12 @@ a:hover {
     box-shadow: var(--shadow-md);
     transform: none;
   }
-  
+
   .modern-table tbody tr:hover {
     transform: none;
     box-shadow: var(--shadow-lg);
   }
-  
+
   .modern-table td {
     border: none;
     border-bottom: 1px solid var(--color-border-primary);
@@ -811,11 +759,11 @@ a:hover {
     padding-inline-start: 40%;
     text-align: end;
   }
-  
+
   .modern-table td:last-child {
     border-bottom: none;
   }
-  
+
   .modern-table td:before {
     content: attr(data-label);
     position: absolute;
@@ -835,8 +783,15 @@ a:hover {
 
 /* Loading states and animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .modern-table tbody tr {
@@ -878,6 +833,7 @@ a:focus-visible {
 }
 
 @media (forced-colors: active) {
+
   .theme-toggle,
   .refresh-btn {
     border: 1px solid ButtonBorder;
@@ -889,6 +845,7 @@ a:focus-visible {
    ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

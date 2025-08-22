@@ -41,7 +41,7 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 	}
 	currentIP := r.History.GetCurrentIP()
 	if currentIP.IsValid() {
-		row.CurrentIP = `<a href="https://ipinfo.io/` + currentIP.String() + `">` + currentIP.String() + "</a>"
+		row.CurrentIP = `<a href="https://ipinfo.io/` + currentIP.String() + `" class="ip-link" target="_blank" rel="noopener noreferrer">` + currentIP.String() + ` <svg class="ipinfo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3m-2 16H5V5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7z" fill="currentColor"/></svg></a>`
 	} else {
 		row.CurrentIP = NotAvailable
 	}

@@ -467,7 +467,6 @@ body {
   line-height: 1.4;
 }
 
-
 .modern-table tbody tr:last-child td {
   border-bottom: none;
 }
@@ -630,20 +629,6 @@ body {
   z-index: 1000;
 }
 
-/* ==========================================================================
-   Responsive Design - Mobile Adjustments
-   ========================================================================== */
-@media (width <=48rem) {
-
-
-  /* Improve mobile table readability */
-  .ip-version-badge+.ip-version-badge {
-    margin-inline-start: 0;
-    margin-top: var(--space-1);
-    display: block;
-  }
-}
-
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   .ip-version-badge {
@@ -662,11 +647,6 @@ body {
   }
 }
 
-/* Performance: Contain layout shifts */
-.ip-version-badge {
-  contain: layout style;
-}
-
 /* ==========================================================================
    Link Components
    ========================================================================== */
@@ -683,6 +663,36 @@ a:hover {
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 2px;
+}
+
+/* IP Info Link Styling */
+.ip-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal) var(--ease-out);
+  text-decoration: none;
+}
+
+.ip-link:hover {
+  background: var(--color-accent-light);
+  text-decoration: none;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.ipinfo-icon {
+  width: var(--space-4);
+  height: var(--space-4);
+  opacity: 0.7;
+  transition: opacity var(--transition-normal) var(--ease-out);
+  flex-shrink: 0;
+}
+
+.ip-link:hover .ipinfo-icon {
+  opacity: 1;
 }
 
 /* ==========================================================================
@@ -870,7 +880,7 @@ a:hover {
     top: var(--space-3);
   }
 
-  /* Fix IPv6 badge stacking on mobile */
+  /* Override desktop IPv6 badge stacking for mobile inline display */
   .ip-version-badge+.ip-version-badge {
     margin-inline-start: var(--space-2);
     margin-top: 0;

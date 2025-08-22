@@ -355,8 +355,6 @@ body {
 
 .modern-table tbody tr:hover {
   background: var(--color-accent-light);
-  transform: translateX(2px);
-  box-shadow: inset 4px 0 0 var(--color-accent-primary);
 }
 
 .modern-table tbody tr:last-child td:first-child {

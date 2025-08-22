@@ -62,7 +62,7 @@
               <th scope="col">Owner</th>
               <th scope="col">Provider</th>
               <th scope="col">IP Version</th>
-              <th scope="col">Update Status</th>
+              <th scope="col">Status</th>
               <th scope="col">Current IP</th>
               <th scope="col">Previous IPs</th>
             </tr>
@@ -81,7 +81,7 @@
                   <span class="ip-version-badge{{if eq .IPVersion "ipv6"}} ipv6{{end}}" role="img" aria-label="{{.IPVersion}} supported">{{.IPVersion}}</span>
                 {{end}}
               </td>
-              <td data-label="Update Status">{{.Status}}</td>
+              <td data-label="Status">{{.Status}}</td>
               <td data-label="Current IP">{{.CurrentIP}}</td>
               <td data-label="Previous IPs">{{.PreviousIPs}}</td>
             </tr>

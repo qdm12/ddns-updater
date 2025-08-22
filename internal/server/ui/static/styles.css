@@ -457,15 +457,13 @@ body {
    Table Column Specific Styling - Production Ready
    ========================================================================== */
 
-/* Previous IPs column - optimized for content display */
+/* Previous IPs column - single line display without truncation */
 .modern-table td:last-child {
-  white-space: normal;
+  white-space: nowrap;
   overflow: visible;
   text-overflow: initial;
   min-width: 12rem;
-  max-width: 20rem;
-  word-break: break-word;
-  overflow-wrap: break-word;
+  width: auto;
   line-height: 1.4;
 }
 
@@ -571,8 +569,8 @@ body {
   font-size: var(--font-size-xs);
 }
 
-/* Update Status column layout */
-.modern-table td[data-label="Update Status"] {
+/* Status column layout */
+.modern-table td[data-label="Status"] {
   min-width: 160px;
   max-width: 250px;
   white-space: nowrap;
@@ -583,21 +581,21 @@ body {
 }
 
 /* Enhanced tooltip styling for status badges */
-.success[title],
-.error[title],
-.uptodate[title],
-.updating[title],
-.unset[title] {
+.success[data-tooltip],
+.error[data-tooltip],
+.uptodate[data-tooltip],
+.updating[data-tooltip],
+.unset[data-tooltip] {
   cursor: help;
   position: relative;
 }
 
-.success[title]:hover::after,
-.error[title]:hover::after,
-.uptodate[title]:hover::after,
-.updating[title]:hover::after,
-.unset[title]:hover::after {
-  content: attr(title);
+.success[data-tooltip]:hover::after,
+.error[data-tooltip]:hover::after,
+.uptodate[data-tooltip]:hover::after,
+.updating[data-tooltip]:hover::after,
+.unset[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
   position: absolute;
   bottom: 100%;
   left: 50%;
@@ -617,11 +615,11 @@ body {
   min-width: max-content;
 }
 
-.success[title]:hover::before,
-.error[title]:hover::before,
-.uptodate[title]:hover::before,
-.updating[title]:hover::before,
-.unset[title]:hover::before {
+.success[data-tooltip]:hover::before,
+.error[data-tooltip]:hover::before,
+.uptodate[data-tooltip]:hover::before,
+.updating[data-tooltip]:hover::before,
+.unset[data-tooltip]:hover::before {
   content: "";
   position: absolute;
   bottom: 100%;
@@ -844,10 +842,16 @@ a:hover {
     padding: var(--space-3) 0;
     padding-inline-start: 40%;
     text-align: end;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: initial;
   }
 
   .modern-table td:last-child {
     border-bottom: none;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   .modern-table td:before {
@@ -864,6 +868,73 @@ a:hover {
     letter-spacing: 0.05em;
     text-align: start;
     top: var(--space-3);
+  }
+
+  /* Fix IPv6 badge stacking on mobile */
+  .ip-version-badge+.ip-version-badge {
+    margin-inline-start: var(--space-2);
+    margin-top: 0;
+    display: inline-flex;
+  }
+
+  /* Fix status badges positioning on mobile */
+  .modern-table td[data-label="Status"] {
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+    padding-inline-start: 40%;
+  }
+
+  .modern-table td[data-label="Status"]:before {
+    white-space: nowrap;
+    position: absolute;
+    inset-inline-start: 0;
+    inline-size: 35%;
+    padding-inline-end: var(--space-4);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: start;
+    top: var(--space-3);
+    content: attr(data-label);
+    z-index: 0;
+  }
+
+  .modern-table td[data-label="Status"] .status-timestamp {
+    margin-left: var(--space-2);
+    margin-top: 0;
+    display: inline-flex;
+    width: auto;
+  }
+
+  /* Ensure tooltips work properly on mobile */
+  .success[data-tooltip]:hover::after,
+  .error[data-tooltip]:hover::after,
+  .uptodate[data-tooltip]:hover::after,
+  .updating[data-tooltip]:hover::after,
+  .unset[data-tooltip]:hover::after {
+    position: fixed;
+    top: 50vh;
+    left: 50vw;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    max-width: calc(100vw - 2rem);
+    min-width: 200px;
+    white-space: normal;
+    word-wrap: break-word;
+    text-align: center;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  .success[data-tooltip]:hover::before,
+  .error[data-tooltip]:hover::before,
+  .uptodate[data-tooltip]:hover::before,
+  .updating[data-tooltip]:hover::before,
+  .unset[data-tooltip]:hover::before {
+    display: none;
   }
 }
 

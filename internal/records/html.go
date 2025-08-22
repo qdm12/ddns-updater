@@ -82,15 +82,15 @@ func convertStatus(status models.Status) string {
 func convertStatusWithTooltip(status models.Status, message string) string {
 	switch status {
 	case constants.SUCCESS:
-		return fmt.Sprintf(`<span class="success" title="%s">Updated</span>`, message)
+		return fmt.Sprintf(`<span class="success" data-tooltip="%s">Updated</span>`, message)
 	case constants.FAIL:
-		return fmt.Sprintf(`<span class="error" title="%s">Failed</span>`, message)
+		return fmt.Sprintf(`<span class="error" data-tooltip="%s">Failed</span>`, message)
 	case constants.UPTODATE:
-		return fmt.Sprintf(`<span class="uptodate" title="%s">Current</span>`, message)
+		return fmt.Sprintf(`<span class="uptodate" data-tooltip="%s">Current</span>`, message)
 	case constants.UPDATING:
-		return fmt.Sprintf(`<span class="updating" title="%s">Syncing</span>`, message)
+		return fmt.Sprintf(`<span class="updating" data-tooltip="%s">Syncing</span>`, message)
 	case constants.UNSET:
-		return fmt.Sprintf(`<span class="unset" title="%s">Pending</span>`, message)
+		return fmt.Sprintf(`<span class="unset" data-tooltip="%s">Pending</span>`, message)
 	default:
 		return "Unknown status"
 	}

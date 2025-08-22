@@ -31,10 +31,12 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 			timeDisplay = fmt.Sprintf("%d days ago", int(timeSince.Hours()/24))
 		}
 		
-		statusHTML := fmt.Sprintf(`%s <span class="status-timestamp">%s</span>`, convertStatus(r.Status), timeDisplay)
+		statusBadge := convertStatus(r.Status)
 		if message != "" {
-			statusHTML += fmt.Sprintf(` <span class="status-details">%s</span>`, message)
+			statusBadge = convertStatusWithTooltip(r.Status, message)
 		}
+		
+		statusHTML := fmt.Sprintf(`%s <span class="status-timestamp">%s</span>`, statusBadge, timeDisplay)
 		row.Status = statusHTML
 	}
 	currentIP := r.History.GetCurrentIP()
@@ -72,6 +74,23 @@ func convertStatus(status models.Status) string {
 		return `<span class="updating">Syncing</span>`
 	case constants.UNSET:
 		return `<span class="unset">Pending</span>`
+	default:
+		return "Unknown status"
+	}
+}
+
+func convertStatusWithTooltip(status models.Status, message string) string {
+	switch status {
+	case constants.SUCCESS:
+		return fmt.Sprintf(`<span class="success" title="%s">Updated</span>`, message)
+	case constants.FAIL:
+		return fmt.Sprintf(`<span class="error" title="%s">Failed</span>`, message)
+	case constants.UPTODATE:
+		return fmt.Sprintf(`<span class="uptodate" title="%s">Current</span>`, message)
+	case constants.UPDATING:
+		return fmt.Sprintf(`<span class="updating" title="%s">Syncing</span>`, message)
+	case constants.UNSET:
+		return fmt.Sprintf(`<span class="unset" title="%s">Pending</span>`, message)
 	default:
 		return "Unknown status"
 	}

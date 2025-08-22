@@ -546,14 +546,13 @@ body {
 }
 
 /* ==========================================================================
-   Status Details and Timestamp Components
+   Status Timestamp Component
    ========================================================================== */
-
 
 .status-timestamp {
   display: inline-flex;
   align-items: center;
-  margin-right: var(--space-2);
+  margin-left: var(--space-2);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
@@ -572,34 +571,65 @@ body {
   font-size: var(--font-size-xs);
 }
 
-.status-details {
-  display: block;
-  margin-top: var(--space-2);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-normal);
-  color: var(--color-text-secondary);
-  font-style: italic;
-  text-transform: none;
-  letter-spacing: normal;
-  background: var(--color-bg-secondary);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border-primary);
-  max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* Update Status column layout */
 .modern-table td[data-label="Update Status"] {
-  min-width: 200px;
-  max-width: 300px;
-  white-space: normal;
+  min-width: 160px;
+  max-width: 250px;
+  white-space: nowrap;
   overflow: visible;
   text-overflow: initial;
   line-height: 1.4;
   padding: var(--space-3) var(--space-4);
+}
+
+/* Enhanced tooltip styling for status badges */
+.success[title],
+.error[title],
+.uptodate[title],
+.updating[title],
+.unset[title] {
+  cursor: help;
+  position: relative;
+}
+
+.success[title]:hover::after,
+.error[title]:hover::after,
+.uptodate[title]:hover::after,
+.updating[title]:hover::after,
+.unset[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: var(--space-2);
+  min-width: max-content;
+}
+
+.success[title]:hover::before,
+.error[title]:hover::before,
+.uptodate[title]:hover::before,
+.updating[title]:hover::before,
+.unset[title]:hover::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--color-text-primary);
+  z-index: 1000;
 }
 
 /* ==========================================================================

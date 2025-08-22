@@ -494,6 +494,7 @@ body {
   justify-content: center;
   min-inline-size: 80px;
   text-align: center;
+  white-space: nowrap;
 }
 
 .success,
@@ -542,6 +543,63 @@ body {
   background: var(--color-warning-light);
   color: var(--color-warning);
   border: 1px solid var(--color-warning);
+}
+
+/* ==========================================================================
+   Status Details and Timestamp Components
+   ========================================================================== */
+
+
+.status-timestamp {
+  display: inline-flex;
+  align-items: center;
+  margin-right: var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  text-transform: none;
+  letter-spacing: normal;
+  background: var(--color-bg-tertiary);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-primary);
+  gap: var(--space-1);
+  vertical-align: middle;
+}
+
+.status-timestamp::before {
+  content: "🕒";
+  font-size: var(--font-size-xs);
+}
+
+.status-details {
+  display: block;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-secondary);
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: normal;
+  background: var(--color-bg-secondary);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-primary);
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Update Status column layout */
+.modern-table td[data-label="Update Status"] {
+  min-width: 200px;
+  max-width: 300px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: initial;
+  line-height: 1.4;
+  padding: var(--space-3) var(--space-4);
 }
 
 /* ==========================================================================

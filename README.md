@@ -90,6 +90,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - OVH
   - Porkbun
   - Route53
+  - Scaleway
   - Selfhost.de
   - Servercow.de
   - Spdyn
@@ -256,6 +257,7 @@ Check the documentation for your DNS provider:
 - [OpenDNS](docs/opendns.md)
 - [OVH](docs/ovh.md)
 - [Porkbun](docs/porkbun.md)
+- [Scaleway](docs/scaleway.md)
 - [Selfhost.de](docs/selfhost.de.md)
 - [Servercow.de](docs/servercow.md)
 - [Spdyn](docs/spdyn.md)

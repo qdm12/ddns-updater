@@ -53,6 +53,7 @@ const (
 	Servercow    models.Provider = "servercow"
 	Spdyn        models.Provider = "spdyn"
 	Strato       models.Provider = "strato"
+	TransIP      models.Provider = "transip"
 	Variomedia   models.Provider = "variomedia"
 	Vultr        models.Provider = "vultr"
 	Zoneedit     models.Provider = "zoneedit"
@@ -106,6 +107,7 @@ func ProviderChoices() []models.Provider {
 		SelfhostDe,
 		Spdyn,
 		Strato,
+		TransIP,
 		Variomedia,
 		Vultr,
 		Zoneedit,

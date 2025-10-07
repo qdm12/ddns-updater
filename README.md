@@ -50,7 +50,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
 - Updates periodically A records for different DNS providers:
   - Aliyun
   - AllInkl
-  - Changeip
+  - ChangeIP
   - Cloudflare
   - DD24
   - DDNSS.de
@@ -64,6 +64,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - DuckDNS
   - DynDNS
   - Dynu
+  - DynV6
   - EasyDNS
   - FreeDNS
   - Gandi
@@ -218,11 +219,10 @@ Check the documentation for your DNS provider:
 - [Allinkl](docs/allinkl.md)
 - [ChangeIP](docs/changeip.md)
 - [Cloudflare](docs/cloudflare.md)
-- [Custom](docs/custom.md)
+- [DD24](docs/dd24.md)
 - [DDNSS.de](docs/ddnss.de.md)
 - [deSEC](docs/desec.md)
 - [DigitalOcean](docs/digitalocean.md)
-- [DD24](docs/dd24.md)
 - [Domeneshop](docs/domeneshop.md)
 - [DonDominio](docs/dondominio.md)
 - [DNSOMatic](docs/dnsomatic.md)
@@ -239,6 +239,7 @@ Check the documentation for your DNS provider:
 - [GoDaddy](docs/godaddy.md)
 - [GoIP.de](docs/goip.md)
 - [He.net](docs/he.net.md)
+- [Hetzner](docs/hetzner.md)
 - [Infomaniak](docs/infomaniak.md)
 - [INWX](docs/inwx.md)
 - [Ionos](docs/ionos.md)
@@ -256,6 +257,7 @@ Check the documentation for your DNS provider:
 - [OpenDNS](docs/opendns.md)
 - [OVH](docs/ovh.md)
 - [Porkbun](docs/porkbun.md)
+- [Route53](docs/route53.md)
 - [Selfhost.de](docs/selfhost.de.md)
 - [Servercow.de](docs/servercow.md)
 - [Spdyn](docs/spdyn.md)
@@ -263,6 +265,7 @@ Check the documentation for your DNS provider:
 - [Variomedia.de](docs/variomedia.md)
 - [Vultr](docs/vultr.md)
 - [Zoneedit](docs/zoneedit.md)
+- [Custom](docs/custom.md)
 
 Note that:
 

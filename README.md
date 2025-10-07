@@ -50,6 +50,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
 - Updates periodically A records for different DNS providers:
   - Aliyun
   - AllInkl
+  - ArvanCloud
   - Changeip
   - Cloudflare
   - DD24
@@ -216,6 +217,7 @@ Check the documentation for your DNS provider:
 
 - [Aliyun](docs/aliyun.md)
 - [Allinkl](docs/allinkl.md)
+- [ArvanCloud](docs/arvancloud.md)
 - [ChangeIP](docs/changeip.md)
 - [Cloudflare](docs/cloudflare.md)
 - [Custom](docs/custom.md)

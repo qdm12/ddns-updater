@@ -142,7 +142,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/2013-04-01/hostedzone/" + p.zoneID + "/rrset",
 	}
 
-	changeRRSetRequest := newChangeRRSetRequest(p.BuildDomainName(), p.ttl, ip)
+	changeRRSetRequest := newChangeRRSetRequest(utils.BuildURLQueryHostname(p.owner, p.domain), p.ttl, ip)
 
 	// Note the AWS API does not accept JSON for this endpoint
 	buffer := bytes.NewBuffer(nil)

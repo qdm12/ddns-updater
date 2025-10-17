@@ -18,7 +18,7 @@ var ErrIPv6NotSupported = errors.New("IPv6 is not supported on this system")
 func tryAndRepeatGettingIP(ctx context.Context, getIPFunc getIPFunc,
 	logger Logger, version ipversion.IPVersion,
 ) (ip netip.Addr, err error) {
-	const tries = 3
+	const tries = 60
 	logMessagePrefix := "obtaining " + version.String() + " address"
 	errs := make([]error, 0, tries)
 	for try := range tries {

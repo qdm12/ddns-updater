@@ -1,0 +1,19 @@
+{{- if .Values.persistence.enabled -}}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "ddns-updater.pv_name" . }}
+  labels:
+    {{- include "ddns-updater.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.persistence.storage_capacity }}
+  {{- with .Values.persistence.accessModes }}
+  accessModes:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  persistentVolumeReclaimPolicy: {{ .Values.persistence.persistentVolumeReclaimPolicy }}
+  storageClassName: {{ .Values.persistence.storageClassName }}
+  hostPath:
+    path: {{ .Values.config.DATADIR }}
+{{- end }}

@@ -1,0 +1,152 @@
+# Default values for ddns-updater.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+################
+# App Specific #
+################
+config:
+  PERIOD: 5m #Default period of IP address check, following this format
+  PUBLICIP_FETCHERS: all #Comma separated fetcher types to obtain the public IP address from http and dns
+  PUBLICIP_HTTP_PROVIDERS: all #Comma separated providers to obtain the public IP address (ipv4 or ipv6). See the Public IP section
+  PUBLICIPV4_HTTP_PROVIDERS: all #Comma separated providers to obtain the public IPv4 address only. See the Public IP section
+  PUBLICIPV6_HTTP_PROVIDERS: all #Comma separated providers to obtain the public IPv6 address only. See the Public IP section
+  PUBLICIP_DNS_PROVIDERS: all #Comma separated providers to obtain the public IP address (IPv4 and/or IPv6). See the Public IP section
+  PUBLICIP_DNS_TIMEOUT: 3s #Public IP DNS query timeout
+  UPDATE_COOLDOWN_PERIOD: 5m #Duration to cooldown between updates for each record. This is useful to avoid being rate limited or banned.
+  HTTP_TIMEOUT: 10s #Timeout for all HTTP requests
+  SERVER_ENABLED: yes #Enable the web server and web UI
+  LISTENING_ADDRESS: :8000 #Internal TCP listening port for the web UI
+  ROOT_URL: / #URL path to append to all paths to the webUI (i.e. /ddns for accessing https://example.com/ddns through a proxy)
+  HEALTH_SERVER_ADDRESS: 127.0.0.1:9999 #Health server listening address
+  HEALTH_HEALTHCHECKSIO_BASE_URL: https://hc-ping.com #Base URL for the healthchecks.io server
+  HEALTH_HEALTHCHECKSIO_UUID: "" #UUID to idenfity with the healthchecks.io server
+  DATADIR: /updater/data #Directory to read and write data files from internally
+  CONFIG_FILEPATH: /updater/data/config.json #Path to the JSON configuration file
+  BACKUP_PERIOD: 0 #Set to a period (i.e. 72h15m) to enable zip backups of data/config.json and data/updates.json in a zip file
+  BACKUP_DIRECTORY: /updater/data #Directory to write backup zip files to if BACKUP_PERIOD is not 0.
+  RESOLVER_ADDRESS: 1.1.1.1:53 #Your network DNS A plaintext DNS address to use to resolve your domain names defined in your settings only. For example it can be 1.1.1.1:53. This is useful for split dns, see #389
+  LOG_LEVEL: info #Level of logging, debug, info, warning or error
+  LOG_CALLER: hidden #Show caller per log line, hidden or short
+  SHOUTRRR_ADDRESSES: [] #(optional) Comma separated list of Shoutrrr addresses (notification services)
+  SHOUTRRR_DEFAULT_TITLE: DDNS Updater #Default title for Shoutrrr notifications
+  TZ: America/New_York #Timezone to have accurate times, i.e. America/Montreal
+  UMASK: 1000 #System current umask Umask to set for the program in octal, i.e. 0022
+
+################
+# K8S Specific #
+################
+replicaCount: 1
+
+image:
+  repository: qmcgaw/ddns-updater
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+persistence:
+  enabled: false
+   # If not set and create is true, a name is generated using the fullname template
+  name: ""
+  storage_capacity: 5Gi
+  storageClassName: manual-hostpath
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

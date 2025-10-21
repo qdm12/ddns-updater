@@ -1,0 +1,18 @@
+{{- if .Values.persistence.enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "ddns-updater.pv_name" . }}
+  # Finalizer is for safety against manual Application delete
+  finalizers:
+  - kubernetes.io/pvc-protection
+spec:
+  {{- with .Values.persistence.accessModes }}
+  accessModes:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.persistentVolumeReclaimPolicy }}
+  storageClassName: {{ .Values.persistence.storageClassName }}
+{{- end }}

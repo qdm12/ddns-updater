@@ -31,6 +31,7 @@ const (
 	GoIP         models.Provider = "goip"
 	HE           models.Provider = "he"
 	Hetzner      models.Provider = "hetzner"
+	HetznerNetworking models.Provider = "hetznernetworking"
 	Infomaniak   models.Provider = "infomaniak"
 	INWX         models.Provider = "inwx"
 	Ionos        models.Provider = "ionos"
@@ -86,6 +87,7 @@ func ProviderChoices() []models.Provider {
 		GoIP,
 		HE,
 		Hetzner,
+		HetznerNetworking,
 		Infomaniak,
 		INWX,
 		Ionos,

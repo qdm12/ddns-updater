@@ -37,6 +37,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/goip"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/he"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/hetzner"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/hetznernetworking"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/infomaniak"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/inwx"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/ionos"
@@ -138,6 +139,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return he.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Hetzner:
 		return hetzner.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.HetznerNetworking:
+		return hetznernetworking.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Infomaniak:
 		return infomaniak.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.INWX:

@@ -95,6 +95,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - Servercow.de
   - Spdyn
   - Strato.de
+  - TransIP
   - Variomedia.de
   - Vultr
   - Zoneedit
@@ -262,6 +263,7 @@ Check the documentation for your DNS provider:
 - [Servercow.de](docs/servercow.md)
 - [Spdyn](docs/spdyn.md)
 - [Strato.de](docs/strato.md)
+- [TransIP](docs/transip.md)
 - [Variomedia.de](docs/variomedia.md)
 - [Vultr](docs/vultr.md)
 - [Zoneedit](docs/zoneedit.md)

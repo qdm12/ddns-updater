@@ -38,11 +38,11 @@
 
 [![GoDaddy Developer Login](../readme/godaddy1.gif)](https://developer.godaddy.com/keys)
 
-2. Generate a Test key and secret.
+1. Generate a Test key and secret.
 
 [![GoDaddy Developer Test Key](../readme/godaddy2.gif)](https://developer.godaddy.com/keys)
 
-3. Generate a **Production** key and secret.
+1. Generate a **Production** key and secret.
 
 [![GoDaddy Developer Production Key](../readme/godaddy3.gif)](https://developer.godaddy.com/keys)
 

@@ -32,6 +32,6 @@
 ## Domain setup
 
 1. Login to the Dreamhost control panel and navigate to the API key page. https://panel.dreamhost.com/?tree=home.api
-2. Generate a new API Key with a comment to describe its purpose. Add permissions("Functions this key should have access to:") for **All dns functions**.
-3. Add your key to your configuration settings for ddns-updater (config.json).
-4. Confirm your domain's DNS records already as an **A** name custom record established in the Dreamhost control panel. If no A name is listed, ddns-updater will fail with error "no_such_zone."
+1. Generate a new API Key with a comment to describe its purpose. Add permissions("Functions this key should have access to:") for **All dns functions**.
+1. Add your key to your configuration settings for ddns-updater (config.json).
+1. Confirm your domain's DNS records already as an **A** name custom record established in the Dreamhost control panel. If no A name is listed, ddns-updater will fail with error "no_such_zone."

@@ -83,6 +83,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - Namecheap
   - NameSilo
   - Netcup
+  - Netlify
   - NoIP
   - Now-DNS
   - Njalla
@@ -250,6 +251,7 @@ Check the documentation for your DNS provider:
 - [Namecheap](docs/namecheap.md)
 - [NameSilo](docs/namesilo.md)
 - [Netcup](docs/netcup.md)
+- [Netlify](docs/netlify.md)
 - [NoIP](docs/noip.md)
 - [Now-DNS](docs/nowdns.md)
 - [Njalla](docs/njalla.md)

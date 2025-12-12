@@ -10,8 +10,8 @@
     {
       "provider": "porkbun",
       "domain": "domain.com",
-      "api_key": "sk1_7d119e3f656b00ae042980302e1425a04163c476efec1833q3cb0w54fc6f5022",
-      "secret_api_key": "pk1_5299b57125c8f3cdf347d2fe0e713311ee3a1e11f11a14942b26472593e35368",
+      "api_key": "pk1_5299b57125c8f3cdf347d2fe0e713311ee3a1e11f11a14942b26472593e35368",
+      "secret_api_key": "sk1_7d119e3f656b00ae042980302e1425a04163c476efec1833q3cb0w54fc6f5022",
       "ip_version": "ipv4",
       "ipv6_suffix": ""
     }

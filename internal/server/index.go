@@ -7,7 +7,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 )
 
-func (h *handlers) index(w http.ResponseWriter, _ *http.Request) {
+func (h *handlers) index(w http.ResponseWriter, r *http.Request) {
 	// Prevent caching to ensure status updates are always fresh
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Pragma", "no-cache")
@@ -43,12 +43,12 @@ func (h *handlers) index(w http.ResponseWriter, _ *http.Request) {
 
 	// Fetch public IP addresses
 	if h.ipGetter != nil {
-		ipv4, err := h.ipGetter.IP4(h.ctx)
+		ipv4, err := h.ipGetter.IP4(r.Context())
 		if err == nil && ipv4.IsValid() {
 			htmlData.PublicIPv4 = ipv4.String()
 		}
 
-		ipv6, err := h.ipGetter.IP6(h.ctx)
+		ipv6, err := h.ipGetter.IP6(r.Context())
 		if err == nil && ipv6.IsValid() {
 			htmlData.PublicIPv6 = ipv6.String()
 		}

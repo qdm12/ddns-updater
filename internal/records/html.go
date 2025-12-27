@@ -9,6 +9,22 @@ import (
 	"github.com/qdm12/ddns-updater/internal/models"
 )
 
+const (
+	hoursPerDay    = 24
+	daysPerWeek    = 7
+	minutesPerHour = 60
+)
+
+const (
+	svgStart = `<svg width="14" height="14" viewBox="0 0 24 24" ` +
+		`fill="none" stroke="currentColor" stroke-width="2" ` +
+		`stroke-linecap="round" stroke-linejoin="round">`
+	svgStartSpin = `<svg class="animate-spin" width="14" height="14" ` +
+		`viewBox="0 0 24 24" fill="none" stroke="currentColor" ` +
+		`stroke-width="2" stroke-linecap="round" stroke-linejoin="round">`
+	svgEnd = `</svg>`
+)
+
 func (r *Record) HTML(now time.Time) models.HTMLRow {
 	const NotAvailable = "N/A"
 	row := r.Provider.HTML()
@@ -27,7 +43,7 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 		var fullMessage string
 		if r.Status == constants.UPTODATE {
 			duration := r.History.GetDurationSinceSuccess(now)
-			fullMessage = fmt.Sprintf("No IP change for %s", duration)
+			fullMessage = "No IP change for " + duration
 		} else if r.Message != "" {
 			fullMessage = r.Message
 		}
@@ -37,7 +53,9 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 		lastUpdate := formatTimeSince(r.Time, now)
 
 		// Combine badge and time inline only
-		row.Status = fmt.Sprintf(`<div class="status-container"><div class="status-inline">%s<span class="status-time">%s</span></div></div>`,
+		row.Status = fmt.Sprintf(
+			`<div class="status-container"><div class="status-inline">%s`+
+				`<span class="status-time">%s</span></div></div>`,
 			statusBadge,
 			lastUpdate)
 	}
@@ -70,7 +88,7 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 	return row
 }
 
-// formatTimeSince formats a duration in a human-readable way
+// formatTimeSince formats a duration in a human-readable way.
 func formatTimeSince(t time.Time, now time.Time) string {
 	duration := now.Sub(t)
 
@@ -92,9 +110,9 @@ func formatTimeSince(t time.Time, now time.Time) string {
 	}
 
 	// Hours (less than 1 day)
-	if duration < 24*time.Hour {
+	if duration < hoursPerDay*time.Hour {
 		hours := int(duration.Hours())
-		minutes := int(duration.Minutes()) % 60
+		minutes := int(duration.Minutes()) % minutesPerHour
 		if minutes > 0 {
 			return fmt.Sprintf("%dh %dm ago", hours, minutes)
 		}
@@ -102,9 +120,9 @@ func formatTimeSince(t time.Time, now time.Time) string {
 	}
 
 	// Days (less than 7 days)
-	if duration < 7*24*time.Hour {
-		days := int(duration.Hours() / 24)
-		hours := int(duration.Hours()) % 24
+	if duration < daysPerWeek*hoursPerDay*time.Hour {
+		days := int(duration.Hours() / hoursPerDay)
+		hours := int(duration.Hours()) % hoursPerDay
 		if hours > 0 {
 			return fmt.Sprintf("%dd %dh ago", days, hours)
 		}
@@ -112,8 +130,8 @@ func formatTimeSince(t time.Time, now time.Time) string {
 	}
 
 	// Weeks
-	weeks := int(duration.Hours() / 24 / 7)
-	days := int(duration.Hours()/24) % 7
+	weeks := int(duration.Hours() / hoursPerDay / daysPerWeek)
+	days := int(duration.Hours()/hoursPerDay) % daysPerWeek
 	if days > 0 {
 		return fmt.Sprintf("%dw %dd ago", weeks, days)
 	}
@@ -132,77 +150,77 @@ func convertStatusWithTooltip(status models.Status, message string) string {
 	switch status {
 	case constants.SUCCESS:
 		return fmt.Sprintf(`<span class="badge badge-success%s"%s>`, tooltipClass, tooltipAttr) +
-			`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+			svgStart +
 			`<polyline points="20 6 9 17 4 12"></polyline>` +
-			`</svg>` +
+			svgEnd +
 			`Success</span>`
 	case constants.FAIL:
 		return fmt.Sprintf(`<span class="badge badge-error%s"%s>`, tooltipClass, tooltipAttr) +
-			`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+			svgStart +
 			`<circle cx="12" cy="12" r="10"></circle>` +
 			`<line x1="15" y1="9" x2="9" y2="15"></line>` +
 			`<line x1="9" y1="9" x2="15" y2="15"></line>` +
-			`</svg>` +
+			svgEnd +
 			`Failed</span>`
 	case constants.UPTODATE:
 		return fmt.Sprintf(`<span class="badge badge-success%s"%s>`, tooltipClass, tooltipAttr) +
-			`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+			svgStart +
 			`<polyline points="20 6 9 17 4 12"></polyline>` +
-			`</svg>` +
+			svgEnd +
 			`Up to date</span>`
 	case constants.UPDATING:
 		return fmt.Sprintf(`<span class="badge badge-info%s"%s>`, tooltipClass, tooltipAttr) +
-			`<svg class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+			svgStartSpin +
 			`<path d="M21 12a9 9 0 11-6.219-8.56"></path>` +
-			`</svg>` +
+			svgEnd +
 			`Updating</span>`
 	case constants.UNSET:
 		return fmt.Sprintf(`<span class="badge badge-warning%s"%s>`, tooltipClass, tooltipAttr) +
-			`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+			svgStart +
 			`<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path>` +
 			`<line x1="12" y1="9" x2="12" y2="13"></line>` +
 			`<line x1="12" y1="17" x2="12.01" y2="17"></line>` +
-			`</svg>` +
+			svgEnd +
 			`Unset</span>`
 	default:
 		return "Unknown status"
 	}
 }
 
-// formatIPVersion formats IP version string with styled badge and icon
+// formatIPVersion formats IP version string with styled badge and icon.
 func formatIPVersion(ipVersion string) string {
 	switch strings.ToLower(ipVersion) {
 	case "ipv4":
 		return `<span class="ip-version-badge ipv4-badge">` +
-			`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+			svgStart +
 			`<rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>` +
 			`<rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>` +
 			`<line x1="6" y1="6" x2="6.01" y2="6"></line>` +
 			`<line x1="6" y1="18" x2="6.01" y2="18"></line>` +
-			`</svg>` +
+			svgEnd +
 			`IPv4</span>`
 	case "ipv6":
 		return `<span class="ip-version-badge ipv6-badge">` +
-			`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+			svgStart +
 			`<polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>` +
 			`<polyline points="2 17 12 22 22 17"></polyline>` +
 			`<polyline points="2 12 12 17 22 12"></polyline>` +
-			`</svg>` +
+			svgEnd +
 			`IPv6</span>`
 	case "ipv4 or ipv6":
 		return `<span class="ip-version-badge ipv4v6-badge">` +
-			`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+			svgStart +
 			`<circle cx="12" cy="12" r="10"></circle>` +
 			`<line x1="2" y1="12" x2="22" y2="12"></line>` +
 			`<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>` +
-			`</svg>` +
+			svgEnd +
 			`IPv4/6</span>`
 	default:
 		return ipVersion
 	}
 }
 
-// escapeHTML escapes special HTML characters to prevent XSS
+// escapeHTML escapes special HTML characters to prevent XSS.
 func escapeHTML(s string) string {
 	s = strings.ReplaceAll(s, "&", "&amp;")
 	s = strings.ReplaceAll(s, "<", "&lt;")
@@ -212,7 +230,7 @@ func escapeHTML(s string) string {
 	return s
 }
 
-// getStatusClass returns CSS class for row background tinting
+// getStatusClass returns CSS class for row background tinting.
 func getStatusClass(status models.Status) string {
 	switch status {
 	case constants.SUCCESS, constants.UPTODATE:

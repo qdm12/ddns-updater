@@ -764,6 +764,15 @@ footer {
   }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .animate-spin {
   animation: spin 1s linear infinite;
 }

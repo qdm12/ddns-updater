@@ -512,17 +512,17 @@ td {
 .badge.has-status-tooltip:hover::after,
 .badge.has-status-tooltip.tooltip-active::after {
   content: attr(data-tooltip);
-  position: absolute;
-  left: 0;
-  top: calc(100% + 0.75rem);
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 1rem;
   background: var(--foreground);
   color: var(--background);
   padding: 0.625rem 0.875rem;
   border-radius: var(--radius);
   font-size: 0.8125rem;
   white-space: normal;
-  max-width: 320px;
-  min-width: 200px;
+  max-width: calc(100vw - 2rem);
   width: max-content;
   z-index: 9999;
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
@@ -531,17 +531,38 @@ td {
   font-weight: normal;
   text-transform: none;
   letter-spacing: normal;
+  text-align: left;
 }
 
 .badge.has-status-tooltip:hover::before,
 .badge.has-status-tooltip.tooltip-active::before {
-  content: "";
-  position: absolute;
-  left: 0.75rem;
-  top: calc(100% + 0.125rem);
-  border: 0.375rem solid transparent;
-  border-bottom-color: var(--foreground);
-  z-index: 10000;
+  display: none;
+}
+
+/* Desktop tooltip positioning */
+@media (min-width: 769px) {
+  .badge.has-status-tooltip:hover::after,
+  .badge.has-status-tooltip.tooltip-active::after {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: calc(100% + 0.75rem);
+    bottom: auto;
+    max-width: 320px;
+  }
+
+  .badge.has-status-tooltip:hover::before,
+  .badge.has-status-tooltip.tooltip-active::before {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: calc(100% + 0.125rem);
+    border: 0.375rem solid transparent;
+    border-bottom-color: var(--foreground);
+    z-index: 10000;
+  }
 }
 
 /* ============================================
@@ -893,6 +914,27 @@ footer {
 
   .status-inline {
     justify-content: flex-end;
+  }
+
+  /* Optimize Previous IPs display on mobile */
+  .ip-badge {
+    font-size: 0.6875rem;
+    padding: 0.0625rem 0.25rem;
+    margin-right: 0.125rem;
+    white-space: nowrap;
+  }
+
+  .text-muted {
+    font-size: 0.6875rem;
+    white-space: nowrap;
+  }
+
+  /* Ensure IP content doesn't wrap */
+  td[data-label="Previous IPs"],
+  td[data-label="Current IP"] {
+    white-space: nowrap;
+    overflow-x: auto;
+    font-size: 0.75rem;
   }
 }
 

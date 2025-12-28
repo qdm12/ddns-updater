@@ -884,6 +884,16 @@ footer {
     padding-bottom: 0.5rem;
     margin-bottom: 0.5rem;
   }
+
+  /* Fix status column alignment on mobile */
+  .status-container {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .status-inline {
+    justify-content: flex-end;
+  }
 }
 
 /* Desktop improvements */

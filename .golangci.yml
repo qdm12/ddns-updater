@@ -78,6 +78,19 @@ linters:
   settings:
     misspell:
       locale: US
+    revive:
+      rules:
+        - name: var-naming
+          severity: warning
+          disabled: false
+          exclude: [""]
+          arguments:
+            - ["ID"] # AllowList
+            - ["VM"] # DenyList
+            - - skip-initialism-name-checks: true
+                upper-case-const: true
+                skip-package-name-checks: true
+                skip-package-name-collision-with-go-std: true
   exclusions:
     generated: lax
     presets:

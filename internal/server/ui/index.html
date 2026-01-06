@@ -90,19 +90,19 @@
             <th scope="col">IP Version</th>
             <th scope="col">Status</th>
             <th scope="col">Current IP</th>
-            <th scope="col">Previous IPs</th>
+            <th scope="col">History</th>
           </tr>
         </thead>
         <tbody>
           {{range .Rows}}
-          <tr>
-            <td data-label="Domain">{{.Domain}}</td>
+          <tr data-history='{{.HistoryJSON}}'>
+            <td data-label="Domain" class="domain-cell">{{.Domain}}</td>
             <td data-label="Owner">{{.Owner}}</td>
             <td data-label="Provider">{{.Provider}}</td>
             <td data-label="IP Version">{{.IPVersion}}</td>
             <td data-label="Status">{{.Status}}</td>
             <td data-label="Current IP">{{.CurrentIP}}</td>
-            <td data-label="Previous IPs">{{.PreviousIPs}}</td>
+            <td data-label="History">{{.PreviousIPs}}</td>
           </tr>
           {{end}}
         </tbody>
@@ -129,6 +129,24 @@
       <span>GitHub</span>
     </a>
   </footer>
+
+  <!-- History Modal -->
+  <div id="history-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">IP History</h2>
+        <button class="modal-close" onclick="closeHistoryModal()" aria-label="Close history modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="history-table-container"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="page-nav-btn" id="prev-page" onclick="previousPage()" disabled>&laquo; Previous</button>
+        <span class="page-info" id="page-info">Page 1 of 1</span>
+        <button class="page-nav-btn" id="next-page" onclick="nextPage()" disabled>Next &raquo;</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Application scripts -->
   <script src="static/app.js"></script>

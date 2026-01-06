@@ -325,6 +325,258 @@
     });
   }
 
+  /**
+   * History Modal Logic
+   */
+  let currentHistoryData = [];
+  let currentPage = 1;
+  let totalPages = 1;
+  const ITEMS_PER_PAGE = 20;
+
+  /**
+   * Open history modal for a domain
+   */
+  function openHistoryModal(button) {
+    const row = button.closest('tr');
+    const historyJSON = row.dataset.history;
+
+    // Get domain name from the domain cell's text content
+    const domainCell = row.querySelector('.domain-cell');
+    const domain = domainCell ? domainCell.textContent.trim() : 'Unknown';
+
+    try {
+      currentHistoryData = JSON.parse(historyJSON);
+    } catch (e) {
+      currentHistoryData = [];
+    }
+
+    // Reverse to show newest first (data is oldest first)
+    currentHistoryData = currentHistoryData.reverse();
+
+    // Calculate total pages
+    totalPages = Math.max(1, Math.ceil(currentHistoryData.length / ITEMS_PER_PAGE));
+    currentPage = 1;
+
+    // Update modal title
+    document.getElementById('modal-title').textContent = `IP History: ${domain}`;
+
+    // Render first page
+    renderHistoryPage();
+
+    // Show modal
+    const modal = document.getElementById('history-modal');
+    modal.classList.add('active');
+  }
+
+  /**
+   * Close history modal
+   */
+  function closeHistoryModal() {
+    const modal = document.getElementById('history-modal');
+    modal.classList.remove('active');
+  }
+
+  /**
+   * Go to previous page
+   */
+  function previousPage() {
+    if (currentPage > 1) {
+      currentPage--;
+      renderHistoryPage();
+    }
+  }
+
+  /**
+   * Go to next page
+   */
+  function nextPage() {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderHistoryPage();
+    }
+  }
+
+  /**
+   * Render current page of history
+   */
+  function renderHistoryPage() {
+    const container = document.getElementById('history-table-container');
+
+    // Empty state
+    if (currentHistoryData.length === 0) {
+      container.innerHTML = `
+        <div class="history-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <p>No history available</p>
+        </div>
+      `;
+      updatePaginationControls();
+      return;
+    }
+
+    // Calculate page range
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, currentHistoryData.length);
+    const pageData = currentHistoryData.slice(startIndex, endIndex);
+
+    // Build table HTML
+    let tableHTML = `
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th class="col-ip">IP Address</th>
+            <th class="col-time">Changed At</th>
+            <th class="col-ago">Time Ago</th>
+            <th class="col-duration">Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    const now = new Date();
+
+    pageData.forEach((event, index) => {
+      const absoluteIndex = startIndex + index + 1;
+      const eventTime = new Date(event.time);
+      const timeAgo = formatTimeAgo(eventTime, now);
+      const formattedTime = formatDateTime(eventTime);
+
+      // Calculate duration (how long this IP was active)
+      // Since we reversed the array, index 0 is newest (current)
+      let duration = '—';
+      if (index === 0 && startIndex === 0) {
+        // This is the most recent IP (currently active)
+        duration = '<span class="history-current-badge">Current</span>';
+      } else {
+        // Calculate duration from this event to the previous one (which is earlier in the reversed array)
+        const prevEventIndex = startIndex + index - 1;
+        if (prevEventIndex >= 0 && prevEventIndex < currentHistoryData.length) {
+          const prevEvent = currentHistoryData[prevEventIndex];
+          const prevTime = new Date(prevEvent.time);
+          duration = formatDuration(prevTime - eventTime);
+        }
+      }
+
+      tableHTML += `
+        <tr>
+          <td class="col-num">${absoluteIndex}</td>
+          <td class="col-ip">${event.ip}</td>
+          <td class="col-time">${formattedTime}</td>
+          <td class="col-ago">${timeAgo}</td>
+          <td class="col-duration">${duration}</td>
+        </tr>
+      `;
+    });
+
+    tableHTML += `
+        </tbody>
+      </table>
+    `;
+
+    container.innerHTML = tableHTML;
+    updatePaginationControls();
+  }
+
+  /**
+   * Update pagination button states
+   */
+  function updatePaginationControls() {
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+    const pageInfo = document.getElementById('page-info');
+
+    prevBtn.disabled = currentPage <= 1;
+    nextBtn.disabled = currentPage >= totalPages;
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+  }
+
+  /**
+   * Format date/time for display
+   */
+  function formatDateTime(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+
+  /**
+   * Format time ago (e.g., "2h ago", "3d ago")
+   */
+  function formatTimeAgo(eventTime, now) {
+    const diff = now - eventTime;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const weeks = Math.floor(days / 7);
+
+    if (seconds < 10) return 'just now';
+    if (seconds < 60) return `${seconds}s ago`;
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) {
+      const mins = minutes % 60;
+      return mins > 0 ? `${hours}h ${mins}m ago` : `${hours}h ago`;
+    }
+    if (days < 7) {
+      const hrs = hours % 24;
+      return hrs > 0 ? `${days}d ${hrs}h ago` : `${days}d ago`;
+    }
+    const dys = days % 7;
+    return dys > 0 ? `${weeks}w ${dys}d ago` : `${weeks}w ago`;
+  }
+
+  /**
+   * Format duration between two times in human-readable format
+   */
+  function formatDuration(milliseconds) {
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const weeks = Math.floor(days / 7);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+
+    if (years > 0) {
+      const remainingMonths = Math.floor((days % 365) / 30);
+      return remainingMonths > 0 ? `${years} year${years > 1 ? 's' : ''} ${remainingMonths} month${remainingMonths > 1 ? 's' : ''}` : `${years} year${years > 1 ? 's' : ''}`;
+    }
+    if (months > 0) {
+      const remainingDays = days % 30;
+      return remainingDays > 0 ? `${months} month${months > 1 ? 's' : ''} ${remainingDays} day${remainingDays > 1 ? 's' : ''}` : `${months} month${months > 1 ? 's' : ''}`;
+    }
+    if (weeks > 0) {
+      const remainingDays = days % 7;
+      return remainingDays > 0 ? `${weeks} week${weeks > 1 ? 's' : ''} ${remainingDays} day${remainingDays > 1 ? 's' : ''}` : `${weeks} week${weeks > 1 ? 's' : ''}`;
+    }
+    if (days > 0) {
+      const remainingHours = hours % 24;
+      return remainingHours > 0 ? `${days} day${days > 1 ? 's' : ''} ${remainingHours} hour${remainingHours > 1 ? 's' : ''}` : `${days} day${days > 1 ? 's' : ''}`;
+    }
+    if (hours > 0) {
+      const remainingMinutes = minutes % 60;
+      return remainingMinutes > 0 ? `${hours} hour${hours > 1 ? 's' : ''} ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}` : `${hours} hour${hours > 1 ? 's' : ''}`;
+    }
+    if (minutes > 0) {
+      return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    }
+    return `${seconds} second${seconds !== 1 ? 's' : ''}`;
+  }
+
+  // Expose functions to global scope
+  window.openHistoryModal = openHistoryModal;
+  window.closeHistoryModal = closeHistoryModal;
+  window.previousPage = previousPage;
+  window.nextPage = nextPage;
+
   // Initialize button icons and tooltips when DOM is ready
   document.addEventListener('DOMContentLoaded', function () {
     // Set refresh button icon if it exists
@@ -363,5 +615,25 @@
 
     // Listen for page visibility changes
     document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Close modal when clicking outside
+    const modal = document.getElementById('history-modal');
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          closeHistoryModal();
+        }
+      });
+    }
+
+    // Close modal with ESC key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('history-modal');
+        if (modal && modal.classList.contains('active')) {
+          closeHistoryModal();
+        }
+      }
+    });
   });
 })();

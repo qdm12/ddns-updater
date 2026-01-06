@@ -24,4 +24,5 @@ type HTMLRow struct {
 	StatusClass string // CSS class for row background tinting (status-success, status-error, etc.)
 	CurrentIP   string
 	PreviousIPs string
+	HistoryJSON string // JSON-encoded history data for modal
 }

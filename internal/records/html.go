@@ -1,6 +1,7 @@
 package records
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -77,7 +78,7 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 		for i, previousIP := range previousIPs {
 			if i == maxPreviousIPs {
 				previousIPsHTML = append(previousIPsHTML,
-					fmt.Sprintf(`<span class="text-muted">+%d more</span>`, len(previousIPs)-i))
+					fmt.Sprintf(`<button class="history-more-btn" onclick="openHistoryModal(this)" title="View full IP change history">+%d more</button>`, len(previousIPs)-i))
 				break
 			}
 			previousIPsHTML = append(previousIPsHTML,
@@ -85,6 +86,15 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 		}
 		row.PreviousIPs = strings.Join(previousIPsHTML, " ")
 	}
+
+	// Serialize history to JSON for modal
+	historyJSON, err := json.Marshal(r.History)
+	if err == nil {
+		row.HistoryJSON = string(historyJSON)
+	} else {
+		row.HistoryJSON = "[]"
+	}
+
 	return row
 }
 

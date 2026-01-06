@@ -77,8 +77,11 @@ func (r *Record) HTML(now time.Time) models.HTMLRow {
 		const maxPreviousIPs = 2
 		for i, previousIP := range previousIPs {
 			if i == maxPreviousIPs {
-				previousIPsHTML = append(previousIPsHTML,
-					fmt.Sprintf(`<button class="history-more-btn" onclick="openHistoryModal(this)" title="View full IP change history">+%d more</button>`, len(previousIPs)-i))
+				moreButton := fmt.Sprintf(
+					`<button class="history-more-btn" onclick="openHistoryModal(this)" `+
+						`title="View full IP change history">+%d more</button>`,
+					len(previousIPs)-i)
+				previousIPsHTML = append(previousIPsHTML, moreButton)
 				break
 			}
 			previousIPsHTML = append(previousIPsHTML,

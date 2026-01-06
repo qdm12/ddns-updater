@@ -72,8 +72,12 @@ func validateSettings(domain, customerNumber, apiKey, password string) (err erro
 	return nil
 }
 
+func (p *Provider) Name() models.Provider {
+	return constants.Netcup
+}
+
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.Netcup, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, p.Name(), p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

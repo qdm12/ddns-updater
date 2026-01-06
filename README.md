@@ -107,6 +107,8 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
 
     ![Mobile Web UI](readme/webui-mobile.png)
 
+- JSON API endpoint at `/json` for programmatic access to DNS record information
+
 - Send notifications with [**Shoutrrr**](https://containrrr.dev/shoutrrr/v0.8/services/overview/) using `SHOUTRRR_ADDRESSES`
 - Container (Docker/K8s) specific features:
   - Lightweight 12MB Docker image based on the Scratch Docker image
@@ -266,6 +268,7 @@ Check the documentation for your DNS provider:
 - [Vultr](docs/vultr.md)
 - [Zoneedit](docs/zoneedit.md)
 - [Custom](docs/custom.md)
+- [JSON API](docs/json-api.md)
 
 Note that:
 

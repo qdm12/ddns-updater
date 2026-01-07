@@ -976,7 +976,6 @@ footer {
   font-size: 0.8125rem;
 }
 
-.history-table .col-ago,
 .history-table .col-duration {
   font-size: 0.8125rem;
   color: var(--muted-foreground);

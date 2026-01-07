@@ -430,7 +430,6 @@
             <th class="col-num">#</th>
             <th class="col-ip">IP Address</th>
             <th class="col-time">Changed At</th>
-            <th class="col-ago">Time Ago</th>
             <th class="col-duration">Duration</th>
           </tr>
         </thead>
@@ -442,7 +441,6 @@
     pageData.forEach((event, index) => {
       const absoluteIndex = startIndex + index + 1;
       const eventTime = new Date(event.time);
-      const timeAgo = formatTimeAgo(eventTime, now);
       const formattedTime = formatDateTime(eventTime);
 
       // Calculate duration (how long this IP was active)
@@ -466,7 +464,6 @@
           <td class="col-num">${absoluteIndex}</td>
           <td class="col-ip">${event.ip}</td>
           <td class="col-time">${formattedTime}</td>
-          <td class="col-ago">${timeAgo}</td>
           <td class="col-duration">${duration}</td>
         </tr>
       `;
@@ -505,32 +502,6 @@
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const seconds = String(date.getSeconds()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  }
-
-  /**
-   * Format time ago (e.g., "2h ago", "3d ago")
-   */
-  function formatTimeAgo(eventTime, now) {
-    const diff = now - eventTime;
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-    const weeks = Math.floor(days / 7);
-
-    if (seconds < 10) return 'just now';
-    if (seconds < 60) return `${seconds}s ago`;
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) {
-      const mins = minutes % 60;
-      return mins > 0 ? `${hours}h ${mins}m ago` : `${hours}h ago`;
-    }
-    if (days < 7) {
-      const hrs = hours % 24;
-      return hrs > 0 ? `${days}d ${hrs}h ago` : `${days}d ago`;
-    }
-    const dys = days % 7;
-    return dys > 0 ? `${weeks}w ${dys}d ago` : `${weeks}w ago`;
   }
 
   /**

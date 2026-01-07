@@ -157,6 +157,18 @@ a:hover {
   flex-wrap: wrap;
 }
 
+.header-title-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-icon {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+}
+
 .header-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -1078,6 +1090,11 @@ footer {
 @media (max-width: 480px) {
   .btn-text {
     display: none;
+  }
+
+  .header-icon {
+    width: 1.75rem;
+    height: 1.75rem;
   }
 
   .header-title {

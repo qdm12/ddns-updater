@@ -100,6 +100,9 @@
                     "formatting.gofumpt": true,
                     "usePlaceholders": false,
                     "staticcheck": true,
+                    "ui.diagnostic.analyses": {
+                        "ST1000": false
+                    },
                     "vulncheck": "Imports"
                 },
                 "remote.extensionKind": {

@@ -1,1 +1,1 @@
-FROM qmcgaw/godevcontainer:v0.20-alpine
+FROM qmcgaw/godevcontainer:v0.21-alpine

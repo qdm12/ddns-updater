@@ -6,8 +6,6 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
 
 [![Build status](https://github.com/qdm12/ddns-updater/actions/workflows/build.yml/badge.svg)](https://github.com/qdm12/ddns-updater/actions/workflows/build.yml)
 
-[![dockeri.co](https://dockeri.co/image/qmcgaw/ddns-updater)](https://hub.docker.com/r/qmcgaw/ddns-updater)
-
 ![Last release](https://img.shields.io/github/release/qdm12/ddns-updater?label=Last%20release)
 ![Last Docker tag](https://img.shields.io/docker/v/qmcgaw/ddns-updater?sort=semver&label=Last%20Docker%20tag)
 [![Last release size](https://img.shields.io/docker/image-size/qmcgaw/ddns-updater?sort=semver&label=Last%20released%20image)](https://hub.docker.com/r/qmcgaw/ddns-updater/tags?page=1&ordering=last_updated)
@@ -22,7 +20,6 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
 [![GitHub issues](https://img.shields.io/github/issues/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues?q=is%3Aissue+is%3Aclosed)
 
-[![Lines of code](https://img.shields.io/tokei/lines/github/qdm12/ddns-updater)](https://github.com/qdm12/ddns-updater)
 ![Code size](https://img.shields.io/github/languages/code-size/qdm12/ddns-updater)
 ![GitHub repo size](https://img.shields.io/github/repo-size/qdm12/ddns-updater)
 ![Go version](https://img.shields.io/github/go-mod/go-version/qdm12/ddns-updater)
@@ -191,7 +188,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
     - You can customize the program behavior using [environment variables](#environment-variables)
     - You can use [docker-compose.yml](docker-compose.yml) with `docker-compose up -d`
     - **Kubernetes**: check out the [k8s directory](k8s) for an installation guide and examples.
-    - Other [Docker image tags are available](https://hub.docker.com/repository/docker/qmcgaw/ddns-updater/tags)
+    - Other [Docker image tags are available](https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater)
     - You can update the image with `docker pull qmcgaw/ddns-updater`
     - You can set your JSON configuration as a single environment variable line (i.e. `{"settings": [{"provider": "namecheap", ...}]}`), which takes precedence over config.json. Note however that if you don't bind mount the `/updater/data` directory, there won't be a persistent database file `/updater/updates.json` but it will still work.
 

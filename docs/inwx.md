@@ -2,7 +2,7 @@
 
 ## Configuration
 
-You must configure a DynDNS Account in INWX and use the configured account and hostname. See https://www.inwx.com/en/offer/dyndns.
+You must configure a [DynDNS Account in INWX](https://www.inwx.com/en/offer/dyndns) and use the configured account and hostname.
 
 ### Example
 
@@ -23,7 +23,7 @@ You must configure a DynDNS Account in INWX and use the configured account and h
 
 ### Compulsory parameters
 
-- `"domain"` is the domain to update. This must be the domain configured for the DynDNS Account.
+- `"domain"` is the domain configured for the DynDNS Account. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`).
 - `"username"`
 - `"password"`
 

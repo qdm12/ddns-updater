@@ -119,11 +119,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Host:   "dondns.dondominio.com",
 		Path:   "/json/",
 		RawQuery: url.Values{
-			"user":   {p.username},
-			"apikey": {p.key},
-			"host":   {utils.BuildURLQueryHostname(p.owner, p.domain)},
-			"ip":     {ip.String()},
-			"lang":   {"en"},
+			"user":     {p.username},
+			"password": {p.key},
+			"host":     {utils.BuildURLQueryHostname(p.owner, p.domain)},
+			"ip":       {ip.String()},
+			"lang":     {"en"},
 		}.Encode(),
 	}
 

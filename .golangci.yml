@@ -1,24 +1,6 @@
-linters-settings:
-  misspell:
-    locale: US
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - containedctx
-        - dupl
-        - err113
-    - text: Function `exitHealthchecksio` should pass the context parameter
-      linters:
-        - contextcheck
-    - source: "See https://"
-      linters:
-        - lll
-
+version: "2"
 linters:
   enable:
-    # - cyclop
     - asasalint
     - asciicheck
     - bidichk
@@ -39,7 +21,6 @@ linters:
     - exhaustive
     - fatcontext
     - forcetypeassert
-    - gci
     - gocheckcompilerdirectives
     - gochecknoglobals
     - gochecknoinits
@@ -49,9 +30,7 @@ linters:
     - gocritic
     - gocyclo
     - godot
-    - gofumpt
     - goheader
-    - goimports
     - gomoddirectives
     - goprintffuncname
     - gosec
@@ -88,7 +67,6 @@ linters:
     - sloglint
     - sqlclosecheck
     - tagalign
-    - tenv
     - thelper
     - tparallel
     - unconvert
@@ -97,3 +75,53 @@ linters:
     - wastedassign
     - whitespace
     - zerologlint
+  settings:
+    misspell:
+      locale: US
+    revive:
+      rules:
+        - name: var-naming
+          severity: warning
+          disabled: false
+          exclude: [""]
+          arguments:
+            - ["ID"] # AllowList
+            - ["VM"] # DenyList
+            - - skip-initialism-name-checks: true
+                upper-case-const: true
+                skip-package-name-checks: true
+                skip-package-name-collision-with-go-std: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - containedctx
+          - dupl
+          - err113
+        path: _test\.go
+      - linters:
+          - contextcheck
+        text: Function `exitHealthchecksio` should pass the context parameter
+      - linters:
+          - lll
+        source: See https://
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

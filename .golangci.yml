@@ -1,22 +1,48 @@
-linters-settings:
-  misspell:
-    locale: US
+version: "2"
 
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - containedctx
-        - dupl
-        - err113
-    - text: Function `exitHealthchecksio` should pass the context parameter
-      linters:
-        - contextcheck
-    - source: "See https://"
-      linters:
-        - lll
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 
 linters:
+  settings:
+    misspell:
+      locale: US
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - containedctx
+          - dupl
+          - err113
+        path: _test\.go
+      - linters:
+          - contextcheck
+        text: Function `exitHealthchecksio` should pass the context parameter
+      - linters:
+          - lll
+        source: See https://
+      - linters:
+          - revive
+        text: "var-naming: avoid meaningless package names"
+        path: internal\/provider\/utils\/
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
   enable:
     # - cyclop
     - asasalint
@@ -39,7 +65,6 @@ linters:
     - exhaustive
     - fatcontext
     - forcetypeassert
-    - gci
     - gocheckcompilerdirectives
     - gochecknoglobals
     - gochecknoinits
@@ -49,9 +74,7 @@ linters:
     - gocritic
     - gocyclo
     - godot
-    - gofumpt
     - goheader
-    - goimports
     - gomoddirectives
     - goprintffuncname
     - gosec
@@ -88,7 +111,6 @@ linters:
     - sloglint
     - sqlclosecheck
     - tagalign
-    - tenv
     - thelper
     - tparallel
     - unconvert

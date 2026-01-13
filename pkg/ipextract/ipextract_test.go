@@ -121,7 +121,7 @@ func Benchmark_IPv6(b *testing.B) {
 		" fac00"
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = IPv6(text)
 	}
 }

@@ -75,8 +75,12 @@ func validateSettings(domain, username, token string, ttl *uint32) (err error) {
 	}
 }
 
+func (p *Provider) Name() models.Provider {
+	return constants.NameCom
+}
+
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.NameCom, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, p.Name(), p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

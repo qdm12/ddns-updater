@@ -79,8 +79,12 @@ func validateSettings(domain, project, zone string, credentials json.RawMessage)
 	return nil
 }
 
+func (p *Provider) Name() models.Provider {
+	return constants.GCP
+}
+
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.GCP, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, p.Name(), p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

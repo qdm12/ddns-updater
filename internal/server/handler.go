@@ -56,6 +56,8 @@ func newHandler(ctx context.Context, rootURL string,
 	}
 	router.Get(rootURL+"/", handlers.index)
 
+	router.Get(rootURL+"/json", handlers.json)
+
 	router.Get(rootURL+"/update", handlers.update)
 
 	router.Handle(rootURL+"/static/*", http.StripPrefix(rootURL+"/static/", http.FileServerFS(staticFolder)))

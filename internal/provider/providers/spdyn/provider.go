@@ -79,8 +79,12 @@ func validateSettings(domain, owner, token, user, password string) (err error) {
 	return nil
 }
 
+func (p *Provider) Name() models.Provider {
+	return constants.Spdyn
+}
+
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.Spdyn, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, p.Name(), p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

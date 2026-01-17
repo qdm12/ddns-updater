@@ -60,6 +60,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/spdyn"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/strato"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/variomedia"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/vercel"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/vultr"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/zoneedit"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -184,6 +185,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return strato.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Variomedia:
 		return variomedia.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Vercel:
+		return vercel.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Vultr:
 		return vultr.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Zoneedit:

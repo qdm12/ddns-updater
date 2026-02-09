@@ -22,9 +22,9 @@ type Updater struct {
 }
 
 func NewUpdater(db Database, client *http.Client, shoutrrrClient ShoutrrrClient,
-	logger DebugLogger, timeNow func() time.Time,
+	logger DebugLogger, timeNow func() time.Time, debugEnabled bool,
 ) *Updater {
-	client = makeLogClient(client, logger)
+	client = makeLogClient(client, logger, debugEnabled)
 	return &Updater{
 		db:             db,
 		client:         client,

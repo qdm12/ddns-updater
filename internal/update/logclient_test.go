@@ -104,7 +104,7 @@ func Test_LogClient(t *testing.T) {
 
 			logClient := makeLogClient(client, logger)
 
-			assert.Equal(t, logClient.Timeout, client.Timeout)
+			assert.Same(t, logClient, client)
 
 			ctx := context.Background()
 

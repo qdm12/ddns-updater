@@ -14,21 +14,15 @@ func (db *Database) StoreNewIP(domain, owner string, ip netip.Addr, t time.Time)
 	db.mutex.Lock()
 	defer db.mutex.Unlock()
 
-	targetIndex := -1
-	for i, record := range db.data.Records {
-		if record.Domain == domain && record.Owner == owner {
-			targetIndex = i
-			break
-		}
-	}
-
-	recordNotFound := targetIndex == -1
-	if recordNotFound {
+	key := recordKey(domain, owner)
+	targetIndex, exists := db.index[key]
+	if !exists {
 		db.data.Records = append(db.data.Records, record{
 			Domain: domain,
 			Owner:  owner,
 		})
 		targetIndex = len(db.data.Records) - 1
+		db.index[key] = targetIndex
 	}
 
 	event := models.HistoryEvent{
@@ -46,10 +40,9 @@ func (db *Database) GetEvents(domain, owner string,
 ) (events []models.HistoryEvent, err error) {
 	db.mutex.RLock()
 	defer db.mutex.RUnlock()
-	for _, record := range db.data.Records {
-		if record.Domain == domain && record.Owner == owner {
-			return filterEvents(record.Events, ipVersion), nil
-		}
+	key := recordKey(domain, owner)
+	if idx, exists := db.index[key]; exists {
+		return filterEvents(db.data.Records[idx].Events, ipVersion), nil
 	}
 	return nil, nil
 }

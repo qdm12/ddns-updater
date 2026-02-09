@@ -16,6 +16,21 @@ type Database struct {
 	data     dataModel
 	filepath string
 	mutex    sync.RWMutex
+	// index maps "domain\x00owner" to the record index in data.Records
+	// for O(1) lookups instead of linear scans.
+	index map[string]int
+}
+
+func recordKey(domain, owner string) string {
+	return domain + "\x00" + owner
+}
+
+func buildIndex(records []record) map[string]int {
+	index := make(map[string]int, len(records))
+	for i, r := range records {
+		index[recordKey(r.Domain, r.Owner)] = i
+	}
+	return index
 }
 
 func (db *Database) Close() error {
@@ -38,7 +53,7 @@ func NewDatabase(dataDir string) (*Database, error) {
 		if err != nil {
 			return nil, fmt.Errorf("creating data directory: %w", err)
 		}
-		return &Database{filepath: filePath}, nil
+		return &Database{filepath: filePath, index: make(map[string]int)}, nil
 	}
 
 	stat, err := file.Stat()
@@ -47,7 +62,7 @@ func NewDatabase(dataDir string) (*Database, error) {
 		return nil, fmt.Errorf("stating file: %w", err)
 	} else if stat.Size() == 0 { // empty file
 		_ = file.Close()
-		return &Database{filepath: filePath}, nil
+		return &Database{filepath: filePath, index: make(map[string]int)}, nil
 	}
 
 	decoder := json.NewDecoder(file)
@@ -79,6 +94,7 @@ func NewDatabase(dataDir string) (*Database, error) {
 	return &Database{
 		data:     data,
 		filepath: filePath,
+		index:    buildIndex(data.Records),
 	}, nil
 }
 

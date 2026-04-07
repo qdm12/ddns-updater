@@ -1,0 +1,95 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - cmd/**
+      - internal/**
+      - pkg/**
+      - go.mod
+      - go.sum
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Determine next version
+        id: version
+        run: |
+          # Find the latest semver tag (vX.Y.Z), default to v0.0.0 if none.
+          latest=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)
+          if [ -z "$latest" ]; then
+            latest="v0.0.0"
+          fi
+          echo "Latest tag: $latest"
+
+          # Strip leading v and split into parts.
+          version=${latest#v}
+          IFS='.' read -r major minor patch <<< "$version"
+          patch=$((patch + 1))
+          next="v${major}.${minor}.${patch}"
+
+          echo "Next version: $next"
+          echo "version=$next" >> "$GITHUB_OUTPUT"
+
+      - name: Build binaries
+        run: |
+          mkdir -p dist
+          targets=(
+            "linux amd64"
+            "linux arm64"
+            "linux arm"
+            "windows amd64"
+            "darwin amd64"
+            "darwin arm64"
+          )
+          for target in "${targets[@]}"; do
+            read -r os arch <<< "$target"
+            ext=""
+            suffix="$os-$arch"
+            if [ "$os" = "windows" ]; then
+              ext=".exe"
+            fi
+            if [ "$arch" = "arm" ]; then
+              suffix="$os-armv7"
+              GOARM=7 GOOS=$os GOARCH=$arch \
+                go build -ldflags="-s -w -X main.version=${{ steps.version.outputs.version }}" \
+                -o "dist/ddns-updater-${suffix}${ext}" ./cmd/ddns-updater/
+            else
+              GOOS=$os GOARCH=$arch \
+                go build -ldflags="-s -w -X main.version=${{ steps.version.outputs.version }}" \
+                -o "dist/ddns-updater-${suffix}${ext}" ./cmd/ddns-updater/
+            fi
+          done
+          ls -lh dist/
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.version }}" \
+            --target "${{ github.sha }}" \
+            --title "${{ steps.version.outputs.version }}" \
+            --generate-notes \
+            dist/ddns-updater-linux-amd64 \
+            dist/ddns-updater-linux-arm64 \
+            dist/ddns-updater-linux-armv7 \
+            dist/ddns-updater-windows-amd64.exe \
+            dist/ddns-updater-darwin-amd64 \
+            dist/ddns-updater-darwin-arm64

@@ -153,7 +153,7 @@ Selected variables. The full list is in upstream's documentation; the variables 
 
 ## Architecture
 
-```
+```text
 ┌─────────────┐    HTTP/JSON    ┌──────────────────┐    file I/O    ┌──────────────┐
 │   Browser   │ ──────────────▶ │  REST API layer  │ ─────────────▶ │ config.json  │
 │  (SPA, JS)  │ ◀────────────── │  internal/server │ ◀───────────── │              │

@@ -339,7 +339,7 @@
       }
       closeModal();
       loadConfig();
-      $('#restart-banner').style.display = 'block';
+      loadStatus();
     } catch (e) {
       showToast('Error: ' + e.message);
     }
@@ -361,7 +361,7 @@
       $('#delete-overlay').style.display = 'none';
       deleteIndex = -1;
       loadConfig();
-      $('#restart-banner').style.display = 'block';
+      loadStatus();
     } catch (e) {
       showToast('Error: ' + e.message);
     }

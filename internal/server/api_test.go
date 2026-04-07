@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/qdm12/ddns-updater/internal/provider"
+	"github.com/qdm12/ddns-updater/internal/records"
 )
 
 func setupTestConfig(t *testing.T, content string) (string, *apiHandlers) {
@@ -20,7 +22,7 @@ func setupTestConfig(t *testing.T, content string) (string, *apiHandlers) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	api := newAPIHandlers(configPath, nil)
+	api := newAPIHandlers(configPath, nil, nil)
 	return configPath, api
 }
 
@@ -184,7 +186,7 @@ func TestMaskSensitive(t *testing.T) {
 
 func TestGetProviders(t *testing.T) {
 	t.Parallel()
-	api := newAPIHandlers("", nil)
+	api := newAPIHandlers("", nil, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/providers", nil)
 	w := httptest.NewRecorder()
@@ -207,5 +209,47 @@ func TestGetProviders(t *testing.T) {
 	}
 	if _, ok := providers["duckdns"]; !ok {
 		t.Fatal("expected duckdns in providers")
+	}
+}
+
+type mockDB struct {
+	records []records.Record
+}
+
+func (m *mockDB) SelectAll() []records.Record {
+	return m.records
+}
+
+func (m *mockDB) ReplaceAll(newRecords []records.Record) {
+	m.records = newRecords
+}
+
+func TestPostConfigTriggersReload(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.json")
+	err := os.WriteFile(configPath, []byte(`{"settings":[]}`), 0o666)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db := &mockDB{}
+	parseCalled := false
+	parser := func(data []byte) ([]provider.Provider, []string, error) {
+		parseCalled = true
+		return nil, nil, nil
+	}
+	api := newAPIHandlers(configPath, db, parser)
+
+	body := `{"provider":"duckdns","domain":"test.duckdns.org","token":"abc"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/config", bytes.NewBufferString(body))
+	w := httptest.NewRecorder()
+	api.postConfig(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+	if !parseCalled {
+		t.Fatal("expected parser to be called for reload")
 	}
 }

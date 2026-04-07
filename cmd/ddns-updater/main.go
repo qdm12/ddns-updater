@@ -19,7 +19,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/healthchecksio"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/noop"
-	jsonparams "github.com/qdm12/ddns-updater/internal/params"
+	"github.com/qdm12/ddns-updater/internal/params"
 	persistence "github.com/qdm12/ddns-updater/internal/persistence/json"
 	"github.com/qdm12/ddns-updater/internal/provider"
 	recordslib "github.com/qdm12/ddns-updater/internal/records"
@@ -151,7 +151,7 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		return err
 	}
 
-	jsonReader := jsonparams.NewReader(logger)
+	jsonReader := params.NewReader(logger)
 	providers, warnings, err := jsonReader.JSONProviders(*config.Paths.Config)
 	for _, w := range warnings {
 		logger.Warn(w)
@@ -376,5 +376,5 @@ func createServer(ctx context.Context, config config.Server,
 	}
 	serverLogger := logger.New(log.SetComponent("http server"))
 	return server.New(ctx, config.ListeningAddress, config.RootURL,
-		db, serverLogger, updaterService, configPath)
+		db, serverLogger, updaterService, configPath, params.ParseProviders)
 }

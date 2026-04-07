@@ -252,3 +252,9 @@ func extractFromDomainField(domainField string) (domainRegistered string,
 	}
 	return domainRegistered, owners, nil
 }
+
+// ParseProviders parses config JSON bytes into provider objects.
+// Exported for use by the API hot-reload mechanism.
+func ParseProviders(configBytes []byte) ([]provider.Provider, []string, error) {
+	return extractAllSettings(configBytes)
+}

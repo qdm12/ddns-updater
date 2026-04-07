@@ -35,6 +35,9 @@
     },
     {
       "pattern": "^https://www.namesilo.com"
+    },
+    {
+      "pattern": "^https://cp.servercow.de"
     }
   ],
   "timeout": "20s",

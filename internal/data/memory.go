@@ -23,3 +23,11 @@ func (db *Database) SelectAll() (records []records.Record) {
 	defer db.RUnlock()
 	return db.data
 }
+
+// ReplaceAll atomically replaces all records in the database with the provided records.
+// This holds a write lock during the entire operation to ensure atomicity.
+func (db *Database) ReplaceAll(records []records.Record) {
+	db.Lock()
+	defer db.Unlock()
+	db.data = records
+}

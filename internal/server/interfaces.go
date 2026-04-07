@@ -8,6 +8,7 @@ import (
 
 type Database interface {
 	SelectAll() (records []records.Record)
+	ReplaceAll(records []records.Record)
 }
 
 type UpdateForcer interface {
@@ -18,4 +19,17 @@ type Logger interface {
 	Info(s string)
 	Warn(s string)
 	Error(s string)
+}
+
+// StatusRecord holds JSON-serializable record status for the API.
+type StatusRecord struct {
+	Domain      string   `json:"domain"`
+	Owner       string   `json:"owner"`
+	Provider    string   `json:"provider"`
+	IPVersion   string   `json:"ip_version"`
+	Status      string   `json:"status"`
+	Message     string   `json:"message"`
+	CurrentIP   string   `json:"current_ip"`
+	PreviousIPs []string `json:"previous_ips"`
+	LastUpdated string   `json:"last_updated"`
 }

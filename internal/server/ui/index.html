@@ -11,46 +11,107 @@
 </head>
 
 <body>
-  <table role="table">
-    <thead>
-      <tr>
-        <th>Domain</th>
-        <th>Owner</th>
-        <th>Provider</th>
-        <th>IP Version</th>
-        <th>Update Status</th>
-        <th>Current IP</th>
-        <th>Previous IPs<small> (reverse chronological order)</small></th>
-      </tr>
-    </thead>
-    <tbody>
-      {{range .Rows}}
-      <tr>
-        <td data-label="Domain">{{.Domain}}</td>
-        <td data-label="Owner">{{.Owner}}</td>
-        <td data-label="Provider">{{.Provider}}</td>
-        <td data-label="IP Version">{{.IPVersion}}</td>
-        <td data-label="Update Status">{{.Status}}</td>
-        <td data-label="Current IP">{{.CurrentIP}}</td>
-        <td data-label="Previous IPs">{{.PreviousIPs}}</td>
-      </tr>
-      {{end}}
-    </tbody>
-  </table>
+  <nav class="tabs">
+    <button class="tab active" data-tab="dashboard">Dashboard</button>
+    <button class="tab" data-tab="configuration">Configuration</button>
+  </nav>
+
+  <main>
+    <section id="dashboard" class="tab-content active">
+      <div class="toolbar">
+        <h2>DNS Records</h2>
+        <button id="force-update-btn" class="btn btn-primary">Force Update All</button>
+      </div>
+      <div id="records-grid" class="table-container">
+        <p class="loading">Loading...</p>
+      </div>
+    </section>
+
+    <section id="configuration" class="tab-content">
+      <div class="toolbar">
+        <h2>Configuration</h2>
+        <button id="add-entry-btn" class="btn btn-primary">+ Add Entry</button>
+      </div>
+      <div id="config-list" class="table-container">
+        <p class="loading">Loading...</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal -->
+  <div id="modal-overlay" class="modal-overlay" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Add Entry</h3>
+        <button id="modal-close" class="modal-close-btn">&times;</button>
+      </div>
+      <form id="entry-form" class="modal-body">
+        <div class="form-group">
+          <label for="provider-select">Provider</label>
+          <select id="provider-select" required>
+            <option value="">Select a provider...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="domain-input">Domain</label>
+          <input type="text" id="domain-input" required placeholder="e.g. sub.example.com">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ip-version-select">IP Version</label>
+            <select id="ip-version-select">
+              <option value="ipv4 or ipv6">IPv4 or IPv6</option>
+              <option value="ipv4">IPv4</option>
+              <option value="ipv6">IPv6</option>
+            </select>
+          </div>
+          <div class="form-group" id="ipv6-suffix-group" style="display:none;">
+            <label for="ipv6-suffix-input">IPv6 Suffix</label>
+            <input type="text" id="ipv6-suffix-input" placeholder="e.g. ::1/64">
+          </div>
+        </div>
+        <div id="auth-groups-container"></div>
+        <div id="provider-fields-container"></div>
+        <div class="modal-footer">
+          <button type="button" id="modal-cancel" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation -->
+  <div id="delete-overlay" class="modal-overlay" style="display:none;">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3>Confirm Delete</h3>
+      </div>
+      <div class="modal-body">
+        <p id="delete-message">Are you sure?</p>
+      </div>
+      <div class="modal-footer">
+        <button id="delete-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="delete-confirm" class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" style="display:none;"></div>
+
   <footer>
     <div>
       <a href="https://github.com/qdm12/ddns-updater" class="text-big">
-        <svg class="github-icon" height="1em" aria-hidden="true" viewBox="0 0 16 16" version="1.1"
-          data-view-component="true">
+        <svg class="github-icon" height="1em" aria-hidden="true" viewBox="0 0 16 16" version="1.1">
           <path
             d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z">
           </path>
         </svg>
       </a>
     </div>
-    <div>by <a href="https://github.com/qdm12">Quentin McGaw</a> / UI reworked by <a
-        href="https://github.com/fuse314">Gottfried Mayer</a></div>
+    <div>by <a href="https://github.com/qdm12">Quentin McGaw</a></div>
   </footer>
+  <script src="static/app.js"></script>
 </body>
 
 </html>

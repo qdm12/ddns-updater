@@ -149,19 +149,29 @@ func (a *apiHandlers) writeConfig(config map[string]interface{}) error {
 	return nil
 }
 
-func (a *apiHandlers) reload() error {
+// validateConfig parses the config to check it produces valid providers.
+// Returns the parsed providers for use by applyProviders.
+func (a *apiHandlers) validateConfig(config map[string]interface{}) ([]provider.Provider, error) {
 	if a.parseConfig == nil {
-		return nil
+		return nil, nil
 	}
-	data, err := os.ReadFile(a.configPath)
+	data, err := json.Marshal(config)
 	if err != nil {
-		return fmt.Errorf("reading config for reload: %w", err)
+		return nil, fmt.Errorf("marshaling config: %w", err)
 	}
 	providers, _, err := a.parseConfig(data)
 	if err != nil {
-		return fmt.Errorf("parsing config for reload: %w", err)
+		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
+	return providers, nil
+}
 
+// applyProviders swaps the in-memory database records with new providers,
+// preserving history for matching entries (by domain+owner+ipversion key).
+func (a *apiHandlers) applyProviders(providers []provider.Provider) {
+	if providers == nil {
+		return
+	}
 	existing := a.db.SelectAll()
 	historyMap := make(map[string]records.Record, len(existing))
 	for _, rec := range existing {
@@ -187,7 +197,6 @@ func (a *apiHandlers) reload() error {
 	}
 
 	a.db.ReplaceAll(newRecords)
-	return nil
 }
 
 func maskSensitive(entry map[string]interface{}) map[string]interface{} {
@@ -261,14 +270,17 @@ func (a *apiHandlers) postConfig(w http.ResponseWriter, r *http.Request) {
 	settings = append(settings, newEntry)
 	config["settings"] = settings
 
+	providers, err := a.validateConfig(config)
+	if err != nil {
+		httpError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	if err := a.writeConfig(config); err != nil {
 		httpError(w, http.StatusInternalServerError, "failed to write config: "+err.Error())
 		return
 	}
-	if err := a.reload(); err != nil {
-		httpError(w, http.StatusInternalServerError, "config saved but reload failed: "+err.Error())
-		return
-	}
+	a.applyProviders(providers)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -330,14 +342,17 @@ func (a *apiHandlers) putConfig(w http.ResponseWriter, r *http.Request) {
 	settings[index] = updatedEntry
 	config["settings"] = settings
 
+	providers, err := a.validateConfig(config)
+	if err != nil {
+		httpError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	if err := a.writeConfig(config); err != nil {
 		httpError(w, http.StatusInternalServerError, "failed to write config: "+err.Error())
 		return
 	}
-	if err := a.reload(); err != nil {
-		httpError(w, http.StatusInternalServerError, "config saved but reload failed: "+err.Error())
-		return
-	}
+	a.applyProviders(providers)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(maskSensitive(updatedEntry))
@@ -369,14 +384,17 @@ func (a *apiHandlers) deleteConfig(w http.ResponseWriter, r *http.Request) {
 	settings = append(settings[:index], settings[index+1:]...)
 	config["settings"] = settings
 
+	providers, err := a.validateConfig(config)
+	if err != nil {
+		httpError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	if err := a.writeConfig(config); err != nil {
 		httpError(w, http.StatusInternalServerError, "failed to write config: "+err.Error())
 		return
 	}
-	if err := a.reload(); err != nil {
-		httpError(w, http.StatusInternalServerError, "config saved but reload failed: "+err.Error())
-		return
-	}
+	a.applyProviders(providers)
 
 	w.WriteHeader(http.StatusNoContent)
 }

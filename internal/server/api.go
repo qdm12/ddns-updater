@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"net/http"
 	"os"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/qdm12/ddns-updater/internal/provider"
+	"github.com/qdm12/ddns-updater/internal/records"
 )
 
 // sensitiveFields are masked in GET responses.
@@ -38,16 +40,21 @@ var sensitiveFields = map[string]bool{
 	"customer_number":       true,
 }
 
+// ConfigParser parses config JSON bytes into providers.
+type ConfigParser func(configBytes []byte) ([]provider.Provider, []string, error)
+
 type apiHandlers struct {
-	configPath string
-	configMu   sync.Mutex
-	db         Database
+	configPath  string
+	configMu    sync.Mutex
+	db          Database
+	parseConfig ConfigParser
 }
 
-func newAPIHandlers(configPath string, db Database) *apiHandlers {
+func newAPIHandlers(configPath string, db Database, parseConfig ConfigParser) *apiHandlers {
 	return &apiHandlers{
-		configPath: configPath,
-		db:         db,
+		configPath:  configPath,
+		db:          db,
+		parseConfig: parseConfig,
 	}
 }
 
@@ -142,6 +149,47 @@ func (a *apiHandlers) writeConfig(config map[string]interface{}) error {
 	return nil
 }
 
+func (a *apiHandlers) reload() error {
+	if a.parseConfig == nil {
+		return nil
+	}
+	data, err := os.ReadFile(a.configPath)
+	if err != nil {
+		return fmt.Errorf("reading config for reload: %w", err)
+	}
+	providers, _, err := a.parseConfig(data)
+	if err != nil {
+		return fmt.Errorf("parsing config for reload: %w", err)
+	}
+
+	existing := a.db.SelectAll()
+	historyMap := make(map[string]records.Record, len(existing))
+	for _, rec := range existing {
+		key := rec.Provider.Domain() + "|" + rec.Provider.Owner() + "|" + rec.Provider.IPVersion().String()
+		historyMap[key] = rec
+	}
+
+	newRecords := make([]records.Record, len(providers))
+	for i, p := range providers {
+		key := p.Domain() + "|" + p.Owner() + "|" + p.IPVersion().String()
+		if old, ok := historyMap[key]; ok {
+			newRecords[i] = records.Record{
+				Provider: p,
+				History:  old.History,
+				Status:   old.Status,
+				Message:  old.Message,
+				Time:     old.Time,
+				LastBan:  old.LastBan,
+			}
+		} else {
+			newRecords[i] = records.New(p, nil)
+		}
+	}
+
+	a.db.ReplaceAll(newRecords)
+	return nil
+}
+
 func maskSensitive(entry map[string]interface{}) map[string]interface{} {
 	masked := make(map[string]interface{}, len(entry))
 	for k, v := range entry {
@@ -217,6 +265,10 @@ func (a *apiHandlers) postConfig(w http.ResponseWriter, r *http.Request) {
 		httpError(w, http.StatusInternalServerError, "failed to write config: "+err.Error())
 		return
 	}
+	if err := a.reload(); err != nil {
+		httpError(w, http.StatusInternalServerError, "config saved but reload failed: "+err.Error())
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -282,6 +334,10 @@ func (a *apiHandlers) putConfig(w http.ResponseWriter, r *http.Request) {
 		httpError(w, http.StatusInternalServerError, "failed to write config: "+err.Error())
 		return
 	}
+	if err := a.reload(); err != nil {
+		httpError(w, http.StatusInternalServerError, "config saved but reload failed: "+err.Error())
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(maskSensitive(updatedEntry))
@@ -315,6 +371,10 @@ func (a *apiHandlers) deleteConfig(w http.ResponseWriter, r *http.Request) {
 
 	if err := a.writeConfig(config); err != nil {
 		httpError(w, http.StatusInternalServerError, "failed to write config: "+err.Error())
+		return
+	}
+	if err := a.reload(); err != nil {
+		httpError(w, http.StatusInternalServerError, "config saved but reload failed: "+err.Error())
 		return
 	}
 

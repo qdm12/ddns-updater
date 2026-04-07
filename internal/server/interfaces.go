@@ -8,6 +8,7 @@ import (
 
 type Database interface {
 	SelectAll() (records []records.Record)
+	ReplaceAll(records []records.Record)
 }
 
 type UpdateForcer interface {

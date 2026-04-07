@@ -28,6 +28,7 @@ var uiFS embed.FS
 
 func newHandler(ctx context.Context, rootURL string,
 	db Database, runner UpdateForcer, configPath string,
+	parseConfig ConfigParser,
 ) http.Handler {
 	indexTemplate := template.Must(template.ParseFS(uiFS, "ui/index.html"))
 
@@ -44,7 +45,7 @@ func newHandler(ctx context.Context, rootURL string,
 		runner:        runner,
 	}
 
-	api := newAPIHandlers(configPath, db)
+	api := newAPIHandlers(configPath, db, parseConfig)
 
 	router := chi.NewRouter()
 

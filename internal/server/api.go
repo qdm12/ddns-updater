@@ -13,12 +13,22 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+
 	"github.com/qdm12/ddns-updater/internal/provider"
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
-// sensitiveFields are masked in GET responses.
-var sensitiveFields = map[string]bool{
+const (
+	maskedValue    = "***"
+	configFilePerm = fs.FileMode(0o600)
+	historyKeySep  = "|"
+)
+
+// sensitiveFieldNames lists the JSON field names whose values are masked in
+// API responses to avoid leaking secrets to the WebUI.
+//
+//nolint:gochecknoglobals // intentional package-level lookup table
+var sensitiveFieldNames = map[string]bool{
 	"password":              true,
 	"token":                 true,
 	"key":                   true,
@@ -40,6 +50,10 @@ var sensitiveFields = map[string]bool{
 	"customer_number":       true,
 }
 
+// stripHTMLTags removes HTML tags from a string. It is used to clean
+// HTML-formatted provider names returned by Provider.HTML().
+var stripHTMLTags = regexp.MustCompile(`<[^>]*>`)
+
 // ConfigParser parses config JSON bytes into providers.
 type ConfigParser func(configBytes []byte) ([]provider.Provider, []string, error)
 
@@ -58,9 +72,31 @@ func newAPIHandlers(configPath string, db Database, parseConfig ConfigParser) *a
 	}
 }
 
-// GET /api/status
+// statusResponse is the JSON wrapper for GET /api/status.
+type statusResponse struct {
+	Records []StatusRecord `json:"records"`
+}
+
+// configResponse is the JSON wrapper for GET /api/config.
+type configResponse struct {
+	Settings []json.RawMessage `json:"settings"`
+}
+
+// providersResponse is the JSON wrapper for GET /api/providers.
+type providersResponse struct {
+	Providers map[string]provider.Definition `json:"providers"`
+}
+
+// writeJSON encodes a value as JSON and writes it to the response writer.
+// It panics on encoding errors, matching the convention in error.go.
+func writeJSON(w http.ResponseWriter, v any) {
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		panic(err)
+	}
+}
+
+// getStatus handles GET /api/status.
 func (a *apiHandlers) getStatus(w http.ResponseWriter, _ *http.Request) {
-	stripHTML := regexp.MustCompile(`<[^>]*>`)
 	allRecords := a.db.SelectAll()
 	statusRecords := make([]StatusRecord, len(allRecords))
 	for i, rec := range allRecords {
@@ -82,7 +118,7 @@ func (a *apiHandlers) getStatus(w http.ResponseWriter, _ *http.Request) {
 		statusRecords[i] = StatusRecord{
 			Domain:      rec.Provider.BuildDomainName(),
 			Owner:       rec.Provider.Owner(),
-			Provider:    stripHTML.ReplaceAllString(htmlRow.Provider, ""),
+			Provider:    stripHTMLTags.ReplaceAllString(htmlRow.Provider, ""),
 			IPVersion:   rec.Provider.IPVersion().String(),
 			Status:      string(rec.Status),
 			Message:     rec.Message,
@@ -92,37 +128,32 @@ func (a *apiHandlers) getStatus(w http.ResponseWriter, _ *http.Request) {
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"records": statusRecords,
-	})
+	writeJSON(w, statusResponse{Records: statusRecords})
 }
 
-func (a *apiHandlers) readConfig() (map[string]interface{}, error) {
+// configFile is the in-memory representation of config.json.
+type configFile struct {
+	Settings []json.RawMessage `json:"settings"`
+}
+
+func (a *apiHandlers) readConfig() (*configFile, map[string]any, error) {
 	data, err := os.ReadFile(a.configPath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	var config map[string]interface{}
-	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, err
+	var cf configFile
+	if err := json.Unmarshal(data, &cf); err != nil {
+		return nil, nil, err
 	}
-	return config, nil
+	var raw map[string]any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return nil, nil, err
+	}
+	return &cf, raw, nil
 }
 
-func getSettings(config map[string]interface{}) []interface{} {
-	settings, ok := config["settings"]
-	if !ok {
-		return nil
-	}
-	arr, ok := settings.([]interface{})
-	if !ok {
-		return nil
-	}
-	return arr
-}
-
-func (a *apiHandlers) writeConfig(config map[string]interface{}) error {
-	data, err := json.MarshalIndent(config, "", "  ")
+func (a *apiHandlers) writeConfig(raw map[string]any) error {
+	data, err := json.MarshalIndent(raw, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -134,28 +165,28 @@ func (a *apiHandlers) writeConfig(config map[string]interface{}) error {
 	}
 	tmpPath := tmpFile.Name()
 	if _, err := tmpFile.Write(data); err != nil {
-		tmpFile.Close()
-		os.Remove(tmpPath)
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpPath)
 		return err
 	}
 	if err := tmpFile.Close(); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return err
 	}
 	if err := os.Rename(tmpPath, a.configPath); err != nil {
-		os.Remove(tmpPath)
-		return os.WriteFile(a.configPath, data, fs.FileMode(0o666))
+		_ = os.Remove(tmpPath)
+		return os.WriteFile(a.configPath, data, configFilePerm)
 	}
 	return nil
 }
 
 // validateConfig parses the config to check it produces valid providers.
 // Returns the parsed providers for use by applyProviders.
-func (a *apiHandlers) validateConfig(config map[string]interface{}) ([]provider.Provider, error) {
+func (a *apiHandlers) validateConfig(raw map[string]any) ([]provider.Provider, error) {
 	if a.parseConfig == nil {
 		return nil, nil
 	}
-	data, err := json.Marshal(config)
+	data, err := json.Marshal(raw)
 	if err != nil {
 		return nil, fmt.Errorf("marshaling config: %w", err)
 	}
@@ -172,16 +203,20 @@ func (a *apiHandlers) applyProviders(providers []provider.Provider) {
 	if providers == nil {
 		return
 	}
+	makeKey := func(domain, owner, ipVersion string) string {
+		return domain + historyKeySep + owner + historyKeySep + ipVersion
+	}
+
 	existing := a.db.SelectAll()
 	historyMap := make(map[string]records.Record, len(existing))
 	for _, rec := range existing {
-		key := rec.Provider.Domain() + "|" + rec.Provider.Owner() + "|" + rec.Provider.IPVersion().String()
-		historyMap[key] = rec
+		p := rec.Provider
+		historyMap[makeKey(p.Domain(), p.Owner(), p.IPVersion().String())] = rec
 	}
 
 	newRecords := make([]records.Record, len(providers))
 	for i, p := range providers {
-		key := p.Domain() + "|" + p.Owner() + "|" + p.IPVersion().String()
+		key := makeKey(p.Domain(), p.Owner(), p.IPVersion().String())
 		if old, ok := historyMap[key]; ok {
 			newRecords[i] = records.Record{
 				Provider: p,
@@ -199,12 +234,12 @@ func (a *apiHandlers) applyProviders(providers []provider.Provider) {
 	a.db.ReplaceAll(newRecords)
 }
 
-func maskSensitive(entry map[string]interface{}) map[string]interface{} {
-	masked := make(map[string]interface{}, len(entry))
+func maskSensitive(entry map[string]any) map[string]any {
+	masked := make(map[string]any, len(entry))
 	for k, v := range entry {
-		if sensitiveFields[k] {
+		if sensitiveFieldNames[k] {
 			if str, ok := v.(string); ok && str != "" {
-				masked[k] = "***"
+				masked[k] = maskedValue
 			} else {
 				masked[k] = v
 			}
@@ -215,43 +250,69 @@ func maskSensitive(entry map[string]interface{}) map[string]interface{} {
 	return masked
 }
 
-// GET /api/config
+// maskRawSettings unmarshals each settings entry, masks its sensitive fields,
+// and returns the masked entries as raw JSON messages.
+func maskRawSettings(rawSettings []json.RawMessage) ([]json.RawMessage, error) {
+	out := make([]json.RawMessage, len(rawSettings))
+	for i, raw := range rawSettings {
+		var entry map[string]any
+		if err := json.Unmarshal(raw, &entry); err != nil {
+			return nil, err
+		}
+		masked := maskSensitive(entry)
+		b, err := json.Marshal(masked)
+		if err != nil {
+			return nil, err
+		}
+		out[i] = b
+	}
+	return out, nil
+}
+
+// getConfig handles GET /api/config.
 func (a *apiHandlers) getConfig(w http.ResponseWriter, _ *http.Request) {
 	a.configMu.Lock()
 	defer a.configMu.Unlock()
 
-	config, err := a.readConfig()
+	cf, _, err := a.readConfig()
 	if err != nil {
 		httpError(w, http.StatusInternalServerError, "failed to read config: "+err.Error())
 		return
 	}
-	settings := getSettings(config)
-	maskedSettings := make([]map[string]interface{}, len(settings))
-	for i, s := range settings {
-		entry, ok := s.(map[string]interface{})
-		if !ok {
-			maskedSettings[i] = map[string]interface{}{}
-			continue
-		}
-		maskedSettings[i] = maskSensitive(entry)
+	maskedSettings, err := maskRawSettings(cf.Settings)
+	if err != nil {
+		httpError(w, http.StatusInternalServerError, "failed to mask config: "+err.Error())
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"settings": maskedSettings,
-	})
+	writeJSON(w, configResponse{Settings: maskedSettings})
 }
 
-// POST /api/config
+// applyAndPersist validates the new config, writes it to disk, and reloads
+// providers in memory. It returns an HTTP error code and message if anything
+// fails.
+func (a *apiHandlers) applyAndPersist(raw map[string]any) (int, string) {
+	providers, err := a.validateConfig(raw)
+	if err != nil {
+		return http.StatusBadRequest, err.Error()
+	}
+	if err := a.writeConfig(raw); err != nil {
+		return http.StatusInternalServerError, "failed to write config: " + err.Error()
+	}
+	a.applyProviders(providers)
+	return 0, ""
+}
+
+// postConfig handles POST /api/config.
 func (a *apiHandlers) postConfig(w http.ResponseWriter, r *http.Request) {
 	a.configMu.Lock()
 	defer a.configMu.Unlock()
 
-	var newEntry map[string]interface{}
+	var newEntry map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&newEntry); err != nil {
 		httpError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
 		return
 	}
-
 	if _, ok := newEntry["provider"]; !ok {
 		httpError(w, http.StatusBadRequest, "provider field is required")
 		return
@@ -261,33 +322,32 @@ func (a *apiHandlers) postConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	config, err := a.readConfig()
+	_, raw, err := a.readConfig()
 	if err != nil {
 		httpError(w, http.StatusInternalServerError, "failed to read config: "+err.Error())
 		return
 	}
-	settings := getSettings(config)
+	settings, _ := raw["settings"].([]any)
 	settings = append(settings, newEntry)
-	config["settings"] = settings
+	raw["settings"] = settings
 
-	providers, err := a.validateConfig(config)
-	if err != nil {
-		httpError(w, http.StatusBadRequest, err.Error())
+	if status, msg := a.applyAndPersist(raw); status != 0 {
+		httpError(w, status, msg)
 		return
 	}
-
-	if err := a.writeConfig(config); err != nil {
-		httpError(w, http.StatusInternalServerError, "failed to write config: "+err.Error())
-		return
-	}
-	a.applyProviders(providers)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(maskSensitive(newEntry))
+	maskedJSON, err := json.Marshal(maskSensitive(newEntry))
+	if err != nil {
+		panic(err)
+	}
+	if _, err := w.Write(maskedJSON); err != nil {
+		panic(err)
+	}
 }
 
-// PUT /api/config/{index}
+// putConfig handles PUT /api/config/{index}.
 func (a *apiHandlers) putConfig(w http.ResponseWriter, r *http.Request) {
 	a.configMu.Lock()
 	defer a.configMu.Unlock()
@@ -299,66 +359,73 @@ func (a *apiHandlers) putConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var updatedEntry map[string]interface{}
+	var updatedEntry map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&updatedEntry); err != nil {
 		httpError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
 		return
 	}
 
-	config, err := a.readConfig()
+	_, raw, err := a.readConfig()
 	if err != nil {
 		httpError(w, http.StatusInternalServerError, "failed to read config: "+err.Error())
 		return
 	}
-	settings := getSettings(config)
+	settings, _ := raw["settings"].([]any)
 	if index < 0 || index >= len(settings) {
 		httpError(w, http.StatusNotFound, "index out of range")
 		return
 	}
 
-	existing, ok := settings[index].(map[string]interface{})
+	existing, ok := settings[index].(map[string]any)
 	if !ok {
-		existing = map[string]interface{}{}
+		existing = map[string]any{}
 	}
 
-	for k, v := range updatedEntry {
-		if sensitiveFields[k] {
-			str, isStr := v.(string)
-			if isStr && (str == "" || str == "***") {
-				if oldVal, exists := existing[k]; exists {
-					updatedEntry[k] = oldVal
-				}
+	preserveSensitiveFields(updatedEntry, existing)
+
+	settings[index] = updatedEntry
+	raw["settings"] = settings
+
+	if status, msg := a.applyAndPersist(raw); status != 0 {
+		httpError(w, status, msg)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	maskedJSON, err := json.Marshal(maskSensitive(updatedEntry))
+	if err != nil {
+		panic(err)
+	}
+	if _, err := w.Write(maskedJSON); err != nil {
+		panic(err)
+	}
+}
+
+// preserveSensitiveFields keeps the existing sensitive values when the
+// updated entry has them empty or set to the masked placeholder.
+func preserveSensitiveFields(updated, existing map[string]any) {
+	for k, v := range updated {
+		if !sensitiveFieldNames[k] {
+			continue
+		}
+		str, isStr := v.(string)
+		if isStr && (str == "" || str == maskedValue) {
+			if oldVal, exists := existing[k]; exists {
+				updated[k] = oldVal
 			}
 		}
 	}
 	for k, v := range existing {
-		if sensitiveFields[k] {
-			if _, exists := updatedEntry[k]; !exists {
-				updatedEntry[k] = v
-			}
+		if !sensitiveFieldNames[k] {
+			continue
+		}
+		if _, exists := updated[k]; !exists {
+			updated[k] = v
 		}
 	}
-
-	settings[index] = updatedEntry
-	config["settings"] = settings
-
-	providers, err := a.validateConfig(config)
-	if err != nil {
-		httpError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	if err := a.writeConfig(config); err != nil {
-		httpError(w, http.StatusInternalServerError, "failed to write config: "+err.Error())
-		return
-	}
-	a.applyProviders(providers)
-
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(maskSensitive(updatedEntry))
 }
 
-// DELETE /api/config/{index}
+// deleteConfig handles DELETE /api/config/{index}.
 func (a *apiHandlers) deleteConfig(w http.ResponseWriter, r *http.Request) {
 	a.configMu.Lock()
 	defer a.configMu.Unlock()
@@ -370,39 +437,30 @@ func (a *apiHandlers) deleteConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	config, err := a.readConfig()
+	_, raw, err := a.readConfig()
 	if err != nil {
 		httpError(w, http.StatusInternalServerError, "failed to read config: "+err.Error())
 		return
 	}
-	settings := getSettings(config)
+	settings, _ := raw["settings"].([]any)
 	if index < 0 || index >= len(settings) {
 		httpError(w, http.StatusNotFound, "index out of range")
 		return
 	}
 
 	settings = append(settings[:index], settings[index+1:]...)
-	config["settings"] = settings
+	raw["settings"] = settings
 
-	providers, err := a.validateConfig(config)
-	if err != nil {
-		httpError(w, http.StatusBadRequest, err.Error())
+	if status, msg := a.applyAndPersist(raw); status != 0 {
+		httpError(w, status, msg)
 		return
 	}
-
-	if err := a.writeConfig(config); err != nil {
-		httpError(w, http.StatusInternalServerError, "failed to write config: "+err.Error())
-		return
-	}
-	a.applyProviders(providers)
 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// GET /api/providers
+// getProviders handles GET /api/providers.
 func (a *apiHandlers) getProviders(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"providers": provider.ProviderDefinitions,
-	})
+	writeJSON(w, providersResponse{Providers: provider.Definitions})
 }

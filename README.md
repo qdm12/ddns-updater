@@ -2,6 +2,10 @@
 
 Program to keep DNS A and/or AAAA records updated for multiple DNS providers
 
+> **v3.0 — Interactive WebUI**
+> This fork introduces a complete interactive WebUI for managing DDNS entries directly in the browser: a modernized Dashboard, a Configuration tab with full CRUD for all 50+ providers, dynamic provider-aware forms, and hot-reload (no restart needed).
+> The new WebUI was developed by [@reptil1990](https://github.com/reptil1990).
+
 <img height="200" alt="DDNS Updater logo" src="https://raw.githubusercontent.com/qdm12/ddns-updater/master/readme/ddnsgopher.svg">
 
 [![Build status](https://github.com/qdm12/ddns-updater/actions/workflows/build.yml/badge.svg)](https://github.com/qdm12/ddns-updater/actions/workflows/build.yml)

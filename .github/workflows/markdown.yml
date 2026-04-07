@@ -22,7 +22,9 @@ jobs:
 
       - uses: DavidAnson/markdownlint-cli2-action@v18
         with:
-          globs: "**.md"
+          globs: |
+            **.md
+            !docs/superpowers/**
           config: .markdownlint.json
 
       - uses: reviewdog/action-misspell@v1

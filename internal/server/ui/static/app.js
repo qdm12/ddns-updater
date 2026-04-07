@@ -75,38 +75,38 @@
   }
 
   function renderRecords(records) {
-    const grid = $('#records-grid');
+    const container = $('#records-grid');
     if (!records || records.length === 0) {
-      grid.innerHTML = '<p class="loading">No DNS records configured.</p>';
+      container.innerHTML = '<p class="loading">No DNS records configured.</p>';
       return;
     }
-    grid.innerHTML = records.map(rec => {
+    let html = '<table class="data-table"><thead><tr>' +
+      '<th>Domain</th><th>Owner</th><th>Provider</th><th>IP Version</th>' +
+      '<th>Update Status</th><th>Current IP</th>' +
+      '<th>Previous IPs</th></tr></thead><tbody>';
+    html += records.map(rec => {
       const prevIPs = (rec.previous_ips || []).slice(0, 3).join(', ') || 'N/A';
       const ipLink = rec.current_ip
         ? '<a href="https://ipinfo.io/' + rec.current_ip + '" target="_blank">' + rec.current_ip + '</a>'
         : 'N/A';
       const sc = statusClass(rec.status);
       const timeAgo = rec.last_updated ? timeSince(rec.last_updated) : '';
-      return '<div class="card">' +
-        '<div class="card-header">' +
-          '<span class="card-domain">' + escHtml(rec.domain) + '</span>' +
-          '<span class="badge badge-provider">' + escHtml(rec.provider) + '</span>' +
-        '</div>' +
-        '<div class="card-body">' +
-          '<div class="card-row"><span class="card-label">Owner</span><span class="card-value">' + escHtml(rec.owner) + '</span></div>' +
-          '<div class="card-row"><span class="card-label">IP Version</span><span class="badge">' + escHtml(rec.ip_version) + '</span></div>' +
-          '<div class="card-row"><span class="card-label">Current IP</span><span class="card-value">' + ipLink + '</span></div>' +
-          '<div class="card-row"><span class="card-label">Previous IPs</span><span class="card-value">' + escHtml(prevIPs) + '</span></div>' +
-        '</div>' +
-        '<div class="card-footer">' +
-          '<span class="status-dot ' + sc + '"></span>' +
-          '<span class="status-text">' + statusLabel(rec.status) +
-            (rec.message ? ' (' + escHtml(rec.message) + ')' : '') +
-            (timeAgo ? ' &middot; ' + timeAgo : '') +
-          '</span>' +
-        '</div>' +
-      '</div>';
+      const statusHtml = '<span class="status-dot ' + sc + '"></span> ' +
+        '<span class="status-' + sc + '">' + statusLabel(rec.status) + '</span>' +
+        (rec.message ? ' <span class="text-muted">(' + escHtml(rec.message) + ')</span>' : '') +
+        (timeAgo ? ' <span class="text-muted">' + timeAgo + '</span>' : '');
+      return '<tr>' +
+        '<td data-label="Domain"><a href="http://' + escHtml(rec.domain) + '" target="_blank">' + escHtml(rec.domain) + '</a></td>' +
+        '<td data-label="Owner">' + escHtml(rec.owner) + '</td>' +
+        '<td data-label="Provider"><span class="badge badge-provider">' + escHtml(rec.provider) + '</span></td>' +
+        '<td data-label="IP Version">' + escHtml(rec.ip_version) + '</td>' +
+        '<td data-label="Status">' + statusHtml + '</td>' +
+        '<td data-label="Current IP" class="mono">' + ipLink + '</td>' +
+        '<td data-label="Previous IPs" class="mono text-muted">' + escHtml(prevIPs) + '</td>' +
+      '</tr>';
     }).join('');
+    html += '</tbody></table>';
+    container.innerHTML = html;
   }
 
   function timeSince(isoStr) {
@@ -141,21 +141,22 @@
       list.innerHTML = '<p class="loading">No entries configured. Click "+ Add Entry" to get started.</p>';
       return;
     }
-    list.innerHTML = settings.map((entry, i) => {
-      return '<div class="card">' +
-        '<div class="card-header">' +
-          '<span class="card-domain">' + escHtml(entry.domain || '') + '</span>' +
-          '<div class="card-actions">' +
-            '<button class="btn-icon" onclick="window._editEntry(' + i + ')" title="Edit">&#9998;</button>' +
-            '<button class="btn-icon danger" onclick="window._deleteEntry(' + i + ')" title="Delete">&#128465;</button>' +
-          '</div>' +
-        '</div>' +
-        '<div class="card-body">' +
-          '<div class="card-row"><span class="card-label">Provider</span><span class="badge badge-provider">' + escHtml(entry.provider || '') + '</span></div>' +
-          '<div class="card-row"><span class="card-label">IP Version</span><span class="badge">' + escHtml(entry.ip_version || 'ipv4 or ipv6') + '</span></div>' +
-        '</div>' +
-      '</div>';
+    let html = '<table class="data-table"><thead><tr>' +
+      '<th>Domain</th><th>Provider</th><th>IP Version</th><th>Actions</th>' +
+      '</tr></thead><tbody>';
+    html += settings.map((entry, i) => {
+      return '<tr>' +
+        '<td data-label="Domain">' + escHtml(entry.domain || '') + '</td>' +
+        '<td data-label="Provider"><span class="badge badge-provider">' + escHtml(entry.provider || '') + '</span></td>' +
+        '<td data-label="IP Version">' + escHtml(entry.ip_version || 'ipv4 or ipv6') + '</td>' +
+        '<td data-label="Actions" class="actions-cell">' +
+          '<button class="btn-icon" onclick="window._editEntry(' + i + ')" title="Edit">&#9998;</button>' +
+          '<button class="btn-icon danger" onclick="window._deleteEntry(' + i + ')" title="Delete">&#128465;</button>' +
+        '</td>' +
+      '</tr>';
     }).join('');
+    html += '</tbody></table>';
+    list.innerHTML = html;
   }
 
   async function loadConfig() {

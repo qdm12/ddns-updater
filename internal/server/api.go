@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"sync"
 	"time"
@@ -52,11 +53,11 @@ func newAPIHandlers(configPath string, db Database) *apiHandlers {
 
 // GET /api/status
 func (a *apiHandlers) getStatus(w http.ResponseWriter, _ *http.Request) {
+	stripHTML := regexp.MustCompile(`<[^>]*>`)
 	allRecords := a.db.SelectAll()
-	now := time.Now()
 	statusRecords := make([]StatusRecord, len(allRecords))
 	for i, rec := range allRecords {
-		row := rec.Provider.HTML()
+		htmlRow := rec.Provider.HTML()
 		currentIP := rec.History.GetCurrentIP()
 		currentIPStr := ""
 		if currentIP.IsValid() {
@@ -71,12 +72,11 @@ func (a *apiHandlers) getStatus(w http.ResponseWriter, _ *http.Request) {
 		if !rec.Time.IsZero() {
 			lastUpdated = rec.Time.Format(time.RFC3339)
 		}
-		_ = now
 		statusRecords[i] = StatusRecord{
-			Domain:      row.Domain,
-			Owner:       row.Owner,
-			Provider:    row.Provider,
-			IPVersion:   row.IPVersion,
+			Domain:      rec.Provider.BuildDomainName(),
+			Owner:       rec.Provider.Owner(),
+			Provider:    stripHTML.ReplaceAllString(htmlRow.Provider, ""),
+			IPVersion:   rec.Provider.IPVersion().String(),
 			Status:      string(rec.Status),
 			Message:     rec.Message,
 			CurrentIP:   currentIPStr,

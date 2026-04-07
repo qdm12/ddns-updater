@@ -147,33 +147,50 @@ main {
 .btn-icon:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--border); }
 .btn-icon.danger:hover { color: var(--danger); }
 
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 12px;
+/* Data table */
+.table-container {
+  overflow-x: auto;
 }
 
-.card {
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px;
-  transition: all var(--transition);
+  overflow: hidden;
 }
-.card:hover { border-color: var(--border-hover); box-shadow: var(--shadow); }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
+.data-table thead {
+  background: var(--bg-secondary);
 }
-.card-domain {
-  font-size: 16px;
+
+.data-table th {
+  text-align: center;
+  padding: 10px 14px;
+  font-size: 12px;
   font-weight: 600;
-  word-break: break-all;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
 }
-.card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+.data-table td {
+  text-align: center;
+  padding: 12px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.data-table tbody tr { transition: background var(--transition); }
+.data-table tbody tr:hover { background: var(--bg-card-hover); }
+.data-table tbody tr:last-child td { border-bottom: none; }
+
+.mono { font-family: var(--font-mono); font-size: 12px; }
+.text-muted { color: var(--text-muted); }
+.actions-cell { white-space: nowrap; }
 
 .badge {
   display: inline-block;
@@ -187,31 +204,14 @@ main {
 }
 .badge-provider { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
 
-.card-body { display: flex; flex-direction: column; gap: 8px; }
-.card-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-}
-.card-label { color: var(--text-secondary); }
-.card-value { color: var(--text-primary); font-family: var(--font-mono); font-size: 12px; }
-
-.card-footer {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-
+/* Status */
 .status-dot {
+  display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  flex-shrink: 0;
+  vertical-align: middle;
+  margin-right: 4px;
 }
 .status-dot.success { background: var(--success); }
 .status-dot.fail, .status-dot.failure { background: var(--danger); }
@@ -219,7 +219,11 @@ main {
 .status-dot.updating { background: var(--updating); }
 .status-dot.unset { background: var(--warning); }
 
-.status-text { color: var(--text-secondary); }
+.status-success { color: var(--success); font-weight: 600; }
+.status-fail { color: var(--danger); font-weight: 600; }
+.status-uptodate { color: var(--success); font-weight: 600; }
+.status-updating { color: var(--updating); font-weight: 600; }
+.status-unset { color: var(--warning); font-weight: 600; }
 
 .modal-overlay {
   position: fixed;
@@ -394,8 +398,32 @@ footer a:hover { color: var(--text-secondary); }
 .text-big { font-size: 1.3em; }
 .github-icon { vertical-align: text-bottom; fill: currentColor; height: 1em; }
 
-@media (max-width: 480px) {
-  .cards-grid { grid-template-columns: 1fr; }
+/* Responsive */
+@media only screen and (max-width: 760px) {
+  .data-table thead { display: none; }
+  .data-table, .data-table tbody, .data-table tr, .data-table td {
+    display: block;
+  }
+  .data-table tr {
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .data-table td {
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td:last-child { border-bottom: none; }
+  .data-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: left;
+  }
   .toolbar { flex-direction: column; gap: 12px; align-items: stretch; }
   .toolbar h2 { text-align: center; }
   .form-row { flex-direction: column; gap: 0; }

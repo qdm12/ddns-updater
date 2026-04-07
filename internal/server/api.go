@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-
 	"github.com/qdm12/ddns-updater/internal/provider"
 	"github.com/qdm12/ddns-updater/internal/records"
 )

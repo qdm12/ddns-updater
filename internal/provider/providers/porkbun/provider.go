@@ -114,6 +114,7 @@ func setHeaders(request *http.Request) {
 	headers.SetAccept(request, "application/json")
 }
 
+// Update updates the IP address for the provider.
 // See https://porkbun.com/api/json/v3/documentation
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A

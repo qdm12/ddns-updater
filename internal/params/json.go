@@ -27,7 +27,7 @@ type commonSettings struct {
 	// Domain field.
 	Owner      string       `json:"owner,omitempty"`
 	IPVersion  string       `json:"ip_version"`
-	IPv6Suffix netip.Prefix `json:"ipv6_suffix,omitempty"`
+	IPv6Suffix netip.Prefix `json:"ipv6_suffix"`
 	// Retro values for warnings
 	ProviderIP *bool `json:"provider_ip,omitempty"`
 }

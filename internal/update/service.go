@@ -79,7 +79,7 @@ func (s *Service) lookupIPsResilient(ctx context.Context, hostname string, tries
 			}
 			results <- result{
 				network: network,
-				err:     fmt.Errorf("look up failed after %d tries.No IP address found", tries),
+				err:     fmt.Errorf("ip look up failed after %d tries", tries),
 			}
 		}(lookupCtx, network, results)
 	}

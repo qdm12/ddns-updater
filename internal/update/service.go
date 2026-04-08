@@ -2,6 +2,7 @@ package update
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/netip"
 	"strconv"
@@ -65,6 +66,7 @@ func (s *Service) lookupIPsResilient(ctx context.Context, hostname string, tries
 	lookupCtx, cancel := context.WithCancel(ctx)
 	for _, network := range networks {
 		go func(ctx context.Context, network string, results chan<- result) {
+			errs := make([]error, 0, tries)
 			for range tries {
 				ips, err := s.resolver.LookupNetIP(ctx, network, hostname)
 				if err != nil {
@@ -72,6 +74,7 @@ func (s *Service) lookupIPsResilient(ctx context.Context, hostname string, tries
 						results <- result{network: network} // no IP address for this network
 						return
 					}
+					errs = append(errs, err)
 					continue // retry
 				}
 				results <- result{network: network, ips: ips, err: err}
@@ -79,7 +82,7 @@ func (s *Service) lookupIPsResilient(ctx context.Context, hostname string, tries
 			}
 			results <- result{
 				network: network,
-				err:     fmt.Errorf("ip look up failed after %d tries", tries),
+				err:     fmt.Errorf("ip look up failed after %d tries: %w", tries, errors.Join(errs...)),
 			}
 		}(lookupCtx, network, results)
 	}

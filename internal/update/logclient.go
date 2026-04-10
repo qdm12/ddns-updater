@@ -16,15 +16,11 @@ type DebugLogger interface {
 }
 
 func makeLogClient(client *http.Client, logger DebugLogger) *http.Client {
-  if !debugEnabled {
-		return client
-	}
-  
-  transport := client.Transport
+	transport := client.Transport
 	if transport == nil {
 		transport = http.DefaultTransport
 	}
-  
+
 	client.Transport = &loggingRoundTripper{
 		proxied: transport,
 		logger:  logger,

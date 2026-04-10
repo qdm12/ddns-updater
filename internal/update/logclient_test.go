@@ -102,7 +102,7 @@ func Test_LogClient(t *testing.T) {
 					assert.Regexp(t, testCase.responseLineRegex, s)
 				})
 
-			logClient := makeLogClient(client, logger, true)
+			logClient := makeLogClient(client, logger)
 
 			assert.Same(t, logClient, client)
 

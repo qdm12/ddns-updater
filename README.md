@@ -6,10 +6,8 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
 
 [![Build status](https://github.com/qdm12/ddns-updater/actions/workflows/build.yml/badge.svg)](https://github.com/qdm12/ddns-updater/actions/workflows/build.yml)
 
-[![dockeri.co](https://dockeri.co/image/qmcgaw/ddns-updater)](https://hub.docker.com/r/qmcgaw/ddns-updater)
-
 ![Last release](https://img.shields.io/github/release/qdm12/ddns-updater?label=Last%20release)
-![Last Docker tag](https://img.shields.io/docker/v/qmcgaw/ddns-updater?sort=semver&label=Last%20Docker%20tag)
+![Last Docker tag](https://img.shields.io/github/v/release/qdm12/ddns-updater?sort=semver&label=Last%20Docker%20tag)
 [![Last release size](https://img.shields.io/docker/image-size/qmcgaw/ddns-updater?sort=semver&label=Last%20released%20image)](https://hub.docker.com/r/qmcgaw/ddns-updater/tags?page=1&ordering=last_updated)
 ![GitHub last release date](https://img.shields.io/github/release-date/qdm12/ddns-updater?label=Last%20release%20date)
 ![Commits since release](https://img.shields.io/github/commits-since/qdm12/ddns-updater/latest?sort=semver)
@@ -22,7 +20,6 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
 [![GitHub issues](https://img.shields.io/github/issues/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues?q=is%3Aissue+is%3Aclosed)
 
-[![Lines of code](https://img.shields.io/tokei/lines/github/qdm12/ddns-updater)](https://github.com/qdm12/ddns-updater)
 ![Code size](https://img.shields.io/github/languages/code-size/qdm12/ddns-updater)
 ![GitHub repo size](https://img.shields.io/github/repo-size/qdm12/ddns-updater)
 ![Go version](https://img.shields.io/github/go-mod/go-version/qdm12/ddns-updater)
@@ -44,7 +41,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
 
 ## Features
 
-- Available as a Docker image [`qmcgaw/ddns-updater`](https://hub.docker.com/r/qmcgaw/ddns-updater) and [`ghcr.io/qdm12/ddns-updater`]((https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater))
+- Available as a Docker image [`ghcr.io/qdm12/ddns-updater`]((https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater)) and [`qmcgaw/ddns-updater`](https://hub.docker.com/r/qmcgaw/ddns-updater)
 - Available as [zero-dependency binaries for Linux, Windows and MacOS](https://github.com/qdm12/ddns-updater/releases)
 - 🆕 Available in the AUR as [`ddns-updater`](https://aur.archlinux.org/packages/ddns-updater) - see [#808](https://github.com/qdm12/ddns-updater/discussions/808)
 - Updates periodically A records for different DNS providers:
@@ -184,15 +181,15 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
 1. Run the container with
 
     ```sh
-    docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data qmcgaw/ddns-updater
+    docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data ghcr.io/qdm12/ddns-updater
     ```
 
 1. The following is **optional**.
     - You can customize the program behavior using [environment variables](#environment-variables)
     - You can use [docker-compose.yml](docker-compose.yml) with `docker-compose up -d`
     - **Kubernetes**: check out the [k8s directory](k8s) for an installation guide and examples.
-    - Other [Docker image tags are available](https://hub.docker.com/repository/docker/qmcgaw/ddns-updater/tags)
-    - You can update the image with `docker pull qmcgaw/ddns-updater`
+    - Other [Docker image tags are available](https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater)
+    - You can update the image with `docker pull ghcr.io/qdm12/ddns-updater`
     - You can set your JSON configuration as a single environment variable line (i.e. `{"settings": [{"provider": "namecheap", ...}]}`), which takes precedence over config.json. Note however that if you don't bind mount the `/updater/data` directory, there won't be a persistent database file `/updater/updates.json` but it will still work.
 
 ## Configuration
@@ -301,7 +298,7 @@ Note that:
 | `RESOLVER_ADDRESS` | Your network DNS | A plaintext DNS address to use to resolve your domain names defined in your settings only. For example it can be `1.1.1.1:53`. This is useful for split dns, see [#389](https://github.com/qdm12/ddns-updater/issues/389) |
 | `LOG_LEVEL` | `info` | Level of logging, `debug`, `info`, `warning` or `error` |
 | `LOG_CALLER` | `hidden` | Show caller per log line, `hidden` or `short` |
-| `SHOUTRRR_ADDRESSES` |  | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/v0.8/services/overview/) (notification services) |
+| `SHOUTRRR_ADDRESSES` | | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/v0.8/services/overview/) (notification services) |
 | `SHOUTRRR_DEFAULT_TITLE` | `DDNS Updater` | Default title for Shoutrrr notifications |
 | `TZ` | | Timezone to have accurate times, i.e. `America/Montreal` |
 | `UMASK` | System current umask | Umask to set for the program in octal, i.e. `0022` |
@@ -347,7 +344,7 @@ You can otherwise customize it with the following:
   - `wtfismyip` using [https://ipv6.wtfismyip.com/text](https://ipv6.wtfismyip.com/text)
   - `seeip` using [https://ipv6.seeip.org](https://ipv6.seeip.org)
   - You can also specify an HTTPS URL with prefix `url:` for example `url:https://ipinfo.io/ip`
-- `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see #136). It can be one or more of the following:
+- `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see [#136](https://github.com/qdm12/ddns-updater/issues/136)). It can be one or more of the following:
   - `cloudflare`
   - `opendns`
 
@@ -407,7 +404,7 @@ We could do an API call to get the record IP address every period, but that woul
 You can build the image yourself with:
 
 ```sh
-docker build -t qmcgaw/ddns-updater https://github.com/qdm12/ddns-updater.git
+docker build -t ghcr.io/qdm12/ddns-updater https://github.com/qdm12/ddns-updater.git
 ```
 
 You can use optional build arguments with `--build-arg KEY=VALUE` from the table below:

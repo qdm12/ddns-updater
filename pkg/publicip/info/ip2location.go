@@ -65,14 +65,14 @@ func (p *ip2Location) get(ctx context.Context, ip netip.Addr) (
 
 	result.IP = data.IP
 	if data.RegionName != "" {
-		result.Region = stringPtr(data.RegionName)
+		result.Region = new(data.RegionName)
 	}
 	if data.CityName != "" {
-		result.City = stringPtr(data.CityName)
+		result.City = new(data.CityName)
 	}
 	if data.CountryName != "" {
 		country := countryCodeToName(data.CountryName)
-		result.Country = stringPtr(country)
+		result.Country = new(country)
 	}
 
 	return result, nil

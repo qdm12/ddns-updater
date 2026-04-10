@@ -43,6 +43,7 @@
   "aliveStatusCodes": [
     200,
     206,
+    403,
     429
   ]
 }

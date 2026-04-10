@@ -7,9 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
+	"time"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
@@ -27,11 +26,17 @@ type Provider struct {
 	clientSecret      string
 	subscriptionID    string
 	resourceGroupName string
+
+	token    string
+	tokenExp time.Time
+
+	now func() time.Time
 }
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	var providerSpecificSettings struct {
 		TenantID          string `json:"tenant_id"`
 		ClientID          string `json:"client_id"`
@@ -59,11 +64,13 @@ func New(data json.RawMessage, domain, owner string,
 		clientSecret:      providerSpecificSettings.ClientSecret,
 		subscriptionID:    providerSpecificSettings.SubscriptionID,
 		resourceGroupName: providerSpecificSettings.ResourceGroupName,
+		now:               time.Now,
 	}, nil
 }
 
 func validateSettings(domain, owner, tenantID, clientID,
-	clientSecret, subscriptionID, resourceGroupName string) error {
+	clientSecret, subscriptionID, resourceGroupName string,
+) error {
 	switch {
 	case domain == "":
 		return fmt.Errorf("%w", ddnserrors.ErrDomainNotSet)
@@ -120,29 +127,28 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-func ptrTo[T any](v T) *T { return &v }
-
-func (p *Provider) Update(ctx context.Context, _ *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	var recordType armdns.RecordType
-	if ip.Is4() {
-		recordType = armdns.RecordTypeA
-	} else {
-		recordType = armdns.RecordTypeAAAA
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
+	recordType := constants.A
+	if ip.Is6() {
+		recordType = constants.AAAA
 	}
 
-	client, err := p.createClient()
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("creating client: %w", err)
+	const updateTimeRequired = 10 * time.Second
+	if p.token == "" || p.now().Add(updateTimeRequired).After(p.tokenExp) {
+		err := p.getAccessToken(ctx, client)
+		if err != nil {
+			return newIP, fmt.Errorf("getting access token: %w", err)
+		}
 	}
 
 	response, err := p.getRecordSet(ctx, client, recordType)
 	if err != nil {
-		azureErr := &azcore.ResponseError{}
-		if errors.As(err, &azureErr) && azureErr.StatusCode == http.StatusNotFound {
+		if errors.Is(err, ddnserrors.ErrRecordNotFound) {
 			err = p.createRecordSet(ctx, client, ip)
 			if err != nil {
 				return netip.Addr{}, fmt.Errorf("creating record set: %w", err)
 			}
+			return ip, nil
 		}
 		return netip.Addr{}, fmt.Errorf("getting record set: %w", err)
 	}

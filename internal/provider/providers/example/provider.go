@@ -121,6 +121,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// Update updates the IP address for the provider.
 // TODO: update this function to match the provider's API
 // Ideally add a comment with a link to their API documentation.
 // If the provider API allows it, create the record if it does not exist.

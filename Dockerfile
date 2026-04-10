@@ -1,13 +1,13 @@
 ARG BUILDPLATFORM=linux/amd64
 ARG ALPINE_VERSION=3.23
-ARG GO_VERSION=1.25
+ARG GO_VERSION=1.26
 ARG XCPUTRANSLATE_VERSION=v0.9.0
-ARG GOLANGCI_LINT_VERSION=v2.4.0
-ARG MOCKGEN_VERSION=v1.6.0
+ARG GOLANGCI_LINT_VERSION=v2.11.4
+ARG MOCKGEN_VERSION=v0.6.0
 
-FROM --platform=${BUILDPLATFORM} qmcgaw/xcputranslate:${XCPUTRANSLATE_VERSION} AS xcputranslate
-FROM --platform=${BUILDPLATFORM} qmcgaw/binpot:golangci-lint-${GOLANGCI_LINT_VERSION} AS golangci-lint
-FROM --platform=${BUILDPLATFORM} qmcgaw/binpot:mockgen-${MOCKGEN_VERSION} AS mockgen
+FROM --platform=${BUILDPLATFORM} ghcr.io/qdm12/xcputranslate:${XCPUTRANSLATE_VERSION} AS xcputranslate
+FROM --platform=${BUILDPLATFORM} ghcr.io/qdm12/binpot:golangci-lint-${GOLANGCI_LINT_VERSION} AS golangci-lint
+FROM --platform=${BUILDPLATFORM} ghcr.io/qdm12/binpot:mockgen-${MOCKGEN_VERSION} AS mockgen
 
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
 WORKDIR /tmp/gobuild

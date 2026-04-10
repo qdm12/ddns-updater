@@ -28,7 +28,7 @@
 
 - `"project"` is the id of your Google Cloud project
 - `"zone"` is the zone, that your DNS record is located in
-- `"credentials"` is the JSON credentials for your Google Cloud project. This is usually downloaded as a JSON file, which you can copy paste the content as the value of the `"credentials"` key. More information on how to get it is available [here](https://cloud.google.com/docs/authentication/getting-started). Please ensure your service account has all necessary permissions to create/update/list/get DNS records within your project.
+- `"credentials"` is the JSON credentials for your Google Cloud project. This is usually downloaded as a JSON file, which you can copy paste the content as the value of the `"credentials"` key. More information on how to get it is available at [cloud.google.com/docs/authentication/getting-started](https://cloud.google.com/docs/authentication/getting-started). Please ensure your service account has all necessary permissions to create/update/list/get DNS records within your project.
 - `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
 
 ### Optional parameters

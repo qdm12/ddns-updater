@@ -1,5 +1,48 @@
 version: "2"
+
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+
 linters:
+  settings:
+    misspell:
+      locale: US
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - containedctx
+          - dupl
+          - err113
+        path: _test\.go
+      - linters:
+          - contextcheck
+        text: Function `exitHealthchecksio` should pass the context parameter
+      - linters:
+          - lll
+        source: See https://
+      - linters:
+          - revive
+        text: "var-naming: avoid meaningless package names"
+        path: internal\/provider\/utils\/
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
   enable:
     - asasalint
     - asciicheck
@@ -29,6 +72,7 @@ linters:
     - goconst
     - gocritic
     - gocyclo
+    - godoclint
     - godot
     - goheader
     - gomoddirectives
@@ -40,6 +84,7 @@ linters:
     - inamedparam
     - interfacebloat
     - intrange
+    - iotamixing
     - ireturn
     - lll
     - maintidx
@@ -47,6 +92,7 @@ linters:
     - mirror
     - misspell
     - mnd
+    - modernize
     - musttag
     - nakedret
     - nestif

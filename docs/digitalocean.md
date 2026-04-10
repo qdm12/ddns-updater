@@ -21,7 +21,7 @@
 ### Compulsory parameters
 
 - `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
-- `"token"` is your token that you can create [here](https://cloud.digitalocean.com/settings/applications)
+- `"token"` is your token that you can create at [cloud.digitalocean.com/settings/applications](https://cloud.digitalocean.com/settings/applications)
 
 ### Optional parameters
 

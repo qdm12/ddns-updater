@@ -21,7 +21,7 @@
 ### Compulsory parameters
 
 - `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
-- `"api_key"` is your API key, obtained from [creating an API key](https://www.ionos.com/help/domains/configuring-your-ip-address/set-up-dynamic-dns-with-company-name/#c181598)
+- `"api_key"` is your API key, consisting of two parts — a prefix and the key itself — and can be obtained by [creating an API key](https://www.ionos.com/help/domains/configuring-your-ip-address/set-up-dynamic-dns-with-company-name/#c181598). It must follow the format `<prefix>.<key>`.
 
 ### Optional parameters
 

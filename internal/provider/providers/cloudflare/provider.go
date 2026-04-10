@@ -303,11 +303,11 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	}
 
 	if !parsedJSON.Success {
-		var errStr strings.Builder
+		var sb strings.Builder
 		for _, e := range parsedJSON.Errors {
-			fmt.Fprintf(&errStr, "error %d: %s; ", e.Code, e.Message)
+			fmt.Fprintf(&sb, "error %d: %s; ", e.Code, e.Message)
 		}
-		return "", fmt.Errorf("%w: %s", errors.ErrUnsuccessful, errStr.String())
+		return "", fmt.Errorf("%w: %s", errors.ErrUnsuccessful, sb.String())
 	}
 
 	return parsedJSON.Result.ID, nil
@@ -395,11 +395,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	if !parsedJSON.Success {
-		var errStr strings.Builder
+		var sb strings.Builder
 		for _, e := range parsedJSON.Errors {
-			fmt.Fprintf(&errStr, "error %d: %s; ", e.Code, e.Message)
+			fmt.Fprintf(&sb, "error %d: %s; ", e.Code, e.Message)
 		}
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, errStr.String())
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, sb.String())
 	}
 
 	newIP, err = netip.ParseAddr(parsedJSON.Result.Content)

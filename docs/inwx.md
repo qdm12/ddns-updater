@@ -2,6 +2,8 @@
 
 ## Configuration
 
+You must configure a [DynDNS Account in INWX](https://www.inwx.com/en/offer/dyndns) and use the configured account and hostname.
+
 ### Example
 
 ```json
@@ -21,7 +23,7 @@
 
 ### Compulsory parameters
 
-- `"domain"` is the domain to update. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`).
+- `"domain"` is the domain configured for the DynDNS Account. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`).
 - `"username"`
 - `"password"`
 

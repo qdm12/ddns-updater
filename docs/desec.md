@@ -21,7 +21,7 @@
 ### Compulsory parameters
 
 - `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
-- `"token"` is your token that you can create [here](https://desec.io/tokens)
+- `"token"` is your token that you can create at [desec.io/tokens](https://desec.io/tokens)
 
 ### Optional parameters
 

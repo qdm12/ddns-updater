@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/netip"
 	"strconv"
 	"strings"
@@ -413,6 +414,7 @@ func (s *Service) run(ctx context.Context, ready chan<- struct{},
 	for {
 		select {
 		case <-ticker.C:
+			time.Sleep(jitterDuration(s.period))
 			s.updateNecessary(ctx)
 		case <-s.force:
 			s.forceResult <- s.updateNecessary(ctx)
@@ -438,4 +440,13 @@ func (s *Service) ForceUpdate(ctx context.Context) (errs []error) {
 		errs = []error{ctx.Err()}
 	}
 	return errs
+}
+
+// jitterDuration returns a random duration in [0, period/5) to spread
+// update calls and avoid synchronized API traffic spikes.
+func jitterDuration(period time.Duration) time.Duration {
+	if divisor := int64(period) / 5; divisor > 0 {
+		return time.Duration(rand.Int63n(divisor))
+	}
+	return 0
 }

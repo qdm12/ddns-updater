@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
@@ -51,15 +52,15 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client) (records
 			}
 			return nil, fmt.Errorf("%w: %s", errors.ErrRecordResourceSetNotFound, apiError.Detail)
 		case http.StatusBadRequest:
-			var details string
+			var details strings.Builder
 			for _, d := range apiError.Data {
 				if d.Field != "" {
-					details += fmt.Sprintf(" %s: %s;", d.Field, d.Details)
+					fmt.Fprintf(&details, " %s: %s;", d.Field, d.Details)
 				} else {
-					details += fmt.Sprintf(" %s;", d.Details)
+					fmt.Fprintf(&details, " %s;", d.Details)
 				}
 			}
-			return nil, fmt.Errorf("%w:%s", errors.ErrBadRequest, details)
+			return nil, fmt.Errorf("%w:%s", errors.ErrBadRequest, details.String())
 		case http.StatusTooManyRequests:
 			return nil, fmt.Errorf("%w: rate limit exceeded", errors.ErrRateLimit)
 		default:

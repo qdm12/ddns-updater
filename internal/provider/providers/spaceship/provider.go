@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
+	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -135,19 +136,21 @@ func (p *Provider) handleAPIError(response *http.Response) error {
 		}
 		return fmt.Errorf("%w: %s", errors.ErrRecordResourceSetNotFound, apiError.Detail)
 	case http.StatusBadRequest:
-		var details string
-		for _, d := range apiError.Data {
-			if d.Field != "" {
-				details += fmt.Sprintf(" %s: %s;", d.Field, d.Details)
-			} else {
-				details += fmt.Sprintf(" %s;", d.Details)
-			}
-		}
+		var details strings.Builder
+
 		// Add error code if present
 		if errorCode != "" {
-			details = fmt.Sprintf(" (code: %s)%s", errorCode, details)
+			fmt.Fprintf(&details, " (code: %s)", errorCode)
 		}
-		return fmt.Errorf("%w:%s", errors.ErrBadRequest, details)
+
+		for _, d := range apiError.Data {
+			if d.Field != "" {
+				fmt.Fprintf(&details, " %s: %s;", d.Field, d.Details)
+			} else {
+				fmt.Fprintf(&details, " %s;", d.Details)
+			}
+		}
+		return fmt.Errorf("%w:%s", errors.ErrBadRequest, details.String())
 	case http.StatusTooManyRequests:
 		// Rate limit is 300 requests within 300 seconds per user and domain
 		return fmt.Errorf("%w: rate limit exceeded (300 requests/300 seconds)", errors.ErrRateLimit)

@@ -88,6 +88,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - OVH
   - Porkbun
   - Route53
+  - Scaleway
   - Selfhost.de
   - Servercow.de
   - Spdyn
@@ -255,6 +256,7 @@ Check the documentation for your DNS provider:
 - [OVH](docs/ovh.md)
 - [Porkbun](docs/porkbun.md)
 - [Route53](docs/route53.md)
+- [Scaleway](docs/scaleway.md)
 - [Selfhost.de](docs/selfhost.de.md)
 - [Servercow.de](docs/servercow.md)
 - [Spdyn](docs/spdyn.md)
@@ -344,7 +346,7 @@ You can otherwise customize it with the following:
   - `wtfismyip` using [https://ipv6.wtfismyip.com/text](https://ipv6.wtfismyip.com/text)
   - `seeip` using [https://ipv6.seeip.org](https://ipv6.seeip.org)
   - You can also specify an HTTPS URL with prefix `url:` for example `url:https://ipinfo.io/ip`
-- `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see #136). It can be one or more of the following:
+- `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see [#136](https://github.com/qdm12/ddns-updater/issues/136)). It can be one or more of the following:
   - `cloudflare`
   - `opendns`
 

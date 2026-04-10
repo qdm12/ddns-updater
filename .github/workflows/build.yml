@@ -73,7 +73,7 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
       - uses: github/codeql-action/init@v4
@@ -153,12 +153,12 @@ jobs:
           push: true
 
       - if: github.event_name == 'release'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
       - if: github.event_name == 'release'
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: latest
           args: release --clean --config .github/workflows/configs/.goreleaser.yaml

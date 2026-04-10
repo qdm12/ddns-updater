@@ -102,6 +102,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// Update updates the IP address for the provider.
 // Using https://www.linode.com/docs/api/domains/
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	domainID, err := p.getDomainID(ctx, client)

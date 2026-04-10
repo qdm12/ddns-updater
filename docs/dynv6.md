@@ -21,7 +21,7 @@
 ### Compulsory parameters
 
 - `"domain"` is the domain to update. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`).
-- `"token"` that you can obtain [here](https://dynv6.com/keys#token)
+- `"token"` that you can obtain from [dynv6.com/keys#token](https://dynv6.com/keys#token)
 
 ### Optional parameters
 

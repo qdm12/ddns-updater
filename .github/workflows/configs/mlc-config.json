@@ -4,7 +4,7 @@
       "pattern": "^http://localhost"
     },
     {
-      "pattern": "^https://api6.ipify.org$"
+      "pattern": "^https://api(6|64).ipify.org$"
     },
     {
       "pattern": "^http://ip1.dynupdate6.no-ip.com$"

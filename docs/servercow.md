@@ -34,4 +34,4 @@
 
 ## Domain setup
 
-See [their article](https://cp.servercow.de/en/plugin/support_manager/knowledgebase/view/34/dns-api-v1/7/)
+See [their article](https://wiki.servercow.de/en/domains/dns_api/api-syntax/)

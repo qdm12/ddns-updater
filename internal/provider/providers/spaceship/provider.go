@@ -22,6 +22,7 @@ type Provider struct {
 	ipv6Suffix netip.Prefix
 	apiKey     string
 	apiSecret  string
+	ttl        uint32
 }
 
 func New(data json.RawMessage, domain, owner string,
@@ -31,13 +32,14 @@ func New(data json.RawMessage, domain, owner string,
 	extraSettings := struct {
 		APIKey    string `json:"api_key"`
 		APISecret string `json:"api_secret"`
+		TTL       uint32 `json:"ttl"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
 		return nil, err
 	}
 
-	err = validateSettings(domain, extraSettings.APIKey, extraSettings.APISecret)
+	err = validateSettings(domain, extraSettings.APIKey, extraSettings.APISecret, extraSettings.TTL)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -49,20 +51,26 @@ func New(data json.RawMessage, domain, owner string,
 		ipv6Suffix: ipv6Suffix,
 		apiKey:     extraSettings.APIKey,
 		apiSecret:  extraSettings.APISecret,
+		ttl:        extraSettings.TTL,
 	}, nil
 }
 
-func validateSettings(domain, apiKey, apiSecret string) (err error) {
+func validateSettings(domain, apiKey, apiSecret string, ttl uint32) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
 	}
 
+	const minTTL, maxTTL = 60, 3600
 	switch {
 	case apiKey == "":
 		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
 	case apiSecret == "":
 		return fmt.Errorf("%w", errors.ErrAPISecretNotSet)
+	case ttl != 0 && ttl < minTTL:
+		return fmt.Errorf("%w: ttl must be at least %d seconds", errors.ErrTTLTooLow, minTTL)
+	case ttl > maxTTL:
+		return fmt.Errorf("%w: ttl must be at most %d seconds", errors.ErrTTLTooHigh, maxTTL)
 	}
 	return nil
 }
@@ -111,62 +119,54 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
-	request.Header.Set("X-Api-Key", p.apiKey)
-	request.Header.Set("X-Api-Secret", p.apiSecret)
+	headers.SetXAPIKey(request, p.apiKey)
+	headers.SetXAPISecret(request, p.apiSecret)
 }
 
 func (p *Provider) handleAPIError(response *http.Response) error {
-	var apiError APIError
+	var apiError apiError
 	if err := json.NewDecoder(response.Body).Decode(&apiError); err != nil {
 		return fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
 	}
 
-	// Extract error code from header if present
 	errorCode := response.Header.Get("Spaceship-Error-Code")
 
 	switch response.StatusCode {
 	case http.StatusUnauthorized:
-		return fmt.Errorf("%w: invalid API credentials", errors.ErrAuth)
+		return fmt.Errorf("%w: %s", errors.ErrAuth, errorCode)
 	case http.StatusForbidden:
-		return fmt.Errorf("%w: missing required permission dnsRecords:write", errors.ErrAuth)
+		return fmt.Errorf("%w: possibly missing dnsRecords:write permission", errors.ErrAuth)
 	case http.StatusNotFound:
 		if apiError.Detail == "SOA record for domain "+p.domain+" not found." {
-			return fmt.Errorf("%w: domain %s must be configured in Spaceship first",
-				errors.ErrDomainNotFound, p.domain)
+			return fmt.Errorf("%w: domain must be configured in Spaceship first", errors.ErrDomainNotFound)
 		}
 		return fmt.Errorf("%w: %s", errors.ErrRecordResourceSetNotFound, apiError.Detail)
 	case http.StatusBadRequest:
-		var details strings.Builder
-
-		// Add error code if present
+		var errorDetails string
 		if errorCode != "" {
-			fmt.Fprintf(&details, " (code: %s)", errorCode)
+			errorDetails = "(code: " + errorCode + ")"
 		}
-
+		fieldDetails := make([]string, 0, len(apiError.Data))
 		for _, d := range apiError.Data {
-			if d.Field != "" {
-				fmt.Fprintf(&details, " %s: %s;", d.Field, d.Details)
-			} else {
-				fmt.Fprintf(&details, " %s;", d.Details)
+			if d.Field == "" {
+				fieldDetails = append(fieldDetails, d.Details)
+				continue
 			}
+			fieldDetails = append(fieldDetails, fmt.Sprintf("%s: %s", d.Field, d.Details))
 		}
-		return fmt.Errorf("%w:%s", errors.ErrBadRequest, details.String())
+		if len(fieldDetails) > 0 {
+			errorDetails += " - " + strings.Join(fieldDetails, "; ")
+		}
+		return fmt.Errorf("%w: %s", errors.ErrBadRequest, errorDetails)
 	case http.StatusTooManyRequests:
-		// Rate limit is 300 requests within 300 seconds per user and domain
-		return fmt.Errorf("%w: rate limit exceeded (300 requests/300 seconds)", errors.ErrRateLimit)
-	case http.StatusInternalServerError:
-		if errorCode != "" {
-			return fmt.Errorf("%w: internal server error (code: %s): %s",
-				errors.ErrHTTPStatusNotValid, errorCode, apiError.Detail)
-		}
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, apiError.Detail)
+		return fmt.Errorf("%w: rate limit exceeded (300 requests/300 seconds) for this domain", errors.ErrRateLimit)
 	default:
+		var detail string
 		if errorCode != "" {
-			return fmt.Errorf("%w: %d (code: %s): %s",
-				errors.ErrHTTPStatusNotValid, response.StatusCode, errorCode, apiError.Detail)
+			detail = "(code " + errorCode + "): "
 		}
+		detail += apiError.Detail
 		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, apiError.Detail)
+			errors.ErrHTTPStatusNotValid, response.StatusCode, detail)
 	}
 }

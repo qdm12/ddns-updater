@@ -9,30 +9,23 @@ import (
 	"net/url"
 )
 
-func (p *Provider) createRecord(ctx context.Context, client *http.Client, recordType, address string) error {
-	const defaultTTL = 3600
-
+func (p *Provider) putRecord(ctx context.Context, client *http.Client, record apiRecord) error {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "spaceship.dev",
 		Path:   "/api/v1/dns/records/" + p.domain,
 	}
 
-	createData := struct {
-		Force bool     `json:"force"`
-		Items []Record `json:"items"`
+	requestData := struct {
+		Force bool        `json:"force"`
+		Items []apiRecord `json:"items"`
 	}{
 		Force: true,
-		Items: []Record{{
-			Type:    recordType,
-			Name:    p.owner,
-			Address: address,
-			TTL:     defaultTTL,
-		}},
+		Items: []apiRecord{record},
 	}
 
 	requestBody := bytes.NewBuffer(nil)
-	if err := json.NewEncoder(requestBody).Encode(createData); err != nil {
+	if err := json.NewEncoder(requestBody).Encode(requestData); err != nil {
 		return fmt.Errorf("encoding request body: %w", err)
 	}
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), requestBody)

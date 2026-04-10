@@ -1,7 +1,7 @@
 package spaceship
 
-// APIError represents the Spaceship API error response.
-type APIError struct {
+// apiError represents the Spaceship API error response.
+type apiError struct {
 	Detail string `json:"detail"`
 	Data   []struct {
 		Field   string `json:"field"`
@@ -9,8 +9,8 @@ type APIError struct {
 	} `json:"data"`
 }
 
-// Record represents a DNS record.
-type Record struct {
+// apiRecord represents a DNS record.
+type apiRecord struct {
 	Type    string `json:"type"`
 	Name    string `json:"name"`
 	Address string `json:"address"`

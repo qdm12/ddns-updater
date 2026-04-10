@@ -20,41 +20,35 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("getting records: %w", err)
 	}
 
-	var existingRecord Record
+	var found bool
+	var targetRecord apiRecord
 
-	// Check exact matches for both type and name
 	for _, record := range records {
 		if record.Type == recordType && record.Name == p.owner {
-			existingRecord = record
+			targetRecord = record
+			found = true
 			break
 		}
 	}
 
-	if existingRecord.Name == "" {
-		err := p.createRecord(ctx, client, recordType, ip.String())
+	if found {
+		currentIP, err := netip.ParseAddr(targetRecord.Address)
 		if err != nil {
-			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
+			return netip.Addr{}, fmt.Errorf("parsing existing IP address: %w", err)
+		} else if currentIP == ip {
+			return ip, nil
 		}
-		return ip, nil
+	} else {
+		targetRecord.Type = recordType
+		targetRecord.Name = p.owner
 	}
 
-	currentIP, err := netip.ParseAddr(existingRecord.Address)
+	targetRecord.TTL = p.ttl
+	targetRecord.Address = ip.String()
+
+	err = p.putRecord(ctx, client, targetRecord)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("parsing existing IP address: %w", err)
-	}
-
-	if currentIP.Compare(ip) == 0 {
-		return ip, nil // IP is already up to date
-	}
-
-	err = p.deleteRecord(ctx, client, existingRecord)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("deleting record: %w", err)
-	}
-
-	err = p.createRecord(ctx, client, recordType, ip.String())
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("creating record: %w", err)
+		return netip.Addr{}, fmt.Errorf("putting record: %w", err)
 	}
 
 	return ip, nil

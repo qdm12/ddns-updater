@@ -6,12 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
-
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
-func (p *Provider) getRecords(ctx context.Context, client *http.Client) (records []Record, err error) {
+func (p *Provider) getRecords(ctx context.Context, client *http.Client) (records []apiRecord, err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "spaceship.dev",
@@ -37,45 +34,16 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client) (records
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		var apiError APIError
-		if err := json.NewDecoder(response.Body).Decode(&apiError); err != nil {
-			return nil, fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
-		}
-
-		switch response.StatusCode {
-		case http.StatusUnauthorized:
-			return nil, fmt.Errorf("%w: invalid API credentials", errors.ErrAuth)
-		case http.StatusNotFound:
-			if apiError.Detail == "SOA record for domain "+p.domain+" not found." {
-				return nil, fmt.Errorf("%w: domain %s must be configured in Spaceship first",
-					errors.ErrDomainNotFound, p.domain)
-			}
-			return nil, fmt.Errorf("%w: %s", errors.ErrRecordResourceSetNotFound, apiError.Detail)
-		case http.StatusBadRequest:
-			var details strings.Builder
-			for _, d := range apiError.Data {
-				if d.Field != "" {
-					fmt.Fprintf(&details, " %s: %s;", d.Field, d.Details)
-				} else {
-					fmt.Fprintf(&details, " %s;", d.Details)
-				}
-			}
-			return nil, fmt.Errorf("%w:%s", errors.ErrBadRequest, details.String())
-		case http.StatusTooManyRequests:
-			return nil, fmt.Errorf("%w: rate limit exceeded", errors.ErrRateLimit)
-		default:
-			return nil, fmt.Errorf("%w: %d: %s",
-				errors.ErrHTTPStatusNotValid, response.StatusCode, apiError.Detail)
-		}
+		return nil, p.handleAPIError(response)
 	}
 
-	var recordsResponse struct {
-		Items []Record `json:"items"`
+	var data struct {
+		Items []apiRecord `json:"items"`
 	}
 
-	if err := json.NewDecoder(response.Body).Decode(&recordsResponse); err != nil {
+	if err := json.NewDecoder(response.Body).Decode(&data); err != nil {
 		return nil, fmt.Errorf("decoding response: %w", err)
 	}
 
-	return recordsResponse.Items, nil
+	return data.Items, nil
 }

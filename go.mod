@@ -12,7 +12,7 @@ require (
 	github.com/qdm12/gosplash v0.2.0
 	github.com/qdm12/gotree v0.3.0
 	github.com/qdm12/log v0.1.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	go.uber.org/mock v0.6.0
 	golang.org/x/mod v0.31.0
 	golang.org/x/net v0.49.0

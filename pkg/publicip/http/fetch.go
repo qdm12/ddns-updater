@@ -20,7 +20,8 @@ var (
 )
 
 func fetch(ctx context.Context, client *http.Client, url string,
-	version ipversion.IPVersion) (publicIP netip.Addr, err error) {
+	version ipversion.IPVersion,
+) (publicIP netip.Addr, err error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return netip.Addr{}, err

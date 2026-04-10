@@ -30,8 +30,8 @@ Feel free to open issues to extend its configuration options.
 
 - `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
 - `"url"` is the URL to update your records and should contain all the information EXCEPT the IP address to update
-- `"ipv4key"` is the URL query parameter name for the IPv4 address, for example `ipv4` will be added to the URL with `&ipv4=1.2.3.4`.
-- `"ipv6key"` is the URL query parameter name for the IPv6 address, for example `ipv6` will be added to the URL with `&ipv6=::aaff`. Even if you don't use IPv6, this must be set to something.
+- `"ipv4key"` is the URL query parameter name for the IPv4 address, for example `ipv4` will be added to the URL with `&ipv4=1.2.3.4`. In the rare case you do not wish to send an IPv4 query parameter to the registrar API when updating your A (IPv4) record, leave it to `"ipv4key": ""`.
+- `"ipv6key"` is the URL query parameter name for the IPv6 address, for example `ipv6` will be added to the URL with `&ipv6=::aaff`. In the rare case you do not wish to send an IPv6 query parameter to the registrar API when updating your AAAA (IPv6) record, leave it to `"ipv6key": ""`.
 - `"success_regex"` is a regular expression to match the response from the server to determine if the update was successful. You can use [regex101.com](https://regex101.com/) to find the regular expression you want. For example `good` would match any response containing the word "good".
 
 ### Optional parameters

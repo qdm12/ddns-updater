@@ -2,7 +2,7 @@ before:
   hooks:
     - go mod download
 builds:
-  - main: ./cmd/updater/main.go
+  - main: ./cmd/ddns-updater/main.go
     flags:
       - -trimpath
     env:

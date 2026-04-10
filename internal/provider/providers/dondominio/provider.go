@@ -24,17 +24,16 @@ type Provider struct {
 	ipv6Suffix netip.Prefix
 	username   string
 	key        string
-	name       string
 }
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Username string `json:"username"`
 		Password string `json:"password"` // retro-compatibility
 		Key      string `json:"key"`
-		Name     string `json:"name"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -47,7 +46,7 @@ func New(data json.RawMessage, domain, owner string,
 		extraSettings.Key = extraSettings.Password
 	}
 
-	err = validateSettings(domain, extraSettings.Username, extraSettings.Key, extraSettings.Name)
+	err = validateSettings(domain, extraSettings.Username, extraSettings.Key)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -59,11 +58,10 @@ func New(data json.RawMessage, domain, owner string,
 		ipv6Suffix: ipv6Suffix,
 		username:   extraSettings.Username,
 		key:        extraSettings.Key,
-		name:       extraSettings.Name,
 	}, nil
 }
 
-func validateSettings(domain, username, key, name string) (err error) {
+func validateSettings(domain, username, key string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
@@ -74,8 +72,6 @@ func validateSettings(domain, username, key, name string) (err error) {
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case key == "":
 		return fmt.Errorf("%w", errors.ErrKeyNotSet)
-	case name == "":
-		return fmt.Errorf("%w", errors.ErrNameNotSet)
 	}
 	return nil
 }
@@ -123,11 +119,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Host:   "dondns.dondominio.com",
 		Path:   "/json/",
 		RawQuery: url.Values{
-			"user":   {p.username},
-			"apikey": {p.key},
-			"host":   {p.BuildDomainName()},
-			"ip":     {ip.String()},
-			"lang":   {"en"},
+			"user":     {p.username},
+			"password": {p.key},
+			"host":     {utils.BuildURLQueryHostname(p.owner, p.domain)},
+			"ip":       {ip.String()},
+			"lang":     {"en"},
 		}.Encode(),
 	}
 

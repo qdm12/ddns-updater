@@ -13,7 +13,8 @@ import (
 )
 
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
-	zoneID string, existingRecord apiRecord, ip netip.Addr) (err error) {
+	zoneID string, existingRecord apiRecord, ip netip.Addr,
+) (err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.hosting.ionos.com",

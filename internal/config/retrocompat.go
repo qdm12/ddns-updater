@@ -1,7 +1,7 @@
 package config
 
 type Warner interface {
-	Warnf(format string, a ...interface{})
+	Warnf(format string, a ...any)
 }
 
 func handleDeprecated(warner Warner, oldKey, newKey string) {

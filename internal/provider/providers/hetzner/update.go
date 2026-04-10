@@ -15,7 +15,8 @@ import (
 )
 
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
-	recordID string, ip netip.Addr) (newIP netip.Addr, err error) {
+	recordID string, ip netip.Addr,
+) (newIP netip.Addr, err error) {
 	recordType := constants.A
 	if ip.Is6() {
 		recordType = constants.AAAA

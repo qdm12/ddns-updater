@@ -44,7 +44,6 @@ func Test_GetPreviousIPs(t *testing.T) {
 		},
 	}
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			previousIPs := testCase.h.GetPreviousIPs()
@@ -73,7 +72,6 @@ func Test_GetDurationSinceSuccess(t *testing.T) {
 		},
 	}
 	for name, tc := range tests {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			now, _ := time.Parse("2006-01-02", "2000-01-01")

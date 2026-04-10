@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -19,21 +18,20 @@ import (
 )
 
 type Provider struct {
-	domain        string
-	ipVersion     ipversion.IPVersion
-	ipv6Suffix    netip.Prefix
-	username      string
-	password      string
-	useProviderIP bool
+	domain     string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	username   string
+	password   string
 }
 
 func New(data json.RawMessage, domain string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
-		Username      string `json:"username"`
-		Password      string `json:"password"`
-		UseProviderIP bool   `json:"provider_ip"`
+		Username string `json:"username"`
+		Password string `json:"password"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -46,12 +44,11 @@ func New(data json.RawMessage, domain string,
 	}
 
 	return &Provider{
-		domain:        domain,
-		ipVersion:     ipVersion,
-		ipv6Suffix:    ipv6Suffix,
-		username:      extraSettings.Username,
-		password:      extraSettings.Password,
-		useProviderIP: extraSettings.UseProviderIP,
+		domain:     domain,
+		ipVersion:  ipVersion,
+		ipv6Suffix: ipv6Suffix,
+		username:   extraSettings.Username,
+		password:   extraSettings.Password,
 	}, nil
 }
 
@@ -117,9 +114,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	values := url.Values{}
 	values.Set("hostname", p.domain)
-	if !p.useProviderIP || (ip.Is6() && p.ipv6Suffix.IsValid()) {
-		values.Set("myip", ip.String())
-	}
+	values.Set("myip", ip.String())
 	u.RawQuery = values.Encode()
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
@@ -133,11 +128,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	defer response.Body.Close()
 
-	b, err := io.ReadAll(response.Body)
+	s, err := utils.ReadAndCleanBody(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
+		return netip.Addr{}, fmt.Errorf("reading response: %w", err)
 	}
-	s := string(b)
 
 	switch response.StatusCode {
 	case http.StatusOK:
@@ -146,7 +140,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 			newIP, err = netip.ParseAddr(ip.String())
 			if err != nil {
 				return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
-			} else if !p.useProviderIP && ip.Compare(newIP) != 0 {
+			} else if ip.Compare(newIP) != 0 {
 				return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
 					errors.ErrIPReceivedMismatch, ip, newIP)
 			}
@@ -155,7 +149,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 			newIP, err = netip.ParseAddr(ip.String())
 			if err != nil {
 				return netip.Addr{}, fmt.Errorf("%w: in response %q", errors.ErrReceivedNoResult, s)
-			} else if !p.useProviderIP && ip.Compare(newIP) != 0 {
+			} else if ip.Compare(newIP) != 0 {
 				return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
 					errors.ErrIPReceivedMismatch, ip, newIP)
 			}

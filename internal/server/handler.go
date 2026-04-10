@@ -27,7 +27,8 @@ type handlers struct {
 var uiFS embed.FS
 
 func newHandler(ctx context.Context, rootURL string,
-	db Database, runner UpdateForcer) http.Handler {
+	db Database, runner UpdateForcer,
+) http.Handler {
 	indexTemplate := template.Must(template.ParseFS(uiFS, "ui/index.html"))
 
 	staticFolder, err := fs.Sub(uiFS, "ui/static")
@@ -46,6 +47,7 @@ func newHandler(ctx context.Context, rootURL string,
 
 	router := chi.NewRouter()
 
+	router.Use(middleware.RealIP)
 	router.Use(middleware.Logger)
 	rootURL = strings.TrimSuffix(rootURL, "/")
 

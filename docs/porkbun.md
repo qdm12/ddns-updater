@@ -10,8 +10,8 @@
     {
       "provider": "porkbun",
       "domain": "domain.com",
-      "api_key": "sk1_7d119e3f656b00ae042980302e1425a04163c476efec1833q3cb0w54fc6f5022",
-      "secret_api_key": "pk1_5299b57125c8f3cdf347d2fe0e713311ee3a1e11f11a14942b26472593e35368",
+      "api_key": "pk1_5299b57125c8f3cdf347d2fe0e713311ee3a1e11f11a14942b26472593e35368",
+      "secret_api_key": "sk1_7d119e3f656b00ae042980302e1425a04163c476efec1833q3cb0w54fc6f5022",
       "ip_version": "ipv4",
       "ipv6_suffix": ""
     }
@@ -22,8 +22,8 @@
 ### Compulsory Parameters
 
 - `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
-- `"apikey"`
-- `"secretapikey"`
+- `"api_key"`
+- `"secret_api_key"`
 - `"ttl"` optional integer value corresponding to a number of seconds
 
 ### Optional parameters
@@ -41,5 +41,12 @@
 ## Record creation
 
 In case you don't have an A or AAAA record for your host and domain combination, it will be created by DDNS-Updater.
-However, to do so, the corresponding ALIAS record, that is automatically created by Porkbun, is automatically deleted to allow this.
+
+Porkbun creates default DNS entries for new domains, which can conflict with creating a root or wildcard A/AAAA record. Therefore, ddns-updater automatically removes any conflicting default record before creating records, as described in the table below:
+
+| Record type | Owner | Record value | Situation requiring a removal |
+| --- | --- | --- | --- |
+| `ALIAS` | `@` | pixie.porkbun.com | Creating A or AAAA record for the root domain **or** wildcard domain |
+| `CNAME` | `*` | pixie.porkbun.com | Creating A or AAAA record for the wildcard domain |
+
 More details is in [this comment by @everydaycombat](https://github.com/qdm12/ddns-updater/issues/546#issuecomment-1773960193).

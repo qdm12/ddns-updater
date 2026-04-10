@@ -10,7 +10,8 @@ import (
 )
 
 func (p *Provider) getAdjustedUnixTimestamp(ctx context.Context, client *http.Client) (
-	unix int64, err error) {
+	unix int64, err error,
+) {
 	delta, err := p.getTimeDelta(ctx, client)
 	if err != nil {
 		return 0, err

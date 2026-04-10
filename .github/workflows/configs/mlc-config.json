@@ -4,7 +4,7 @@
       "pattern": "^http://localhost"
     },
     {
-      "pattern": "^https://api6.ipify.org$"
+      "pattern": "^https://api(6|64).ipify.org$"
     },
     {
       "pattern": "^http://ip1.dynupdate6.no-ip.com$"
@@ -26,6 +26,15 @@
     },
     {
       "pattern": "https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater"
+    },
+    {
+      "pattern": "^https://www.duckdns.org/$"
+    },
+    {
+      "pattern": "^https://my.vultr.com/settings/#settingsapi$"
+    },
+    {
+      "pattern": "^https://www.namesilo.com"
     }
   ],
   "timeout": "20s",
@@ -33,6 +42,8 @@
   "fallbackRetryDelay": "30s",
   "aliveStatusCodes": [
     200,
-    206
+    206,
+    403,
+    429
   ]
 }

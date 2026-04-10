@@ -48,7 +48,7 @@ func New(data json.RawMessage, domain, owner string,
 	if err != nil {
 		return nil, fmt.Errorf("json decoding provider specific settings: %w", err)
 	}
-	err = validateSettings(domain, owner, providerSpecificSettings.TenantID,
+	err = validateSettings(domain, providerSpecificSettings.TenantID,
 		providerSpecificSettings.ClientID, providerSpecificSettings.ClientSecret,
 		providerSpecificSettings.SubscriptionID, providerSpecificSettings.ResourceGroupName)
 	if err != nil {
@@ -68,14 +68,12 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(domain, owner, tenantID, clientID,
+func validateSettings(domain, tenantID, clientID,
 	clientSecret, subscriptionID, resourceGroupName string,
 ) error {
 	switch {
 	case domain == "":
 		return fmt.Errorf("%w", ddnserrors.ErrDomainNotSet)
-	case owner == "":
-		return fmt.Errorf("%w", ddnserrors.ErrOwnerNotSet)
 	case tenantID == "":
 		return fmt.Errorf("%w: tenant id", ddnserrors.ErrCredentialsNotSet)
 	case clientID == "":

@@ -27,7 +27,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		AccessKeyID  string `json:"access_key_id"`
 		AccessSecret string `json:"access_secret"`

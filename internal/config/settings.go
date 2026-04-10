@@ -80,7 +80,8 @@ func (c Config) toLinesNode() *gotree.Node {
 }
 
 func (c *Config) Read(reader *reader.Reader,
-	warner Warner) (err error) {
+	warner Warner,
+) (err error) {
 	err = c.Client.read(reader)
 	if err != nil {
 		return fmt.Errorf("reading client settings: %w", err)
@@ -107,7 +108,10 @@ func (c *Config) Read(reader *reader.Reader,
 	}
 
 	c.Health.Read(reader)
-	c.Paths.read(reader)
+	err = c.Paths.read(reader)
+	if err != nil {
+		return fmt.Errorf("reading paths settings: %w", err)
+	}
 
 	err = c.Backup.read(reader)
 	if err != nil {

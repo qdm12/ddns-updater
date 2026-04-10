@@ -10,7 +10,8 @@ import (
 )
 
 func createOauth2Client(ctx context.Context, client *http.Client, credentialsJSON []byte) (
-	oauth2Client *http.Client, err error) {
+	oauth2Client *http.Client, err error,
+) {
 	scopes := []string{
 		"https://www.googleapis.com/auth/cloud-platform",
 		"https://www.googleapis.com/auth/cloud-platform.read-only",

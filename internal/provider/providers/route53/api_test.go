@@ -58,7 +58,8 @@ func Test_changeResourceRecordSetsResponse_XML_Decode(t *testing.T) {
 		XMLNS: "https://route53.amazonaws.com/doc/2013-04-01/",
 		XMLName: xml.Name{
 			Space: "https://route53.amazonaws.com/doc/2013-04-01/",
-			Local: "ChangeResourceRecordSetsResponse"},
+			Local: "ChangeResourceRecordSetsResponse",
+		},
 		ChangeInfo: xmlChangeInfo{
 			ID:          "/change/FFFFFFFFFFFFFFFFFFFFF",
 			Status:      "PENDING",
@@ -83,7 +84,8 @@ func Test_errorResponse_XML_Decode(t *testing.T) {
 		XMLNS: "https://route53.amazonaws.com/doc/2013-04-01/",
 		XMLName: xml.Name{
 			Space: "https://route53.amazonaws.com/doc/2013-04-01/",
-			Local: "ErrorResponse"},
+			Local: "ErrorResponse",
+		},
 		Error: xmlError{
 			Type: "Sender",
 			Code: "SignatureDoesNotMatch",
@@ -146,7 +148,6 @@ func Test_newChangeRRSetRequest(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

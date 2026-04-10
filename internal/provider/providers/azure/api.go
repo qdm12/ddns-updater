@@ -78,7 +78,7 @@ func (p *Provider) getAccessToken(ctx context.Context, client *http.Client) (err
 
 	var data struct {
 		AccessToken string `json:"access_token"`
-		ExpiresIn   uint   `json:"expires_in"`
+		ExpiresIn   uint32 `json:"expires_in"`
 		TokenType   string `json:"token_type"`
 	}
 	decoder := json.NewDecoder(response.Body)

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"sync"
@@ -16,12 +15,12 @@ import (
 type Database struct {
 	data     dataModel
 	filepath string
-	sync.RWMutex
+	mutex    sync.RWMutex
 }
 
 func (db *Database) Close() error {
-	db.Lock() // ensure a write operation finishes
-	defer db.Unlock()
+	db.mutex.Lock() // ensure a write operation finishes
+	defer db.mutex.Unlock()
 	return nil
 }
 
@@ -34,8 +33,8 @@ func NewDatabase(dataDir string) (*Database, error) {
 		if !errors.Is(err, os.ErrNotExist) {
 			return nil, fmt.Errorf("reading file: %w", err)
 		}
-		const perm fs.FileMode = 0700
-		err = os.MkdirAll(filepath.Dir(filePath), perm)
+		const dirPerm = os.FileMode(0o777)
+		err = os.MkdirAll(filepath.Dir(filePath), dirPerm)
 		if err != nil {
 			return nil, fmt.Errorf("creating data directory: %w", err)
 		}
@@ -134,8 +133,8 @@ func checkHistoryEvents(events []models.HistoryEvent) (err error) {
 }
 
 func (db *Database) write() error {
-	const createPerms fs.FileMode = 0600
-	file, err := os.OpenFile(db.filepath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, createPerms)
+	const filePerm = os.FileMode(0o666)
+	file, err := os.OpenFile(db.filepath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, filePerm)
 	if err != nil {
 		return fmt.Errorf("opening file: %w", err)
 	}

@@ -16,7 +16,7 @@ type settings struct {
 func newDefaultSettings() settings {
 	const defaultTimeout = 5 * time.Second
 	return settings{
-		providersIP:  []Provider{Google},
+		providersIP:  []Provider{Ipify},
 		providersIP4: []Provider{Ipify},
 		providersIP6: []Provider{Ipify},
 		timeout:      defaultTimeout,

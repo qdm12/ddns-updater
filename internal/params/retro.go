@@ -18,9 +18,7 @@ func getRetroIPv6Suffix() (suffix netip.Prefix, err error) {
 	return makeIPv6Suffix(prefixBitsString)
 }
 
-var (
-	ErrIPv6PrefixFormat = errors.New("IPv6 prefix format is incorrect")
-)
+var ErrIPv6PrefixFormat = errors.New("IPv6 prefix format is incorrect")
 
 func makeIPv6Suffix(prefixBitsString string) (suffix netip.Prefix, err error) {
 	prefixBitsString = strings.TrimPrefix(prefixBitsString, "/")

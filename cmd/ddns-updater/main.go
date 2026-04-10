@@ -26,6 +26,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/resolver"
 	"github.com/qdm12/ddns-updater/internal/server"
 	"github.com/qdm12/ddns-updater/internal/shoutrrr"
+	"github.com/qdm12/ddns-updater/internal/system"
 	"github.com/qdm12/ddns-updater/internal/update"
 	"github.com/qdm12/ddns-updater/pkg/publicip"
 	"github.com/qdm12/goservices"
@@ -45,7 +46,7 @@ func main() {
 	buildInfo := models.BuildInformation{
 		Version: version,
 		Commit:  commit,
-		Date:    date,
+		Created: date,
 	}
 	logger := log.New()
 
@@ -98,7 +99,8 @@ func main() {
 }
 
 func _main(ctx context.Context, reader *reader.Reader, args []string, logger log.LoggerInterface,
-	buildInfo models.BuildInformation, timeNow func() time.Time) (err error) {
+	buildInfo models.BuildInformation, timeNow func() time.Time,
+) (err error) {
 	if len(args) > 1 {
 		switch args[1] {
 		case "version", "-version", "--version":
@@ -127,6 +129,10 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	config, err := readConfig(reader, logger)
 	if err != nil {
 		return err
+	}
+
+	if *config.Paths.Umask > 0 {
+		system.SetUmask(*config.Paths.Umask)
 	}
 
 	shoutrrrSettings := shoutrrr.Settings{
@@ -262,7 +268,7 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 }
 
 func printSplash(buildInfo models.BuildInformation) {
-	announcementExp, err := time.Parse(time.RFC3339, "2023-07-15T00:00:00Z")
+	announcementExp, err := time.Parse(time.RFC3339, "2024-10-15T00:00:00Z")
 	if err != nil {
 		panic(err)
 	}
@@ -272,8 +278,8 @@ func printSplash(buildInfo models.BuildInformation) {
 		Emails:       []string{"quentin.mcgaw@gmail.com"},
 		Version:      buildInfo.Version,
 		Commit:       buildInfo.Commit,
-		BuildDate:    buildInfo.Date,
-		Announcement: "Public IP dns provider GOOGLE, see https://github.com/qdm12/ddns-updater/issues/492",
+		Created:      buildInfo.Created,
+		Announcement: "Public IP http provider GOOGLE is no longer working",
 		AnnounceExp:  announcementExp,
 		// Sponsor information
 		PaypalUser:    "qmcgaw",
@@ -285,7 +291,8 @@ func printSplash(buildInfo models.BuildInformation) {
 }
 
 func readConfig(reader *reader.Reader, logger log.LoggerInterface) (
-	config config.Config, err error) {
+	config config.Config, err error,
+) {
 	err = config.Read(reader, logger)
 	if err != nil {
 		return config, fmt.Errorf("reading settings: %w", err)
@@ -315,7 +322,8 @@ func logProvidersCount(providersCount int, logger log.LeveledLogger) {
 
 func readRecords(providers []provider.Provider, persistentDB *persistence.Database,
 	logger log.LoggerInterface, shoutrrrClient *shoutrrr.Client) (
-	records []recordslib.Record, err error) {
+	records []recordslib.Record, err error,
+) {
 	records = make([]recordslib.Record, len(providers))
 	for i, provider := range providers {
 		logger.Info("Reading history from database: domain " +
@@ -333,7 +341,8 @@ func readRecords(providers []provider.Provider, persistentDB *persistence.Databa
 }
 
 func exitHealthchecksio(hioClient *healthchecksio.Client,
-	logger log.LoggerInterface, state healthchecksio.State) {
+	logger log.LoggerInterface, state healthchecksio.State,
+) {
 	const timeout = 3 * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -346,8 +355,9 @@ func exitHealthchecksio(hioClient *healthchecksio.Client,
 //nolint:ireturn
 func createHealthServer(db health.AllSelecter, resolver health.LookupIPer,
 	logger log.LoggerInterface, serverAddress string) (
-	healthServer goservices.Service, err error) {
-	if !health.IsDocker() {
+	healthServer goservices.Service, err error,
+) {
+	if serverAddress == "" {
 		return noop.New("healthcheck server"), nil
 	}
 	isHealthy := health.MakeIsHealthy(db, resolver)
@@ -359,7 +369,8 @@ func createHealthServer(db health.AllSelecter, resolver health.LookupIPer,
 func createServer(ctx context.Context, config config.Server,
 	logger log.LoggerInterface, db server.Database,
 	updaterService server.UpdateForcer) (
-	service goservices.Service, err error) {
+	service goservices.Service, err error,
+) {
 	if !*config.Enabled {
 		return noop.New("server"), nil
 	}

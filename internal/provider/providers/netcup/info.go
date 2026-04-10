@@ -6,7 +6,8 @@ import (
 )
 
 func (p *Provider) infoDNSRecords(ctx context.Context, client *http.Client,
-	session string) (recordSet dnsRecordSet, err error) {
+	session string,
+) (recordSet dnsRecordSet, err error) {
 	type jsonParams struct {
 		APIKey         string `json:"apikey"`
 		APISessionID   string `json:"apisessionid"`

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
+	"slices"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
@@ -34,18 +35,16 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		}
 	}
 
-	for _, rrdata := range recordResourceSet.Rrdatas {
-		if rrdata == ip.String() {
-			// already up to date
-			return ip, nil
-		}
-	}
-
 	if !rrSetFound {
 		err = p.createRRSet(ctx, client, fqdn, recordType, ip)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 		}
+		return ip, nil
+	}
+
+	if slices.Contains(recordResourceSet.Rrdatas, ip.String()) {
+		// already up to date
 		return ip, nil
 	}
 

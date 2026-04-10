@@ -10,7 +10,6 @@
     {
       "provider": "dondominio",
       "domain": "domain.com",
-      "name": "something",
       "username": "username",
       "key": "key",
       "ip_version": "ipv4",
@@ -23,7 +22,6 @@
 ### Compulsory parameters
 
 - `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
-- `"name"` is the name of the service/hosting
 - `"username"`
 - `"password"`
 

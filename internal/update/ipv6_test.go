@@ -47,7 +47,6 @@ func Test_ipv6WithSuffix(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			updateIP := ipv6WithSuffix(testCase.publicIP, testCase.ipv6Suffix)

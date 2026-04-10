@@ -10,7 +10,8 @@ import (
 )
 
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
-	recordID uint64, ipStr string, timestamp int64) (err error) {
+	recordID uint64, ipStr string, timestamp int64,
+) (err error) {
 	u := url.URL{
 		Scheme: p.apiURL.Scheme,
 		Host:   p.apiURL.Host,

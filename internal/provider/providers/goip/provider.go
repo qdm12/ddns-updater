@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -19,28 +19,40 @@ import (
 )
 
 type Provider struct {
-	domain        string
-	owner         string
-	ipVersion     ipversion.IPVersion
-	ipv6Suffix    netip.Prefix
-	username      string
-	password      string
-	useProviderIP bool
+	domain     string
+	owner      string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	username   string
+	password   string
 }
 
 const defaultDomain = "goip.de"
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
-	if domain == "" {
+	p *Provider, err error,
+) {
+	// Note domain is of the form:
+	// - for retro-compatibility: "", "goip.de" or "goip.it"
+	// - domain.goip.de or domain.goip.it since goip.de and goip.it are eTLDs.
+	if domain == "" { // retro-compatibility
 		domain = defaultDomain
+	}
+	if domain == defaultDomain || domain == "goip.it" { // retro-compatibility
+		ownerParts := strings.Split(owner, ".")
+		lastOwnerPart := ownerParts[len(ownerParts)-1]
+		domain = lastOwnerPart + "." + domain // form domain.goip.de or domain.goip.it
+		if len(ownerParts) > 1 {
+			owner = strings.Join(ownerParts[:len(ownerParts)-1], ".")
+		} else {
+			owner = "@" // root domain
+		}
 	}
 
 	extraSettings := struct {
-		Username      string `json:"username"`
-		Password      string `json:"password"`
-		UseProviderIP bool   `json:"provider_ip"`
+		Username string `json:"username"`
+		Password string `json:"password"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
@@ -53,27 +65,32 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	return &Provider{
-		domain:        domain,
-		owner:         owner,
-		ipVersion:     ipVersion,
-		ipv6Suffix:    ipv6Suffix,
-		username:      extraSettings.Username,
-		password:      extraSettings.Password,
-		useProviderIP: extraSettings.UseProviderIP,
+		domain:     domain,
+		owner:      owner,
+		ipVersion:  ipVersion,
+		ipv6Suffix: ipv6Suffix,
+		username:   extraSettings.Username,
+		password:   extraSettings.Password,
 	}, nil
 }
 
+var regexDomain = regexp.MustCompile(`^.+\.(goip\.de|goip\.it)$`)
+
 func validateSettings(domain, owner, username, password string) (err error) {
+	const maxDomainLabels = 3 // domain.goip.de
 	switch {
 	case username == "":
 		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
 	case password == "":
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
-	case domain != defaultDomain && domain != "goip.it":
-		return fmt.Errorf(`%w: %q must be "goip.de" or "goip.it"`,
+	case !regexDomain.MatchString(domain):
+		return fmt.Errorf(`%w: %q must match have the effective TLD "goip.de" or "goip.it"`,
 			errors.ErrDomainNotValid, domain)
-	case owner == "@" || owner == "*":
-		return fmt.Errorf("%w: %q", errors.ErrOwnerRootOrWildcard, owner)
+	case strings.Count(owner, ".") > maxDomainLabels-1:
+		return fmt.Errorf("%w: %q has more than %d labels",
+			errors.ErrDomainNotValid, domain, maxDomainLabels)
+	case owner == "*":
+		return fmt.Errorf("%w: %q", errors.ErrOwnerWildcard, owner)
 	}
 	return nil
 }
@@ -115,6 +132,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// Update updates the IP address for the provider.
 // See https://www.goip.de/update-url.html
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{
@@ -129,11 +147,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	values.Set("password", p.password)
 	values.Set("shortResponse", "true")
 	if ip.Is4() {
-		if !p.useProviderIP {
-			values.Set("ip", ip.String())
-		}
+		values.Set("ip", ip.String())
 	} else {
-		// IPv6 cannot be automatically detected
 		values.Set("ip6", ip.String())
 	}
 	u.RawQuery = values.Encode()
@@ -156,15 +171,15 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 			utils.BodyToSingleLine(response.Body))
 	}
 
-	b, err := io.ReadAll(response.Body)
+	s, err := utils.ReadAndCleanBody(response.Body)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
+		return netip.Addr{}, fmt.Errorf("reading response: %w", err)
 	}
-	s := string(b)
+
 	switch {
 	case strings.HasPrefix(s, p.BuildDomainName()+" ("+ip.String()+")"):
 		return ip, nil
-	case strings.HasPrefix(strings.ToLower(s), "zugriff verweigert"):
+	case strings.HasPrefix(s, "zugriff verweigert"):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	default:
 		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, utils.ToSingleLine(s))

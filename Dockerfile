@@ -1,13 +1,13 @@
 ARG BUILDPLATFORM=linux/amd64
-ARG ALPINE_VERSION=3.19
-ARG GO_VERSION=1.22
-ARG XCPUTRANSLATE_VERSION=v0.6.0
-ARG GOLANGCI_LINT_VERSION=v1.56.2
-ARG MOCKGEN_VERSION=v1.6.0
+ARG ALPINE_VERSION=3.23
+ARG GO_VERSION=1.26
+ARG XCPUTRANSLATE_VERSION=v0.9.0
+ARG GOLANGCI_LINT_VERSION=v2.11.4
+ARG MOCKGEN_VERSION=v0.6.0
 
-FROM --platform=${BUILDPLATFORM} qmcgaw/xcputranslate:${XCPUTRANSLATE_VERSION} AS xcputranslate
-FROM --platform=${BUILDPLATFORM} qmcgaw/binpot:golangci-lint-${GOLANGCI_LINT_VERSION} AS golangci-lint
-FROM --platform=${BUILDPLATFORM} qmcgaw/binpot:mockgen-${MOCKGEN_VERSION} AS mockgen
+FROM --platform=${BUILDPLATFORM} ghcr.io/qdm12/xcputranslate:${XCPUTRANSLATE_VERSION} AS xcputranslate
+FROM --platform=${BUILDPLATFORM} ghcr.io/qdm12/binpot:golangci-lint-${GOLANGCI_LINT_VERSION} AS golangci-lint
+FROM --platform=${BUILDPLATFORM} ghcr.io/qdm12/binpot:mockgen-${MOCKGEN_VERSION} AS mockgen
 
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
 WORKDIR /tmp/gobuild
@@ -50,8 +50,7 @@ RUN git init && \
     rm -rf .git/
 
 FROM --platform=$BUILDPLATFORM base AS build
-RUN mkdir -p /tmp/data && \
-    touch /tmp/isdocker
+RUN mkdir -p /tmp/data
 ARG VERSION=unknown
 ARG CREATED="an unknown date"
 ARG COMMIT=unknown
@@ -62,7 +61,7 @@ RUN GOARCH="$(xcputranslate translate -targetplatform ${TARGETPLATFORM} -field a
     -X 'main.version=$VERSION' \
     -X 'main.date=$CREATED' \
     -X 'main.commit=$COMMIT' \
-    " -o app cmd/updater/main.go
+    " -o app cmd/ddns-updater/main.go
 
 FROM scratch
 EXPOSE 8000
@@ -73,7 +72,6 @@ USER ${UID}:${GID}
 WORKDIR /updater
 ENTRYPOINT ["/updater/ddns-updater"]
 COPY --from=build --chown=${UID}:${GID} /tmp/data /updater/data
-COPY --from=build --chown=${UID}:${GID} /tmp/isdocker /updater/isdocker
 ENV \
     # Core
     CONFIG= \
@@ -103,6 +101,8 @@ ENV \
     SHOUTRRR_ADDRESSES= \
     SHOUTRRR_DEFAULT_TITLE="DDNS Updater" \
     TZ= \
+    # UMASK left empty so it dynamically defaults to the OS current umask
+    UMASK= \
     HEALTH_SERVER_ADDRESS=127.0.0.1:9999 \
     HEALTH_HEALTHCHECKSIO_BASE_URL=https://hc-ping.com \
     HEALTH_HEALTHCHECKSIO_UUID=

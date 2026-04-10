@@ -12,6 +12,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider"
+	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"golang.org/x/net/publicsuffix"
@@ -26,17 +27,17 @@ type commonSettings struct {
 	// Domain field.
 	Owner      string       `json:"owner,omitempty"`
 	IPVersion  string       `json:"ip_version"`
-	IPv6Suffix netip.Prefix `json:"ipv6_suffix,omitempty"`
+	IPv6Suffix netip.Prefix `json:"ipv6_suffix"`
 	// Retro values for warnings
-	IPMethod *string `json:"ip_method,omitempty"`
-	Delay    *uint64 `json:"delay,omitempty"`
+	ProviderIP *bool `json:"provider_ip,omitempty"`
 }
 
 // JSONProviders obtain the update settings from the JSON content,
 // first trying from the environment variable CONFIG and then from
 // the file config.json.
 func (r *Reader) JSONProviders(filePath string) (
-	providers []provider.Provider, warnings []string, err error) {
+	providers []provider.Provider, warnings []string, err error,
+) {
 	providers, warnings, err = r.getProvidersFromEnv(filePath)
 	if providers != nil || warnings != nil || err != nil {
 		return providers, warnings, err
@@ -48,7 +49,8 @@ var errWriteConfigToFile = errors.New("cannot write configuration to file")
 
 // getProvidersFromFile obtain the update settings from config.json.
 func (r *Reader) getProvidersFromFile(filePath string) (
-	providers []provider.Provider, warnings []string, err error) {
+	providers []provider.Provider, warnings []string, err error,
+) {
 	r.logger.Info("reading JSON config from file " + filePath)
 	bytes, err := r.readFile(filePath)
 	if err != nil {
@@ -58,9 +60,8 @@ func (r *Reader) getProvidersFromFile(filePath string) (
 
 		r.logger.Info("file not found, creating an empty settings file")
 
-		const mode = fs.FileMode(0600)
-
-		err = r.writeFile(filePath, []byte(`{}`), mode)
+		const filePerm = fs.FileMode(0o666)
+		err = r.writeFile(filePath, []byte(`{}`), filePerm)
 		if err != nil {
 			err = fmt.Errorf("%w: %w", errWriteConfigToFile, err)
 		}
@@ -74,7 +75,8 @@ func (r *Reader) getProvidersFromFile(filePath string) (
 // getProvidersFromEnv obtain the update settings from the environment variable CONFIG.
 // If the settings are valid, they are written to the filePath.
 func (r *Reader) getProvidersFromEnv(filePath string) (
-	providers []provider.Provider, warnings []string, err error) {
+	providers []provider.Provider, warnings []string, err error,
+) {
 	s := os.Getenv("CONFIG")
 	if s == "" {
 		return nil, nil, nil
@@ -94,8 +96,8 @@ func (r *Reader) getProvidersFromEnv(filePath string) (
 	if err != nil {
 		return providers, warnings, fmt.Errorf("%w: %w", errWriteConfigToFile, err)
 	}
-	const mode = fs.FileMode(0600)
-	err = r.writeFile(filePath, buffer.Bytes(), mode)
+	const filePerm = fs.FileMode(0o666)
+	err = r.writeFile(filePath, buffer.Bytes(), filePerm)
 	if err != nil {
 		return providers, warnings, fmt.Errorf("%w: %w", errWriteConfigToFile, err)
 	}
@@ -109,7 +111,8 @@ var (
 )
 
 func extractAllSettings(jsonBytes []byte) (
-	allProviders []provider.Provider, warnings []string, err error) {
+	allProviders []provider.Provider, warnings []string, err error,
+) {
 	config := struct {
 		CommonSettings []commonSettings `json:"settings"`
 	}{}
@@ -145,11 +148,13 @@ func extractAllSettings(jsonBytes []byte) (
 
 var (
 	ErrProviderNoLongerSupported = errors.New("provider no longer supported")
+	ErrProviderMultipleDomains   = errors.New("provider does not support multiple domains")
 )
 
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	retroGlobalIPv6Suffix netip.Prefix) (
-	providers []provider.Provider, warnings []string, err error) {
+	providers []provider.Provider, warnings []string, err error,
+) {
 	if common.Provider == "google" {
 		return nil, nil, fmt.Errorf("%w: %s", ErrProviderNoLongerSupported, common.Provider)
 	}
@@ -177,6 +182,11 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 		}
 	}
 
+	if common.Provider == string(constants.Myaddr) && len(owners) > 1 {
+		return nil, nil, fmt.Errorf("%w: %s for parent domain %q",
+			ErrProviderMultipleDomains, common.Provider, domain)
+	}
+
 	if common.IPVersion == "" {
 		common.IPVersion = ipversion.IP4or6.String()
 	}
@@ -196,6 +206,13 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 				ipv6Suffix, ipVersion))
 	}
 
+	if common.ProviderIP != nil {
+		warning := fmt.Sprintf("for domain %s and ip version %s: "+
+			`the field "provider_ip" is deprecated and no longer used`,
+			domain, ipVersion)
+		warnings = append(warnings, warning)
+	}
+
 	providerName := models.Provider(common.Provider)
 	providers = make([]provider.Provider, len(owners))
 	for i, owner := range owners {
@@ -209,12 +226,11 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	return providers, warnings, nil
 }
 
-var (
-	ErrMultipleDomainsSpecified = errors.New("multiple domains specified")
-)
+var ErrMultipleDomainsSpecified = errors.New("multiple domains specified")
 
 func extractFromDomainField(domainField string) (domainRegistered string,
-	owners []string, err error) {
+	owners []string, err error,
+) {
 	domains := strings.Split(domainField, ",")
 	owners = make([]string, len(domains))
 	for i, domain := range domains {

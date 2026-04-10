@@ -31,7 +31,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	provider *Provider, err error) {
+	provider *Provider, err error,
+) {
 	var providerSpecificSettings struct {
 		AccessKey string  `json:"access_key"`
 		SecretKey string  `json:"secret_key"`
@@ -49,7 +50,7 @@ func New(data json.RawMessage, domain, owner string,
 		ttl = *providerSpecificSettings.TTL
 	}
 
-	err = validateSettings(domain, owner, providerSpecificSettings.AccessKey,
+	err = validateSettings(domain, providerSpecificSettings.AccessKey,
 		providerSpecificSettings.SecretKey, providerSpecificSettings.ZoneID)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
@@ -79,15 +80,13 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(domain, owner, accessKey, secretKey, zoneID string) (err error) {
+func validateSettings(domain, accessKey, secretKey, zoneID string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
 	}
 
 	switch {
-	case owner == "":
-		return fmt.Errorf("%w", errors.ErrOwnerNotSet)
 	case accessKey == "":
 		return fmt.Errorf("%w", errors.ErrAccessKeyNotSet)
 	case secretKey == "":
@@ -135,6 +134,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// Update updates the IP address for the provider.
 // See https://docs.aws.amazon.com/Route53/latest/APIReference/API_ChangeResourceRecordSets.html
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{
@@ -143,7 +143,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   "/2013-04-01/hostedzone/" + p.zoneID + "/rrset",
 	}
 
-	changeRRSetRequest := newChangeRRSetRequest(p.BuildDomainName(), p.ttl, ip)
+	changeRRSetRequest := newChangeRRSetRequest(utils.BuildURLQueryHostname(p.owner, p.domain), p.ttl, ip)
 
 	// Note the AWS API does not accept JSON for this endpoint
 	buffer := bytes.NewBuffer(nil)

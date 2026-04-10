@@ -46,10 +46,19 @@ func Test_extractFromDomainField(t *testing.T) {
 			errWrapped:  ErrMultipleDomainsSpecified,
 			errMessage:  "multiple domains specified: \"example.com\" and \"something.com\"",
 		},
+		"goip.de": {
+			domainField:      "my.domain.goip.de",
+			domainRegistered: "domain.goip.de",
+			owners:           []string{"my"},
+		},
+		"duckdns.org": {
+			domainField:      "my.domain.duckdns.org",
+			domainRegistered: "domain.duckdns.org",
+			owners:           []string{"my"},
+		},
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

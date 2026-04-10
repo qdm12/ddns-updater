@@ -26,7 +26,8 @@ type signer struct {
 }
 
 func (s *signer) sign(method, urlPath string, payload []byte, date time.Time) (
-	headerValue string) {
+	headerValue string,
+) {
 	credentialScope := fmt.Sprintf("%s/%s/%s/%s", date.Format(dateFormat),
 		s.region, s.service, s.signatureVersion)
 	credential := fmt.Sprintf("%s/%s", s.accessKey, credentialScope)
@@ -41,7 +42,8 @@ func (s *signer) sign(method, urlPath string, payload []byte, date time.Time) (
 }
 
 func buildCanonicalRequest(method, path, headers string, payload []byte) (
-	canonicalRequest string) {
+	canonicalRequest string,
+) {
 	canonicalHeaders := "content-type:application/xml\nhost:" + route53Domain + "\n"
 	const canonicalQuery = "" // no query arg used
 	payloadHashDigest := hex.EncodeToString(sha256Sum(payload))
@@ -57,7 +59,8 @@ func buildCanonicalRequest(method, path, headers string, payload []byte) (
 }
 
 func buildStringToSign(date time.Time,
-	canonicalRequest, credentialScope string) string {
+	canonicalRequest, credentialScope string,
+) string {
 	return "AWS4-HMAC-SHA256\n" +
 		date.Format(dateTimeFormat) + "\n" +
 		credentialScope + "\n" +

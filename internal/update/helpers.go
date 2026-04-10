@@ -43,6 +43,9 @@ func (s *Service) logInfoLookupUpdate(hostname, ipKind string, recordIPs []netip
 }
 
 func ipsToString(ips []netip.Addr) string {
+	if len(ips) == 0 {
+		return "<none>"
+	}
 	ipStrings := make([]string, len(ips))
 	for i, ip := range ips {
 		ipStrings[i] = ip.String()

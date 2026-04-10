@@ -160,6 +160,6 @@ func (provider Provider) SupportsVersion(version ipversion.IPVersion) bool {
 // It is the responsibility of the caller to make sure it is a valid URL
 // and that it supports the desired IP version(s) as no further check is
 // done on it.
-func CustomProvider(httpsURL *url.URL) Provider { //nolint:interfacer
+func CustomProvider(httpsURL *url.URL) Provider {
 	return Provider("url:" + httpsURL.String())
 }

@@ -11,11 +11,10 @@ If something is unclear in the documentation below, please refer to the [scalewa
     "settings": [
         {
             "provider": "scaleway",
-            "domain": "munchkin-academia.eu",
+            "domain": "domain.com",
             "secret_key": "<SECRET_KEY>",
             "ip_version": "ipv4",
-            "ipv6_suffix": "",
-            "ttl": 450
+            "ipv6_suffix": ""
         }
     ]
 }
@@ -23,14 +22,14 @@ If something is unclear in the documentation below, please refer to the [scalewa
 
 ### Compulsory parameters
 
-- `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard. This field is used to extract the `dns-zone`, `id_fields.name`, and `records.name`, and used to make the scaleway API call. For example. if your domain is `example.com`, and you set as `"domain`" `sub.example.com`, then the API call will be made with `dns-zone = example.com`, `id_fields.name = sub`, and `records.name = sub`.
-- `"secret_key"`
+- `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
+- `"secret_key"` is your secret key
 
 ### Optional parameters
 
-- `"ip_version"` can be `"ipv4"` or `"ipv6"`. It defaults to `"ipv4"`.
-- `"ipv6_suffix"` is the suffix to append to the IPv6 address. It defaults to `""`.
-- `"ttl"` is the TTL of the DNS record to update. It defaults to `3600`.
+- `"ip_version"` can be `ipv4` (A records), or `ipv6` (AAAA records) or `ipv4 or ipv6` (update one of the two, depending on the public ip found). It defaults to `ipv4 or ipv6`.
+- `"ipv6_suffix"` is the IPv6 interface identifier suffix to use. It can be for example `0:0:0:0:72ad:8fbb:a54e:bedd/64`. If left empty, it defaults to no suffix and the raw temporary IPv6 address of the machine is used in the record updating. You might want to set this to use your permanent IPv6 address instead of your temporary IPv6 address.
+- `"ttl"` is the TTL of the DNS record to update, if you want to specify it.
 
 ## Domain setup
 

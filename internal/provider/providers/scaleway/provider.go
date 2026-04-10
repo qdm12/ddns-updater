@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -30,21 +31,16 @@ func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	provider *Provider, err error,
 ) {
-	var providerSpecificSettings struct {
+	extraSettings := struct {
 		SecretKey string `json:"secret_key"`
 		TTL       uint16 `json:"ttl"`
-	}
-	err = json.Unmarshal(data, &providerSpecificSettings)
+	}{}
+	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
-		return nil, fmt.Errorf("json decoding provider specific settings: %w", err)
+		return nil, fmt.Errorf("decoding provider specific settings: %w", err)
 	}
 
-	if providerSpecificSettings.TTL == 0 {
-		providerSpecificSettings.TTL = 3600
-	}
-
-	err = validateSettings(domain,
-		providerSpecificSettings.SecretKey)
+	err = validateSettings(domain, extraSettings.SecretKey)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -54,8 +50,8 @@ func New(data json.RawMessage, domain, owner string,
 		owner:      owner,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
-		secretKey:  providerSpecificSettings.SecretKey,
-		ttl:        providerSpecificSettings.TTL,
+		secretKey:  extraSettings.SecretKey,
+		ttl:        extraSettings.TTL,
 	}, nil
 }
 
@@ -109,7 +105,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
-// Update updates the DNS record for the domain using Scaleway's API.
+// Update updates the DNS record for the domain using the Scaleway API.
 // See https://www.scaleway.com/en/developers/api/domains-and-dns/#path-records-update-records-within-a-dns-zone
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{
@@ -118,14 +114,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Path:   fmt.Sprintf("/domain/v2beta1/dns-zones/%s/records", p.domain),
 	}
 
-	fieldType := "A"
-	if ip.Is6() {
-		fieldType = "AAAA"
-	}
 	type recordJSON struct {
 		Data string `json:"data"`
 		Name string `json:"name"`
-		TTL  uint16 `json:"ttl"`
+		TTL  uint16 `json:"ttl,omitempty"`
 	}
 	type changeJSON struct {
 		Set struct {
@@ -138,7 +130,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	var change changeJSON
 	change.Set.IDFields.Name = p.owner
-	change.Set.IDFields.Type = fieldType
+	recordType := constants.A
+	if ip.Is6() {
+		recordType = constants.AAAA
+	}
+	change.Set.IDFields.Type = recordType
 	change.Set.Records = []recordJSON{{
 		Data: ip.String(),
 		Name: p.owner,
@@ -172,24 +168,44 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	defer response.Body.Close()
 
-	s, err := utils.ReadAndCleanBody(response.Body)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("reading response: %w", err)
-	}
-
 	if response.StatusCode != http.StatusOK {
+		b, err := io.ReadAll(response.Body)
+		if err != nil {
+			return netip.Addr{}, fmt.Errorf("reading error response body: %w", err)
+		}
 		var errorResponse struct {
 			Message string `json:"message"`
 			Type    string `json:"type"`
 		}
-		if jsonErr := json.Unmarshal([]byte(s), &errorResponse); jsonErr == nil {
-			if errorResponse.Type == "denied_authentication" {
-				return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrAuth, errorResponse.Message)
-			}
+		err = json.Unmarshal(b, &errorResponse)
+		if err != nil {
+			return netip.Addr{}, fmt.Errorf("json decoding error response body: %w: %s",
+				err, utils.ToSingleLine(string(b)))
+		} else if errorResponse.Type == "denied_authentication" {
+			return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrAuth, errorResponse.Message)
 		}
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("%w: %d: %s: %s",
+			errors.ErrHTTPStatusNotValid, response.StatusCode,
+			errorResponse.Type, errorResponse.Message)
 	}
 
-	return ip, nil
+	var data struct {
+		Records []recordJSON `json:"records"`
+	}
+	err = json.NewDecoder(response.Body).Decode(&data)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
+	}
+	if len(data.Records) == 0 {
+		return netip.Addr{}, fmt.Errorf("%w: no record in response", errors.ErrUnknownResponse)
+	}
+	newIP, err = netip.ParseAddr(data.Records[0].Data)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, data.Records[0].Data)
+	}
+	if newIP != ip {
+		return newIP, fmt.Errorf("%w: IP in response %s does not match IP sent in request %s",
+			errors.ErrIPReceivedMismatch, newIP, ip)
+	}
+	return newIP, nil
 }

@@ -132,8 +132,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode == http.StatusOK {
-		return ip, nil
+	switch response.StatusCode {
+	case http.StatusOK:
+			return ip, nil
+	case http.StatusUnauthorized:
+			return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	}
 	return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 		errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))

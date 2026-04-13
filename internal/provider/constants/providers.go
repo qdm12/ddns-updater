@@ -50,6 +50,7 @@ const (
 	OVH          models.Provider = "ovh"
 	Porkbun      models.Provider = "porkbun"
 	Route53      models.Provider = "route53"
+	Scaleway     models.Provider = "scaleway"
 	SelfhostDe   models.Provider = "selfhost.de"
 	Servercow    models.Provider = "servercow"
 	Spdyn        models.Provider = "spdyn"
@@ -105,6 +106,7 @@ func ProviderChoices() []models.Provider {
 		OVH,
 		Porkbun,
 		Route53,
+		Scaleway,
 		SelfhostDe,
 		Spdyn,
 		Strato,

@@ -99,6 +99,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// Update updates the domain records using the DynDNS2 endpoint of ipv64.net
 // see https://ipv64.net/dyndns_updater_api
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{

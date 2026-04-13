@@ -74,7 +74,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - Hetzner
   - Infomaniak
   - INWX
-  - Ionos
+  - ipv64
   - Linode
   - Loopia
   - LuaDNS

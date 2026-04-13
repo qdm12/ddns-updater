@@ -72,7 +72,8 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - Hetzner
   - Infomaniak
   - INWX
-  - Ionos
+    - Ionos
+    - ipv64
   - Linode
   - Loopia
   - LuaDNS
@@ -241,6 +242,7 @@ Check the documentation for your DNS provider:
 - [Infomaniak](docs/infomaniak.md)
 - [INWX](docs/inwx.md)
 - [Ionos](docs/ionos.md)
+- [IPv64](docs/ipv64.md)
 - [Linode](docs/linode.md)
 - [Loopia](docs/loopia.md)
 - [LuaDNS](docs/luadns.md)

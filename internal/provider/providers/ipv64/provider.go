@@ -134,9 +134,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	switch response.StatusCode {
 	case http.StatusOK:
-			return ip, nil
+		return ip, nil
 	case http.StatusUnauthorized:
-			return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
+		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
 	}
 	return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 		errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))

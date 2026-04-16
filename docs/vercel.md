@@ -33,9 +33,9 @@
 ## Domain setup
 
 1. Ensure your domain is added to Vercel. You can do this via the [Vercel Dashboard](https://vercel.com/dashboard) under your project's Domain settings, or via the API.
-2. Your domain must be using Vercel's nameservers or have DNS management delegated to Vercel for this provider to work.
-3. Create an API token with appropriate permissions at [Vercel Account Settings > Tokens](https://vercel.com/account/tokens).
-4. If the domain belongs to a team, make sure to include the `team_id` parameter in your configuration.
+1. Your domain must be using Vercel's nameservers or have DNS management delegated to Vercel for this provider to work.
+1. Create an API token with appropriate permissions at [Vercel Account Settings > Tokens](https://vercel.com/account/tokens).
+1. If the domain belongs to a team, make sure to include the `team_id` parameter in your configuration.
 
 ## Example with team
 

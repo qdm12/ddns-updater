@@ -12,7 +12,8 @@
       "domain": "domain.com",
       "token": "yourtoken",
       "ip_version": "ipv4",
-      "ipv6_suffix": ""
+      "ipv6_suffix": "",
+      "team_id": ""
     }
   ]
 }
@@ -36,20 +37,3 @@
 1. Your domain must be using Vercel's nameservers or have DNS management delegated to Vercel for this provider to work.
 1. Create an API token with appropriate permissions at [Vercel Account Settings > Tokens](https://vercel.com/account/tokens).
 1. If the domain belongs to a team, make sure to include the `team_id` parameter in your configuration.
-
-## Example with team
-
-```json
-{
-  "settings": [
-    {
-      "provider": "vercel",
-      "domain": "domain.com",
-      "token": "yourtoken",
-      "team_id": "team_xxxxxxxxxx",
-      "ttl": 300,
-      "ip_version": "ipv4"
-    }
-  ]
-}
-```

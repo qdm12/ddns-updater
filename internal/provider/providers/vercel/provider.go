@@ -124,20 +124,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return ip, nil
 	case err != nil:
 		return netip.Addr{}, fmt.Errorf("getting record: %w", err)
-	}
-
-	if value == ip.String() {
+	case value == ip:
 		return ip, nil
 	}
 
-	err = p.deleteRecord(ctx, client, id)
+	err = p.updateRecord(ctx, client, id, ip)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("deleting record: %w", err)
-	}
-
-	err = p.createRecord(ctx, client, ip)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("creating record: %w", err)
+		return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 	}
 
 	return ip, nil
@@ -164,41 +157,50 @@ func (p *Provider) makeURL(path string) string {
 	return u.String()
 }
 
+// See https://vercel.com/docs/rest-api/dns/list-existing-dns-records
 func (p *Provider) getRecord(ctx context.Context, client *http.Client, recordType string) (
-	id, value string, err error,
+	id string, ip netip.Addr, err error,
 ) {
-	u := p.makeURL("/v4/domains/" + p.domain + "/records")
+	u := p.makeURL("/v5/domains/" + p.domain + "/records")
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
-		return "", "", fmt.Errorf("creating http request: %w", err)
+		return "", netip.Addr{}, fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return "", "", err
+		return "", netip.Addr{}, err
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
-		return "", "", fmt.Errorf("%w: %d: %s",
+	switch response.StatusCode {
+	case http.StatusOK:
+	case http.StatusBadRequest:
+		return "", netip.Addr{}, fmt.Errorf("%w: %s",
+			errors.ErrBadRequest, utils.BodyToSingleLine(response.Body))
+	case http.StatusUnauthorized, http.StatusForbidden:
+		return "", netip.Addr{}, fmt.Errorf("%w: %s",
+			errors.ErrAuth, utils.BodyToSingleLine(response.Body))
+	default:
+		return "", netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
 	var result struct {
 		Records []struct {
-			ID    string `json:"id"`
-			Name  string `json:"name"`
-			Type  string `json:"type"`
-			Value string `json:"value"`
-			TTL   uint32 `json:"ttl"`
+			ID    string     `json:"id"`
+			Name  string     `json:"name"`
+			Type  string     `json:"type"`
+			Value netip.Addr `json:"value"`
+			TTL   uint32     `json:"ttl"`
 		} `json:"records"`
 	}
 	err = decoder.Decode(&result)
 	if err != nil {
-		return "", "", fmt.Errorf("json decoding response body: %w", err)
+		return "", netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	targetName := p.owner
@@ -212,20 +214,21 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, recordTyp
 		}
 	}
 
-	return "", "", fmt.Errorf("%w", errors.ErrRecordNotFound)
+	return "", netip.Addr{}, fmt.Errorf("%w", errors.ErrRecordNotFound)
 }
 
+// See https://vercel.com/docs/rest-api/dns/create-a-dns-record
 func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip netip.Addr) error {
-	recordType := constants.A
-	if ip.Is6() {
-		recordType = constants.AAAA
-	}
-
-	u := p.makeURL("/v4/domains/" + p.domain + "/records")
+	u := p.makeURL("/v2/domains/" + p.domain + "/records")
 
 	name := p.owner
 	if name == "@" {
 		name = ""
+	}
+
+	recordType := constants.A
+	if ip.Is6() {
+		recordType = constants.AAAA
 	}
 
 	requestData := struct {
@@ -261,18 +264,60 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
+	switch response.StatusCode {
+	case http.StatusOK, http.StatusCreated:
+		return nil
+	case http.StatusBadRequest:
+		return fmt.Errorf("%w: %s",
+			errors.ErrBadRequest, utils.BodyToSingleLine(response.Body))
+	case http.StatusUnauthorized, http.StatusForbidden:
+		return fmt.Errorf("%w: %s",
+			errors.ErrAuth, utils.BodyToSingleLine(response.Body))
+	case http.StatusNotFound:
+		return fmt.Errorf("%w: %s",
+			errors.ErrRecordNotFound, utils.BodyToSingleLine(response.Body))
+	default:
 		return fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
-
-	return nil
 }
 
-func (p *Provider) deleteRecord(ctx context.Context, client *http.Client, recordID string) error {
-	u := p.makeURL("/v2/domains/" + p.domain + "/records/" + recordID)
+// See https://vercel.com/docs/rest-api/dns/update-an-existing-dns-record
+func (p *Provider) updateRecord(ctx context.Context, client *http.Client, recordID string, ip netip.Addr) error {
+	u := p.makeURL("/v2/domains/" + p.domain + "/records")
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodDelete, u, nil)
+	name := p.owner
+	if name == "@" {
+		name = ""
+	}
+
+	recordType := constants.A
+	if ip.Is6() {
+		recordType = constants.AAAA
+	}
+
+	requestData := struct {
+		Name    string `json:"name"`
+		Type    string `json:"type"`
+		Value   string `json:"value"`
+		TTL     uint32 `json:"ttl,omitempty"`
+		Comment string `json:"comment,omitempty"`
+	}{
+		Name:    name,
+		Type:    recordType,
+		Value:   ip.String(),
+		TTL:     p.ttl,
+		Comment: "DDNS Updater automatically manages this record.",
+	}
+
+	buffer := bytes.NewBuffer(nil)
+	encoder := json.NewEncoder(buffer)
+	err := encoder.Encode(requestData)
+	if err != nil {
+		return fmt.Errorf("json encoding request data: %w", err)
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPatch, u, buffer)
 	if err != nil {
 		return fmt.Errorf("creating http request: %w", err)
 	}
@@ -284,9 +329,39 @@ func (p *Provider) deleteRecord(ctx context.Context, client *http.Client, record
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNoContent {
+	switch response.StatusCode {
+	case http.StatusOK, http.StatusCreated:
+	case http.StatusBadRequest:
+		return fmt.Errorf("%w: %s",
+			errors.ErrBadRequest, utils.BodyToSingleLine(response.Body))
+	case http.StatusUnauthorized, http.StatusForbidden:
+		return fmt.Errorf("%w: %s",
+			errors.ErrAuth, utils.BodyToSingleLine(response.Body))
+	case http.StatusNotFound:
+		return fmt.Errorf("%w: %s",
+			errors.ErrRecordNotFound, utils.BodyToSingleLine(response.Body))
+	default:
 		return fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+	}
+
+	var data struct {
+		Value string `json:"value"`
+	}
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&data)
+	if err != nil {
+		return fmt.Errorf("json decoding response body: %w", err)
+	}
+
+	receivedIP, err := netip.ParseAddr(data.Value)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+	}
+
+	if receivedIP != ip {
+		return fmt.Errorf("%w: sent %s and received %s",
+			errors.ErrIPReceivedMismatch, ip, receivedIP)
 	}
 
 	return nil

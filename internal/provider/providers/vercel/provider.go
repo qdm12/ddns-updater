@@ -177,7 +177,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, recordTyp
 		}
 	}
 
-	return "", "", fmt.Errorf("%w", errors.ErrReceivedNoResult)
+	return "", "", fmt.Errorf("%w", errors.ErrRecordNotFound)
 }
 
 func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip netip.Addr) error {
@@ -265,7 +265,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	id, value, err := p.getRecord(ctx, client, recordType)
 	switch {
-	case stderrors.Is(err, errors.ErrReceivedNoResult):
+	case stderrors.Is(err, errors.ErrRecordNotFound):
 		// Record doesn't exist, create it
 		err = p.createRecord(ctx, client, ip)
 		if err != nil {

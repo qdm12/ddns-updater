@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -165,14 +166,13 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, recordTyp
 		return "", "", fmt.Errorf("json decoding response body: %w", err)
 	}
 
-	// Find the matching record by name and type
 	targetName := p.owner
 	if targetName == "@" {
 		targetName = ""
 	}
 
 	for _, r := range result.Records {
-		if r.Name == targetName && r.Type == recordType {
+		if r.Name == targetName && strings.EqualFold(r.Type, recordType) {
 			return r.ID, r.Value, nil
 		}
 	}
@@ -266,7 +266,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	id, value, err := p.getRecord(ctx, client, recordType)
 	switch {
 	case stderrors.Is(err, errors.ErrRecordNotFound):
-		// Record doesn't exist, create it
 		err = p.createRecord(ctx, client, ip)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
@@ -276,12 +275,10 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("getting record: %w", err)
 	}
 
-	// Check if IP is already up to date
 	if value == ip.String() {
 		return ip, nil
 	}
 
-	// Delete the existing record and create a new one with the updated IP
 	err = p.deleteRecord(ctx, client, id)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("deleting record: %w", err)

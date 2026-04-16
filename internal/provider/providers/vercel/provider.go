@@ -108,6 +108,41 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
+	recordType := constants.A
+	if ip.Is6() {
+		recordType = constants.AAAA
+	}
+
+	id, value, err := p.getRecord(ctx, client, recordType)
+	switch {
+	case stderrors.Is(err, errors.ErrRecordNotFound):
+		err = p.createRecord(ctx, client, ip)
+		if err != nil {
+			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
+		}
+		return ip, nil
+	case err != nil:
+		return netip.Addr{}, fmt.Errorf("getting record: %w", err)
+	}
+
+	if value == ip.String() {
+		return ip, nil
+	}
+
+	err = p.deleteRecord(ctx, client, id)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("deleting record: %w", err)
+	}
+
+	err = p.createRecord(ctx, client, ip)
+	if err != nil {
+		return netip.Addr{}, fmt.Errorf("creating record: %w", err)
+	}
+
+	return ip, nil
+}
+
 func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetAccept(request, "application/json")
@@ -255,39 +290,4 @@ func (p *Provider) deleteRecord(ctx context.Context, client *http.Client, record
 	}
 
 	return nil
-}
-
-func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	recordType := constants.A
-	if ip.Is6() {
-		recordType = constants.AAAA
-	}
-
-	id, value, err := p.getRecord(ctx, client, recordType)
-	switch {
-	case stderrors.Is(err, errors.ErrRecordNotFound):
-		err = p.createRecord(ctx, client, ip)
-		if err != nil {
-			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
-		}
-		return ip, nil
-	case err != nil:
-		return netip.Addr{}, fmt.Errorf("getting record: %w", err)
-	}
-
-	if value == ip.String() {
-		return ip, nil
-	}
-
-	err = p.deleteRecord(ctx, client, id)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("deleting record: %w", err)
-	}
-
-	err = p.createRecord(ctx, client, ip)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("creating record: %w", err)
-	}
-
-	return ip, nil
 }

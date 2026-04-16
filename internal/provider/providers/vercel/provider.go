@@ -47,12 +47,6 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
 
-	// Default TTL to 60 seconds if not set
-	ttl := extraSettings.TTL
-	if ttl == 0 {
-		ttl = 60
-	}
-
 	return &Provider{
 		domain:     domain,
 		owner:      owner,
@@ -60,7 +54,7 @@ func New(data json.RawMessage, domain, owner string,
 		ipv6Suffix: ipv6Suffix,
 		token:      extraSettings.Token,
 		teamID:     extraSettings.TeamID,
-		ttl:        ttl,
+		ttl:        extraSettings.TTL,
 	}, nil
 }
 
@@ -302,4 +296,3 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	return ip, nil
 }
-

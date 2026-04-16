@@ -15,7 +15,7 @@ import (
 
 // See https://vercel.com/docs/rest-api/dns/update-an-existing-dns-record
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client, recordID string, ip netip.Addr) error {
-	u := p.makeURL("/v2/domains/" + p.domain + "/records")
+	u := p.makeURL("/v1/domains/records/" + recordID)
 
 	name := p.owner
 	if name == "@" {

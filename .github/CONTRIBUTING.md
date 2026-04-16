@@ -51,8 +51,8 @@ You might want to use an editor such as [Visual Studio Code](https://code.visual
 - Test the code: `go test ./...`
 - Lint the code `golangci-lint run`
 - Build the program: `go build -o app cmd/ddns-updater/main.go`
-- Build the Docker image (tests and lint included): `docker build -t qmcgaw/ddns-updater .`
-- Run the Docker container: `docker run -it --rm -v /yourpath/data:/updater/data qmcgaw/ddns-updater`
+- Build the Docker image (tests and lint included): `docker build -t ghcr.io/qdm12/ddns-updater .`
+- Run the Docker container: `docker run -it --rm -v /yourpath/data:/updater/data ghcr.io/qdm12/ddns-updater`
 
 ## Add a new DNS provider
 

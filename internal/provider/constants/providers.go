@@ -34,6 +34,7 @@ const (
 	Infomaniak   models.Provider = "infomaniak"
 	INWX         models.Provider = "inwx"
 	Ionos        models.Provider = "ionos"
+	IPv64        models.Provider = "ipv64"
 	Linode       models.Provider = "linode"
 	Loopia       models.Provider = "loopia"
 	LuaDNS       models.Provider = "luadns"
@@ -49,6 +50,7 @@ const (
 	OVH          models.Provider = "ovh"
 	Porkbun      models.Provider = "porkbun"
 	Route53      models.Provider = "route53"
+	Scaleway     models.Provider = "scaleway"
 	SelfhostDe   models.Provider = "selfhost.de"
 	Servercow    models.Provider = "servercow"
 	Spdyn        models.Provider = "spdyn"
@@ -90,6 +92,7 @@ func ProviderChoices() []models.Provider {
 		Infomaniak,
 		INWX,
 		Ionos,
+		IPv64,
 		Linode,
 		Loopia,
 		LuaDNS,
@@ -104,6 +107,7 @@ func ProviderChoices() []models.Provider {
 		OVH,
 		Porkbun,
 		Route53,
+		Scaleway,
 		SelfhostDe,
 		Spdyn,
 		Strato,

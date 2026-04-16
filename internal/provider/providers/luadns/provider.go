@@ -116,6 +116,7 @@ func setHeaders(request *http.Request) {
 	headers.SetAccept(request, "application/json")
 }
 
+// Update updates the IP address for the provider.
 // Using https://www.luadns.com/api.html
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	zoneID, err := p.getZoneID(ctx, client)

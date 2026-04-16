@@ -128,43 +128,41 @@ func (p *Provider) makeURL(path string) string {
 	return u.String()
 }
 
-type dnsRecord struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Type  string `json:"type"`
-	Value string `json:"value"`
-	TTL   uint32 `json:"ttl"`
-}
-
 func (p *Provider) getRecord(ctx context.Context, client *http.Client, recordType string) (
-	record *dnsRecord, err error,
+	id, value string, err error,
 ) {
 	u := p.makeURL("/v4/domains/" + p.domain + "/records")
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
-		return nil, fmt.Errorf("creating http request: %w", err)
+		return "", "", fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, err
+		return "", "", err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s",
+		return "", "", fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
 	var result struct {
-		Records []dnsRecord `json:"records"`
+		Records []struct {
+			ID    string `json:"id"`
+			Name  string `json:"name"`
+			Type  string `json:"type"`
+			Value string `json:"value"`
+			TTL   uint32 `json:"ttl"`
+		} `json:"records"`
 	}
 	err = decoder.Decode(&result)
 	if err != nil {
-		return nil, fmt.Errorf("json decoding response body: %w", err)
+		return "", "", fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	// Find the matching record by name and type
@@ -175,11 +173,11 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, recordTyp
 
 	for _, r := range result.Records {
 		if r.Name == targetName && r.Type == recordType {
-			return &r, nil
+			return r.ID, r.Value, nil
 		}
 	}
 
-	return nil, fmt.Errorf("%w", errors.ErrReceivedNoResult)
+	return "", "", fmt.Errorf("%w", errors.ErrReceivedNoResult)
 }
 
 func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip netip.Addr) error {
@@ -265,7 +263,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		recordType = constants.AAAA
 	}
 
-	record, err := p.getRecord(ctx, client, recordType)
+	id, value, err := p.getRecord(ctx, client, recordType)
 	switch {
 	case stderrors.Is(err, errors.ErrReceivedNoResult):
 		// Record doesn't exist, create it
@@ -279,12 +277,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	// Check if IP is already up to date
-	if record.Value == ip.String() {
+	if value == ip.String() {
 		return ip, nil
 	}
 
 	// Delete the existing record and create a new one with the updated IP
-	err = p.deleteRecord(ctx, client, record.ID)
+	err = p.deleteRecord(ctx, client, id)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("deleting record: %w", err)
 	}

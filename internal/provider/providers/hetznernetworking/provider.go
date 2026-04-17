@@ -22,7 +22,10 @@ type Provider struct {
 	ipv6Suffix     netip.Prefix
 	token          string
 	zoneIdentifier string
-	ttl            uint32
+	// ttl is the Time To Live for the DNS record in seconds.
+	// It is optional, and is ONLY used to add a record to the rrset.
+	// See https://docs.hetzner.cloud/reference/cloud#tag/zone-rrset-actions/add_zone_rrset_records.body.ttl
+	ttl uint32
 }
 
 func New(data json.RawMessage, domain, owner string,
@@ -39,12 +42,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, err
 	}
 
-	ttl := uint32(1)
-	if extraSettings.TTL > 0 {
-		ttl = extraSettings.TTL
-	}
-
-	err = validateSettings(domain, extraSettings.ZoneIdentifier, extraSettings.Token)
+	err = validateSettings(domain, extraSettings.ZoneIdentifier, extraSettings.Token, extraSettings.TTL)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -56,11 +54,11 @@ func New(data json.RawMessage, domain, owner string,
 		ipv6Suffix:     ipv6Suffix,
 		token:          extraSettings.Token,
 		zoneIdentifier: extraSettings.ZoneIdentifier,
-		ttl:            ttl,
+		ttl:            extraSettings.TTL,
 	}, nil
 }
 
-func validateSettings(domain, zoneIdentifier, token string) (err error) {
+func validateSettings(domain, zoneIdentifier, token string, ttl uint32) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
@@ -71,6 +69,14 @@ func validateSettings(domain, zoneIdentifier, token string) (err error) {
 		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
 	case token == "":
 		return fmt.Errorf("%w", errors.ErrTokenNotSet)
+	case ttl != 0:
+		const minTTL, maxTTL = 60, 2147483647
+		switch {
+		case ttl < minTTL:
+			return fmt.Errorf("%w: %d must be at least %d seconds", errors.ErrTTLTooLow, ttl, minTTL)
+		case ttl > maxTTL:
+			return fmt.Errorf("%w: %d must be at most %d seconds", errors.ErrTTLTooHigh, ttl, maxTTL)
+		}
 	}
 	return nil
 }

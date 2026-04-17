@@ -34,6 +34,7 @@ const (
 	Infomaniak   models.Provider = "infomaniak"
 	INWX         models.Provider = "inwx"
 	Ionos        models.Provider = "ionos"
+	IPv64        models.Provider = "ipv64"
 	Linode       models.Provider = "linode"
 	Loopia       models.Provider = "loopia"
 	LuaDNS       models.Provider = "luadns"
@@ -56,6 +57,7 @@ const (
 	Spdyn        models.Provider = "spdyn"
 	Strato       models.Provider = "strato"
 	Variomedia   models.Provider = "variomedia"
+	Vercel       models.Provider = "vercel"
 	Vultr        models.Provider = "vultr"
 	Zoneedit     models.Provider = "zoneedit"
 )
@@ -91,6 +93,7 @@ func ProviderChoices() []models.Provider {
 		Infomaniak,
 		INWX,
 		Ionos,
+		IPv64,
 		Linode,
 		Loopia,
 		LuaDNS,
@@ -111,6 +114,7 @@ func ProviderChoices() []models.Provider {
 		Spdyn,
 		Strato,
 		Variomedia,
+		Vercel,
 		Vultr,
 		Zoneedit,
 	}

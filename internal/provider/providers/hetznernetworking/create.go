@@ -27,7 +27,8 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 		return fmt.Errorf("extracting RR name: %w", err)
 	}
 
-	urlString := fmt.Sprintf("https://api.hetzner.cloud/v1/zones/%s/rrsets/%s/%s/actions/add_records", p.zoneIdentifier, rrName, recordType)
+	const urlTemplate = "https://api.hetzner.cloud/v1/zones/%s/rrsets/%s/%s/actions/add_records"
+	urlString := fmt.Sprintf(urlTemplate, p.zoneIdentifier, rrName, recordType)
 
 	requestData := recordsRequest{
 		TTL: p.ttl,

@@ -15,9 +15,9 @@ import (
 
 // updateRecord updates an existing DNS record using the set_records action.
 // It replaces all existing records with the new IP address.
-func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
-	recordID string, ip netip.Addr,
-) (newIP netip.Addr, err error) {
+func (p *Provider) updateRecord(ctx context.Context, client *http.Client, ip netip.Addr) (
+	newIP netip.Addr, err error,
+) {
 	recordType := constants.A
 	if ip.Is6() {
 		recordType = constants.AAAA
@@ -29,7 +29,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 		return netip.Addr{}, fmt.Errorf("extracting RR name: %w", err)
 	}
 
-	urlString := fmt.Sprintf("https://api.hetzner.cloud/v1/zones/%s/rrsets/%s/%s/actions/set_records", p.zoneIdentifier, rrName, recordType)
+	const urlTemplate = "https://api.hetzner.cloud/v1/zones/%s/rrsets/%s/%s/actions/set_records"
+	urlString := fmt.Sprintf(urlTemplate, p.zoneIdentifier, rrName, recordType)
 
 	requestData := recordsRequest{
 		Records: []recordValue{

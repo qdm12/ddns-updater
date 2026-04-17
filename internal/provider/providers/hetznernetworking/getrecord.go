@@ -3,6 +3,7 @@ package hetznernetworking
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -18,7 +19,7 @@ import (
 // If the record doesn't exist, it returns ErrReceivedNoResult.
 // See https://docs.hetzner.cloud/reference/cloud#dns
 func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip netip.Addr) (
-	identifier string, upToDate bool, err error,
+	upToDate bool, err error,
 ) {
 	recordType := constants.A
 	if ip.Is6() {
@@ -28,29 +29,29 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip neti
 	// Extract RR name from domain relative to zone
 	rrName, err := p.extractRRName()
 	if err != nil {
-		return "", false, fmt.Errorf("extracting RR name: %w", err)
+		return false, fmt.Errorf("extracting RR name: %w", err)
 	}
 
 	urlString := fmt.Sprintf("https://api.hetzner.cloud/v1/zones/%s/rrsets/%s/%s", p.zoneIdentifier, rrName, recordType)
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, urlString, nil)
 	if err != nil {
-		return "", false, fmt.Errorf("creating http request: %w", err)
+		return false, fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return "", false, err
+		return false, err
 	}
 	defer response.Body.Close()
 
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusNotFound:
-		return "", false, fmt.Errorf("%w", errors.ErrReceivedNoResult)
+		return false, fmt.Errorf("%w", errors.ErrReceivedNoResult)
 	default:
-		return "", false, fmt.Errorf("%w: %d: %s",
+		return false, fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
@@ -58,7 +59,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip neti
 	var rrSetResponse rrSetResponse
 	err = decoder.Decode(&rrSetResponse)
 	if err != nil {
-		return "", false, fmt.Errorf("json decoding response body: %w", err)
+		return false, fmt.Errorf("json decoding response body: %w", err)
 	}
 
 	// Check if any record value matches the current IP
@@ -68,18 +69,20 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip neti
 			continue // Skip invalid IPs
 		}
 		if recordIP.Compare(ip) == 0 {
-			return rrSetResponse.RRSet.ID, true, nil
+			return true, nil
 		}
 	}
 
 	// Record exists but IP doesn't match
-	return rrSetResponse.RRSet.ID, false, nil
+	return false, nil
 }
+
+var errDomainNotSubOfZone = stderrors.New("domain is not a subdomain of zone")
 
 // extractRRName extracts the RR name from the domain relative to the zone
 // For example: domain="sub.example.com", zone="example.com" -> "sub"
 // For example: domain="example.com", zone="example.com" -> "@"
-// For example: domain="*.sub.example.com", zone="example.com" -> "*.sub"
+// For example: domain="*.sub.example.com", zone="example.com" -> "*.sub".
 func (p *Provider) extractRRName() (string, error) {
 	domain := p.BuildDomainName()
 	zone := p.zoneIdentifier
@@ -97,9 +100,8 @@ func (p *Provider) extractRRName() (string, error) {
 		return "@", nil
 	}
 
-	// Check if domain is a subdomain of zone
 	if !strings.HasSuffix(domain, "."+zone) {
-		return "", fmt.Errorf("domain %s is not a subdomain of zone %s", domain, zone)
+		return "", fmt.Errorf("%w: %s for zone %s", errDomainNotSubOfZone, domain, zone)
 	}
 
 	// Extract subdomain part

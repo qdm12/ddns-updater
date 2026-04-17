@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
@@ -45,7 +45,7 @@ func (p *Provider) get(ctx context.Context, client *http.Client,
 	u := url.URL{
 		Scheme:   "https",
 		Host:     "api.hosting.ionos.com",
-		Path:     filepath.Join("/dns/v1/", subPath),
+		Path:     path.Join("/dns/v1/", subPath),
 		RawQuery: queryParams.Encode(),
 	}
 

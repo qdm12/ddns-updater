@@ -1,4 +1,4 @@
-package hetznercloud
+package vercel
 
 import (
 	"context"
@@ -7,22 +7,24 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
+	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
 type Provider struct {
-	domain         string
-	owner          string
-	ipVersion      ipversion.IPVersion
-	ipv6Suffix     netip.Prefix
-	token          string
-	zoneIdentifier string
-	ttl            uint32
+	domain     string
+	owner      string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	token      string
+	teamID     string
+	ttl        uint32
 }
 
 func New(data json.RawMessage, domain, owner string,
@@ -30,53 +32,45 @@ func New(data json.RawMessage, domain, owner string,
 	p *Provider, err error,
 ) {
 	extraSettings := struct {
-		Token          string `json:"token"`
-		ZoneIdentifier string `json:"zone_identifier"`
-		TTL            uint32 `json:"ttl"`
+		Token  string `json:"token"`
+		TeamID string `json:"team_id"`
+		TTL    uint32 `json:"ttl"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
 		return nil, err
 	}
 
-	ttl := uint32(1)
-	if extraSettings.TTL > 0 {
-		ttl = extraSettings.TTL
-	}
-
-	err = validateSettings(domain, extraSettings.ZoneIdentifier, extraSettings.Token)
+	err = validateSettings(domain, extraSettings.Token)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
 
 	return &Provider{
-		domain:         domain,
-		owner:          owner,
-		ipVersion:      ipVersion,
-		ipv6Suffix:     ipv6Suffix,
-		token:          extraSettings.Token,
-		zoneIdentifier: extraSettings.ZoneIdentifier,
-		ttl:            ttl,
+		domain:     domain,
+		owner:      owner,
+		ipVersion:  ipVersion,
+		ipv6Suffix: ipv6Suffix,
+		token:      extraSettings.Token,
+		teamID:     extraSettings.TeamID,
+		ttl:        extraSettings.TTL,
 	}, nil
 }
 
-func validateSettings(domain, zoneIdentifier, token string) (err error) {
+func validateSettings(domain, token string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
 	}
 
-	switch {
-	case zoneIdentifier == "":
-		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
-	case token == "":
+	if token == "" {
 		return fmt.Errorf("%w", errors.ErrTokenNotSet)
 	}
 	return nil
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.HetznerCloud, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.Vercel, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
@@ -100,46 +94,63 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	// Override to preserve wildcard characters for Hetzner Cloud API
-	if p.owner == "@" {
-		return p.domain
-	}
-	// Don't replace * with "any" for wildcard domains
-	return p.owner + "." + p.domain
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
 		Owner:     p.Owner(),
-		Provider:  "<a href=\"https://www.hetzner.cloud\">Hetzner Cloud</a>",
+		Provider:  "<a href=\"https://vercel.com/\">Vercel</a>",
 		IPVersion: p.ipVersion.String(),
 	}
 }
 
-// Update updates the DNS record with the given IP address.
-// It first checks if a record exists and if the IP is up to date.
-// If the record doesn't exist, it creates a new one.
-// If the record exists but has a different IP, it updates the record.
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	recordID, upToDate, err := p.getRecordID(ctx, client, ip)
+	recordType := constants.A
+	if ip.Is6() {
+		recordType = constants.AAAA
+	}
+
+	id, value, err := p.getRecord(ctx, client, recordType)
 	switch {
-	case stderrors.Is(err, errors.ErrReceivedNoResult):
+	case stderrors.Is(err, errors.ErrRecordNotFound):
 		err = p.createRecord(ctx, client, ip)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 		}
 		return ip, nil
 	case err != nil:
-		return netip.Addr{}, fmt.Errorf("getting record id: %w", err)
-	case upToDate:
+		return netip.Addr{}, fmt.Errorf("getting record: %w", err)
+	case value == ip:
 		return ip, nil
 	}
 
-	ip, err = p.updateRecord(ctx, client, recordID, ip)
+	err = p.updateRecord(ctx, client, id, ip)
 	if err != nil {
-		return newIP, fmt.Errorf("updating record: %w", err)
+		return netip.Addr{}, fmt.Errorf("updating record: %w", err)
 	}
 
 	return ip, nil
+}
+
+func (p *Provider) setHeaders(request *http.Request) {
+	headers.SetUserAgent(request)
+	headers.SetAccept(request, "application/json")
+	headers.SetContentType(request, "application/json")
+	headers.SetAuthBearer(request, p.token)
+}
+
+func (p *Provider) makeURL(path string) string {
+	u := url.URL{
+		Scheme: "https",
+		Host:   "api.vercel.com",
+		Path:   path,
+	}
+	if p.teamID != "" {
+		values := url.Values{}
+		values.Set("teamId", p.teamID)
+		u.RawQuery = values.Encode()
+	}
+	return u.String()
 }

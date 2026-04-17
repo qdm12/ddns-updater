@@ -122,7 +122,7 @@ func (p *Provider) HTML() models.HTMLRow {
 // If the record doesn't exist, it creates a new one.
 // If the record exists but has a different IP, it updates the record.
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	recordID, upToDate, err := p.getRecordID(ctx, client, ip)
+	upToDate, err := p.getRecordID(ctx, client, ip)
 	switch {
 	case stderrors.Is(err, errors.ErrReceivedNoResult):
 		err = p.createRecord(ctx, client, ip)
@@ -136,7 +136,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return ip, nil
 	}
 
-	ip, err = p.updateRecord(ctx, client, recordID, ip)
+	ip, err = p.updateRecord(ctx, client, ip)
 	if err != nil {
 		return newIP, fmt.Errorf("updating record: %w", err)
 	}

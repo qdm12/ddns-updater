@@ -1,6 +1,7 @@
 package hetznercloud
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,6 +17,29 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
 	headers.SetAuthBearer(request, p.token)
+}
+
+func (p *Provider) handleActionResponse(ctx context.Context, client *http.Client, parsed actionResponse) (err error) {
+	switch parsed.Action.Status {
+	case "success":
+		return nil
+	case "running:":
+		err = p.waitAction(ctx, client, parsed.Action.ID)
+		if err != nil {
+			return fmt.Errorf("waiting for action to complete: %w", err)
+		}
+		return nil
+	case "error":
+		err = fmt.Errorf("%w: action id %d failed",
+			errors.ErrUnsuccessful, parsed.Action.ID)
+		if parsed.Action.Error != nil {
+			err = fmt.Errorf("%w: %v", err, parsed.Action.Error)
+		}
+		return err
+	default:
+		return fmt.Errorf("%w: unexpected action status %q for action id %d",
+			errors.ErrUnknownResponse, parsed.Action.Status, parsed.Action.ID)
+	}
 }
 
 func handleErrorResponse(response *http.Response) (err error) {

@@ -21,6 +21,7 @@ type actionResponse struct {
 	Action struct {
 		ID     uint64 `json:"id"`
 		Status string `json:"status"`
+		Error  any    `json:"error,omitempty"`
 	} `json:"action"`
 }
 

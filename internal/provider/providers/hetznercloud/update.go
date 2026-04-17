@@ -9,7 +9,6 @@ import (
 	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 // updateRecord updates an existing DNS record using the set_records action.
@@ -62,14 +61,9 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client, ip net
 		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
 	}
 
-	// Verify the action was created successfully
-	if actionResp.Action.ID == 0 {
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoResult)
-	}
-
-	// Check if action status indicates success or is still running
-	if actionResp.Action.Status != "running" && actionResp.Action.Status != "success" {
-		return netip.Addr{}, fmt.Errorf("%w: action status %s", errors.ErrUnsuccessful, actionResp.Action.Status)
+	err = p.handleActionResponse(ctx, client, actionResp)
+	if err != nil {
+		return netip.Addr{}, err
 	}
 
 	return ip, nil

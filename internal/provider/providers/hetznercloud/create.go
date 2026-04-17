@@ -9,7 +9,6 @@ import (
 	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 // createRecord creates a new DNS record using the add_records action.
@@ -62,15 +61,5 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 		return fmt.Errorf("json decoding response body: %w", err)
 	}
 
-	// Verify the action was created successfully
-	if actionResp.Action.ID == 0 {
-		return fmt.Errorf("%w", errors.ErrReceivedNoResult)
-	}
-
-	// Check if action status indicates success or is still running
-	if actionResp.Action.Status != "running" && actionResp.Action.Status != "success" {
-		return fmt.Errorf("%w: action status %s", errors.ErrUnsuccessful, actionResp.Action.Status)
-	}
-
-	return nil
+	return p.handleActionResponse(ctx, client, actionResp)
 }

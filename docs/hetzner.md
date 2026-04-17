@@ -1,5 +1,7 @@
 # Hetzner
 
+⚠️ You should use [Hetzner Cloud](./hetznercloud.md) with the new Hetzner Cloud console instead, given this legacy Hetzner API is going to be shutdown soon.
+
 ## Configuration
 
 ### Example

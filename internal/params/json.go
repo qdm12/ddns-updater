@@ -214,6 +214,11 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	}
 
 	providerName := models.Provider(common.Provider)
+	if providerName == constants.Hetzner {
+		warnings = append(warnings,
+			"You should use the hetznercloud with the new Hetzner Cloud console instead, "+
+				"given this legacy Hetzner API is going to be shutdown soon.")
+	}
 	providers = make([]provider.Provider, len(owners))
 	for i, owner := range owners {
 		owner = strings.TrimSpace(owner)

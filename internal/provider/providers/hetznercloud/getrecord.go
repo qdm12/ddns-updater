@@ -8,45 +8,43 @@ import (
 	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
-// getRecordID fetches the RRSet ID and checks if the IP is up to date.
-// It returns the record ID, whether the IP is up to date, and any error.
-// If the record doesn't exist, it returns ErrReceivedNoResult.
-// See https://docs.hetzner.cloud/reference/cloud#dns
-func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip netip.Addr) (
-	upToDate bool, err error,
+// checkRecord checks if the record exists and if it is already up to date
+// regarding its IP address.
+// See https://docs.hetzner.cloud/reference/cloud#tag/zone-rrsets/get_zone_rrset
+func (p *Provider) checkRecord(ctx context.Context, client *http.Client, ip netip.Addr) (
+	exists, upToDate bool, err error,
 ) {
 	recordType := constants.A
 	if ip.Is6() {
 		recordType = constants.AAAA
 	}
+	url := fmt.Sprintf("https://api.hetzner.cloud/v1/zones/%s/rrsets/%s/%s",
+		p.domain, p.owner, recordType)
 
-	urlString := fmt.Sprintf("https://api.hetzner.cloud/v1/zones/%s/rrsets/%s/%s", p.domain, p.owner, recordType)
-
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, urlString, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return false, fmt.Errorf("creating http request: %w", err)
+		return false, false, fmt.Errorf("creating http request: %w", err)
 	}
 	p.setHeaders(request)
 
 	response, err := client.Do(request)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 	defer response.Body.Close()
 
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusNotFound:
-		return false, fmt.Errorf("%w", errors.ErrRecordNotFound)
+		return false, false, nil
 	default:
-		return false, handleErrorResponse(response)
+		return false, false, handleErrorResponse(response)
 	}
 
 	decoder := json.NewDecoder(response.Body)
-	var rrSetResponse struct {
+	var responseData struct {
 		RRSet struct {
 			ID      string `json:"id"`
 			Records []struct {
@@ -54,22 +52,17 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip neti
 			} `json:"records"`
 		} `json:"rrset"`
 	}
-	err = decoder.Decode(&rrSetResponse)
+	err = decoder.Decode(&responseData)
 	if err != nil {
-		return false, fmt.Errorf("json decoding response body: %w", err)
+		return true, false, fmt.Errorf("json decoding response body: %w", err)
 	}
 
-	// Check if any record value matches the current IP
-	for _, record := range rrSetResponse.RRSet.Records {
+	for _, record := range responseData.RRSet.Records {
 		recordIP, err := netip.ParseAddr(record.Value)
-		if err != nil {
-			continue // Skip invalid IPs
-		}
-		if recordIP.Compare(ip) == 0 {
-			return true, nil
+		if err == nil && recordIP == ip {
+			return true, true, nil
 		}
 	}
 
-	// Record exists but IP doesn't match
-	return false, nil
+	return true, false, nil
 }

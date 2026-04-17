@@ -19,13 +19,15 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	if ip.Is6() {
 		recordType = constants.AAAA
 	}
-
 	const urlTemplate = "https://api.hetzner.cloud/v1/zones/%s/rrsets/%s/%s/actions/add_records"
-	urlString := fmt.Sprintf(urlTemplate, p.domain, p.owner, recordType)
+	url := fmt.Sprintf(urlTemplate, p.domain, p.owner, recordType)
 
-	requestData := recordsRequest{
+	requestData := struct {
+		TTL     uint32   `json:"ttl,omitempty"`
+		Records []record `json:"records"`
+	}{
 		TTL: p.ttl,
-		Records: []recordValue{
+		Records: []record{
 			{Value: ip.String()},
 		},
 	}
@@ -37,7 +39,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 		return fmt.Errorf("json encoding request data: %w", err)
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, urlString, buffer)
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, url, buffer)
 	if err != nil {
 		return fmt.Errorf("creating http request: %w", err)
 	}
@@ -55,11 +57,11 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	}
 
 	decoder := json.NewDecoder(response.Body)
-	var actionResp actionResponse
-	err = decoder.Decode(&actionResp)
+	var responseData actionResponse
+	err = decoder.Decode(&responseData)
 	if err != nil {
 		return fmt.Errorf("json decoding response body: %w", err)
 	}
 
-	return p.handleActionResponse(ctx, client, actionResp)
+	return p.handleActionResponse(ctx, client, responseData)
 }

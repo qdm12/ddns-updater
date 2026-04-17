@@ -14,17 +14,7 @@ type recordsRequest struct {
 // actionResponse represents the response from Hetzner Cloud API actions.
 type actionResponse struct {
 	Action struct {
-		ID     int    `json:"id"`
+		ID     uint64 `json:"id"`
 		Status string `json:"status"`
 	} `json:"action"`
-}
-
-// rrSetResponse represents the response from Hetzner Cloud API RRSet GET requests.
-type rrSetResponse struct {
-	RRSet struct {
-		ID      string `json:"id"`
-		Records []struct {
-			Value string `json:"value"`
-		} `json:"records"`
-	} `json:"rrset"`
 }

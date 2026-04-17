@@ -42,14 +42,21 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip neti
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusNotFound:
-		return false, fmt.Errorf("%w", errors.ErrReceivedNoResult)
+		return false, fmt.Errorf("%w", errors.ErrRecordNotFound)
 	default:
 		return false, fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
-	var rrSetResponse rrSetResponse
+	var rrSetResponse struct {
+		RRSet struct {
+			ID      string `json:"id"`
+			Records []struct {
+				Value string `json:"value"`
+			} `json:"records"`
+		} `json:"rrset"`
+	}
 	err = decoder.Decode(&rrSetResponse)
 	if err != nil {
 		return false, fmt.Errorf("json decoding response body: %w", err)
@@ -69,5 +76,3 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip neti
 	// Record exists but IP doesn't match
 	return false, nil
 }
-
-var errDomainNotSubOfZone = stderrors.New("domain is not a subdomain of zone")

@@ -3,14 +3,12 @@ package hetznercloud
 import (
 	"context"
 	"encoding/json"
-	stderrors "errors"
 	"fmt"
 	"net/http"
 	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
-	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
 // getRecordID fetches the RRSet ID and checks if the IP is up to date.
@@ -44,8 +42,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip neti
 	case http.StatusNotFound:
 		return false, fmt.Errorf("%w", errors.ErrRecordNotFound)
 	default:
-		return false, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return false, handleErrorResponse(response)
 	}
 
 	decoder := json.NewDecoder(response.Body)

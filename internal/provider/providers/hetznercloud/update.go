@@ -10,7 +10,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
-	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
 // updateRecord updates an existing DNS record using the set_records action.
@@ -53,9 +52,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client, ip net
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusCreated {
-		return ip, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode,
-			utils.BodyToSingleLine(response.Body))
+		return netip.Addr{}, handleErrorResponse(response)
 	}
 
 	decoder := json.NewDecoder(response.Body)

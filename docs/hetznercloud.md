@@ -1,4 +1,4 @@
-# Hetzner Networking
+# Hetzner Cloud
 
 This provider uses the Hetzner Cloud API `https://api.hetzner.cloud/v1/` which is different from the legacy Hetzner DNS API.
 
@@ -10,7 +10,7 @@ This provider uses the Hetzner Cloud API `https://api.hetzner.cloud/v1/` which i
 {
   "settings": [
     {
-      "provider": "hetznernetworking",
+      "provider": "hetznercloud",
       "domain": "example.com",
       "token": "yourtoken",
       "ip_version": "ipv4",

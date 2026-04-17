@@ -1,4 +1,4 @@
-package hetznernetworking
+package hetznercloud
 
 import (
 	"context"
@@ -77,7 +77,7 @@ func validateSettings(domain, token string, ttl uint32) (err error) {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.HetznerNetworking, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.HetznerCloud, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
@@ -108,7 +108,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
 		Owner:     p.Owner(),
-		Provider:  "<a href=\"https://www.hetzner.cloud\">Hetzner Networking</a>",
+		Provider:  "<a href=\"https://www.hetzner.com/cloud/\">Hetzner Cloud</a>",
 		IPVersion: p.ipVersion.String(),
 	}
 }

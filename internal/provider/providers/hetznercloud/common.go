@@ -1,4 +1,4 @@
-package hetznernetworking
+package hetznercloud
 
 import (
 	"net/http"

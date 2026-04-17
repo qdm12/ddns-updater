@@ -1,4 +1,4 @@
-package hetznernetworking
+package hetznercloud
 
 // recordValue represents a single DNS record value.
 type recordValue struct {
@@ -11,7 +11,7 @@ type recordsRequest struct {
 	Records []recordValue `json:"records"`
 }
 
-// actionResponse represents the response from Hetzner Networking API actions.
+// actionResponse represents the response from Hetzner Cloud API actions.
 type actionResponse struct {
 	Action struct {
 		ID     int    `json:"id"`
@@ -19,7 +19,7 @@ type actionResponse struct {
 	} `json:"action"`
 }
 
-// rrSetResponse represents the response from Hetzner Networking API RRSet GET requests.
+// rrSetResponse represents the response from Hetzner Cloud API RRSet GET requests.
 type rrSetResponse struct {
 	RRSet struct {
 		ID      string `json:"id"`

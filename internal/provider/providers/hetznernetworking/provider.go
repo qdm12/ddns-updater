@@ -100,12 +100,7 @@ func (p *Provider) Proxied() bool {
 }
 
 func (p *Provider) BuildDomainName() string {
-	// Override to preserve wildcard characters for Hetzner Networking API
-	if p.owner == "@" {
-		return p.domain
-	}
-	// Don't replace * with "any" for wildcard domains
-	return p.owner + "." + p.domain
+	return utils.BuildDomainName(p.owner, p.domain)
 }
 
 func (p *Provider) HTML() models.HTMLRow {

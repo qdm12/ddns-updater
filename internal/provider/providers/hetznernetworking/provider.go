@@ -16,12 +16,11 @@ import (
 )
 
 type Provider struct {
-	domain         string
-	owner          string
-	ipVersion      ipversion.IPVersion
-	ipv6Suffix     netip.Prefix
-	token          string
-	zoneIdentifier string
+	domain     string
+	owner      string
+	ipVersion  ipversion.IPVersion
+	ipv6Suffix netip.Prefix
+	token      string
 	// ttl is the Time To Live for the DNS record in seconds.
 	// It is optional, and is ONLY used to add a record to the rrset.
 	// See https://docs.hetzner.cloud/reference/cloud#tag/zone-rrset-actions/add_zone_rrset_records.body.ttl
@@ -33,40 +32,36 @@ func New(data json.RawMessage, domain, owner string,
 	p *Provider, err error,
 ) {
 	extraSettings := struct {
-		Token          string `json:"token"`
-		ZoneIdentifier string `json:"zone_identifier"`
-		TTL            uint32 `json:"ttl"`
+		Token string `json:"token"`
+		TTL   uint32 `json:"ttl"`
 	}{}
 	err = json.Unmarshal(data, &extraSettings)
 	if err != nil {
 		return nil, err
 	}
 
-	err = validateSettings(domain, extraSettings.ZoneIdentifier, extraSettings.Token, extraSettings.TTL)
+	err = validateSettings(domain, extraSettings.Token, extraSettings.TTL)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
 
 	return &Provider{
-		domain:         domain,
-		owner:          owner,
-		ipVersion:      ipVersion,
-		ipv6Suffix:     ipv6Suffix,
-		token:          extraSettings.Token,
-		zoneIdentifier: extraSettings.ZoneIdentifier,
-		ttl:            extraSettings.TTL,
+		domain:     domain,
+		owner:      owner,
+		ipVersion:  ipVersion,
+		ipv6Suffix: ipv6Suffix,
+		token:      extraSettings.Token,
+		ttl:        extraSettings.TTL,
 	}, nil
 }
 
-func validateSettings(domain, zoneIdentifier, token string, ttl uint32) (err error) {
+func validateSettings(domain, token string, ttl uint32) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
 	}
 
 	switch {
-	case zoneIdentifier == "":
-		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
 	case token == "":
 		return fmt.Errorf("%w", errors.ErrTokenNotSet)
 	case ttl != 0:

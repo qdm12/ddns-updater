@@ -15,20 +15,15 @@ import (
 
 // createRecord creates a new DNS record using the add_records action.
 // It adds the new IP address to the existing RRSet or creates a new RRSet.
+// See https://docs.hetzner.cloud/reference/cloud#tag/zone-rrset-actions/add_zone_rrset_records
 func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip netip.Addr) (err error) {
 	recordType := constants.A
 	if ip.Is6() {
 		recordType = constants.AAAA
 	}
 
-	// Extract RR name from domain relative to zone
-	rrName, err := p.extractRRName()
-	if err != nil {
-		return fmt.Errorf("extracting RR name: %w", err)
-	}
-
 	const urlTemplate = "https://api.hetzner.cloud/v1/zones/%s/rrsets/%s/%s/actions/add_records"
-	urlString := fmt.Sprintf(urlTemplate, p.zoneIdentifier, rrName, recordType)
+	urlString := fmt.Sprintf(urlTemplate, p.domain, p.owner, recordType)
 
 	requestData := recordsRequest{
 		TTL: p.ttl,

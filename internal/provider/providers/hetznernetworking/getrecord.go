@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
-	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
@@ -26,13 +25,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip neti
 		recordType = constants.AAAA
 	}
 
-	// Extract RR name from domain relative to zone
-	rrName, err := p.extractRRName()
-	if err != nil {
-		return false, fmt.Errorf("extracting RR name: %w", err)
-	}
-
-	urlString := fmt.Sprintf("https://api.hetzner.cloud/v1/zones/%s/rrsets/%s/%s", p.zoneIdentifier, rrName, recordType)
+	urlString := fmt.Sprintf("https://api.hetzner.cloud/v1/zones/%s/rrsets/%s/%s", p.domain, p.owner, recordType)
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, urlString, nil)
 	if err != nil {
@@ -78,39 +71,3 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip neti
 }
 
 var errDomainNotSubOfZone = stderrors.New("domain is not a subdomain of zone")
-
-// extractRRName extracts the RR name from the domain relative to the zone
-// For example: domain="sub.example.com", zone="example.com" -> "sub"
-// For example: domain="example.com", zone="example.com" -> "@"
-// For example: domain="*.sub.example.com", zone="example.com" -> "*.sub".
-func (p *Provider) extractRRName() (string, error) {
-	domain := utils.BuildURLQueryHostname(p.owner, p.domain)
-	zone := p.zoneIdentifier
-
-	// Normalize domain and zone to lowercase
-	domain = strings.ToLower(domain)
-	zone = strings.ToLower(zone)
-
-	// Remove trailing dots if present
-	domain = strings.TrimSuffix(domain, ".")
-	zone = strings.TrimSuffix(zone, ".")
-
-	// If domain equals zone, this is the apex record
-	if domain == zone {
-		return "@", nil
-	}
-
-	if !strings.HasSuffix(domain, "."+zone) {
-		return "", fmt.Errorf("%w: %s for zone %s", errDomainNotSubOfZone, domain, zone)
-	}
-
-	// Extract subdomain part
-	subdomain := strings.TrimSuffix(domain, "."+zone)
-	if subdomain == "" {
-		return "@", nil
-	}
-
-	// For wildcard domains, keep the * character
-	// For example: "*.sub" should remain "*.sub"
-	return subdomain, nil
-}

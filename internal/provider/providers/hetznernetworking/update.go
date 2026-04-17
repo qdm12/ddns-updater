@@ -23,14 +23,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client, ip net
 		recordType = constants.AAAA
 	}
 
-	// Extract RR name from domain relative to zone
-	rrName, err := p.extractRRName()
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("extracting RR name: %w", err)
-	}
-
 	const urlTemplate = "https://api.hetzner.cloud/v1/zones/%s/rrsets/%s/%s/actions/set_records"
-	urlString := fmt.Sprintf(urlTemplate, p.zoneIdentifier, rrName, recordType)
+	urlString := fmt.Sprintf(urlTemplate, p.domain, p.owner, recordType)
 
 	requestData := recordsRequest{
 		Records: []recordValue{

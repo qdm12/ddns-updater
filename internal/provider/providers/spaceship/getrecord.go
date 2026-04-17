@@ -8,6 +8,8 @@ import (
 	"net/url"
 )
 
+// getRecords fetches DNS records for the domain.
+// See https://docs.spaceship.dev/#tag/DNS-records/operation/getRecords
 func (p *Provider) getRecords(ctx context.Context, client *http.Client) (records []apiRecord, err error) {
 	u := url.URL{
 		Scheme: "https",

@@ -9,7 +9,7 @@ import (
 	"net/url"
 )
 
-func (p *Provider) putRecord(ctx context.Context, client *http.Client, record apiRecord) error {
+func (p *Provider) createRecord(ctx context.Context, client *http.Client, record apiRecord) error {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "spaceship.dev",

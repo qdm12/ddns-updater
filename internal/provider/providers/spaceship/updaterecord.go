@@ -21,34 +21,39 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	var found bool
-	var targetRecord apiRecord
+	var existingRecord apiRecord
 
 	for _, record := range records {
 		if record.Type == recordType && record.Name == p.owner {
-			targetRecord = record
+			existingRecord = record
 			found = true
 			break
 		}
 	}
 
 	if found {
-		currentIP, err := netip.ParseAddr(targetRecord.Address)
+		currentIP, err := netip.ParseAddr(existingRecord.Address)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("parsing existing IP address: %w", err)
-		} else if currentIP == ip {
+		}
+		if currentIP == ip {
 			return ip, nil
 		}
-	} else {
-		targetRecord.Type = recordType
-		targetRecord.Name = p.owner
+		err = p.deleteRecord(ctx, client, existingRecord)
+		if err != nil {
+			return netip.Addr{}, fmt.Errorf("deleting existing record: %w", err)
+		}
 	}
 
-	targetRecord.TTL = p.ttl
-	targetRecord.Address = ip.String()
-
-	err = p.putRecord(ctx, client, targetRecord)
+	newRecord := apiRecord{
+		Type:    recordType,
+		Name:    p.owner,
+		Address: ip.String(),
+		TTL:     p.ttl,
+	}
+	err = p.createRecord(ctx, client, newRecord)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("putting record: %w", err)
+		return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 	}
 
 	return ip, nil

@@ -11,22 +11,25 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 )
 
-// createRecord creates a new DNS record using the add_records action.
-// It adds the new IP address to the existing RRSet or creates a new RRSet.
-// See https://docs.hetzner.cloud/reference/cloud#tag/zone-rrset-actions/add_zone_rrset_records
-func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip netip.Addr) (err error) {
+// createRRSet creates a new RRSet with an A or AAAA record.
+// It should only be called if the record type for the owner name does not exist.
+// See https://docs.hetzner.cloud/reference/cloud#tag/zone-rrsets/create_zone_rrset
+func (p *Provider) createRRSet(ctx context.Context, client *http.Client, ip netip.Addr) (err error) {
 	recordType := constants.A
 	if ip.Is6() {
 		recordType = constants.AAAA
 	}
-	const urlTemplate = "https://api.hetzner.cloud/v1/zones/%s/rrsets/%s/%s/actions/add_records"
-	url := fmt.Sprintf(urlTemplate, p.domain, p.owner, recordType)
+	url := fmt.Sprintf("https://api.hetzner.cloud/v1/zones/%s/rrsets", p.domain)
 
 	requestData := struct {
+		Name    string   `json:"name"`
+		Type    string   `json:"type"`
 		TTL     uint32   `json:"ttl,omitempty"`
 		Records []record `json:"records"`
 	}{
-		TTL: p.ttl,
+		Name: p.owner,
+		Type: recordType,
+		TTL:  p.ttl,
 		Records: []record{
 			{Value: ip.String()},
 		},

@@ -23,7 +23,7 @@ This provider uses the Hetzner Cloud API `https://api.hetzner.cloud/v1/` which i
 ### Compulsory parameters
 
 - `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
-- `"token"` is your API token configured with DNS write permissions for your DNS zone, see [the Authentication section](https://docs.hetzner.cloud/reference/cloud#description/authentication)
+- `"token"` is your API token configured with DNS write permissions for your DNS zone, see [the Authentication section](https://docs.hetzner.com/cloud/api/getting-started/generating-api-token)
 
 ### Optional parameters
 

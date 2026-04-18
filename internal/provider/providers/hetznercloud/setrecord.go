@@ -11,10 +11,10 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 )
 
-// updateRecord updates an existing DNS record using the set_records action.
-// It replaces all existing records with the new IP address.
+// setRecord updates an existing DNS record using the set_records action.
+// It replaces all existing A or AAAA records with the new IP address.
 // See https://docs.hetzner.cloud/reference/cloud#tag/zone-rrset-actions/set_zone_rrset_records
-func (p *Provider) updateRecord(ctx context.Context, client *http.Client, ip netip.Addr) (err error) {
+func (p *Provider) setRecord(ctx context.Context, client *http.Client, ip netip.Addr) (err error) {
 	recordType := constants.A
 	if ip.Is6() {
 		recordType = constants.AAAA
@@ -24,7 +24,6 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client, ip net
 	urlString := fmt.Sprintf(urlTemplate, p.domain, p.owner, recordType)
 
 	requestData := struct {
-		TTL     uint32   `json:"ttl,omitempty"`
 		Records []record `json:"records"`
 	}{
 		Records: []record{

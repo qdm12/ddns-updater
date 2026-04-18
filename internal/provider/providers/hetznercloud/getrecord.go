@@ -10,10 +10,10 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 )
 
-// checkRecord checks if the record exists and if it is already up to date
+// getRecord checks if the record exists and if it is already up to date
 // regarding its IP address.
 // See https://docs.hetzner.cloud/reference/cloud#tag/zone-rrsets/get_zone_rrset
-func (p *Provider) checkRecord(ctx context.Context, client *http.Client, ip netip.Addr) (
+func (p *Provider) getRecord(ctx context.Context, client *http.Client, ip netip.Addr) (
 	exists, upToDate bool, err error,
 ) {
 	recordType := constants.A
@@ -46,7 +46,6 @@ func (p *Provider) checkRecord(ctx context.Context, client *http.Client, ip neti
 	decoder := json.NewDecoder(response.Body)
 	var responseData struct {
 		RRSet struct {
-			ID      string `json:"id"`
 			Records []struct {
 				Value string `json:"value"`
 			} `json:"records"`

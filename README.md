@@ -69,7 +69,8 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - GoDaddy
   - GoIP.de
   - He.net
-  - Hetzner
+  - Hetzner (legacy API)
+  - Hetzner Cloud
   - Infomaniak
   - INWX
     - Ionos
@@ -239,6 +240,7 @@ Check the documentation for your DNS provider:
 - [GoIP.de](docs/goip.md)
 - [He.net](docs/he.net.md)
 - [Hetzner](docs/hetzner.md)
+- [HetznerCloud](docs/hetznercloud.md)
 - [Infomaniak](docs/infomaniak.md)
 - [INWX](docs/inwx.md)
 - [Ionos](docs/ionos.md)

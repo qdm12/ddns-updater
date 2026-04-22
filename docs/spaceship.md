@@ -12,7 +12,6 @@
       "domain": "sub.example.com",
       "api_key": "YOUR_API_KEY",
       "api_secret": "YOUR_API_SECRET",
-      "ttl": 3600,
       "ip_version": "ipv4",
       "ipv6_suffix": ""
     }

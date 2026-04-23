@@ -30,3 +30,8 @@
 - `"ipv6_suffix"` is the IPv6 interface identifier suffix to use. It can be for example `0:0:0:0:72ad:8fbb:a54e:bedd/64`. If left empty, it defaults to no suffix and the raw temporary IPv6 address of the machine is used in the record updating. You might want to set this to use your permanent IPv6 address instead of your temporary IPv6 address.
 
 ## Domain setup
+
+1. Login to the Dreamhost control panel and navigate to [the API key page](https://panel.dreamhost.com/?tree=home.api)
+1. Generate a new API Key with a comment to describe its purpose. Add permissions ("Functions this key should have access to:") for **All dns functions**.
+1. Use this API key in your ddns-updater config.json file.
+1. Confirm your domain's DNS records already as an **A** name custom record established in the Dreamhost control panel. If no A name is listed, ddns-updater will fail with error "no_such_zone."

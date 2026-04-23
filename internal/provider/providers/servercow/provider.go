@@ -80,8 +80,12 @@ func validateSettings(domain, owner, username, password string) (err error) {
 	return nil
 }
 
+func (p *Provider) Name() models.Provider {
+	return constants.Servercow
+}
+
 func (p *Provider) String() string {
-	return utils.ToString("servercow.de", p.owner, constants.Servercow, p.ipVersion)
+	return utils.ToString("servercow.de", p.owner, p.Name(), p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

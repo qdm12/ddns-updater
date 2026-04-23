@@ -65,8 +65,12 @@ func validateSettings(domain, apiKey string) (err error) {
 	return nil
 }
 
+func (p *Provider) Name() models.Provider {
+	return constants.Vultr
+}
+
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.Vultr, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, p.Name(), p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

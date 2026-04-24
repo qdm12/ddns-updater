@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 	_ "time/tzdata"
@@ -206,7 +207,8 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	hioClient := healthchecksio.New(client, config.Health.HealthchecksioBaseURL,
 		*config.Health.HealthchecksioUUID)
 
-	updater := update.NewUpdater(db, client, shoutrrrClient, logger, timeNow)
+	debugEnabled := strings.EqualFold(config.Logger.Level, "DEBUG")
+	updater := update.NewUpdater(db, client, shoutrrrClient, logger, timeNow, debugEnabled)
 	updaterService := update.NewService(db, updater, ipGetter, config.Update.Period,
 		config.Update.Cooldown, logger, resolver, timeNow, hioClient)
 

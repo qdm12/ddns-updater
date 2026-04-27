@@ -55,6 +55,7 @@ const (
 	SelfhostDe   models.Provider = "selfhost.de"
 	Servercow    models.Provider = "servercow"
 	Spdyn        models.Provider = "spdyn"
+	Synology     models.Provider = "synology"
 	Strato       models.Provider = "strato"
 	Variomedia   models.Provider = "variomedia"
 	Vercel       models.Provider = "vercel"
@@ -113,6 +114,7 @@ func ProviderChoices() []models.Provider {
 		SelfhostDe,
 		Spdyn,
 		Strato,
+		Synology,
 		Variomedia,
 		Vercel,
 		Vultr,

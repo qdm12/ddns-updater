@@ -23,7 +23,7 @@ func (p *Provider) handleActionResponse(ctx context.Context, client *http.Client
 	switch parsed.Action.Status {
 	case "success":
 		return nil
-	case "running:":
+	case "running":
 		err = p.waitAction(ctx, client, parsed.Action.ID)
 		if err != nil {
 			return fmt.Errorf("waiting for action to complete: %w", err)

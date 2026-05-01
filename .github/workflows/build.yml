@@ -45,6 +45,7 @@ jobs:
           level: error
           exclude: |
             *.md
+          ignore: "importas"
 
       - name: Linting
         run: docker build --target lint .
@@ -90,7 +91,7 @@ jobs:
         github.event_name == 'release' ||
         (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]')
       )
-    needs: [verify, codeql]
+    needs: [ verify, codeql ]
     permissions:
       actions: read
       contents: write

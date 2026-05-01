@@ -95,6 +95,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - Variomedia.de
   - Vultr
   - Zoneedit
+  - Vddns
   - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
 - Web user interface (Desktop)
 

@@ -114,9 +114,9 @@ LABEL \
     org.opencontainers.image.version=$VERSION \
     org.opencontainers.image.created=$CREATED \
     org.opencontainers.image.revision=$COMMIT \
-    org.opencontainers.image.url="https://github.com/qdm12/ddns-updater" \
-    org.opencontainers.image.documentation="https://github.com/qdm12/ddns-updater" \
-    org.opencontainers.image.source="https://github.com/qdm12/ddns-updater" \
+    org.opencontainers.image.url="https://github.com/reptil1990/ddns-updater" \
+    org.opencontainers.image.documentation="https://github.com/reptil1990/ddns-updater" \
+    org.opencontainers.image.source="https://github.com/reptil1990/ddns-updater" \
     org.opencontainers.image.title="ddns-updater" \
     org.opencontainers.image.description="Universal DNS updater with WebUI"
 COPY --from=build --chown=${UID}:${GID} /tmp/gobuild/app /updater/ddns-updater

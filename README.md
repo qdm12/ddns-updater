@@ -93,6 +93,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - Scaleway
   - Selfhost.de
   - Servercow.de
+  - Site.nl
   - Spaceship
   - Spdyn
   - Strato.de
@@ -264,6 +265,7 @@ Check the documentation for your DNS provider:
 - [Scaleway](docs/scaleway.md)
 - [Selfhost.de](docs/selfhost.de.md)
 - [Servercow.de](docs/servercow.md)
+- [Site.nl](docs/sitenl.md)
 - [Spaceship](docs/spaceship.md)
 - [Spdyn](docs/spdyn.md)
 - [Strato.de](docs/strato.md)

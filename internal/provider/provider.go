@@ -60,6 +60,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/scaleway"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/selfhostde"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/servercow"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/sitenl"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/spaceship"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/spdyn"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/strato"
@@ -189,6 +190,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return selfhostde.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Servercow:
 		return servercow.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.SiteNl:
+		return sitenl.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Spaceship:
 		return spaceship.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Spdyn:

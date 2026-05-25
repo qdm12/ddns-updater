@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/breml/rootcerts v0.3.5
 	github.com/containrrr/shoutrrr v0.8.0
-	github.com/go-chi/chi/v5 v5.2.5
+	github.com/go-chi/chi/v5 v5.3.0
 	github.com/miekg/dns v1.1.72
 	github.com/qdm12/goservices v0.1.0
 	github.com/qdm12/gosettings v0.4.4

@@ -10,15 +10,24 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
+// waitAction polls a Zone action until it completes.
+// The action is returned by Zone RRSet operations such as set_records, so it
+// must be queried through the Zone actions endpoint and NOT the Server actions
+// endpoint, otherwise the lookup returns 404 (action not found).
+// See https://docs.hetzner.cloud/reference/cloud#zone-actions-get-an-action
 func (p *Provider) waitAction(ctx context.Context, client *http.Client, id uint64) (err error) {
 	if id == 0 {
 		return fmt.Errorf("%w: action id is zero", errors.ErrReceivedNoResult)
 	}
 
-	const sleepDuration = time.Second
-	const tries = 3
+	// Zone actions (e.g. set_rrset_records) are processed asynchronously by
+	// Hetzner and observed to take around 20 seconds to reach the success
+	// status, so poll up to 12 times waiting p.actionPollPeriod (5 seconds by
+	// default) between attempts, for up to 60 seconds in total.
+	const tries = 12
+	sleepDuration := p.actionPollPeriod
 	for range tries {
-		url := fmt.Sprintf("https://api.hetzner.cloud/v1/servers/actions/%d", id)
+		url := fmt.Sprintf("https://api.hetzner.cloud/v1/zones/actions/%d", id)
 		request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 		if err != nil {
 			return fmt.Errorf("creating http request: %w", err)

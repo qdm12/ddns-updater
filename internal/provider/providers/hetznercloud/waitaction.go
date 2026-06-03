@@ -11,19 +11,17 @@ import (
 )
 
 // waitAction polls a Zone action until it completes.
-// The action is returned by Zone RRSet operations such as set_records, so it
-// must be queried through the Zone actions endpoint and NOT the Server actions
-// endpoint, otherwise the lookup returns 404 (action not found).
+// Zone RRSet operations such as set_records return an action belonging to the
+// zone resource, which is queried through the Zone actions endpoint.
 // See https://docs.hetzner.cloud/reference/cloud#zone-actions-get-an-action
 func (p *Provider) waitAction(ctx context.Context, client *http.Client, id uint64) (err error) {
 	if id == 0 {
 		return fmt.Errorf("%w: action id is zero", errors.ErrReceivedNoResult)
 	}
 
-	// Zone actions (e.g. set_rrset_records) are processed asynchronously by
-	// Hetzner and observed to take around 20 seconds to reach the success
-	// status, so poll up to 12 times waiting p.actionPollPeriod (5 seconds by
-	// default) between attempts, for up to 60 seconds in total.
+	// Zone actions take around 20 seconds to reach the success status, so poll
+	// up to 12 times, waiting p.actionPollPeriod between attempts (60s total
+	// with the default period).
 	const tries = 12
 	sleepDuration := p.actionPollPeriod
 	for range tries {

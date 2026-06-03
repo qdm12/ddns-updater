@@ -15,9 +15,8 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-// defaultActionPollPeriod is the interval between two Zone action status polls.
-// Combined with the number of tries in waitAction, it defines the total time
-// spent waiting for an asynchronous Zone action to complete.
+// defaultActionPollPeriod is the interval between two Zone action status polls
+// in waitAction.
 const defaultActionPollPeriod = 5 * time.Second
 
 type Provider struct {
@@ -31,7 +30,6 @@ type Provider struct {
 	// See https://docs.hetzner.cloud/reference/cloud#tag/zone-rrset-actions/add_zone_rrset_records.body.ttl
 	ttl uint32
 	// actionPollPeriod is the interval between two Zone action status polls.
-	// See waitAction.
 	actionPollPeriod time.Duration
 }
 

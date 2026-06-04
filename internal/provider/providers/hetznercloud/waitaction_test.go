@@ -106,7 +106,7 @@ func Test_Provider_waitAction(t *testing.T) {
 			}
 
 			// Use a tiny poll period to keep the test fast.
-			provider := &Provider{token: "token", actionPollPeriod: time.Millisecond}
+			provider := &Provider{token: testToken, actionPollPeriod: time.Millisecond}
 			err := provider.waitAction(context.Background(), client, testCase.id)
 
 			assert.Equal(t, testCase.wantQueries, queries)
@@ -150,7 +150,7 @@ func Test_Provider_waitAction_timeout(t *testing.T) {
 		}),
 	}
 
-	provider := &Provider{token: "token", actionPollPeriod: time.Millisecond}
+	provider := &Provider{token: testToken, actionPollPeriod: time.Millisecond}
 	err := provider.waitAction(context.Background(), client, actionID)
 
 	require.Error(t, err)

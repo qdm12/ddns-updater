@@ -13,7 +13,7 @@ import (
 // waitAction polls a Zone action until it completes.
 // Zone RRSet operations such as set_records return an action belonging to the
 // zone resource, which is queried through the Zone actions endpoint.
-// See https://docs.hetzner.cloud/reference/cloud#zone-actions-get-an-action
+// See https://docs.hetzner.cloud/reference/cloud#tag/zone-actions/get_zone_action
 func (p *Provider) waitAction(ctx context.Context, client *http.Client, id uint64) (err error) {
 	if id == 0 {
 		return fmt.Errorf("%w: action id is zero", errors.ErrReceivedNoResult)

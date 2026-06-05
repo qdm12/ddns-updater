@@ -75,15 +75,19 @@ func Test_Provider_waitAction(t *testing.T) {
 			errWrapped:   errors.ErrHTTPStatusNotValid,
 			errSubstring: "404",
 		},
+		// The Hetzner Cloud API returns the action error as an object
+		// {"code": ..., "message": ...}, not a bare string.
+		// See https://docs.hetzner.cloud/reference/cloud#tag/zone-actions/get_zone_action
 		"action_error": {
 			id: actionID,
 			responses: []bodyResponse{{
 				http.StatusOK,
-				fmt.Sprintf(`{"action":{"id":%d,"status":"error","error":"boom"}}`, actionID),
+				fmt.Sprintf(`{"action":{"id":%d,"status":"error",`+
+					`"error":{"code":"action_failed","message":"Action failed"}}}`, actionID),
 			}},
 			wantQueries:  1,
 			errWrapped:   errors.ErrUnsuccessful,
-			errSubstring: "boom",
+			errSubstring: "action_failed",
 		},
 	}
 

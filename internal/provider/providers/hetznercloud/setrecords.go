@@ -14,10 +14,12 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
-// createRRSet legt einen neuen RRset an. Existiert der RRset bereits, antwortet
-// die API mit 409 Conflict; bestehende Records werden über setRecords geändert.
-// Siehe https://docs.hetzner.cloud/reference/cloud#tag/zones/POST/zones/{zone_id}/rrsets
-func (p *Provider) createRRSet(ctx context.Context, client *http.Client, zoneID string, ip netip.Addr) (
+// setRecords ändert die Records eines bereits bestehenden RRsets über die
+// set_records-Action. Die Action läuft server-seitig asynchron; wir werten
+// nur den unmittelbaren Status aus und pollen bewusst nicht, da ddns-updater
+// den RRset im nächsten Zyklus ohnehin erneut liest.
+// Siehe https://docs.hetzner.cloud/reference/cloud#tag/zone-actions/POST/zones/{zone_id}/rrsets/{name}/{type}/actions/set_records
+func (p *Provider) setRecords(ctx context.Context, client *http.Client, zoneID string, ip netip.Addr) (
 	newIP netip.Addr, err error,
 ) {
 	recordType := constants.A
@@ -28,20 +30,17 @@ func (p *Provider) createRRSet(ctx context.Context, client *http.Client, zoneID 
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.hetzner.cloud",
-		Path:   "/v1/zones/" + zoneID + "/rrsets",
+		Path: "/v1/zones/" + zoneID + "/rrsets/" +
+			url.PathEscape(p.owner) + "/" + recordType + "/actions/set_records",
 	}
 
+	// set_records setzt ausschließlich die Records; die TTL wird über die
+	// change_ttl-Action verwaltet und bleibt hier unverändert.
 	requestData := struct {
-		Name    string `json:"name"`
-		Type    string `json:"type"`
-		TTL     uint32 `json:"ttl"`
 		Records []struct {
 			Value string `json:"value"`
 		} `json:"records"`
 	}{
-		Name: p.owner,
-		Type: recordType,
-		TTL:  p.ttl,
 		Records: []struct {
 			Value string `json:"value"`
 		}{{Value: ip.String()}},
@@ -70,28 +69,29 @@ func (p *Provider) createRRSet(ctx context.Context, client *http.Client, zoneID 
 	}
 
 	var result struct {
-		RRSet struct {
-			Records []struct {
-				Value string `json:"value"`
-			} `json:"records"`
-		} `json:"rrset"`
+		Action struct {
+			Status string `json:"status"`
+			Error  *struct {
+				Code    string `json:"code"`
+				Message string `json:"message"`
+			} `json:"error"`
+		} `json:"action"`
 	}
 	if err = json.NewDecoder(response.Body).Decode(&result); err != nil {
 		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
 	}
 
-	if len(result.RRSet.Records) == 0 {
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoResult)
+	// Nur ein bereits fehlgeschlagener Action-Status wird als Fehler gewertet;
+	// "running" und "success" gelten als angenommen.
+	if result.Action.Status == "error" {
+		message := "action failed"
+		if result.Action.Error != nil {
+			message = result.Action.Error.Code + ": " + result.Action.Error.Message
+		}
+		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrHTTPStatusNotValid, message)
 	}
 
-	newIP, err = netip.ParseAddr(result.RRSet.Records[0].Value)
-	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
-	}
-
-	if newIP.Compare(ip) != 0 {
-		return netip.Addr{}, fmt.Errorf("%w: sent %s but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
-	}
-	return newIP, nil
+	// Die Action-Antwort enthält keine Records; bei erfolgreicher Annahme wird
+	// die gesendete IP zurückgegeben.
+	return ip, nil
 }

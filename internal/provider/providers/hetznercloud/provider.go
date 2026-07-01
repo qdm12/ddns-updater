@@ -121,16 +121,24 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	// Aktuellen RRset prüfen
 	currentIP, err := p.getRRSet(ctx, client, zoneID, ip)
+	recordExists := true
 	switch {
 	case stderrors.Is(err, errors.ErrReceivedNoResult):
-		// Kein RRset vorhanden → neu anlegen via upsert
+		recordExists = false // Kein RRset vorhanden → neu anlegen
 	case err != nil:
 		return netip.Addr{}, fmt.Errorf("getting rrset: %w", err)
 	case currentIP.Compare(ip) == 0:
 		return ip, nil // bereits aktuell
 	}
 
-	newIP, err = p.setRRSet(ctx, client, zoneID, ip)
+	// Die Hetzner-Cloud-API trennt Anlegen und Ändern: POST /rrsets legt einen
+	// RRset an (409 Conflict falls er existiert), während die Records eines
+	// bestehenden RRsets über die set_records-Action geändert werden.
+	if recordExists {
+		newIP, err = p.setRecords(ctx, client, zoneID, ip)
+	} else {
+		newIP, err = p.createRRSet(ctx, client, zoneID, ip)
+	}
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("setting rrset: %w", err)
 	}

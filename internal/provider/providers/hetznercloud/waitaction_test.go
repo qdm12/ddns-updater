@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// rewriteTransport leitet alle Anfragen (an api.hetzner.cloud) auf den
-// Test-Server um, ohne den Provider-Code für Tests anpassen zu müssen.
+// rewriteTransport redirects all requests (to api.hetzner.cloud) to the
+// test server, without having to make the provider code test-aware.
 type rewriteTransport struct {
 	host string
 	base http.RoundTripper
@@ -36,9 +36,9 @@ func Test_waitAction(t *testing.T) {
 		wantPath   string
 		wantErr    error
 	}{
-		// Regression: die Action einer set_records-/create-Operation gehört zu
-		// einer Zone, muss also unter /v1/zones/actions/{id} gepollt werden.
-		// Zuvor wurde fälschlich /v1/servers/actions/{id} verwendet (404).
+		// Regression: the action of a set_records/create operation belongs to a
+		// zone, so it must be polled at /v1/zones/actions/{id}.
+		// Previously /v1/servers/actions/{id} was used by mistake, which 404s.
 		"success_polls_zone_action_endpoint": {
 			actionID:   42,
 			statusCode: http.StatusOK,

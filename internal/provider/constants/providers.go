@@ -112,6 +112,7 @@ func ProviderChoices() []models.Provider {
 		Route53,
 		Scaleway,
 		SelfhostDe,
+		Servercow,
 		Spaceship,
 		Spdyn,
 		Strato,

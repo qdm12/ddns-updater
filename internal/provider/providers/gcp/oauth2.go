@@ -9,7 +9,8 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-func createOauth2Client(ctx context.Context, client *http.Client, credentialsJSON []byte) (
+func createOauth2Client(ctx context.Context, client *http.Client,
+	credentialsJSON []byte, credentialsType google.CredentialsType) (
 	oauth2Client *http.Client, err error,
 ) {
 	scopes := []string{
@@ -18,7 +19,7 @@ func createOauth2Client(ctx context.Context, client *http.Client, credentialsJSO
 		"https://www.googleapis.com/auth/ndev.clouddns.readonly",
 		"https://www.googleapis.com/auth/ndev.clouddns.readwrite",
 	}
-	credentials, err := google.CredentialsFromJSON(ctx, credentialsJSON, scopes...)
+	credentials, err := google.CredentialsFromJSONWithType(ctx, credentialsJSON, credentialsType, scopes...)
 	if err != nil {
 		return nil, fmt.Errorf("creating Google credentials: %w", err)
 	}

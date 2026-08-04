@@ -69,10 +69,12 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - GoDaddy
   - GoIP.de
   - He.net
-  - Hetzner
+  - Hetzner (legacy API)
+  - Hetzner Cloud
   - Infomaniak
   - INWX
-  - Ionos
+    - Ionos
+    - ipv64
   - Linode
   - Loopia
   - LuaDNS
@@ -88,8 +90,10 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - OVH
   - Porkbun
   - Route53
+  - Scaleway
   - Selfhost.de
   - Servercow.de
+  - Spaceship
   - Spdyn
   - Strato.de
   - Variomedia.de
@@ -237,9 +241,11 @@ Check the documentation for your DNS provider:
 - [GoIP.de](docs/goip.md)
 - [He.net](docs/he.net.md)
 - [Hetzner](docs/hetzner.md)
+- [HetznerCloud](docs/hetznercloud.md)
 - [Infomaniak](docs/infomaniak.md)
 - [INWX](docs/inwx.md)
 - [Ionos](docs/ionos.md)
+- [IPv64](docs/ipv64.md)
 - [Linode](docs/linode.md)
 - [Loopia](docs/loopia.md)
 - [LuaDNS](docs/luadns.md)
@@ -255,8 +261,10 @@ Check the documentation for your DNS provider:
 - [OVH](docs/ovh.md)
 - [Porkbun](docs/porkbun.md)
 - [Route53](docs/route53.md)
+- [Scaleway](docs/scaleway.md)
 - [Selfhost.de](docs/selfhost.de.md)
 - [Servercow.de](docs/servercow.md)
+- [Spaceship](docs/spaceship.md)
 - [Spdyn](docs/spdyn.md)
 - [Strato.de](docs/strato.md)
 - [Variomedia.de](docs/variomedia.md)
@@ -344,7 +352,7 @@ You can otherwise customize it with the following:
   - `wtfismyip` using [https://ipv6.wtfismyip.com/text](https://ipv6.wtfismyip.com/text)
   - `seeip` using [https://ipv6.seeip.org](https://ipv6.seeip.org)
   - You can also specify an HTTPS URL with prefix `url:` for example `url:https://ipinfo.io/ip`
-- `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see #136). It can be one or more of the following:
+- `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see [#136](https://github.com/qdm12/ddns-updater/issues/136)). It can be one or more of the following:
   - `cloudflare`
   - `opendns`
 

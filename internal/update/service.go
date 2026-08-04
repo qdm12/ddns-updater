@@ -2,6 +2,7 @@ package update
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/netip"
 	"strconv"
@@ -65,6 +66,7 @@ func (s *Service) lookupIPsResilient(ctx context.Context, hostname string, tries
 	lookupCtx, cancel := context.WithCancel(ctx)
 	for _, network := range networks {
 		go func(ctx context.Context, network string, results chan<- result) {
+			errs := make([]error, 0, tries)
 			for range tries {
 				ips, err := s.resolver.LookupNetIP(ctx, network, hostname)
 				if err != nil {
@@ -72,10 +74,15 @@ func (s *Service) lookupIPsResilient(ctx context.Context, hostname string, tries
 						results <- result{network: network} // no IP address for this network
 						return
 					}
+					errs = append(errs, err)
 					continue // retry
 				}
 				results <- result{network: network, ips: ips, err: err}
 				return
+			}
+			results <- result{
+				network: network,
+				err:     fmt.Errorf("ip look up failed after %d tries: %w", tries, errors.Join(errs...)),
 			}
 		}(lookupCtx, network, results)
 	}
@@ -150,7 +157,7 @@ func (s *Service) getRecordIDsToUpdate(ctx context.Context, records []librecords
 	for i, record := range records {
 		shouldUpdate := s.shouldUpdateRecord(ctx, record, ip, ipv4, ipv6)
 		if shouldUpdate {
-			id := uint(i) //nolint:gosec
+			id := uint(i)
 			recordIDs[id] = struct{}{}
 		}
 	}
@@ -322,7 +329,7 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 	now := s.timeNow()
 
 	for i, record := range records {
-		id := uint(i) //nolint:gosec
+		id := uint(i)
 		_, requireUpdate := recordIDs[id]
 		if requireUpdate || record.Status != constants.UNSET {
 			continue

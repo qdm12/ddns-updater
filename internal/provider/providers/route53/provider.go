@@ -134,6 +134,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// Update updates the IP address for the provider.
 // See https://docs.aws.amazon.com/Route53/latest/APIReference/API_ChangeResourceRecordSets.html
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{

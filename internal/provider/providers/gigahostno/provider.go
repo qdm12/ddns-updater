@@ -23,10 +23,10 @@ type Provider struct {
 	owner      string
 	ipVersion  ipversion.IPVersion
 	ipv6Suffix netip.Prefix
-	// username is the account email, used with password for HTTP Basic auth.
-	username string
+	// email is the account email, used with password for HTTP Basic auth.
+	email    string
 	password string
-	// apiKey is used as a bearer token instead of username and password.
+	// apiKey is used as a bearer token instead of email and password.
 	// It is required for accounts with two-factor authentication enabled.
 	apiKey string
 }
@@ -36,7 +36,7 @@ func New(data json.RawMessage, domain, owner string,
 	p *Provider, err error,
 ) {
 	extraSettings := struct {
-		Username string `json:"username"`
+		Email    string `json:"email"`
 		Password string `json:"password"`
 		APIKey   string `json:"apikey"`
 	}{}
@@ -46,7 +46,7 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	err = validateSettings(domain,
-		extraSettings.Username, extraSettings.Password, extraSettings.APIKey)
+		extraSettings.Email, extraSettings.Password, extraSettings.APIKey)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -56,13 +56,13 @@ func New(data json.RawMessage, domain, owner string,
 		owner:      owner,
 		ipVersion:  ipVersion,
 		ipv6Suffix: ipv6Suffix,
-		username:   extraSettings.Username,
+		email:      extraSettings.Email,
 		password:   extraSettings.Password,
 		apiKey:     extraSettings.APIKey,
 	}, nil
 }
 
-func validateSettings(domain, username, password, apiKey string) (err error) {
+func validateSettings(domain, email, password, apiKey string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
@@ -75,11 +75,11 @@ func validateSettings(domain, username, password, apiKey string) (err error) {
 	}
 
 	switch {
-	case username == "" && password == "":
-		return fmt.Errorf("%w: API key, or username and password, must be set",
+	case email == "" && password == "":
+		return fmt.Errorf("%w: API key, or email and password, must be set",
 			errors.ErrCredentialsNotSet)
-	case username == "":
-		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+	case email == "":
+		return fmt.Errorf("%w", errors.ErrEmailNotSet)
 	case password == "":
 		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
 	}
@@ -140,7 +140,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 	if p.apiKey == "" {
 		// HTTP Basic authentication using the account email and password.
-		u.User = url.UserPassword(p.username, p.password)
+		u.User = url.UserPassword(p.email, p.password)
 	}
 	u.RawQuery = values.Encode()
 

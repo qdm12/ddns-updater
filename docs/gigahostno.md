@@ -26,7 +26,7 @@
     {
       "provider": "gigahostno",
       "domain": "sub.example.no",
-      "username": "you@example.no",
+      "email": "you@example.no",
       "password": "your password",
       "ip_version": "ipv4",
       "ipv6_suffix": ""
@@ -40,9 +40,9 @@
 - `"domain"` is the domain to update. It can be `example.no` (root domain), `sub.example.no` (subdomain of `example.no`) or `*.example.no` for the wildcard.
 - Authentication, using **either**:
     - `"apikey"` is an API key generated from your Gigahost account. This is the recommended method.
-    - `"username"` (your account email) together with `"password"` (your account password).
+    - `"email"` (your account email) together with `"password"` (your account password).
 
-> ⚠️ Two-factor authentication (2FA) is not supported for now when using `"username"` and `"password"`. If you have 2FA enabled on your account, use an `"apikey"` instead.
+> ⚠️ Two-factor authentication (2FA) is not supported for now when using `"email"` and `"password"`. If you have 2FA enabled on your account, use an `"apikey"` instead.
 
 ### Optional parameters
 
@@ -52,7 +52,7 @@
 ## Domain setup
 
 1. Log in to your [Gigahost account](https://gigahost.no/) and make sure your domain's DNS is hosted at Gigahost.
-2. To use an API key, generate one from your account and set it as `"apikey"`. Otherwise set your account email as `"username"` and your password as `"password"`.
+2. To use an API key, generate one from your account and set it as `"apikey"`. Otherwise set your account email as `"email"` and your password as `"password"`.
 
 The record (`A` for IPv4 and/or `AAAA` for IPv6) is created automatically on the first update if it does not already exist.
 

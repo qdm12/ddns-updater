@@ -69,10 +69,12 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - GoDaddy
   - GoIP.de
   - He.net
-  - Hetzner
+  - Hetzner (legacy API)
+  - Hetzner Cloud
   - Infomaniak
   - INWX
-  - Ionos
+    - Ionos
+    - ipv64
   - Linode
   - Loopia
   - LuaDNS
@@ -91,6 +93,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - Scaleway
   - Selfhost.de
   - Servercow.de
+  - Spaceship
   - Spdyn
   - Strato.de
   - Variomedia.de
@@ -238,9 +241,11 @@ Check the documentation for your DNS provider:
 - [GoIP.de](docs/goip.md)
 - [He.net](docs/he.net.md)
 - [Hetzner](docs/hetzner.md)
+- [HetznerCloud](docs/hetznercloud.md)
 - [Infomaniak](docs/infomaniak.md)
 - [INWX](docs/inwx.md)
 - [Ionos](docs/ionos.md)
+- [IPv64](docs/ipv64.md)
 - [Linode](docs/linode.md)
 - [Loopia](docs/loopia.md)
 - [LuaDNS](docs/luadns.md)
@@ -259,6 +264,7 @@ Check the documentation for your DNS provider:
 - [Scaleway](docs/scaleway.md)
 - [Selfhost.de](docs/selfhost.de.md)
 - [Servercow.de](docs/servercow.md)
+- [Spaceship](docs/spaceship.md)
 - [Spdyn](docs/spdyn.md)
 - [Strato.de](docs/strato.md)
 - [Variomedia.de](docs/variomedia.md)

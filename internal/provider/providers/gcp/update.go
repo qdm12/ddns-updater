@@ -18,7 +18,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		recordType = constants.AAAA
 	}
 
-	client, err = createOauth2Client(ctx, client, p.credentials)
+	client, err = createOauth2Client(ctx, client, p.credentials, p.credType)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("creating OAuth2 client: %w", err)
 	}

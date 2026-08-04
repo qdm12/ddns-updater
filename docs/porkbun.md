@@ -10,7 +10,6 @@
     {
       "provider": "porkbun",
       "domain": "domain.com",
-      "host": "@",
       "api_key": "pk1_5299b57125c8f3cdf347d2fe0e713311ee3a1e11f11a14942b26472593e35368",
       "secret_api_key": "sk1_7d119e3f656b00ae042980302e1425a04163c476efec1833q3cb0w54fc6f5022",
       "ip_version": "ipv4",
@@ -23,11 +22,6 @@
 ### Compulsory Parameters
 
 - `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
-- `"host"` is the DNS host to update:
-  * `"@"` for the root domain (example.com)
-  * `"sub"` for sub.example.com
-  * `"*"` for the wildcard (*.example.com)
-  * `"*,@"` to update both wildcard and root records
 - `"api_key"`
 - `"secret_api_key"`
 

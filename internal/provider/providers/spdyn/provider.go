@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -177,10 +178,5 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 }
 
 func isAny(s string, values ...string) (ok bool) {
-	for _, value := range values {
-		if s == value {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(values, s)
 }

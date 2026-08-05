@@ -206,7 +206,8 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	hioClient := healthchecksio.New(client, config.Health.HealthchecksioBaseURL,
 		*config.Health.HealthchecksioUUID)
 
-	updater := update.NewUpdater(db, client, shoutrrrClient, logger, timeNow)
+	debugEnabled := config.Logger.Level == log.LevelDebug.String()
+	updater := update.NewUpdater(db, client, shoutrrrClient, logger, timeNow, debugEnabled)
 	updaterService := update.NewService(db, updater, ipGetter, config.Update.Period,
 		config.Update.Cooldown, logger, resolver, timeNow, hioClient)
 

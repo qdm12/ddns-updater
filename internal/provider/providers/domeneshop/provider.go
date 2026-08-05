@@ -108,6 +108,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// Update updates the IP address for the provider.
 // Link to documentation:
 // https://api.domeneshop.no/docs/#tag/ddns/paths/~1dyndns~1update/get
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {

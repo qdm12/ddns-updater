@@ -110,6 +110,10 @@ docker run -d \
 
 ---
 
+### Home Assistant
+
+To install ddns-updater on [Home Assistant](https://home-assistant.io/), follow the installation instructions on [ha-ddns-updater](https://github.com/ha-ddns-updater/ha-ddns-updater/).
+
 ## Configuration
 
 You can manage entries entirely through the WebUI. If you prefer editing `data/config.json` directly, both work — the WebUI hot-reloads on file changes and direct edits are supported.

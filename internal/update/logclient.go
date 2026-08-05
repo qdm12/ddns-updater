@@ -2,7 +2,6 @@ package update
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -16,29 +15,18 @@ type DebugLogger interface {
 	Debug(s string)
 }
 
-func makeLogClient(client *http.Client, logger DebugLogger) (newClient *http.Client) {
-	newClient = &http.Client{
-		Timeout: client.Timeout,
+func makeLogClient(client *http.Client, logger DebugLogger) *http.Client {
+	transport := client.Transport
+	if transport == nil {
+		transport = http.DefaultTransport
 	}
 
-	originalTransport := client.Transport
-	if originalTransport == nil {
-		originalTransport = http.DefaultTransport
-	}
-
-	transport, ok := originalTransport.(*http.Transport)
-	if !ok {
-		panic(fmt.Sprintf("transport %T is not *http.Transport", originalTransport))
-	}
-
-	clonedTransport := transport.Clone()
-
-	newClient.Transport = &loggingRoundTripper{
-		proxied: clonedTransport,
+	client.Transport = &loggingRoundTripper{
+		proxied: transport,
 		logger:  logger,
 	}
 
-	return newClient
+	return client
 }
 
 type loggingRoundTripper struct {

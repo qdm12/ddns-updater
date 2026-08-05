@@ -103,7 +103,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
 		Owner:     p.Owner(),
-		Provider:  "<a href=\"https://www.porkbun.com/\">Porkbun DNS</a>",
+		Provider:  "<a href=\"https://www.porkbun.com/\">Porkbun</a>",
 		IPVersion: p.ipVersion.String(),
 	}
 }
@@ -114,6 +114,7 @@ func setHeaders(request *http.Request) {
 	headers.SetAccept(request, "application/json")
 }
 
+// Update updates the IP address for the provider.
 // See https://porkbun.com/api/json/v3/documentation
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A

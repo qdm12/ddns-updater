@@ -132,6 +132,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// Update updates the IP address for the provider.
 // See https://www.goip.de/update-url.html
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	u := url.URL{

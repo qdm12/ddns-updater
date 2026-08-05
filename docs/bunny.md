@@ -20,7 +20,7 @@
 
 ### Compulsory parameters
 
-- `"domain"` is the domain to update. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`).
+- `"domain"` is the domain to update. It can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
 - `"api_key"` is your API key which can be obtained from your [Account Settings](https://dash.bunny.net/account/api-key).
 
 ### Optional parameters

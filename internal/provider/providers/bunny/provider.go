@@ -20,11 +20,6 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
-const (
-	dnsRecordTypeA    = 0
-	dnsRecordTypeAAAA = 1
-)
-
 type Provider struct {
 	domain     string
 	owner      string
@@ -72,9 +67,9 @@ func validateSettings(domain, apiKey string, ttl uint32) (err error) {
 	case apiKey == "":
 		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
 	case ttl != 0 && ttl < 60:
-		return fmt.Errorf("%w", errors.ErrTTLTooLow)
+		return fmt.Errorf("%w: %d", errors.ErrTTLTooLow, ttl)
 	case ttl > 3600:
-		return fmt.Errorf("%w", errors.ErrTTLTooHigh)
+		return fmt.Errorf("%w: %d", errors.ErrTTLTooHigh, ttl)
 	}
 	return nil
 }
@@ -129,9 +124,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("getting zone id: %w", err)
 	}
 
-	recordType := dnsRecordTypeA
+	recordType := 0
 	if ip.Is6() {
-		recordType = dnsRecordTypeAAAA
+		recordType = 1
 	}
 
 	record, err := p.getRecord(ctx, client, zoneID, recordType)

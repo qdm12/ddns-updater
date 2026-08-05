@@ -39,8 +39,8 @@
 
 - `"domain"` is the domain to update. It can be `example.no` (root domain), `sub.example.no` (subdomain of `example.no`) or `*.example.no` for the wildcard.
 - Authentication, using **either**:
-    - `"apikey"` is an API key generated from your Gigahost account. This is the recommended method.
-    - `"email"` (your account email) together with `"password"` (your account password).
+  - `"apikey"` is an API key generated from your Gigahost account. This is the recommended method.
+  - `"email"` (your account email) together with `"password"` (your account password).
 
 > ⚠️ Two-factor authentication (2FA) is not supported for now when using `"email"` and `"password"`. If you have 2FA enabled on your account, use an `"apikey"` instead.
 

@@ -74,7 +74,7 @@ func TestGetConfig(t *testing.T) {
 	const content = `{"settings":[{"provider":"duckdns","domain":"test.duckdns.org","token":"secret123"}]}`
 	_, api := setupTestConfig(t, content)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/config", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/config", nil)
 	w := httptest.NewRecorder()
 	api.getConfig(w, req)
 
@@ -108,7 +108,7 @@ func TestPostConfig(t *testing.T) {
 	configPath, api := setupTestConfig(t, `{"settings":[]}`)
 
 	body := `{"provider":"duckdns","domain":"new.duckdns.org","token":"abc123"}`
-	req := httptest.NewRequest(http.MethodPost, "/api/config", bytes.NewBufferString(body))
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/config", bytes.NewBufferString(body))
 	w := httptest.NewRecorder()
 	api.postConfig(w, req)
 
@@ -132,7 +132,7 @@ func TestPutConfig(t *testing.T) {
 	router.Put("/api/config/{index}", api.putConfig)
 
 	body := `{"provider":"duckdns","domain":"updated.duckdns.org","token":"***"}`
-	req := httptest.NewRequest(http.MethodPut, "/api/config/0", bytes.NewBufferString(body))
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPut, "/api/config/0", bytes.NewBufferString(body))
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -158,7 +158,7 @@ func TestDeleteConfig(t *testing.T) {
 	router := chi.NewRouter()
 	router.Delete("/api/config/{index}", api.deleteConfig)
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/config/0", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodDelete, "/api/config/0", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -184,7 +184,7 @@ func TestDeleteConfigOutOfRange(t *testing.T) {
 	router := chi.NewRouter()
 	router.Delete("/api/config/{index}", api.deleteConfig)
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/config/5", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodDelete, "/api/config/5", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -198,7 +198,7 @@ func TestPostConfigMissingProvider(t *testing.T) {
 	_, api := setupTestConfig(t, `{"settings":[]}`)
 
 	body := `{"domain":"test.com"}`
-	req := httptest.NewRequest(http.MethodPost, "/api/config", bytes.NewBufferString(body))
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/config", bytes.NewBufferString(body))
 	w := httptest.NewRecorder()
 	api.postConfig(w, req)
 
@@ -231,7 +231,7 @@ func TestGetProviders(t *testing.T) {
 	t.Parallel()
 	api := newAPIHandlers("", nil, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/providers", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/providers", nil)
 	w := httptest.NewRecorder()
 	api.getProviders(w, req)
 
@@ -282,7 +282,7 @@ func TestPostConfigTriggersReload(t *testing.T) {
 	api := newAPIHandlers(configPath, db, parser)
 
 	body := `{"provider":"duckdns","domain":"test.duckdns.org","token":"abc"}`
-	req := httptest.NewRequest(http.MethodPost, "/api/config", bytes.NewBufferString(body))
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/config", bytes.NewBufferString(body))
 	w := httptest.NewRecorder()
 	api.postConfig(w, req)
 

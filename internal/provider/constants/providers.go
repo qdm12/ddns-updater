@@ -32,6 +32,7 @@ const (
 	HE           models.Provider = "he"
 	Hetzner      models.Provider = "hetzner"
 	HetznerCloud models.Provider = "hetznercloud"
+	Hostinger    models.Provider = "hostinger"
 	Infomaniak   models.Provider = "infomaniak"
 	INWX         models.Provider = "inwx"
 	Ionos        models.Provider = "ionos"
@@ -92,6 +93,7 @@ func ProviderChoices() []models.Provider {
 		HE,
 		Hetzner,
 		HetznerCloud,
+		Hostinger,
 		Infomaniak,
 		INWX,
 		Ionos,

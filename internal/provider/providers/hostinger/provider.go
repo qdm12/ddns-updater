@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -16,8 +17,6 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
-
-const defaultTTL uint32 = 14400
 
 type Provider struct {
 	domain string
@@ -43,6 +42,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, err
 	}
 
+	const defaultTTL uint32 = 14400
 	if extraSettings.TTL == 0 {
 		extraSettings.TTL = defaultTTL
 	}
@@ -68,8 +68,7 @@ func validateSettings(domain, token string) (err error) {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
 	}
 
-	switch {
-	case token == "":
+	if token == "" {
 		return fmt.Errorf("%w", errors.ErrTokenNotSet)
 	}
 
@@ -121,6 +120,22 @@ func (p *Provider) setHeaders(request *http.Request) {
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
+	type recordContent struct {
+		Content string `json:"content"`
+	}
+
+	type zoneRecord struct {
+		Name    string          `json:"name"`
+		Records []recordContent `json:"records"`
+		TTL     uint32          `json:"ttl"`
+		Type    string          `json:"type"`
+	}
+
+	type updateRequest struct {
+		Overwrite bool         `json:"overwrite"`
+		Zone      []zoneRecord `json:"zone"`
+	}
+
 	recordType := constants.A
 	if ip.Is6() {
 		recordType = constants.AAAA
@@ -151,7 +166,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		Host:   "developers.hostinger.com",
 		Path:   "/api/dns/v1/zones/" + p.domain,
 	}
-
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, u.String(), buffer)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
@@ -172,9 +186,17 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 }
 
 func handleAPIError(response *http.Response) error {
-	apiError := apiError{}
-	if err := json.NewDecoder(response.Body).Decode(&apiError); err != nil {
-		return fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("reading response body: %w", err)
+	}
+
+	apiError := struct {
+		Error         string `json:"error"`
+		CorrelationID string `json:"correlation_id"`
+	}{}
+	if err := json.Unmarshal(body, &apiError); err != nil {
+		return fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, string(body))
 	}
 
 	detail := apiError.Error
@@ -194,25 +216,4 @@ func handleAPIError(response *http.Response) error {
 	default:
 		return fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, detail)
 	}
-}
-
-type updateRequest struct {
-	Overwrite bool         `json:"overwrite"`
-	Zone      []zoneRecord `json:"zone"`
-}
-
-type zoneRecord struct {
-	Name    string          `json:"name"`
-	Records []recordContent `json:"records"`
-	TTL     uint32          `json:"ttl"`
-	Type    string          `json:"type"`
-}
-
-type recordContent struct {
-	Content string `json:"content"`
-}
-
-type apiError struct {
-	Error         string `json:"error"`
-	CorrelationID string `json:"correlation_id"`
 }

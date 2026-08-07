@@ -1,7 +1,6 @@
 package hetznercloud
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -39,7 +38,7 @@ func (rt *recordingTransport) RoundTrip(request *http.Request) (*http.Response, 
 		}, nil
 	}
 	return &http.Response{
-		StatusCode: response.statusCode,
+		StatusCode: int(response.statusCode),
 		Body:       io.NopCloser(strings.NewReader(response.body)),
 	}, nil
 }
@@ -60,7 +59,7 @@ func Test_Provider_Update_wildcard(t *testing.T) {
 		domain   = "example.com"
 		actionID = 12345
 	)
-	newIP := netip.MustParseAddr("185.28.78.5")
+	newIP := netip.AddrFrom4([4]byte{185, 28, 78, 5})
 
 	runningBody := fmt.Sprintf(`{"action":{"id":%d,"status":"running"}}`, actionID)
 	successBody := fmt.Sprintf(`{"action":{"id":%d,"status":"success"}}`, actionID)
@@ -126,7 +125,7 @@ func Test_Provider_Update_wildcard(t *testing.T) {
 				actionPollPeriod: time.Millisecond,
 			}
 
-			gotIP, err := provider.Update(context.Background(), client, newIP)
+			gotIP, err := provider.Update(t.Context(), client, newIP)
 			require.NoError(t, err)
 			assert.Equal(t, newIP, gotIP)
 

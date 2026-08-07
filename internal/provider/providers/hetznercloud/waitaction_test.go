@@ -1,7 +1,6 @@
 package hetznercloud
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// roundTripFunc lets us mock the HTTP client transport.
 type roundTripFunc func(request *http.Request) *http.Response
 
 func (f roundTripFunc) RoundTrip(request *http.Request) (*http.Response, error) {
@@ -23,7 +21,7 @@ func (f roundTripFunc) RoundTrip(request *http.Request) (*http.Response, error) 
 
 // bodyResponse describes a single HTTP response returned by the mock transport.
 type bodyResponse struct {
-	statusCode int
+	statusCode uint
 	body       string
 }
 
@@ -37,7 +35,7 @@ func Test_Provider_waitAction(t *testing.T) {
 	testCases := map[string]struct {
 		id           uint64
 		responses    []bodyResponse
-		wantQueries  int
+		wantQueries  uint
 		errWrapped   error
 		errSubstring string
 	}{
@@ -95,7 +93,7 @@ func Test_Provider_waitAction(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			var queries int
+			var queries uint
 			var lastURL string
 			client := &http.Client{
 				Transport: roundTripFunc(func(request *http.Request) *http.Response {
@@ -103,7 +101,7 @@ func Test_Provider_waitAction(t *testing.T) {
 					response := testCase.responses[queries]
 					queries++
 					return &http.Response{
-						StatusCode: response.statusCode,
+						StatusCode: int(response.statusCode),
 						Body:       io.NopCloser(strings.NewReader(response.body)),
 					}
 				}),
@@ -111,7 +109,7 @@ func Test_Provider_waitAction(t *testing.T) {
 
 			// Use a tiny poll period to keep the test fast.
 			provider := &Provider{token: testToken, actionPollPeriod: time.Millisecond}
-			err := provider.waitAction(context.Background(), client, testCase.id)
+			err := provider.waitAction(t.Context(), client, testCase.id)
 
 			assert.Equal(t, testCase.wantQueries, queries)
 			if testCase.wantQueries > 0 {
@@ -143,7 +141,7 @@ func Test_Provider_waitAction_timeout(t *testing.T) {
 	const actionID = 12345
 	runningBody := fmt.Sprintf(`{"action":{"id":%d,"status":"running"}}`, actionID)
 
-	var queries int
+	var queries uint
 	client := &http.Client{
 		Transport: roundTripFunc(func(_ *http.Request) *http.Response {
 			queries++
@@ -155,11 +153,11 @@ func Test_Provider_waitAction_timeout(t *testing.T) {
 	}
 
 	provider := &Provider{token: testToken, actionPollPeriod: time.Millisecond}
-	err := provider.waitAction(context.Background(), client, actionID)
+	err := provider.waitAction(t.Context(), client, actionID)
 
 	require.Error(t, err)
 	assert.ErrorIs(t, err, errors.ErrUnsuccessful)
 	assert.Contains(t, err.Error(), "did not complete")
 	// The action is polled exactly the maximum number of tries.
-	assert.Equal(t, 12, queries)
+	assert.Equal(t, uint(12), queries)
 }

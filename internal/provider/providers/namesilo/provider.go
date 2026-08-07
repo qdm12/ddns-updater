@@ -90,8 +90,12 @@ func validateSettings(domain, key string, ttl *uint32) (err error) {
 	return nil
 }
 
+func (p *Provider) Name() models.Provider {
+	return constants.NameSilo
+}
+
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.NameSilo, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, p.Name(), p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

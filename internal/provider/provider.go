@@ -72,6 +72,7 @@ import (
 
 type Provider interface {
 	String() string
+	Name() models.Provider
 	Domain() string
 	Owner() string
 	BuildDomainName() string

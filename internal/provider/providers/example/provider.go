@@ -81,10 +81,14 @@ func validateSettings(domain, username, password string) (err error) {
 	return nil
 }
 
+func (p *Provider) Name() models.Provider {
+	return constants.Example
+}
+
 func (p *Provider) String() string {
 	// TODO update the name of the provider and add it to the
 	// internal/provider/constants package.
-	return utils.ToString(p.domain, p.owner, constants.Dyn, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, p.Name(), p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

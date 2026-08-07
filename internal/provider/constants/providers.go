@@ -56,6 +56,7 @@ const (
 	Servercow    models.Provider = "servercow"
 	Spaceship    models.Provider = "spaceship"
 	Spdyn        models.Provider = "spdyn"
+	Synology     models.Provider = "synology"
 	Strato       models.Provider = "strato"
 	Variomedia   models.Provider = "variomedia"
 	Vercel       models.Provider = "vercel"
@@ -116,6 +117,7 @@ func ProviderChoices() []models.Provider {
 		Spaceship,
 		Spdyn,
 		Strato,
+		Synology,
 		Variomedia,
 		Vercel,
 		Vultr,

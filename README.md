@@ -284,7 +284,7 @@ Note that:
 | Environment variable | Default | Description |
 | --- | --- | --- |
 | `CONFIG` | | One line JSON object containing the entire config (takes precedence over config.json file) if specified |
-| `PERIOD` | `10m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
+| `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
 | `PUBLICIP_FETCHERS` | `all` | Comma separated fetcher types to obtain the public IP address from `http` and `dns` |
 | `PUBLICIP_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IP address (ipv4 or ipv6). See the [Public IP section](#public-ip) |
 | `PUBLICIPV4_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IPv4 address only. See the [Public IP section](#public-ip) |
@@ -366,7 +366,7 @@ If you have a host firewall in place, this container needs the following ports:
 
 ## Architecture
 
-At program start and every period (10 minutes by default):
+At program start and every period (5 minutes by default):
 
 1. Fetch your public IP address
 1. For each record:
@@ -383,7 +383,7 @@ At program start and every period (10 minutes by default):
 
 For Cloudflare records with the `proxied` option, the following is done.
 
-At program start and every period (10 minutes by default), for each record:
+At program start and every period (5 minutes by default), for each record:
 
 1. Fetch your public IP address
 1. For each record:

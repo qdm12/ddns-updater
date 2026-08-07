@@ -19,7 +19,7 @@ func Test_Settings_String(t *testing.T) {
 ├── HTTP client
 |   └── Timeout: 20s
 ├── Update
-|   ├── Period: 10m0s
+|   ├── Period: 5m0s
 |   └── Cooldown: 5m0s
 ├── Public IP fetching
 |   ├── HTTP enabled: yes

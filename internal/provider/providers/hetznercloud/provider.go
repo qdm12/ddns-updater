@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
+	"time"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -13,6 +14,10 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
+
+// defaultActionPollPeriod is the interval between two Zone action status polls
+// in waitAction.
+const defaultActionPollPeriod = 5 * time.Second
 
 type Provider struct {
 	domain     string
@@ -24,6 +29,8 @@ type Provider struct {
 	// It is optional, and is ONLY used to add a record to the rrset.
 	// See https://docs.hetzner.cloud/reference/cloud#tag/zone-rrset-actions/add_zone_rrset_records.body.ttl
 	ttl uint32
+	// actionPollPeriod is the interval between two Zone action status polls.
+	actionPollPeriod time.Duration
 }
 
 func New(data json.RawMessage, domain, owner string,
@@ -45,12 +52,13 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	return &Provider{
-		domain:     domain,
-		owner:      owner,
-		ipVersion:  ipVersion,
-		ipv6Suffix: ipv6Suffix,
-		token:      extraSettings.Token,
-		ttl:        extraSettings.TTL,
+		domain:           domain,
+		owner:            owner,
+		ipVersion:        ipVersion,
+		ipv6Suffix:       ipv6Suffix,
+		token:            extraSettings.Token,
+		ttl:              extraSettings.TTL,
+		actionPollPeriod: defaultActionPollPeriod,
 	}, nil
 }
 

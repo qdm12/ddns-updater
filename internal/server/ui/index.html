@@ -2,55 +2,157 @@
 <html lang="en">
 
 <head>
-  <title>DDNS Updater</title>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DDNS Updater</title>
   <link rel="icon" href="static/favicon.svg" sizes="any" type="image/svg+xml">
   <link rel="icon" href="static/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="static/styles.css" type="text/css">
+  <!-- Theme script loaded immediately to prevent flash -->
+  <script src="static/theme.js"></script>
 </head>
 
 <body>
-  <table role="table">
-    <thead>
-      <tr>
-        <th>Domain</th>
-        <th>Owner</th>
-        <th>Provider</th>
-        <th>IP Version</th>
-        <th>Update Status</th>
-        <th>Current IP</th>
-        <th>Previous IPs<small> (reverse chronological order)</small></th>
-      </tr>
-    </thead>
-    <tbody>
-      {{range .Rows}}
-      <tr>
-        <td data-label="Domain">{{.Domain}}</td>
-        <td data-label="Owner">{{.Owner}}</td>
-        <td data-label="Provider">{{.Provider}}</td>
-        <td data-label="IP Version">{{.IPVersion}}</td>
-        <td data-label="Update Status">{{.Status}}</td>
-        <td data-label="Current IP">{{.CurrentIP}}</td>
-        <td data-label="Previous IPs">{{.PreviousIPs}}</td>
-      </tr>
-      {{end}}
-    </tbody>
-  </table>
-  <footer>
-    <div>
-      <a href="https://github.com/qdm12/ddns-updater" class="text-big">
-        <svg class="github-icon" height="1em" aria-hidden="true" viewBox="0 0 16 16" version="1.1"
-          data-view-component="true">
-          <path
-            d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z">
-          </path>
-        </svg>
-      </a>
+  <!-- Header with stats and actions -->
+  <header class="header">
+    <div class="header-container">
+      <div class="header-left">
+        <div class="header-title-container">
+          <img src="static/favicon.svg" alt="DDNS Updater Icon" class="header-icon">
+          <h1 class="header-title">DDNS Updater</h1>
+        </div>
+        <div class="stats-summary">
+          <div class="stat-item">
+            <span class="stat-value">{{.TotalDomains}}</span>
+            <span class="stat-label">Domains</span>
+          </div>
+          {{if gt .SuccessCount 0}}
+          <div class="stat-item stat-success">
+            <span class="stat-value">{{.SuccessCount}}</span>
+            <span class="stat-label">Active</span>
+          </div>
+          {{end}}
+          <div class="stat-item stat-error">
+            <span class="stat-value">{{.ErrorCount}}</span>
+            <span class="stat-label">Errors</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <!-- Auto-refresh indicator -->
+        <div id="auto-refresh-indicator" class="auto-refresh-indicator" style="display: none;"></div>
+
+        <button id="update-btn" class="btn btn-primary" onclick="handleManualUpdate()" title="Trigger DNS update">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span class="btn-text">Update</span>
+        </button>
+        <button id="refresh-btn" class="btn btn-ghost" onclick="handleRefresh()" title="Refresh page">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+
+        <!-- Auto-refresh menu button -->
+        <div class="auto-refresh-container">
+          <button id="auto-refresh-btn" class="btn btn-ghost" onclick="toggleAutoRefreshMenu()" title="Auto-refresh settings">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </button>
+          <div id="auto-refresh-menu" class="auto-refresh-menu" style="display: none;">
+            <div class="menu-header">Auto-refresh</div>
+            <button class="menu-item" data-interval="0" onclick="setAutoRefreshInterval(0)">Off</button>
+            <button class="menu-item" data-interval="30" onclick="setAutoRefreshInterval(30)">30 seconds</button>
+            <button class="menu-item" data-interval="60" onclick="setAutoRefreshInterval(60)">1 minute</button>
+            <button class="menu-item" data-interval="300" onclick="setAutoRefreshInterval(300)">5 minutes</button>
+          </div>
+        </div>
+
+        <button id="theme-toggle" class="btn btn-ghost" onclick="toggleTheme()" aria-label="Toggle theme" aria-pressed="false">
+          <!-- Icon injected by theme.js -->
+        </button>
+      </div>
     </div>
-    <div>by <a href="https://github.com/qdm12">Quentin McGaw</a> / UI reworked by <a
-        href="https://github.com/fuse314">Gottfried Mayer</a></div>
+  </header>
+
+  <!-- Main content -->
+  <main class="main-container">
+    <div class="table-container">
+      <table role="table" aria-label="DNS Records">
+        <thead>
+          <tr>
+            <th scope="col">Domain</th>
+            <th scope="col">Owner</th>
+            <th scope="col">Provider</th>
+            <th scope="col">IP Version</th>
+            <th scope="col">Status</th>
+            <th scope="col">Current IP</th>
+            <th scope="col">History</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Rows}}
+          <tr data-history='{{.HistoryJSON}}'>
+            <td data-label="Domain" class="domain-cell">{{.Domain}}</td>
+            <td data-label="Owner">{{.Owner}}</td>
+            <td data-label="Provider">{{.Provider}}</td>
+            <td data-label="IP Version">{{.IPVersion}}</td>
+            <td data-label="Status">{{.Status}}</td>
+            <td data-label="Current IP">{{.CurrentIP}}</td>
+            <td data-label="History">{{.PreviousIPs}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Public IP Section -->
+    {{if or .PublicIPv4 .PublicIPv6}}
+    <div class="public-ip-section">
+      <span class="public-ip-label">Your IP:</span>
+      {{if .PublicIPv4}}<a href="https://ipinfo.io/{{.PublicIPv4}}" class="public-ip-address">{{.PublicIPv4}}</a>{{end}}
+      {{if and .PublicIPv4 .PublicIPv6}}<span class="public-ip-separator">•</span>{{end}}
+      {{if .PublicIPv6}}<a href="https://ipinfo.io/{{.PublicIPv6}}" class="public-ip-address">{{.PublicIPv6}}</a>{{end}}
+    </div>
+    {{end}}
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <a href="https://github.com/qdm12/ddns-updater" class="footer-link">
+      <svg class="github-icon" viewBox="0 0 16 16">
+        <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
+      </svg>
+      <span>GitHub</span>
+    </a>
   </footer>
+
+  <!-- History Modal -->
+  <div id="history-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">IP History</h2>
+        <button class="modal-close" onclick="closeHistoryModal()" aria-label="Close history modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="history-table-container"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="page-nav-btn" id="prev-page" onclick="previousPage()" disabled>&laquo; Previous</button>
+        <span class="page-info" id="page-info">Page 1 of 1</span>
+        <button class="page-nav-btn" id="next-page" onclick="nextPage()" disabled>Next &raquo;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application scripts -->
+  <script src="static/app.js"></script>
 </body>
 
 </html>

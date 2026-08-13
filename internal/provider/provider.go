@@ -59,6 +59,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/opendns"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/ovh"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/porkbun"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/rfc2136"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/route53"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/scaleway"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/selfhostde"
@@ -190,6 +191,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return ovh.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Porkbun:
 		return porkbun.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.RFC2136:
+		return rfc2136.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Route53:
 		return route53.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Scaleway:

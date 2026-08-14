@@ -6,6 +6,7 @@ import "github.com/qdm12/ddns-updater/internal/models"
 const (
 	Aliyun       models.Provider = "aliyun"
 	AllInkl      models.Provider = "allinkl"
+	Bunny        models.Provider = "bunny"
 	Changeip     models.Provider = "changeip"
 	Cloudflare   models.Provider = "cloudflare"
 	Custom       models.Provider = "custom"
@@ -27,11 +28,13 @@ const (
 	FreeDNS      models.Provider = "freedns"
 	Gandi        models.Provider = "gandi"
 	GCP          models.Provider = "gcp"
+	GigahostNo   models.Provider = "gigahostno"
 	GoDaddy      models.Provider = "godaddy"
 	GoIP         models.Provider = "goip"
 	HE           models.Provider = "he"
 	Hetzner      models.Provider = "hetzner"
 	HetznerCloud models.Provider = "hetznercloud"
+	Hostinger    models.Provider = "hostinger"
 	Infomaniak   models.Provider = "infomaniak"
 	INWX         models.Provider = "inwx"
 	Ionos        models.Provider = "ionos"
@@ -68,6 +71,7 @@ func ProviderChoices() []models.Provider {
 	return []models.Provider{
 		Aliyun,
 		AllInkl,
+		Bunny,
 		Changeip,
 		Cloudflare,
 		Dd24,
@@ -88,11 +92,13 @@ func ProviderChoices() []models.Provider {
 		FreeDNS,
 		Gandi,
 		GCP,
+		GigahostNo,
 		GoDaddy,
 		GoIP,
 		HE,
 		Hetzner,
 		HetznerCloud,
+		Hostinger,
 		Infomaniak,
 		INWX,
 		Ionos,
@@ -114,6 +120,7 @@ func ProviderChoices() []models.Provider {
 		Route53,
 		Scaleway,
 		SelfhostDe,
+		Servercow,
 		Spaceship,
 		Spdyn,
 		Strato,

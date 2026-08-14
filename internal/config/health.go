@@ -60,8 +60,8 @@ func (h Health) toLinesNode() *gotree.Node {
 	return node
 }
 
-func (h *Health) Read(reader *reader.Reader) {
-	h.ServerAddress = reader.Get("HEALTH_SERVER_ADDRESS")
-	h.HealthchecksioBaseURL = reader.String("HEALTH_HEALTHCHECKSIO_BASE_URL")
-	h.HealthchecksioUUID = reader.Get("HEALTH_HEALTHCHECKSIO_UUID")
+func (h *Health) Read(r *reader.Reader) {
+	h.ServerAddress = r.Get("HEALTH_SERVER_ADDRESS")
+	h.HealthchecksioBaseURL = r.String("HEALTH_HEALTHCHECKSIO_BASE_URL")
+	h.HealthchecksioUUID = r.Get("HEALTH_HEALTHCHECKSIO_UUID", reader.ForceLowercase(false))
 }

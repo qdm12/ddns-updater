@@ -33,6 +33,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/freedns"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/gandi"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/gcp"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/gigahostno"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/godaddy"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/goip"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/he"
@@ -135,6 +136,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return gandi.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.GCP:
 		return gcp.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.GigahostNo:
+		return gigahostno.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.GoDaddy:
 		return godaddy.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.GoIP:

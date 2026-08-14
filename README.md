@@ -66,6 +66,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - FreeDNS
   - Gandi
   - GCP
+  - Gigahost.no
   - GoDaddy
   - GoIP.de
   - He.net
@@ -241,6 +242,7 @@ Check the documentation for your DNS provider:
 - [FreeDNS](docs/freedns.md)
 - [Gandi](docs/gandi.md)
 - [GCP](docs/gcp.md)
+- [Gigahost.no](docs/gigahostno.md)
 - [GoDaddy](docs/godaddy.md)
 - [GoIP.de](docs/goip.md)
 - [He.net](docs/he.net.md)

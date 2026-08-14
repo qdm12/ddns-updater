@@ -47,6 +47,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
 - Updates periodically A records for different DNS providers:
   - Aliyun
   - AllInkl
+  - Bunny
   - ChangeIP
   - Cloudflare
   - DD24
@@ -66,6 +67,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - FreeDNS
   - Gandi
   - GCP
+  - Gigahost.no
   - GoDaddy
   - GoIP.de
   - He.net
@@ -196,6 +198,10 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
     - You can update the image with `docker pull ghcr.io/qdm12/ddns-updater`
     - You can set your JSON configuration as a single environment variable line (i.e. `{"settings": [{"provider": "namecheap", ...}]}`), which takes precedence over config.json. Note however that if you don't bind mount the `/updater/data` directory, there won't be a persistent database file `/updater/updates.json` but it will still work.
 
+### Home Assistant
+
+To install ddns-updater on [Home Assistant](https://home-assistant.io/), follow the installation instructions on [ha-ddns-updater](https://github.com/ha-ddns-updater/ha-ddns-updater/).
+
 ## Configuration
 
 Start by having the following content in *config.json*, or in your `CONFIG` environment variable:
@@ -218,6 +224,7 @@ Check the documentation for your DNS provider:
 
 - [Aliyun](docs/aliyun.md)
 - [Allinkl](docs/allinkl.md)
+- [Bunny](docs/bunny.md)
 - [ChangeIP](docs/changeip.md)
 - [Cloudflare](docs/cloudflare.md)
 - [DD24](docs/dd24.md)
@@ -237,6 +244,7 @@ Check the documentation for your DNS provider:
 - [FreeDNS](docs/freedns.md)
 - [Gandi](docs/gandi.md)
 - [GCP](docs/gcp.md)
+- [Gigahost.no](docs/gigahostno.md)
 - [GoDaddy](docs/godaddy.md)
 - [GoIP.de](docs/goip.md)
 - [He.net](docs/he.net.md)

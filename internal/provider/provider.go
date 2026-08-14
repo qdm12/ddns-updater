@@ -12,6 +12,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/aliyun"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/allinkl"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/bunny"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/changeip"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/cloudflare"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/custom"
@@ -33,6 +34,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/freedns"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/gandi"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/gcp"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/gigahostno"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/godaddy"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/goip"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/he"
@@ -85,7 +87,7 @@ type Provider interface {
 
 var ErrProviderUnknown = errors.New("unknown provider")
 
-//nolint:gocyclo
+//nolint:gocyclo,maintidx
 func New(providerName models.Provider, data json.RawMessage, domain, owner string, //nolint:ireturn
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix,
 ) (provider Provider, err error) {
@@ -94,6 +96,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return aliyun.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.AllInkl:
 		return allinkl.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Bunny:
+		return bunny.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Changeip:
 		return changeip.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Cloudflare:
@@ -136,6 +140,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return gandi.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.GCP:
 		return gcp.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.GigahostNo:
+		return gigahostno.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.GoDaddy:
 		return godaddy.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.GoIP:

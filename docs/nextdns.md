@@ -9,8 +9,7 @@
   "settings": [
     {
       "provider": "nextdns",
-      "domain": "nextdns.io",
-      "owner": "link-ip",
+      "domain": "link-ip.nextdns.io",
       "endpoint_id": "abcdef",
       "api_guid": "0123456789abcdef",
       "ip_version": "ipv4",
@@ -22,7 +21,7 @@
 
 ### Compulsory parameters
 
-- `"domain"` must be `"nextdns.io"` and `"owner"` must be `"link-ip"`.
+- `"domain"` must be `"link-ip.nextdns.io"`
 - `"endpoint_id"` is the first path segment of the Linked IP update URL.
 - `"api_guid"` is the second path segment of the Linked IP update URL.
 

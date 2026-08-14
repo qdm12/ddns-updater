@@ -86,8 +86,12 @@ func validateSettings(domain string, url *url.URL,
 	}
 }
 
+func (p *Provider) Name() models.Provider {
+	return constants.Custom
+}
+
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.Custom, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, p.Name(), p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

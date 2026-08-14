@@ -28,6 +28,7 @@ var (
 	ErrSecretNotSet           = errors.New("secret is not set")
 	ErrSecretNotValid         = errors.New("secret is not valid")
 	ErrServerNotSet           = errors.New("server is not set")
+	ErrServerNotValid         = errors.New("server is not valid")
 	ErrSuccessRegexNotSet     = errors.New("success regex is not set")
 	ErrTokenNotSet            = errors.New("token is not set")
 	ErrTokenNotValid          = errors.New("token is not valid")

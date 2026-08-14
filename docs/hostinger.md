@@ -9,7 +9,7 @@
   "settings": [
     {
       "provider": "hostinger",
-      "domain": "example.com",
+      "domain": "domain.com",
       "token": "YOUR_HOSTINGER_API_TOKEN",
       "ttl": 300,
       "ip_version": "ipv4",

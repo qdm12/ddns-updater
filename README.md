@@ -73,6 +73,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - He.net
   - Hetzner (legacy API)
   - Hetzner Cloud
+  - Hostinger
   - Infomaniak
   - INWX
     - Ionos
@@ -250,6 +251,7 @@ Check the documentation for your DNS provider:
 - [He.net](docs/he.net.md)
 - [Hetzner](docs/hetzner.md)
 - [HetznerCloud](docs/hetznercloud.md)
+- [Hostinger](docs/hostinger.md)
 - [Infomaniak](docs/infomaniak.md)
 - [INWX](docs/inwx.md)
 - [Ionos](docs/ionos.md)

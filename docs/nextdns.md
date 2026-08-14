@@ -9,7 +9,7 @@
   "settings": [
     {
       "provider": "nextdns",
-      "domain": "link-ip.nextdns.io",
+      "domain": "domain.com",
       "endpoint_id": "abcdef",
       "api_guid": "0123456789abcdef",
       "ip_version": "ipv4",
@@ -21,7 +21,7 @@
 
 ### Compulsory parameters
 
-- `"domain"` must be `"link-ip.nextdns.io"`
+- `"domain"` is the domain to update, it can be `example.com` (root domain), `sub.example.com` (subdomain of `example.com`) or `*.example.com` for the wildcard.
 - `"endpoint_id"` is the first path segment of the Linked IP update URL.
 - `"api_guid"` is the second path segment of the Linked IP update URL.
 

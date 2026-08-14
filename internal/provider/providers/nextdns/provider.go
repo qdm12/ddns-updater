@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
-	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -28,11 +27,6 @@ func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
 	provider *Provider, err error,
 ) {
-	if utils.BuildDomainName(owner, domain) != "link-ip.nextdns.io" {
-		return nil, fmt.Errorf("%w: domain must be link-ip.nextdns.io, got %s",
-			errors.ErrDomainNotValid, utils.BuildDomainName(owner, domain))
-	}
-
 	var providerSpecificSettings struct {
 		EndpointID string `json:"endpoint_id"`
 		APIGUID    string `json:"api_guid"`
@@ -68,7 +62,7 @@ func validateSettings(endpointID, apiGUID string) error {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString("nextdns.io", "link-ip", constants.NextDNS, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.NextDNS, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {
@@ -105,12 +99,8 @@ func (p *Provider) HTML() models.HTMLRow {
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
-	u := url.URL{
-		Scheme: "https",
-		Host:   p.BuildDomainName(),
-		Path:   fmt.Sprintf("/%s/%s", p.endpointID, p.apiGUID),
-	}
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	url := fmt.Sprintf("https://link-ip.nextdns.io/%s/%s", p.endpointID, p.apiGUID)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("creating http request: %w", err)
 	}

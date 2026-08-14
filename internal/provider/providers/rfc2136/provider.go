@@ -80,24 +80,13 @@ func New(data json.RawMessage, domain, owner string,
 		owner:         owner,
 		ipVersion:     ipVersion,
 		ipv6Suffix:    ipv6Suffix,
-		server:        addressWithDefaultPort(providerSpecificSettings.Server),
+		server:        providerSpecificSettings.Server,
 		zone:          dns.Fqdn(providerSpecificSettings.Zone),
 		tsigKeyName:   providerSpecificSettings.TSIGKeyName,
 		tsigSecret:    providerSpecificSettings.TSIGSecret,
 		tsigAlgorithm: providerSpecificSettings.TSIGAlgorithm,
 		ttl:           providerSpecificSettings.TTL,
 	}, nil
-}
-
-// addressWithDefaultPort adds the default DNS port to the server address
-// given, if the address does not already specify a port.
-func addressWithDefaultPort(server string) (address string) {
-	const defaultPort = "53"
-	_, _, err := net.SplitHostPort(server)
-	if err != nil { // no port specified
-		return net.JoinHostPort(server, defaultPort)
-	}
-	return server
 }
 
 func validateSettings(domain, server, tsigKeyName, tsigSecret, tsigAlgorithm string) (err error) {
@@ -112,9 +101,15 @@ func validateSettings(domain, server, tsigKeyName, tsigSecret, tsigAlgorithm str
 		return fmt.Errorf("%w: %s", errors.ErrAlgorithmNotValid, tsigAlgorithm)
 	}
 
-	switch {
-	case server == "":
+	if server == "" {
 		return fmt.Errorf("%w", errors.ErrServerNotSet)
+	}
+	_, _, err = net.SplitHostPort(server)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errors.ErrServerNotValid, err)
+	}
+
+	switch {
 	case tsigKeyName == "" && tsigSecret != "":
 		return fmt.Errorf("%w", errors.ErrKeyNotSet)
 	case tsigKeyName != "" && tsigSecret == "":
@@ -203,10 +198,9 @@ func (p *Provider) Update(ctx context.Context, _ *http.Client, ip netip.Addr) (n
 // applies atomically, see https://datatracker.ietf.org/doc/html/rfc2136#section-2.5
 func (p *Provider) newUpdateMessage(ip netip.Addr) (message *dns.Msg) {
 	header := dns.RR_Header{
-		Name:   dns.Fqdn(utils.BuildDomainName(p.owner, p.domain)),
-		Rrtype: dns.TypeA,
-		Class:  dns.ClassINET,
-		Ttl:    p.ttl,
+		Name:  dns.Fqdn(utils.BuildDomainName(p.owner, p.domain)),
+		Class: dns.ClassINET,
+		Ttl:   p.ttl,
 	}
 
 	var record dns.RR
@@ -214,6 +208,7 @@ func (p *Provider) newUpdateMessage(ip netip.Addr) (message *dns.Msg) {
 		header.Rrtype = dns.TypeAAAA
 		record = &dns.AAAA{Hdr: header, AAAA: net.IP(ip.AsSlice())}
 	} else {
+		header.Rrtype = dns.TypeA
 		record = &dns.A{Hdr: header, A: net.IP(ip.AsSlice())}
 	}
 
@@ -227,16 +222,16 @@ func (p *Provider) newUpdateMessage(ip netip.Addr) (message *dns.Msg) {
 func rcodeToError(rcode int) (err error) {
 	switch rcode {
 	case dns.RcodeNotAuth:
-		return errors.ErrAuth
+		return fmt.Errorf("%w", errors.ErrAuth)
 	case dns.RcodeRefused:
-		return errors.ErrBadRequest
+		return fmt.Errorf("%w", errors.ErrBadRequest)
 	case dns.RcodeNotZone, dns.RcodeNameError:
-		return errors.ErrZoneNotFound
+		return fmt.Errorf("%w", errors.ErrZoneNotFound)
 	case dns.RcodeFormatError:
-		return errors.ErrBadRequest
+		return fmt.Errorf("%w", errors.ErrBadRequest)
 	case dns.RcodeServerFailure:
-		return errors.ErrDNSServerSide
+		return fmt.Errorf("%w", errors.ErrDNSServerSide)
 	default:
-		return errors.ErrUnknownResponse
+		return fmt.Errorf("%w", errors.ErrUnknownResponse)
 	}
 }

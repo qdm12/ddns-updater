@@ -13,57 +13,67 @@ import (
 )
 
 const (
-	exampleZone = "example.com."
-	ipv6Server  = "[2001:db8::1]:5353"
+	exampleZone       = "example.com."
+	testServerAddress = "ns1.example.com:53"
 )
 
 func Test_New(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		data          string
-		expectedErr   error
-		expectedZone  string
-		expectedTTL   uint32
-		expectedSrv   string
-		expectedAlgo  string
-		expectedKeyNm string
+		data             string
+		expectedProvider *Provider
+		expectedErr      error
 	}{
 		"defaults": {
-			data: `{"server":"ns1.example.com"}`,
-			// zone defaults to the domain and the server to port 53.
-			expectedZone: exampleZone,
-			expectedTTL:  300,
-			expectedSrv:  "ns1.example.com:53",
-			expectedAlgo: "hmac-sha256.",
+			data: `{"server":"` + testServerAddress + `"}`,
+			expectedProvider: &Provider{
+				domain:        "example.com",
+				owner:         "home",
+				ipVersion:     ipversion.IP4or6,
+				server:        testServerAddress,
+				zone:          exampleZone,
+				tsigAlgorithm: "hmac-sha256.",
+				ttl:           300,
+			},
 		},
 		"tsig and explicit settings": {
-			data: `{"server":"` + ipv6Server + `","zone":"sub.example.com",` +
+			data: `{"server":"[2001:db8::1]:5353","zone":"sub.example.com",` +
 				`"tsig_key_name":"ddns-key","tsig_secret":"c2VjcmV0","tsig_algorithm":"hmac-sha512","ttl":60}`,
-			expectedZone:  "sub.example.com.",
-			expectedTTL:   60,
-			expectedSrv:   ipv6Server,
-			expectedAlgo:  "hmac-sha512.",
-			expectedKeyNm: "ddns-key.",
+			expectedProvider: &Provider{ //nolint:gosec
+				domain:        "example.com",
+				owner:         "home",
+				ipVersion:     ipversion.IP4or6,
+				server:        "[2001:db8::1]:5353",
+				zone:          "sub.example.com.",
+				tsigKeyName:   "ddns-key.",
+				tsigSecret:    "c2VjcmV0",
+				tsigAlgorithm: "hmac-sha512.",
+				ttl:           60,
+			},
 		},
 		"server not set": {
 			data:        `{}`,
 			expectedErr: errors.ErrServerNotSet,
 		},
+		"server without a port": {
+			data:        `{"server":"ns1.example.com"}`,
+			expectedErr: errors.ErrServerNotValid,
+		},
 		"tsig key without secret": {
-			data:        `{"server":"ns1.example.com","tsig_key_name":"ddns-key"}`,
+			data:        `{"server":"` + testServerAddress + `","tsig_key_name":"ddns-key"}`,
 			expectedErr: errors.ErrSecretNotSet,
 		},
 		"tsig secret without key": {
-			data:        `{"server":"ns1.example.com","tsig_secret":"c2VjcmV0"}`,
+			data:        `{"server":"` + testServerAddress + `","tsig_secret":"c2VjcmV0"}`,
 			expectedErr: errors.ErrKeyNotSet,
 		},
 		"tsig secret not base64": {
-			data:        `{"server":"ns1.example.com","tsig_key_name":"k","tsig_secret":"not base64!"}`,
+			data:        `{"server":"` + testServerAddress + `","tsig_key_name":"k","tsig_secret":"not base64!"}`,
 			expectedErr: errors.ErrSecretNotValid,
 		},
 		"unsupported algorithm": {
-			data:        `{"server":"ns1.example.com","tsig_algorithm":"hmac-md5"}`,
+			data:        `{"server":"` + testServerAddress + `","tsig_algorithm":"hmac-md5"}`,
 			expectedErr: errors.ErrAlgorithmNotValid,
 		},
 	}
@@ -81,11 +91,7 @@ func Test_New(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, testCase.expectedZone, provider.zone)
-			assert.Equal(t, testCase.expectedTTL, provider.ttl)
-			assert.Equal(t, testCase.expectedSrv, provider.server)
-			assert.Equal(t, testCase.expectedAlgo, provider.tsigAlgorithm)
-			assert.Equal(t, testCase.expectedKeyNm, provider.tsigKeyName)
+			assert.Equal(t, testCase.expectedProvider, provider)
 		})
 	}
 }
@@ -147,25 +153,6 @@ func Test_Provider_newUpdateMessage(t *testing.T) {
 			addition := message.Ns[1]
 			assert.Equal(t, uint16(dns.ClassINET), addition.Header().Class)
 			assert.Equal(t, testCase.expectedRecord, addition.String())
-		})
-	}
-}
-
-func Test_addressWithDefaultPort(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]string{
-		"ns1.example.com":      "ns1.example.com:53",
-		"ns1.example.com:5353": "ns1.example.com:5353",
-		"192.168.1.1":          "192.168.1.1:53",
-		"2001:db8::1":          "[2001:db8::1]:53",
-		ipv6Server:             ipv6Server,
-	}
-
-	for server, expected := range testCases {
-		t.Run(server, func(t *testing.T) {
-			t.Parallel()
-			assert.Equal(t, expected, addressWithDefaultPort(server))
 		})
 	}
 }

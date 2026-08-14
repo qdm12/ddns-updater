@@ -11,58 +11,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_New_domainOwner(t *testing.T) {
+func Test_New(t *testing.T) {
 	t.Parallel()
 
 	validData := json.RawMessage(`{"endpoint_id":"abcdef","api_guid":"0123456789abcdef"}`)
 
-	testCases := map[string]struct {
-		domain     string
-		owner      string
-		errWrapped error
-		errMessage string
-	}{
-		"success": {
-			domain: "nextdns.io",
-			owner:  "link-ip",
-		},
-		"wrong_domain": {
-			domain:     "example.com",
-			owner:      "link-ip",
-			errWrapped: errors.ErrDomainNotValid,
-			errMessage: "domain is not valid: domain must be link-ip.nextdns.io, got link-ip.example.com",
-		},
-		"wrong_owner": {
-			domain:     "nextdns.io",
-			owner:      "wrong",
-			errWrapped: errors.ErrDomainNotValid,
-			errMessage: "domain is not valid: domain must be link-ip.nextdns.io, got wrong.nextdns.io",
-		},
-		"both_wrong": {
-			domain:     "example.com",
-			owner:      "wrong",
-			errWrapped: errors.ErrDomainNotValid,
-			errMessage: "domain is not valid: domain must be link-ip.nextdns.io, got wrong.example.com",
-		},
-	}
+	provider, err := New(validData, "example.com", "owner",
+		ipversion.IP4, netip.Prefix{})
 
-	for name, testCase := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			provider, err := New(validData, testCase.domain, testCase.owner,
-				ipversion.IP4, netip.Prefix{})
-
-			if testCase.errWrapped != nil {
-				assert.ErrorIs(t, err, testCase.errWrapped)
-				assert.EqualError(t, err, testCase.errMessage)
-				assert.Nil(t, provider)
-			} else {
-				require.NoError(t, err)
-				assert.NotNil(t, provider)
-			}
-		})
-	}
+	require.NoError(t, err)
+	assert.NotNil(t, provider)
 }
 
 func Test_validateSettings(t *testing.T) {

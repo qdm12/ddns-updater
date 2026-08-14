@@ -86,7 +86,7 @@ type Provider interface {
 
 var ErrProviderUnknown = errors.New("unknown provider")
 
-//nolint:gocyclo
+//nolint:gocyclo,maintidx
 func New(providerName models.Provider, data json.RawMessage, domain, owner string, //nolint:ireturn
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix,
 ) (provider Provider, err error) {

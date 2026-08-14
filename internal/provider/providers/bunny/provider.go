@@ -63,13 +63,14 @@ func validateSettings(domain, apiKey string, ttl uint32) (err error) {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
 	}
 
+	const minTTL, maxTTL = 60, 3600
 	switch {
 	case apiKey == "":
 		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
-	case ttl != 0 && ttl < 60:
+	case ttl != 0 && ttl < minTTL:
 		return fmt.Errorf("%w: %d", errors.ErrTTLTooLow, ttl)
-	case ttl > 3600:
-		return fmt.Errorf("%w: %d", errors.ErrTTLTooHigh, ttl)
+	case ttl > maxTTL:
+		return fmt.Errorf("%w: %d > %d", errors.ErrTTLTooHigh, ttl, maxTTL)
 	}
 	return nil
 }
@@ -115,7 +116,7 @@ func (p *Provider) setHeaders(request *http.Request) {
 	headers.SetUserAgent(request)
 	headers.SetContentType(request, "application/json")
 	headers.SetAccept(request, "application/json")
-	request.Header.Set("AccessKey", p.apiKey)
+	request.Header.Set("AccessKey", p.apiKey) //nolint:canonicalheader
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
@@ -378,7 +379,7 @@ func (p *Provider) recordNameMatches(recordName string) bool {
 }
 
 func doRequest(client *http.Client, request *http.Request) (bodyBytes []byte, statusCode int, err error) {
-	response, err := client.Do(request)
+	response, err := client.Do(request) //nolint:gosec
 	if err != nil {
 		return nil, 0, err
 	}

@@ -29,10 +29,20 @@ func Test_ipv6WithSuffix(t *testing.T) {
 			ipv6Suffix: netip.MustParsePrefix("0:0:0:0:0:0:0:0/0"),
 			updateIP:   netip.MustParseAddr("e4db:af36:82e:1221:1b7f:2f54:6e9e:5e5f"),
 		},
+		"suffix_68": {
+			publicIP:   netip.MustParseAddr("e4db:af36:82e:1221:1b7f:2f54:6e9e:5e5f"),
+			ipv6Suffix: netip.MustParsePrefix("bbff:8199:4e2f:b4ba:72ad:8fbb:a54e:bedd/68"),
+			updateIP:   netip.MustParseAddr("e4db:af36:82e:122" + "a:72ad:8fbb:a54e:bedd"),
+		},
 		"suffix_64": {
 			publicIP:   netip.MustParseAddr("e4db:af36:82e:1221:1b7f:2f54:6e9e:5e5f"),
 			ipv6Suffix: netip.MustParsePrefix("0:0:0:0:72ad:8fbb:a54e:bedd/64"),
 			updateIP:   netip.MustParseAddr("e4db:af36:82e:1221:" + "72ad:8fbb:a54e:bedd"),
+		},
+		"suffix_60": {
+			publicIP:   netip.MustParseAddr("e4db:af36:82e:1221:1b7f:2f54:6e9e:5e5f"),
+			ipv6Suffix: netip.MustParsePrefix("bbff:8199:4e2f:b4ba:72ad:8fbb:a54e:bedd/60"),
+			updateIP:   netip.MustParseAddr("e4db:af36:82e:1221:1" + "2ad:8fbb:a54e:bedd"),
 		},
 		"suffix_56": {
 			publicIP:   netip.MustParseAddr("e4db:af36:82e:1221:1b7f:2f54:6e9e:5e5f"),

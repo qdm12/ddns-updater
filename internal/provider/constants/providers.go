@@ -28,6 +28,7 @@ const (
 	FreeDNS      models.Provider = "freedns"
 	Gandi        models.Provider = "gandi"
 	GCP          models.Provider = "gcp"
+	GigahostNo   models.Provider = "gigahostno"
 	GoDaddy      models.Provider = "godaddy"
 	GoIP         models.Provider = "goip"
 	HE           models.Provider = "he"
@@ -89,6 +90,7 @@ func ProviderChoices() []models.Provider {
 		FreeDNS,
 		Gandi,
 		GCP,
+		GigahostNo,
 		GoDaddy,
 		GoIP,
 		HE,
@@ -114,6 +116,7 @@ func ProviderChoices() []models.Provider {
 		Route53,
 		Scaleway,
 		SelfhostDe,
+		Servercow,
 		Spaceship,
 		Spdyn,
 		Strato,

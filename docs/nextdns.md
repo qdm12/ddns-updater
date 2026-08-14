@@ -39,5 +39,3 @@ NextDNS supports updating Linked IP via a DDNS hostname. If you're already using
 1. Click `Show advanced options` in the Linked IP card
 1. Copy the update URL shown — it looks like `https://link-ip.nextdns.io/abcdef/0123456789abcdef`
 1. Set `"endpoint_id"` to the first path segment (e.g. `abcdef`) and `"api_guid"` to the second path segment (e.g. `0123456789abcdef`)
-
-See the [nextdns website](https://nextdns.io/)

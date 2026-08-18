@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/qdm12/ddns-updater/internal/models"
 )
 
 type handlers struct {
@@ -19,6 +20,7 @@ type handlers struct {
 	db            Database
 	runner        UpdateForcer
 	indexTemplate *template.Template
+	buildInfo     models.BuildInformation
 	// Mockable functions
 	timeNow func() time.Time
 }
@@ -27,7 +29,7 @@ type handlers struct {
 var uiFS embed.FS
 
 func newHandler(ctx context.Context, rootURL string,
-	db Database, runner UpdateForcer,
+	db Database, runner UpdateForcer, buildInfo models.BuildInformation,
 ) http.Handler {
 	indexTemplate := template.Must(template.ParseFS(uiFS, "ui/index.html"))
 
@@ -40,9 +42,9 @@ func newHandler(ctx context.Context, rootURL string,
 		ctx:           ctx,
 		db:            db,
 		indexTemplate: indexTemplate,
-		// TODO build information
-		timeNow: time.Now,
-		runner:  runner,
+		buildInfo:     buildInfo,
+		timeNow:       time.Now,
+		runner:        runner,
 	}
 
 	router := chi.NewRouter()
@@ -57,6 +59,9 @@ func newHandler(ctx context.Context, rootURL string,
 	router.Get(rootURL+"/", handlers.index)
 
 	router.Get(rootURL+"/update", handlers.update)
+
+	router.Get(rootURL+"/api/v1/records", handlers.apiRecords)
+	router.Get(rootURL+"/api/v1/version", handlers.apiVersion)
 
 	router.Handle(rootURL+"/static/*", http.StripPrefix(rootURL+"/static/", http.FileServerFS(staticFolder)))
 

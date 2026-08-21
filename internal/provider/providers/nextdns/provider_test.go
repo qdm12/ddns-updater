@@ -20,7 +20,15 @@ func Test_New(t *testing.T) {
 		ipversion.IP4, netip.Prefix{})
 
 	require.NoError(t, err)
-	assert.NotNil(t, provider)
+	expectedProvider := &Provider{
+		domain:     "example.com",
+		owner:      "owner",
+		ipVersion:  ipversion.IP4,
+		ipv6Suffix: netip.Prefix{},
+		endpointID: "abcdef",
+		apiGUID:    "0123456789abcdef",
+	}
+	assert.Equal(t, expectedProvider, provider)
 }
 
 func Test_validateSettings(t *testing.T) {

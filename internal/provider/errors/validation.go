@@ -14,6 +14,7 @@ var (
 	ErrCredentialsNotValid    = errors.New("credentials are not valid")
 	ErrCustomerNumberNotSet   = errors.New("customer number is not set")
 	ErrDomainNotSet           = errors.New("domain is not set")
+	ErrEndpointNotValid       = errors.New("endpoint is not valid")
 	ErrEmailNotSet            = errors.New("email is not set")
 	ErrEmailNotValid          = errors.New("email address is not valid")
 	ErrGCPProjectNotSet       = errors.New("GCP project is not set")

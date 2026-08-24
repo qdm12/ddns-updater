@@ -6,7 +6,7 @@ require (
 	github.com/breml/rootcerts v0.3.7
 	github.com/containrrr/shoutrrr v0.8.0
 	github.com/go-chi/chi/v5 v5.3.1
-	github.com/miekg/dns v1.1.72
+	github.com/miekg/dns v1.1.73
 	github.com/qdm12/goservices v0.1.0
 	github.com/qdm12/gosettings v0.4.4
 	github.com/qdm12/gosplash v0.2.0
@@ -29,9 +29,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
-	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/tools v0.47.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.77 // indirect

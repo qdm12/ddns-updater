@@ -25,6 +25,7 @@ const (
 	DynV6        models.Provider = "dynv6"
 	EasyDNS      models.Provider = "easydns"
 	Example      models.Provider = "example"
+	Feno         models.Provider = "feno"
 	FreeDNS      models.Provider = "freedns"
 	Gandi        models.Provider = "gandi"
 	GCP          models.Provider = "gcp"
@@ -88,6 +89,7 @@ func ProviderChoices() []models.Provider {
 		DynV6,
 		EasyDNS,
 		Example,
+		Feno,
 		FreeDNS,
 		Gandi,
 		GCP,

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/qdm12/gosettings"
@@ -21,23 +22,44 @@ func (s *Settings) setDefaults() {
 }
 
 var (
-	ErrAddressHostEmpty = errors.New("address host is empty")
-	ErrAddressPortEmpty = errors.New("address port is empty")
-	ErrTimeoutTooLow    = errors.New("timeout is too low")
+	ErrAddressHostEmpty  = errors.New("address host is empty")
+	ErrTimeoutTooLow     = errors.New("timeout is too low")
+	ErrUnsupportedScheme = errors.New("address scheme is not supported; supported schemes are udp://, tcp:// and tls://")
 )
+
+// stripScheme removes a known transport scheme prefix (udp://, tcp://,
+// tls://) from the address and reports whether it was present. An
+// unknown scheme prefix makes it return an error instead, so that
+// malformed addresses fail fast with an actionable message rather than
+// being silently mis-parsed downstream.
+func stripScheme(address string) (scheme string, rest string, err error) {
+	i := strings.Index(address, "://")
+	if i < 0 {
+		return "", address, nil
+	}
+	candidate := address[:i]
+	switch candidate {
+	case "udp", "tcp", "tls":
+		return candidate, strings.TrimPrefix(address[i:], "://"), nil
+	default:
+		return "", "", fmt.Errorf("%w: got %q", ErrUnsupportedScheme, candidate+"://")
+	}
+}
 
 func (s Settings) validate() (err error) {
 	if *s.Address != "" {
-		host, port, err := net.SplitHostPort(*s.Address)
-		if err != nil {
-			return fmt.Errorf("splitting host and port from address: %w", err)
+		_, rest, schemeErr := stripScheme(*s.Address)
+		if schemeErr != nil {
+			return schemeErr
 		}
 
-		switch {
-		case host == "":
+		host, _, err := net.SplitHostPort(rest)
+		if err != nil {
+			host = rest // no port specified: New applies the transport default
+		}
+
+		if host == "" {
 			return fmt.Errorf("%w: in %s", ErrAddressHostEmpty, *s.Address)
-		case port == "":
-			return fmt.Errorf("%w: in %s", ErrAddressPortEmpty, *s.Address)
 		}
 	}
 

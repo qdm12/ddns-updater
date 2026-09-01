@@ -40,8 +40,6 @@
    - `domains.dns.modify`
 4. Copy the generated 256-character API key and use it as the `"api_key"` value in your configuration.
 
-> ⚠️ Site.nl API keys are exactly 256 characters. After 3 failed authentication attempts within 24 hours your IP will be blocked for 72 hours — store your key securely.
-
 ## Record behaviour
 
 The site.nl API (`PATCH /v2/domain_names/{id}/dns_records`) performs a **complete replacement** of all DNS records on each update. DDNS-Updater fetches the current record set first, upserts the A/AAAA record for the configured owner, and then sends the full set back — so all your other DNS records are preserved.

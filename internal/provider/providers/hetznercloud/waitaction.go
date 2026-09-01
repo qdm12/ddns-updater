@@ -18,7 +18,7 @@ func (p *Provider) waitAction(ctx context.Context, client *http.Client, id uint6
 	const sleepDuration = time.Second
 	const tries = 3
 	for range tries {
-		url := fmt.Sprintf("https://api.hetzner.cloud/v1/servers/actions/%d", id)
+		url := fmt.Sprintf("https://api.hetzner.cloud/v1/zones/actions/%d", id)
 		request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 		if err != nil {
 			return fmt.Errorf("creating http request: %w", err)

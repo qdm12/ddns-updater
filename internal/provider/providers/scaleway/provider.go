@@ -69,7 +69,7 @@ func validateSettings(domain, secretKey string) (err error) {
 }
 
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.Dyn, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, constants.Scaleway, p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

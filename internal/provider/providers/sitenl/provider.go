@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/netip"
 	"net/url"
@@ -39,12 +40,13 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, fmt.Errorf("json decoding provider specific settings: %w", err)
 	}
 
-	ttl := uint32(3600)
+	const defaultTTL uint32 = 3600
+	ttl := defaultTTL
 	if settings.TTL > 0 {
 		ttl = settings.TTL
 	}
 
-	err = validateSettings(domain, settings.APIKey)
+	err = validateSettings(domain, settings.APIKey, ttl)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
 	}
@@ -59,7 +61,7 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-func validateSettings(domain, apiKey string) (err error) {
+func validateSettings(domain, apiKey string, ttl uint32) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
@@ -72,8 +74,19 @@ func validateSettings(domain, apiKey string) (err error) {
 	case len(apiKey) != apiKeyLength:
 		return fmt.Errorf("%w: must be %d characters, got %d",
 			errors.ErrKeyNotValid, apiKeyLength, len(apiKey))
+	case !validTTL(ttl):
+		return fmt.Errorf("%w: %d", errors.ErrTTLNotValid, ttl)
 	}
 	return nil
+}
+
+func validTTL(ttl uint32) bool {
+	switch ttl {
+	case 60, 300, 3600, 7200, 14400, 28800, 86400:
+		return true
+	default:
+		return false
+	}
 }
 
 func (p *Provider) String() string {
@@ -175,14 +188,14 @@ func (p *Provider) getDomainID(ctx context.Context, client *http.Client) (id uin
 		return 0, fmt.Errorf("json decoding response: %w", err)
 	}
 
-	for _, d := range domains {
-		fullName := d.Name + "." + d.DomainTopLevel.TLD
+	for _, domain := range domains {
+		fullName := domain.Name + "." + domain.DomainTopLevel.TLD
 		if fullName == p.domain {
-			if d.DNSControlEnabled == 0 {
+			if domain.DNSControlEnabled == 0 {
 				return 0, fmt.Errorf("%w: DNS control is not enabled for %s",
 					errors.ErrFeatureUnavailable, p.domain)
 			}
-			return d.ID, nil
+			return domain.ID, nil
 		}
 	}
 	return 0, fmt.Errorf("%w: %s", errors.ErrDomainNotFound, p.domain)
@@ -234,8 +247,8 @@ func (p *Provider) patchRecords(ctx context.Context, client *http.Client,
 		DNSRecords []dnsRecord `json:"dns_records"`
 	}{DNSRecords: records}
 
-	bodyBytes, err := json.Marshal(requestBody)
-	if err != nil {
+	buffer := bytes.NewBuffer(nil)
+	if err := json.NewEncoder(buffer).Encode(requestBody); err != nil {
 		return fmt.Errorf("json encoding request: %w", err)
 	}
 
@@ -245,7 +258,7 @@ func (p *Provider) patchRecords(ctx context.Context, client *http.Client,
 		Path:   fmt.Sprintf("/v2/domain_names/%d/dns_records", domainID),
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPatch, u.String(), bytes.NewReader(bodyBytes))
+	request, err := http.NewRequestWithContext(ctx, http.MethodPatch, u.String(), buffer)
 	if err != nil {
 		return fmt.Errorf("creating http request: %w", err)
 	}
@@ -261,13 +274,20 @@ func (p *Provider) patchRecords(ctx context.Context, client *http.Client,
 		return nil
 	}
 
-	// Parse error body for a more descriptive message.
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("%w: %d: reading response body: %w",
+			errors.ErrHTTPStatusNotValid, response.StatusCode, err)
+	}
+
 	var apiError struct {
 		Error   string            `json:"error"`
 		Message string            `json:"message"`
 		Fields  map[string]string `json:"fields"`
 	}
-	_ = json.NewDecoder(response.Body).Decode(&apiError)
+	if err := json.Unmarshal(body, &apiError); err != nil {
+		return fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, body)
+	}
 
 	switch apiError.Error {
 	case "AUTH_002", "AUTH_003", "AUTH_004", "AUTH_006":
@@ -280,9 +300,10 @@ func (p *Provider) patchRecords(ctx context.Context, client *http.Client,
 		return fmt.Errorf("%w: %s", errors.ErrDomainNotFound, p.domain)
 	case "EXT_001":
 		return fmt.Errorf("%w: %s", errors.ErrDNSServerSide, apiError.Message)
+	default:
+		return fmt.Errorf("%w: %d: error=%s message=%s fields=%v",
+			errors.ErrHTTPStatusNotValid, response.StatusCode, apiError.Error, apiError.Message, apiError.Fields)
 	}
-
-	return fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
 }
 
 // Update updates the IP address for the owner record of p.domain.
@@ -306,18 +327,19 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	targetName := recordFQDN(p.owner, p.domain)
-	updated := false
-	for i, r := range records {
-		if r.Name == targetName && r.Type == recordType {
-			if r.Value == ip.String() {
+	found := false
+	for i, record := range records {
+		if record.Name == targetName && record.Type == recordType {
+			if record.Value == ip.String() {
 				return ip, nil // already up to date
 			}
-			records[i].Value = ip.String()
-			updated = true
-			break
+			if !found {
+				records[i].Value = ip.String()
+				found = true
+			}
 		}
 	}
-	if !updated {
+	if !found {
 		records = append(records, dnsRecord{
 			Name:  targetName,
 			Type:  recordType,

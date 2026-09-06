@@ -153,6 +153,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
 	case strings.HasPrefix(s, "badrequest"):
 		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBadRequest)
+	case strings.HasPrefix(s, "nochg"):
+		return ip, nil
 	case strings.HasPrefix(s, "good"):
 		return ip, nil
 	default:

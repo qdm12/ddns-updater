@@ -92,6 +92,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - OpenDNS
   - OVH
   - Porkbun
+  - RFC 2136 (BIND, Knot DNS, PowerDNS)
   - Route53
   - Scaleway
   - Selfhost.de
@@ -270,6 +271,7 @@ Check the documentation for your DNS provider:
 - [OpenDNS](docs/opendns.md)
 - [OVH](docs/ovh.md)
 - [Porkbun](docs/porkbun.md)
+- [RFC 2136](docs/rfc2136.md)
 - [Route53](docs/route53.md)
 - [Scaleway](docs/scaleway.md)
 - [Selfhost.de](docs/selfhost.de.md)

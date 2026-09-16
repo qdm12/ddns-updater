@@ -57,6 +57,7 @@ const (
 	Scaleway     models.Provider = "scaleway"
 	SelfhostDe   models.Provider = "selfhost.de"
 	Servercow    models.Provider = "servercow"
+	SiteNl       models.Provider = "sitenl"
 	Spaceship    models.Provider = "spaceship"
 	Spdyn        models.Provider = "spdyn"
 	Strato       models.Provider = "strato"
@@ -119,6 +120,7 @@ func ProviderChoices() []models.Provider {
 		Scaleway,
 		SelfhostDe,
 		Servercow,
+		SiteNl,
 		Spaceship,
 		Spdyn,
 		Strato,

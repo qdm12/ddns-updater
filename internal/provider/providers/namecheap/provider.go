@@ -63,8 +63,12 @@ func validateSettings(domain, password string) (err error) {
 	return nil
 }
 
+func (p *Provider) Name() models.Provider {
+	return constants.Namecheap
+}
+
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.Namecheap, ipversion.IP4)
+	return utils.ToString(p.domain, p.owner, p.Name(), ipversion.IP4)
 }
 
 func (p *Provider) Domain() string {

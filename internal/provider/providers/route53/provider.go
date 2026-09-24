@@ -97,8 +97,12 @@ func validateSettings(domain, accessKey, secretKey, zoneID string) (err error) {
 	return nil
 }
 
+func (p *Provider) Name() models.Provider {
+	return constants.Route53
+}
+
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.Route53, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, p.Name(), p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

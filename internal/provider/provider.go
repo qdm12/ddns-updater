@@ -85,10 +85,36 @@ type Provider interface {
 	Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error)
 }
 
+// Namer is implemented by every provider built through [New] and returns the
+// provider name in machine readable form. It is kept separate from [Provider]
+// so the concrete implementations do not each have to declare it.
+type Namer interface {
+	Name() models.Provider
+}
+
+// named decorates a [Provider] with the name it was built from. The concrete
+// implementations only expose their name pre-formatted for HTML, via HTML().
+type named struct {
+	Provider
+	name models.Provider
+}
+
+func (n named) Name() models.Provider { return n.name }
+
 var ErrProviderUnknown = errors.New("unknown provider")
 
-//nolint:gocyclo,maintidx
 func New(providerName models.Provider, data json.RawMessage, domain, owner string, //nolint:ireturn
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix,
+) (provider Provider, err error) {
+	provider, err = newProvider(providerName, data, domain, owner, ipVersion, ipv6Suffix)
+	if err != nil {
+		return nil, err
+	}
+	return named{Provider: provider, name: providerName}, nil
+}
+
+//nolint:gocyclo,maintidx
+func newProvider(providerName models.Provider, data json.RawMessage, domain, owner string, //nolint:ireturn
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix,
 ) (provider Provider, err error) {
 	switch providerName {

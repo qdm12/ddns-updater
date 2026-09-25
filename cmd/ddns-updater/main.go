@@ -217,7 +217,7 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		return fmt.Errorf("creating health server: %w", err)
 	}
 
-	server, err := createServer(ctx, config.Server, logger, db, updaterService)
+	server, err := createServer(ctx, config.Server, logger, db, updaterService, buildInfo)
 	if err != nil {
 		return fmt.Errorf("creating server: %w", err)
 	}
@@ -370,7 +370,7 @@ func createHealthServer(db health.AllSelecter, resolver health.LookupIPer,
 //nolint:ireturn
 func createServer(ctx context.Context, config config.Server,
 	logger log.LoggerInterface, db server.Database,
-	updaterService server.UpdateForcer) (
+	updaterService server.UpdateForcer, buildInfo models.BuildInformation) (
 	service goservices.Service, err error,
 ) {
 	if !*config.Enabled {
@@ -378,5 +378,5 @@ func createServer(ctx context.Context, config config.Server,
 	}
 	serverLogger := logger.New(log.SetComponent("http server"))
 	return server.New(ctx, config.ListeningAddress, config.RootURL,
-		db, serverLogger, updaterService)
+		db, serverLogger, updaterService, buildInfo)
 }

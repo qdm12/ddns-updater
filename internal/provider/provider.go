@@ -31,6 +31,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/dynv6"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/easydns"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/example"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/feno"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/freedns"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/gandi"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/gcp"
@@ -134,6 +135,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return easydns.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Example:
 		return example.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Feno:
+		return feno.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.FreeDNS:
 		return freedns.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Gandi:

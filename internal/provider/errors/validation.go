@@ -23,6 +23,7 @@ var (
 	ErrKeyNotValid            = errors.New("key is not valid")
 	ErrPasswordNotSet         = errors.New("password is not set")
 	ErrPasswordNotValid       = errors.New("password is not valid")
+	ErrProjectIDNotSet        = errors.New("project id is not set")
 	ErrSecretKeyNotSet        = errors.New("secret key is not set")
 	ErrSecretNotSet           = errors.New("secret is not set")
 	ErrSuccessRegexNotSet     = errors.New("success regex is not set")

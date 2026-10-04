@@ -10,6 +10,7 @@ import (
 	"github.com/qdm12/ddns-updater/pkg/publicip/dns"
 	"github.com/qdm12/ddns-updater/pkg/publicip/http"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
+	"github.com/qdm12/ddns-updater/pkg/publicip/privateip"
 	"github.com/qdm12/gosettings"
 	"github.com/qdm12/gosettings/reader"
 	"github.com/qdm12/gosettings/validate"
@@ -24,6 +25,11 @@ type PubIP struct {
 	DNSEnabled        *bool
 	DNSProviders      []string
 	DNSTimeout        time.Duration
+	PrivateIPEnabled  *bool
+
+	// PrivateIPInterface is the case sensitive name of the interface to read the
+	// private IP address from. It is required if PrivateIPEnabled is true.
+	PrivateIPInterface string
 }
 
 func (p *PubIP) setDefaults() {
@@ -35,7 +41,10 @@ func (p *PubIP) setDefaults() {
 	p.DNSProviders = gosettings.DefaultSlice(p.DNSProviders, []string{all})
 	const defaultDNSTimeout = 3 * time.Second
 	p.DNSTimeout = gosettings.DefaultComparable(p.DNSTimeout, defaultDNSTimeout)
+	p.PrivateIPEnabled = gosettings.DefaultPointer(p.PrivateIPEnabled, false)
 }
+
+var ErrPrivateIPInterfaceNotSet = errors.New("PRIVATEIP_INTERFACE must be set when the privateip fetcher is enabled")
 
 func (p PubIP) Validate() (err error) {
 	err = p.validateHTTPIPProviders()
@@ -56,6 +65,10 @@ func (p PubIP) Validate() (err error) {
 	err = p.validateDNSProviders()
 	if err != nil {
 		return fmt.Errorf("DNS providers: %w", err)
+	}
+
+	if *p.PrivateIPEnabled && p.PrivateIPInterface == "" {
+		return fmt.Errorf("private IP fetching: %w", ErrPrivateIPInterfaceNotSet)
 	}
 
 	return nil
@@ -95,6 +108,11 @@ func (p *PubIP) toLinesNode() (node *gotree.Node) {
 		}
 	}
 
+	node.Appendf("Private IP enabled: %s", gosettings.BoolToYesNo(p.PrivateIPEnabled))
+	if *p.PrivateIPEnabled {
+		node.Appendf("Private IP interface: %s", p.PrivateIPInterface)
+	}
+
 	return node
 }
 
@@ -107,6 +125,14 @@ func (p *PubIP) ToHTTPOptions() (options []http.Option) {
 		http.SetProvidersIP(httpIPProviders[0], httpIPProviders[1:]...),
 		http.SetProvidersIP4(httpIPv4Providers[0], httpIPv4Providers[1:]...),
 		http.SetProvidersIP6(httpIPv6Providers[0], httpIPv6Providers[1:]...),
+	}
+}
+
+// ToPrivateIPSettings assumes the settings have been validated.
+func (p *PubIP) ToPrivateIPSettings() privateip.Settings {
+	return privateip.Settings{
+		Enabled:   *p.PrivateIPEnabled,
+		Interface: p.PrivateIPInterface,
 	}
 }
 
@@ -234,10 +260,13 @@ func validateHTTPIPProviders(providerStrings []string,
 }
 
 func (p *PubIP) read(r *reader.Reader, warner Warner) (err error) {
-	p.HTTPEnabled, p.DNSEnabled, err = getFetchers(r)
+	p.HTTPEnabled, p.DNSEnabled, p.PrivateIPEnabled, err = getFetchers(r)
 	if err != nil {
 		return err
 	}
+
+	p.PrivateIPEnabled = gosettings.DefaultPointer(p.PrivateIPEnabled, false)
+	p.PrivateIPInterface = r.String("PRIVATEIP_INTERFACE", reader.ForceLowercase(false))
 
 	p.HTTPIPProviders = r.CSV("PUBLICIP_HTTP_PROVIDERS",
 		reader.RetroKeys("IP_METHOD"))
@@ -297,14 +326,14 @@ func (p *PubIP) read(r *reader.Reader, warner Warner) (err error) {
 
 var ErrFetcherNotValid = errors.New("fetcher is not valid")
 
-func getFetchers(reader *reader.Reader) (http, dns *bool, err error) {
+func getFetchers(reader *reader.Reader) (http, dns, privateIP *bool, err error) {
 	// TODO change to use reader.BoolPtr with retro-compatibility
 	s := reader.String("PUBLICIP_FETCHERS")
 	if s == "" {
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 
-	http, dns = new(bool), new(bool)
+	http, dns, privateIP = new(bool), new(bool), new(bool)
 	fields := strings.Split(s, ",")
 	for i, field := range fields {
 		switch strings.ToLower(field) {
@@ -315,14 +344,16 @@ func getFetchers(reader *reader.Reader) (http, dns *bool, err error) {
 			*http = true
 		case "dns":
 			*dns = true
+		case "privateip":
+			*privateIP = true
 		default:
-			return nil, nil, fmt.Errorf(
+			return nil, nil, nil, fmt.Errorf(
 				"%w: %q at position %d of %d",
 				ErrFetcherNotValid, field, i+1, len(fields))
 		}
 	}
 
-	return http, dns, nil
+	return http, dns, privateIP, nil
 }
 
 func handleRetroProvider(provider string) (updatedProvider string) {

@@ -34,7 +34,7 @@ type errorItem struct {
 }
 
 func (e gcpError) String() string {
-	elements := make([]string, 0, 3+len(e.Errors)) //nolint:gomnd
+	elements := make([]string, 0, 3+len(e.Errors)) //nolint:mnd
 	if e.Code != 0 {
 		element := fmt.Sprintf("status %d", e.Code)
 		elements = append(elements, element)

@@ -1,43 +1,70 @@
-linters-settings:
-  misspell:
-    locale: US
+version: "2"
 
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - containedctx
-        - dupl
-        - goerr113
-    - text: Function `exitHealthchecksio` should pass the context parameter
-      linters:
-        - contextcheck
-    - source: "See https://"
-      linters:
-        - lll
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 
 linters:
+  settings:
+    misspell:
+      locale: US
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - containedctx
+          - dupl
+          - err113
+        path: _test\.go
+      - linters:
+          - contextcheck
+        text: Function `exitHealthchecksio` should pass the context parameter
+      - linters:
+          - lll
+        source: See https://
+      - linters:
+          - revive
+        text: "var-naming: avoid meaningless package names"
+        path: internal\/provider\/utils\/
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
   enable:
     # - cyclop
     - asasalint
     - asciicheck
     - bidichk
     - bodyclose
+    - canonicalheader
     - containedctx
     - contextcheck
+    - copyloopvar
     - decorder
     - dogsled
     - dupl
     - dupword
     - durationcheck
+    - err113
     - errchkjson
     - errname
     - errorlint
-    - execinquery
     - exhaustive
-    - exportloopref
+    - fatcontext
     - forcetypeassert
-    - gci
     - gocheckcompilerdirectives
     - gochecknoglobals
     - gochecknoinits
@@ -46,11 +73,9 @@ linters:
     - goconst
     - gocritic
     - gocyclo
+    - godoclint
     - godot
-    - goerr113
     - goheader
-    - goimports
-    - gomnd
     - gomoddirectives
     - goprintffuncname
     - gosec
@@ -59,11 +84,16 @@ linters:
     - importas
     - inamedparam
     - interfacebloat
+    - intrange
+    - iotamixing
     - ireturn
     - lll
     - maintidx
     - makezero
+    - mirror
     - misspell
+    - mnd
+    - modernize
     - musttag
     - nakedret
     - nestif
@@ -84,7 +114,6 @@ linters:
     - sloglint
     - sqlclosecheck
     - tagalign
-    - tenv
     - thelper
     - tparallel
     - unconvert

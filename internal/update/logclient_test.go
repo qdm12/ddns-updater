@@ -8,10 +8,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/qdm12/ddns-updater/internal/update/mock_update"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func Test_LogClient(t *testing.T) {
@@ -57,7 +57,6 @@ func Test_LogClient(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -105,7 +104,7 @@ func Test_LogClient(t *testing.T) {
 
 			logClient := makeLogClient(client, logger)
 
-			assert.Equal(t, logClient.Timeout, client.Timeout)
+			assert.Same(t, logClient, client)
 
 			ctx := context.Background()
 

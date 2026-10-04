@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"sync/atomic"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -29,12 +30,14 @@ type Provider struct {
 	personalAccessToken string
 	// apiKey is deprecated so personalAccessToken should be used
 	// instead.
-	apiKey string
+	apiKey   string
+	knownTTL atomic.Uint32
 }
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		PersonalAccessToken string `json:"personal_access_token"`
 		APIKey              string `json:"key"`
@@ -110,6 +113,19 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// TTL returns the record TTL in seconds if it is known.
+func (p *Provider) TTL() (ttl *uint32) {
+	if p.ttl != 0 {
+		return &p.ttl
+	}
+	if knownTTL := p.knownTTL.Load(); knownTTL != 0 {
+		return &knownTTL
+	}
+	return nil
+}
+
+// Update updates the IP address for the provider.
+// See https://api.gandi.net/docs/livedns/#v5-livedns-domains-fqdn-records
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A
 	if ip.Is6() {
@@ -118,23 +134,18 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	u := url.URL{
 		Scheme: "https",
-		Host:   "dns.api.gandi.net",
-		Path:   fmt.Sprintf("/api/v5/domains/%s/records/%s/%s", p.domain, p.owner, recordType),
+		Host:   "api.gandi.net",
+		Path:   fmt.Sprintf("v5/livedns/domains/%s/records/%s/%s", p.domain, p.owner, recordType),
 	}
 
 	buffer := bytes.NewBuffer(nil)
 	encoder := json.NewEncoder(buffer)
-	const defaultTTL uint32 = 3600
-	ttl := defaultTTL
-	if p.ttl != 0 {
-		ttl = p.ttl
-	}
 	requestData := struct {
 		Values [1]string `json:"rrset_values"`
-		TTL    uint32    `json:"rrset_ttl"`
+		TTL    uint32    `json:"rrset_ttl,omitempty"`
 	}{
 		Values: [1]string{ip.Unmap().String()},
-		TTL:    ttl,
+		TTL:    p.ttl,
 	}
 	err = encoder.Encode(requestData)
 	if err != nil {
@@ -164,6 +175,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	if response.StatusCode != http.StatusCreated {
 		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
 			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+	}
+
+	var responseData struct {
+		TTL uint32 `json:"rrset_ttl"`
+	}
+	if err := json.NewDecoder(response.Body).Decode(&responseData); err == nil && responseData.TTL != 0 {
+		p.knownTTL.Store(responseData.TTL)
 	}
 
 	return ip, nil

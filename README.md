@@ -6,10 +6,8 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
 
 [![Build status](https://github.com/qdm12/ddns-updater/actions/workflows/build.yml/badge.svg)](https://github.com/qdm12/ddns-updater/actions/workflows/build.yml)
 
-[![dockeri.co](https://dockeri.co/image/qmcgaw/ddns-updater)](https://hub.docker.com/r/qmcgaw/ddns-updater)
-
 ![Last release](https://img.shields.io/github/release/qdm12/ddns-updater?label=Last%20release)
-![Last Docker tag](https://img.shields.io/docker/v/qmcgaw/ddns-updater?sort=semver&label=Last%20Docker%20tag)
+![Last Docker tag](https://img.shields.io/github/v/release/qdm12/ddns-updater?sort=semver&label=Last%20Docker%20tag)
 [![Last release size](https://img.shields.io/docker/image-size/qmcgaw/ddns-updater?sort=semver&label=Last%20released%20image)](https://hub.docker.com/r/qmcgaw/ddns-updater/tags?page=1&ordering=last_updated)
 ![GitHub last release date](https://img.shields.io/github/release-date/qdm12/ddns-updater?label=Last%20release%20date)
 ![Commits since release](https://img.shields.io/github/commits-since/qdm12/ddns-updater/latest?sort=semver)
@@ -22,7 +20,6 @@ Program to keep DNS A and/or AAAA records updated for multiple DNS providers
 [![GitHub issues](https://img.shields.io/github/issues/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/qdm12/ddns-updater.svg)](https://github.com/qdm12/ddns-updater/issues?q=is%3Aissue+is%3Aclosed)
 
-[![Lines of code](https://img.shields.io/tokei/lines/github/qdm12/ddns-updater)](https://github.com/qdm12/ddns-updater)
 ![Code size](https://img.shields.io/github/languages/code-size/qdm12/ddns-updater)
 ![GitHub repo size](https://img.shields.io/github/repo-size/qdm12/ddns-updater)
 ![Go version](https://img.shields.io/github/go-mod/go-version/qdm12/ddns-updater)
@@ -44,13 +41,14 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
 
 ## Features
 
-- Available as a Docker image [`qmcgaw/ddns-updater`](https://hub.docker.com/r/qmcgaw/ddns-updater) and [`ghcr.io/qdm12/ddns-updater`]((https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater))
+- Available as a Docker image [`ghcr.io/qdm12/ddns-updater`]((https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater)) and [`qmcgaw/ddns-updater`](https://hub.docker.com/r/qmcgaw/ddns-updater)
 - Available as [zero-dependency binaries for Linux, Windows and MacOS](https://github.com/qdm12/ddns-updater/releases)
 - 🆕 Available in the AUR as [`ddns-updater`](https://aur.archlinux.org/packages/ddns-updater) - see [#808](https://github.com/qdm12/ddns-updater/discussions/808)
 - Updates periodically A records for different DNS providers:
   - Aliyun
   - AllInkl
-  - Changeip
+  - Bunny
+  - ChangeIP
   - Cloudflare
   - DD24
   - DDNSS.de
@@ -64,21 +62,29 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - DuckDNS
   - DynDNS
   - Dynu
+  - DynV6
   - EasyDNS
   - FreeDNS
   - Gandi
   - GCP
+  - Gigahost.no
   - GoDaddy
   - GoIP.de
   - He.net
-  - Hetzner
+  - Hetzner (legacy API)
+  - Hetzner Cloud
+  - Hostinger
   - Infomaniak
   - INWX
-  - Ionos
+    - Ionos
+    - ipv64
   - Linode
+  - Loopia
   - LuaDNS
+  - Myaddr
   - Name.com
   - Namecheap
+  - NameSilo
   - Netcup
   - NoIP
   - Now-DNS
@@ -87,11 +93,14 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - OVH
   - Porkbun
   - Route53
+  - Scaleway
   - Selfhost.de
   - Servercow.de
+  - Spaceship
   - Spdyn
   - Strato.de
   - Variomedia.de
+  - Vultr
   - Zoneedit
   - **Want more?** [Create an issue for it](https://github.com/qdm12/ddns-updater/issues/new/choose)!
 - Web user interface (Desktop)
@@ -179,16 +188,20 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
 1. Run the container with
 
     ```sh
-    docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data qmcgaw/ddns-updater
+    docker run -d -p 8000:8000/tcp -v "$(pwd)"/data:/updater/data ghcr.io/qdm12/ddns-updater
     ```
 
 1. The following is **optional**.
     - You can customize the program behavior using [environment variables](#environment-variables)
     - You can use [docker-compose.yml](docker-compose.yml) with `docker-compose up -d`
     - **Kubernetes**: check out the [k8s directory](k8s) for an installation guide and examples.
-    - Other [Docker image tags are available](https://hub.docker.com/repository/docker/qmcgaw/ddns-updater/tags)
-    - You can update the image with `docker pull qmcgaw/ddns-updater`
+    - Other [Docker image tags are available](https://github.com/qdm12/ddns-updater/pkgs/container/ddns-updater)
+    - You can update the image with `docker pull ghcr.io/qdm12/ddns-updater`
     - You can set your JSON configuration as a single environment variable line (i.e. `{"settings": [{"provider": "namecheap", ...}]}`), which takes precedence over config.json. Note however that if you don't bind mount the `/updater/data` directory, there won't be a persistent database file `/updater/updates.json` but it will still work.
+
+### Home Assistant
+
+To install ddns-updater on [Home Assistant](https://home-assistant.io/), follow the installation instructions on [ha-ddns-updater](https://github.com/ha-ddns-updater/ha-ddns-updater/).
 
 ## Configuration
 
@@ -212,13 +225,13 @@ Check the documentation for your DNS provider:
 
 - [Aliyun](docs/aliyun.md)
 - [Allinkl](docs/allinkl.md)
+- [Bunny](docs/bunny.md)
 - [ChangeIP](docs/changeip.md)
 - [Cloudflare](docs/cloudflare.md)
-- [Custom](docs/custom.md)
+- [DD24](docs/dd24.md)
 - [DDNSS.de](docs/ddnss.de.md)
 - [deSEC](docs/desec.md)
 - [DigitalOcean](docs/digitalocean.md)
-- [DD24](docs/dd24.md)
 - [Domeneshop](docs/domeneshop.md)
 - [DonDominio](docs/dondominio.md)
 - [DNSOMatic](docs/dnsomatic.md)
@@ -232,16 +245,24 @@ Check the documentation for your DNS provider:
 - [FreeDNS](docs/freedns.md)
 - [Gandi](docs/gandi.md)
 - [GCP](docs/gcp.md)
+- [Gigahost.no](docs/gigahostno.md)
 - [GoDaddy](docs/godaddy.md)
 - [GoIP.de](docs/goip.md)
 - [He.net](docs/he.net.md)
+- [Hetzner](docs/hetzner.md)
+- [HetznerCloud](docs/hetznercloud.md)
+- [Hostinger](docs/hostinger.md)
 - [Infomaniak](docs/infomaniak.md)
 - [INWX](docs/inwx.md)
 - [Ionos](docs/ionos.md)
+- [IPv64](docs/ipv64.md)
 - [Linode](docs/linode.md)
+- [Loopia](docs/loopia.md)
 - [LuaDNS](docs/luadns.md)
+- [Myaddr](docs/myaddr.md)
 - [Name.com](docs/name.com.md)
 - [Namecheap](docs/namecheap.md)
+- [NameSilo](docs/namesilo.md)
 - [Netcup](docs/netcup.md)
 - [NoIP](docs/noip.md)
 - [Now-DNS](docs/nowdns.md)
@@ -249,16 +270,22 @@ Check the documentation for your DNS provider:
 - [OpenDNS](docs/opendns.md)
 - [OVH](docs/ovh.md)
 - [Porkbun](docs/porkbun.md)
+- [Route53](docs/route53.md)
+- [Scaleway](docs/scaleway.md)
 - [Selfhost.de](docs/selfhost.de.md)
 - [Servercow.de](docs/servercow.md)
+- [Spaceship](docs/spaceship.md)
 - [Spdyn](docs/spdyn.md)
 - [Strato.de](docs/strato.md)
 - [Variomedia.de](docs/variomedia.md)
+- [Vultr](docs/vultr.md)
 - [Zoneedit](docs/zoneedit.md)
+- [Custom](docs/custom.md)
 
 Note that:
 
 - you can specify multiple owners/hosts for the same domain using a comma separated list. For example with `"domain": "example.com,sub.example.com,sub2.example.com",`.
+⚠️ this is a bit different for DuckDNS and GoIP, see their respective documentation.
 
 ### Environment variables
 
@@ -289,7 +316,7 @@ Note that:
 | `RESOLVER_ADDRESS` | Your network DNS | A plaintext DNS address to use to resolve your domain names defined in your settings only. For example it can be `1.1.1.1:53`. This is useful for split dns, see [#389](https://github.com/qdm12/ddns-updater/issues/389) |
 | `LOG_LEVEL` | `info` | Level of logging, `debug`, `info`, `warning` or `error` |
 | `LOG_CALLER` | `hidden` | Show caller per log line, `hidden` or `short` |
-| `SHOUTRRR_ADDRESSES` |  | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/v0.8/services/overview/) (notification services) |
+| `SHOUTRRR_ADDRESSES` | | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/v0.8/services/overview/) (notification services) |
 | `SHOUTRRR_DEFAULT_TITLE` | `DDNS Updater` | Default title for Shoutrrr notifications |
 | `TZ` | | Timezone to have accurate times, i.e. `America/Montreal` |
 | `UMASK` | System current umask | Umask to set for the program in octal, i.e. `0022` |
@@ -335,7 +362,7 @@ You can otherwise customize it with the following:
   - `wtfismyip` using [https://ipv6.wtfismyip.com/text](https://ipv6.wtfismyip.com/text)
   - `seeip` using [https://ipv6.seeip.org](https://ipv6.seeip.org)
   - You can also specify an HTTPS URL with prefix `url:` for example `url:https://ipinfo.io/ip`
-- `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see #136). It can be one or more of the following:
+- `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see [#136](https://github.com/qdm12/ddns-updater/issues/136)). It can be one or more of the following:
   - `cloudflare`
   - `opendns`
 
@@ -383,7 +410,7 @@ We could do an API call to get the record IP address every period, but that woul
 
 ## Testing
 
-- The automated healthcheck verifies all your records are up to date [using DNS lookups](internal/health/check.go#L42)
+- The automated healthcheck verifies all your records are up to date [using DNS lookups](internal/health/check.go#L59). For the duration of the record TTL (when known by the provider) after a successful update, the previous IP address is also accepted since resolvers may not have propagated the update yet.
 - You can also manually check, by:
     1. Going to your DNS management webpage
     1. Setting your record to `127.0.0.1`
@@ -395,7 +422,7 @@ We could do an API call to get the record IP address every period, but that woul
 You can build the image yourself with:
 
 ```sh
-docker build -t qmcgaw/ddns-updater https://github.com/qdm12/ddns-updater.git
+docker build -t ghcr.io/qdm12/ddns-updater https://github.com/qdm12/ddns-updater.git
 ```
 
 You can use optional build arguments with `--build-arg KEY=VALUE` from the table below:

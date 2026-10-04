@@ -13,16 +13,15 @@ import (
 
 type getIPFunc func(ctx context.Context) (ip netip.Addr, err error)
 
-var (
-	ErrIPv6NotSupported = errors.New("IPv6 is not supported on this system")
-)
+var ErrIPv6NotSupported = errors.New("IPv6 is not supported on this system")
 
 func tryAndRepeatGettingIP(ctx context.Context, getIPFunc getIPFunc,
-	logger Logger, version ipversion.IPVersion) (ip netip.Addr, err error) {
+	logger Logger, version ipversion.IPVersion,
+) (ip netip.Addr, err error) {
 	const tries = 3
 	logMessagePrefix := "obtaining " + version.String() + " address"
 	errs := make([]error, 0, tries)
-	for try := 0; try < tries; try++ {
+	for try := range tries {
 		ip, err = getIPFunc(ctx)
 		if err != nil {
 			errs = append(errs, err)

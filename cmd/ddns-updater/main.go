@@ -99,7 +99,8 @@ func main() {
 }
 
 func _main(ctx context.Context, reader *reader.Reader, args []string, logger log.LoggerInterface,
-	buildInfo models.BuildInformation, timeNow func() time.Time) (err error) {
+	buildInfo models.BuildInformation, timeNow func() time.Time,
+) (err error) {
 	if len(args) > 1 {
 		switch args[1] {
 		case "version", "-version", "--version":
@@ -208,11 +209,13 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	hioClient := healthchecksio.New(client, config.Health.HealthchecksioBaseURL,
 		*config.Health.HealthchecksioUUID)
 
-	updater := update.NewUpdater(db, client, shoutrrrClient, logger, timeNow)
+	debugEnabled := config.Logger.Level == log.LevelDebug.String()
+	updater := update.NewUpdater(db, client, shoutrrrClient, logger, timeNow, debugEnabled)
 	updaterService := update.NewService(db, updater, ipGetter, config.Update.Period,
 		config.Update.Cooldown, logger, resolver, timeNow, hioClient)
 
-	healthServer, err := createHealthServer(db, resolver, logger, *config.Health.ServerAddress)
+	healthServer, err := createHealthServer(db, resolver, logger,
+		*config.Health.ServerAddress, timeNow)
 	if err != nil {
 		return fmt.Errorf("creating health server: %w", err)
 	}
@@ -293,7 +296,8 @@ func printSplash(buildInfo models.BuildInformation) {
 }
 
 func readConfig(reader *reader.Reader, logger log.LoggerInterface) (
-	config config.Config, err error) {
+	config config.Config, err error,
+) {
 	err = config.Read(reader, logger)
 	if err != nil {
 		return config, fmt.Errorf("reading settings: %w", err)
@@ -323,7 +327,8 @@ func logProvidersCount(providersCount int, logger log.LeveledLogger) {
 
 func readRecords(providers []provider.Provider, persistentDB *persistence.Database,
 	logger log.LoggerInterface, shoutrrrClient *shoutrrr.Client) (
-	records []recordslib.Record, err error) {
+	records []recordslib.Record, err error,
+) {
 	records = make([]recordslib.Record, len(providers))
 	for i, provider := range providers {
 		logger.Info("Reading history from database: domain " +
@@ -341,7 +346,8 @@ func readRecords(providers []provider.Provider, persistentDB *persistence.Databa
 }
 
 func exitHealthchecksio(hioClient *healthchecksio.Client,
-	logger log.LoggerInterface, state healthchecksio.State) {
+	logger log.LoggerInterface, state healthchecksio.State,
+) {
 	const timeout = 3 * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -353,12 +359,13 @@ func exitHealthchecksio(hioClient *healthchecksio.Client,
 
 //nolint:ireturn
 func createHealthServer(db health.AllSelecter, resolver health.LookupIPer,
-	logger log.LoggerInterface, serverAddress string) (
-	healthServer goservices.Service, err error) {
+	logger log.LoggerInterface, serverAddress string, timeNow func() time.Time) (
+	healthServer goservices.Service, err error,
+) {
 	if serverAddress == "" {
 		return noop.New("healthcheck server"), nil
 	}
-	isHealthy := health.MakeIsHealthy(db, resolver)
+	isHealthy := health.MakeIsHealthy(db, resolver, timeNow)
 	healthLogger := logger.New(log.SetComponent("healthcheck server"))
 	return health.NewServer(serverAddress, healthLogger, isHealthy)
 }
@@ -367,7 +374,8 @@ func createHealthServer(db health.AllSelecter, resolver health.LookupIPer,
 func createServer(ctx context.Context, config config.Server,
 	logger log.LoggerInterface, db server.Database,
 	updaterService server.UpdateForcer) (
-	service goservices.Service, err error) {
+	service goservices.Service, err error,
+) {
 	if !*config.Enabled {
 		return noop.New("server"), nil
 	}

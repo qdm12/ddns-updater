@@ -7,20 +7,22 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 func (p *Provider) getZones(ctx context.Context, client *http.Client) (
-	zones []apiZone, err error) {
+	zones []apiZone, err error,
+) {
 	err = p.get(ctx, client, "/zones", nil, &zones)
 	return zones, err
 }
 
 func (p *Provider) getRecords(ctx context.Context, client *http.Client,
-	zoneID string, recordType string) (records []apiRecord, err error) {
+	zoneID string, recordType string,
+) (records []apiRecord, err error) {
 	queryParams := url.Values{
 		"recordName": []string{p.BuildDomainName()},
 		"recordType": []string{recordType},
@@ -38,11 +40,12 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client,
 }
 
 func (p *Provider) get(ctx context.Context, client *http.Client,
-	subPath string, queryParams url.Values, responseJSONData any) (err error) {
+	subPath string, queryParams url.Values, responseJSONData any,
+) (err error) {
 	u := url.URL{
 		Scheme:   "https",
 		Host:     "api.hosting.ionos.com",
-		Path:     filepath.Join("/dns/v1/", subPath),
+		Path:     path.Join("/dns/v1/", subPath),
 		RawQuery: queryParams.Encode(),
 	}
 

@@ -29,7 +29,8 @@ type Provider struct {
 }
 
 func New(data json.RawMessage, domain, owner string, ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	// retro compatibility
 	if owner == "" {
 		owner = "@"
@@ -114,6 +115,14 @@ func (p *Provider) HTML() models.HTMLRow {
 		Provider:  "<a href=\"https://servercow.de\">Servercow</a>",
 		IPVersion: p.ipVersion.String(),
 	}
+}
+
+// TTL returns the record TTL in seconds if it is known.
+func (p *Provider) TTL() (ttl *uint32) {
+	if p.ttl == 0 {
+		return nil
+	}
+	return &p.ttl
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {

@@ -9,7 +9,8 @@ import (
 )
 
 func (p *Provider) getRecords(ctx context.Context, client *http.Client,
-	recordType, subdomain string, timestamp int64) (recordIDs []uint64, err error) {
+	recordType, subdomain string, timestamp int64,
+) (recordIDs []uint64, err error) {
 	values := url.Values{}
 	values.Set("fieldType", recordType)
 	values.Set("subDomain", subdomain)

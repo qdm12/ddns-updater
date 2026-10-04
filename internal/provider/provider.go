@@ -12,6 +12,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/aliyun"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/allinkl"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/bunny"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/changeip"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/cloudflare"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/custom"
@@ -33,17 +34,24 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/freedns"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/gandi"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/gcp"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/gigahostno"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/godaddy"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/goip"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/he"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/hetzner"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/hetznercloud"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/hostinger"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/infomaniak"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/inwx"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/ionos"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/ipv64"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/linode"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/loopia"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/luadns"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/myaddr"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/namecheap"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/namecom"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/namesilo"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/netcup"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/njalla"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/noip"
@@ -52,11 +60,15 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/ovh"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/porkbun"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/route53"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/scaleway"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/selfhostde"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/servercow"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/spaceship"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/spdyn"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/strato"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/variomedia"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/vercel"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/vultr"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/zoneedit"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -75,14 +87,17 @@ type Provider interface {
 
 var ErrProviderUnknown = errors.New("unknown provider")
 
-//nolint:gocyclo
+//nolint:gocyclo,maintidx
 func New(providerName models.Provider, data json.RawMessage, domain, owner string, //nolint:ireturn
-	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (provider Provider, err error) {
+	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix,
+) (provider Provider, err error) {
 	switch providerName {
 	case constants.Aliyun:
 		return aliyun.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.AllInkl:
 		return allinkl.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Bunny:
+		return bunny.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Changeip:
 		return changeip.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Cloudflare:
@@ -125,6 +140,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return gandi.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.GCP:
 		return gcp.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.GigahostNo:
+		return gigahostno.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.GoDaddy:
 		return godaddy.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.GoIP:
@@ -133,20 +150,32 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return he.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Hetzner:
 		return hetzner.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.HetznerCloud:
+		return hetznercloud.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Hostinger:
+		return hostinger.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Infomaniak:
 		return infomaniak.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.INWX:
 		return inwx.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Ionos:
 		return ionos.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.IPv64:
+		return ipv64.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Linode:
 		return linode.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Loopia:
+		return loopia.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.LuaDNS:
 		return luadns.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Myaddr:
+		return myaddr.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Namecheap:
 		return namecheap.New(data, domain, owner)
 	case constants.NameCom:
 		return namecom.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.NameSilo:
+		return namesilo.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Netcup:
 		return netcup.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Njalla:
@@ -163,16 +192,24 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return porkbun.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Route53:
 		return route53.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Scaleway:
+		return scaleway.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.SelfhostDe:
 		return selfhostde.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Servercow:
 		return servercow.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Spaceship:
+		return spaceship.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Spdyn:
 		return spdyn.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Strato:
 		return strato.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Variomedia:
 		return variomedia.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Vercel:
+		return vercel.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Vultr:
+		return vultr.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Zoneedit:
 		return zoneedit.New(data, domain, owner, ipVersion, ipv6Suffix)
 	default:

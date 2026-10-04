@@ -47,6 +47,13 @@ body {
   padding: 0.5rem;
 }
 
+body {
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
 table {
   border-collapse: collapse;
   border-radius: 0.3rem;
@@ -87,10 +94,7 @@ a:hover {
 }
 
 footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
+  margin-top: auto;
   padding: 0.5rem;
   display: flex;
   flex-direction: column;

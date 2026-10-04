@@ -7,9 +7,7 @@ import (
 	"net/http"
 )
 
-var (
-	ErrHTTPStatusCodeNotOK = errors.New("status code is not OK")
-)
+var ErrHTTPStatusCodeNotOK = errors.New("status code is not OK")
 
 func CheckHTTP(ctx context.Context, client *http.Client) (err error) {
 	const url = "https://github.com"

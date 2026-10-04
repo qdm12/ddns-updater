@@ -23,7 +23,8 @@ func (f *Fetcher) IP6(ctx context.Context) (publicIP netip.Addr, err error) {
 }
 
 func (f *Fetcher) ip(ctx context.Context, ring *urlsRing, version ipversion.IPVersion) (
-	publicIP netip.Addr, err error) {
+	publicIP netip.Addr, err error,
+) {
 	ring.mutex.Lock()
 
 	var index int

@@ -5,14 +5,21 @@ import (
 	"errors"
 	"fmt"
 	"net/netip"
+	"slices"
 	"strings"
+	"time"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
+	"github.com/qdm12/ddns-updater/internal/records"
 )
 
-func MakeIsHealthy(db AllSelecter, resolver LookupIPer) func(ctx context.Context) error {
+// MakeIsHealthy returns a function checking all the records were updated
+// successfully, returning an error if not.
+func MakeIsHealthy(db AllSelecter, resolver LookupIPer,
+	timeNow func() time.Time,
+) func(ctx context.Context) error {
 	return func(ctx context.Context) (err error) {
-		return isHealthy(ctx, db, resolver)
+		return isHealthy(ctx, db, resolver, timeNow())
 	}
 }
 
@@ -22,8 +29,13 @@ var (
 	ErrLookupMismatch     = errors.New("lookup IP addresses do not match")
 )
 
-// isHealthy checks all the records were updated successfully and returns an error if not.
-func isHealthy(ctx context.Context, db AllSelecter, resolver LookupIPer) (err error) {
+// isHealthy checks all the records were updated successfully and returns an
+// error if not. Within a record TTL after its last update, previous IP
+// addresses are also accepted since resolvers may not have propagated the
+// update yet.
+func isHealthy(ctx context.Context, db AllSelecter, resolver LookupIPer,
+	now time.Time,
+) (err error) {
 	records := db.SelectAll()
 	for _, record := range records {
 		if record.Status == constants.FAIL {
@@ -37,6 +49,12 @@ func isHealthy(ctx context.Context, db AllSelecter, resolver LookupIPer) (err er
 		currentIP := record.History.GetCurrentIP()
 		if !currentIP.IsValid() {
 			return fmt.Errorf("%w: for hostname %s", ErrRecordIPNotSet, hostname)
+		}
+
+		acceptedIPs := []netip.Addr{currentIP}
+		ttl := recordTTL(record)
+		if ttl != nil && now.Before(record.History.GetSuccessTime().Add(time.Duration(*ttl)*time.Second)) {
+			acceptedIPs = append(acceptedIPs, record.History.GetPreviousIPs()...)
 		}
 
 		lookedUpNetIPs, err := resolver.LookupIP(ctx, "ip", hostname)
@@ -55,7 +73,7 @@ func isHealthy(ctx context.Context, db AllSelecter, resolver LookupIPer) (err er
 			default: // IPv6
 				ip = netip.AddrFrom16([16]byte(netIP.To16()))
 			}
-			if ip.Compare(currentIP) == 0 {
+			if slices.Contains(acceptedIPs, ip) {
 				found = true
 				break
 			}
@@ -67,4 +85,13 @@ func isHealthy(ctx context.Context, db AllSelecter, resolver LookupIPer) (err er
 		}
 	}
 	return nil
+}
+
+// recordTTL returns the record TTL in seconds if the provider knows it.
+func recordTTL(record records.Record) (ttl *uint32) {
+	ttlProvider, ok := record.Provider.(ttlProvider)
+	if !ok {
+		return nil
+	}
+	return ttlProvider.TTL()
 }

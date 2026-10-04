@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
+	"sync/atomic"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -20,11 +21,13 @@ type Provider struct {
 	ipVersion  ipversion.IPVersion
 	ipv6Suffix netip.Prefix
 	apiKey     string
+	knownTTL   atomic.Uint32
 }
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		APIKey string `json:"api_key"`
 	}{}
@@ -95,9 +98,19 @@ func (p *Provider) HTML() models.HTMLRow {
 	}
 }
 
+// TTL returns the record TTL in seconds if it is known.
+func (p *Provider) TTL() (ttl *uint32) {
+	if knownTTL := p.knownTTL.Load(); knownTTL != 0 {
+		return &knownTTL
+	}
+	return nil
+}
+
+// Update updates the IP address for the provider.
 // See https://developer.hosting.ionos.com/docs/dns
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (
-	newIP netip.Addr, err error) {
+	newIP netip.Addr, err error,
+) {
 	zones, err := p.getZones(ctx, client)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("getting zones: %w", err)
@@ -132,6 +145,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	for _, record := range records {
 		if record.Name == fullDomainName {
 			matchingRecords = append(matchingRecords, record)
+		}
+	}
+
+	for i := range matchingRecords {
+		if matchingRecords[i].TTL != 0 {
+			p.knownTTL.Store(matchingRecords[i].TTL)
+			break
 		}
 	}
 

@@ -12,9 +12,9 @@ import (
 )
 
 func newURLValues(accessKeyID string) (values url.Values) {
-	randBytes := make([]byte, 8) //nolint:gomnd
+	randBytes := make([]byte, 8) //nolint:mnd
 	_, _ = rand.Read(randBytes)
-	randInt64 := int64(binary.BigEndian.Uint64(randBytes))
+	randInt64 := int64(binary.BigEndian.Uint64(randBytes)) //nolint:gosec
 
 	values = make(url.Values)
 	values.Set("AccessKeyId", accessKeyID)

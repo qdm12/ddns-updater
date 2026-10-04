@@ -20,7 +20,8 @@ type Service struct {
 }
 
 func New(backupPeriod time.Duration,
-	dataDir, outputDir string, logger Logger) *Service {
+	dataDir, outputDir string, logger Logger,
+) *Service {
 	return &Service{
 		logger:       logger,
 		backupPeriod: backupPeriod,
@@ -56,7 +57,8 @@ func (s *Service) Start(ctx context.Context) (runError <-chan error, startErr er
 
 func run(ready chan<- struct{}, runError chan<- error, stopCh <-chan struct{},
 	done chan<- struct{}, outputDir, dataDir string, backupPeriod time.Duration,
-	logger Logger) {
+	logger Logger,
+) {
 	defer close(done)
 
 	if backupPeriod == 0 {

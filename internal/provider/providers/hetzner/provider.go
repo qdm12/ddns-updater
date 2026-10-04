@@ -27,7 +27,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Token          string `json:"token"`
 		ZoneIdentifier string `json:"zone_identifier"`
@@ -109,6 +110,11 @@ func (p *Provider) HTML() models.HTMLRow {
 		Provider:  "<a href=\"https://www.hetzner.com\">Hetzner</a>",
 		IPVersion: p.ipVersion.String(),
 	}
+}
+
+// TTL returns the record TTL in seconds.
+func (p *Provider) TTL() (ttl *uint32) {
+	return &p.ttl
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
+	"strconv"
+	"sync/atomic"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -22,13 +24,15 @@ type Provider struct {
 	ipVersion    ipversion.IPVersion
 	ipv6Suffix   netip.Prefix
 	ttl          uint32
+	knownTTL     atomic.Uint32
 	apiKey       string
 	secretAPIKey string
 }
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		SecretAPIKey string `json:"secret_api_key"`
 		APIKey       string `json:"api_key"`
@@ -102,7 +106,7 @@ func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
 		Owner:     p.Owner(),
-		Provider:  "<a href=\"https://www.porkbun.com/\">Porkbun DNS</a>",
+		Provider:  "<a href=\"https://www.porkbun.com/\">Porkbun</a>",
 		IPVersion: p.ipVersion.String(),
 	}
 }
@@ -113,6 +117,18 @@ func setHeaders(request *http.Request) {
 	headers.SetAccept(request, "application/json")
 }
 
+// TTL returns the record TTL in seconds if it is known.
+func (p *Provider) TTL() (ttl *uint32) {
+	if p.ttl != 0 {
+		return &p.ttl
+	}
+	if knownTTL := p.knownTTL.Load(); knownTTL != 0 {
+		return &knownTTL
+	}
+	return nil
+}
+
+// Update updates the IP address for the provider.
 // See https://porkbun.com/api/json/v3/documentation
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordType := constants.A
@@ -136,6 +152,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 		}
 		return ip, nil
+	}
+
+	const base = 10
+	ttlValue, err := strconv.ParseUint(records[0].TTL, base, 32)
+	if err == nil && ttlValue != 0 {
+		p.knownTTL.Store(uint32(ttlValue))
 	}
 
 	for _, record := range records {
@@ -179,7 +201,8 @@ func (p *Provider) deleteDefaultConflictingRecordsIfNeeded(ctx context.Context, 
 // matches the expected content value.
 // It returns an error if multiple records are found or if one record is found with an unexpected value.
 func (p *Provider) deleteSingleMatchingRecord(ctx context.Context, client *http.Client,
-	recordType, owner, expectedContent string) (err error) {
+	recordType, owner, expectedContent string,
+) (err error) {
 	records, err := p.getRecords(ctx, client, recordType, owner)
 	if err != nil {
 		return fmt.Errorf("getting records: %w", err)

@@ -23,11 +23,15 @@ func SetAuthSSOKey(request *http.Request, key, secret string) {
 }
 
 func SetOauth(request *http.Request, value string) {
-	request.Header.Set("oauth", value)
+	request.Header.Set("Oauth", value)
 }
 
 func SetXFilter(request *http.Request, value string) {
 	request.Header.Set("X-Filter", value)
+}
+
+func SetXAuthToken(request *http.Request, value string) {
+	request.Header.Set("X-Auth-Token", value)
 }
 
 func SetXAuthUsername(request *http.Request, value string) {
@@ -39,5 +43,9 @@ func SetXAuthPassword(request *http.Request, value string) {
 }
 
 func SetXAPIKey(request *http.Request, value string) {
-	request.Header.Set("X-API-Key", value)
+	request.Header.Set("X-Api-Key", value)
+}
+
+func SetXAPISecret(request *http.Request, value string) {
+	request.Header.Set("X-Api-Secret", value)
 }

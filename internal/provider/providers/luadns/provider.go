@@ -30,7 +30,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Email string `json:"email"`
 		Token string `json:"token"`
@@ -55,9 +56,7 @@ func New(data json.RawMessage, domain, owner string,
 	}, nil
 }
 
-var (
-	regexEmail = regexp.MustCompile(`[a-zA-Z0-9-_.+]+@[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,10}`)
-)
+var regexEmail = regexp.MustCompile(`[a-zA-Z0-9-_.+]+@[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,10}`)
 
 func validateSettings(domain, email, token string) (err error) {
 	err = utils.CheckDomain(domain)
@@ -117,6 +116,7 @@ func setHeaders(request *http.Request) {
 	headers.SetAccept(request, "application/json")
 }
 
+// Update updates the IP address for the provider.
 // Using https://www.luadns.com/api.html
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	zoneID, err := p.getZoneID(ctx, client)
@@ -203,7 +203,8 @@ func (p *Provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 }
 
 func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID int, ip netip.Addr) (
-	record luaDNSRecord, err error) {
+	record luaDNSRecord, err error,
+) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.luadns.com",
@@ -258,7 +259,8 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 }
 
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
-	zoneID int, newRecord luaDNSRecord) (err error) {
+	zoneID int, newRecord luaDNSRecord,
+) (err error) {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "api.luadns.com",

@@ -73,28 +73,28 @@ func (p *PubIP) toLinesNode() (node *gotree.Node) {
 
 	node.Appendf("HTTP enabled: %s", gosettings.BoolToYesNo(p.HTTPEnabled))
 	if *p.HTTPEnabled {
-		childNode := node.Appendf("HTTP IP providers")
+		childNode := node.Append("HTTP IP providers")
 		for _, provider := range p.HTTPIPProviders {
-			childNode.Appendf(provider)
+			childNode.Append(provider)
 		}
 
-		childNode = node.Appendf("HTTP IPv4 providers")
+		childNode = node.Append("HTTP IPv4 providers")
 		for _, provider := range p.HTTPIPv4Providers {
-			childNode.Appendf(provider)
+			childNode.Append(provider)
 		}
 
-		childNode = node.Appendf("HTTP IPv6 providers")
+		childNode = node.Append("HTTP IPv6 providers")
 		for _, provider := range p.HTTPIPv6Providers {
-			childNode.Appendf(provider)
+			childNode.Append(provider)
 		}
 	}
 
 	node.Appendf("DNS enabled: %s", gosettings.BoolToYesNo(p.DNSEnabled))
 	if *p.DNSEnabled {
 		node.Appendf("DNS timeout: %s", p.DNSTimeout)
-		childNode := node.Appendf("DNS over TLS providers")
+		childNode := node.Append("DNS over TLS providers")
 		for _, provider := range p.DNSProviders {
-			childNode.Appendf(provider)
+			childNode.Append(provider)
 		}
 	}
 
@@ -123,7 +123,8 @@ func (p *PubIP) ToPrivateIPSettings() privateip.Settings {
 }
 
 func stringsToHTTPProviders(providers []string, ipVersion ipversion.IPVersion) (
-	updatedProviders []http.Provider) {
+	updatedProviders []http.Provider,
+) {
 	updatedProvidersSet := make(map[string]struct{}, len(providers))
 	for _, provider := range providers {
 		if provider != all {
@@ -170,9 +171,7 @@ func (p *PubIP) ToDNSPOptions() (options []dns.Option) {
 	}
 }
 
-var (
-	ErrNoPublicIPDNSProvider = errors.New("no public IP DNS provider specified")
-)
+var ErrNoPublicIPDNSProvider = errors.New("no public IP DNS provider specified")
 
 func (p PubIP) validateDNSProviders() (err error) {
 	if len(p.DNSProviders) == 0 {
@@ -206,7 +205,8 @@ var (
 )
 
 func validateHTTPIPProviders(providerStrings []string,
-	version ipversion.IPVersion) (err error) {
+	version ipversion.IPVersion,
+) (err error) {
 	if len(providerStrings) == 0 {
 		return fmt.Errorf("%w", ErrNoPublicIPHTTPProvider)
 	}

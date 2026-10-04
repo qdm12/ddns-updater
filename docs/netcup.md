@@ -26,7 +26,7 @@ Also keep in mind, that TTL, Expire, Retry and Refresh values of the given Domai
 
 ### Compulsory parameters
 
-- `"domain"` is the domain to update. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`).
+- `"domain"` is the domain to update. It can be `example.com` (root domain) or `sub.example.com` (subdomain of `example.com`) or the wildcard `*.example.com`.
 - `"api_key"` is your api key (generated in the [customercontrolpanel](https://www.customercontrolpanel.de))
 - `"password"` is your api password (generated in the [customercontrolpanel](https://www.customercontrolpanel.de)). Netcup only allows one ApiPassword. This is not the account password. This password is used for all api keys.
 - `"customer_number"` is your customer number (viewable in the [customercontrolpanel](https://www.customercontrolpanel.de) next to your name). As seen in the example above, provide the number as string value.
@@ -34,4 +34,4 @@ Also keep in mind, that TTL, Expire, Retry and Refresh values of the given Domai
 ### Optional parameters
 
 - `"ip_version"` can be `ipv4` (A records), or `ipv6` (AAAA records) or `ipv4 or ipv6` (update one of the two, depending on the public ip found). It defaults to `ipv4 or ipv6`.
-- `"ipv6_suffix"` is the IPv6 interface identifier suffix to use. It can be for example `0:0:0:0:72ad:8fbb:a54e:bedd/64`. If left empty, it defaults to no suffix and the raw public IPv6 address obtained is used in the record updating.
+- `"ipv6_suffix"` is the IPv6 interface identifier suffix to use. It can be for example `0:0:0:0:72ad:8fbb:a54e:bedd/64`. If left empty, it defaults to no suffix and the raw temporary IPv6 address of the machine is used in the record updating. You might want to set this to use your permanent IPv6 address instead of your temporary IPv6 address.

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
+	"slices"
 )
 
 type Provider string
@@ -25,10 +26,8 @@ func ListProviders() []Provider {
 var ErrUnknownProvider = errors.New("unknown public IP information provider")
 
 func ValidateProvider(provider Provider) error {
-	for _, possible := range ListProviders() {
-		if provider == possible {
-			return nil
-		}
+	if slices.Contains(ListProviders(), provider) {
+		return nil
 	}
 	return fmt.Errorf("%w: %s", ErrUnknownProvider, provider)
 }
@@ -37,8 +36,7 @@ type provider interface {
 	get(ctx context.Context, ip netip.Addr) (result Result, err error)
 }
 
-//nolint:ireturn
-func newProvider(providerName Provider, client *http.Client) provider {
+func newProvider(providerName Provider, client *http.Client) provider { //nolint:ireturn
 	switch providerName {
 	case Ipinfo:
 		return newIpinfo(client)

@@ -43,7 +43,7 @@ func (s Shoutrrr) ToLinesNode() *gotree.Node {
 
 	childNode := node.Appendf("Addresses")
 	for _, address := range s.Addresses {
-		childNode.Appendf(address)
+		childNode.Append(address)
 	}
 
 	return node

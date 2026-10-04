@@ -23,7 +23,7 @@ func (h History) GetPreviousIPs() (previousIPs []netip.Addr) {
 		return nil
 	}
 	previousIPs = make([]netip.Addr, len(h)-1)
-	mostRecentPreviousIPIndex := len(h) - 2 //nolint:gomnd
+	mostRecentPreviousIPIndex := len(h) - 2 //nolint:mnd
 	for i := range previousIPs {
 		previousIPs[i] = h[mostRecentPreviousIPIndex-i].IP
 	}

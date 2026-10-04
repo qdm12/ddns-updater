@@ -109,7 +109,8 @@ func Test_fetcher_IP6(t *testing.T) {
 	httpBytes := []byte(`::1`)
 	expectedPublicIP := netip.AddrFrom16([16]byte{
 		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 1})
+		0, 0, 0, 0, 0, 0, 0, 1,
+	})
 
 	client := &http.Client{
 		Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
@@ -321,7 +322,6 @@ func Test_fetcher_ip(t *testing.T) {
 	}
 
 	for name, testCase := range testCases {
-		testCase := testCase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

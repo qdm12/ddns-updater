@@ -9,7 +9,8 @@ import (
 )
 
 func (p *Provider) login(ctx context.Context, client *http.Client) (
-	session string, err error) {
+	session string, err error,
+) {
 	type jsonParams struct {
 		APIKey         string `json:"apikey"`
 		APIPassword    string `json:"apipassword"`

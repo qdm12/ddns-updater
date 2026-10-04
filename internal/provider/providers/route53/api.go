@@ -78,7 +78,8 @@ func newChangeRRSetRequest(name string, ttl uint32, ip netip.Addr) changeResourc
 					TTL:  ttl,
 					ResourceRecords: []resourceRecord{{
 						Value: ip.String(),
-					}}},
+					}},
+				},
 			}},
 		},
 	}

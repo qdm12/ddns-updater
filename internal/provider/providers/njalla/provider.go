@@ -26,7 +26,8 @@ type Provider struct {
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Key string `json:"key"`
 	}{}
@@ -102,7 +103,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	u := url.URL{
 		Scheme: "https",
 		Host:   "njal.la",
-		Path:   "/update",
+		Path:   "/update/",
 	}
 	values := url.Values{}
 	values.Set("h", utils.BuildURLQueryHostname(p.owner, p.domain))

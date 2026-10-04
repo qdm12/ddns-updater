@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/netip"
+	"sync/atomic"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
@@ -23,11 +24,13 @@ type Provider struct {
 	username   string
 	token      string
 	ttl        *uint32
+	knownTTL   atomic.Uint32
 }
 
 func New(data json.RawMessage, domain, owner string,
 	ipVersion ipversion.IPVersion, ipv6Suffix netip.Prefix) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Username string  `json:"username"`
 		Token    string  `json:"token"`
@@ -109,6 +112,17 @@ func (p *Provider) HTML() models.HTMLRow {
 		Provider:  "<a href=\"https://name.com\">Name.com</a>",
 		IPVersion: p.ipVersion.String(),
 	}
+}
+
+// TTL returns the record TTL in seconds if it is set or known.
+func (p *Provider) TTL() (ttl *uint32) {
+	if p.ttl != nil {
+		return p.ttl
+	}
+	if knownTTL := p.knownTTL.Load(); knownTTL != 0 {
+		return &knownTTL
+	}
+	return nil
 }
 
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {

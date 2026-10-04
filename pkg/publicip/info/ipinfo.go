@@ -19,7 +19,8 @@ type ipinfo struct {
 }
 
 func (p *ipinfo) get(ctx context.Context, ip netip.Addr) (
-	result Result, err error) {
+	result Result, err error,
+) {
 	result.Source = string(Ipinfo)
 
 	url := "https://ipinfo.io/"
@@ -63,14 +64,14 @@ func (p *ipinfo) get(ctx context.Context, ip netip.Addr) (
 
 	result.IP = data.IP
 	if data.Region != "" {
-		result.Region = stringPtr(data.Region)
+		result.Region = new(data.Region)
 	}
 	if data.City != "" {
-		result.City = stringPtr(data.City)
+		result.City = new(data.City)
 	}
 	if data.Country != "" {
 		country := countryCodeToName(data.Country)
-		result.Country = stringPtr(country)
+		result.Country = new(country)
 	}
 
 	return result, nil

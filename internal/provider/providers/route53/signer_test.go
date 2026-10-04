@@ -11,7 +11,7 @@ import (
 func Test_signer_sign(t *testing.T) {
 	t.Parallel()
 
-	signer := &signer{
+	signer := &signer{ //nolint:gosec
 		accessKey:        "AKIDEXAMPLE",
 		secretkey:        "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
 		region:           "us-east-1",
@@ -66,7 +66,7 @@ func Test_signer_buildPrivateKey(t *testing.T) {
 	t.Parallel()
 
 	date := time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
-	signer := &signer{
+	signer := &signer{ //nolint:gosec
 		secretkey:        "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
 		region:           "us-east-1",
 		service:          "route53",

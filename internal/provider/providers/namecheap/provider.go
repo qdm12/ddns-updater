@@ -26,7 +26,8 @@ type Provider struct {
 }
 
 func New(data json.RawMessage, domain, owner string) (
-	p *Provider, err error) {
+	p *Provider, err error,
+) {
 	extraSettings := struct {
 		Password string `json:"password"`
 	}{}

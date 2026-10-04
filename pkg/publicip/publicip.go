@@ -28,7 +28,8 @@ var ErrNoFetchTypeSpecified = errors.New("at least one fetcher type must be spec
 func NewFetcher(
 	dnsSettings DNSSettings,
 	httpSettings HTTPSettings,
-	privateIPSettings PrivateIPSettings) (f *Fetcher, err error) {
+	privateIPSettings PrivateIPSettings,
+) (f *Fetcher, err error) {
 	settings := settings{
 		dns:       dnsSettings,
 		http:      httpSettings,
@@ -61,7 +62,10 @@ func NewFetcher(
 		retriever := privateip.RealInterfaceRetriever{}
 
 		// Pass both Settings and the retriever to privateip.New
-		subFetcher, err := privateip.New(privateip.Settings{Enabled: true}, retriever)
+		subFetcher, err := privateip.New(privateip.Settings{
+			Enabled:   true,
+			Interface: settings.privateIP.Interface,
+		}, retriever)
 		if err != nil {
 			return nil, err
 		}

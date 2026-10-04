@@ -26,6 +26,10 @@ type PubIP struct {
 	DNSProviders      []string
 	DNSTimeout        time.Duration
 	PrivateIPEnabled  *bool
+
+	// PrivateIPInterface is the case sensitive name of the interface to read the
+	// private IP address from. It is required if PrivateIPEnabled is true.
+	PrivateIPInterface string
 }
 
 func (p *PubIP) setDefaults() {
@@ -37,8 +41,10 @@ func (p *PubIP) setDefaults() {
 	p.DNSProviders = gosettings.DefaultSlice(p.DNSProviders, []string{all})
 	const defaultDNSTimeout = 3 * time.Second
 	p.DNSTimeout = gosettings.DefaultComparable(p.DNSTimeout, defaultDNSTimeout)
-	p.PrivateIPEnabled = gosettings.DefaultPointer(p.PrivateIPEnabled, true)
+	p.PrivateIPEnabled = gosettings.DefaultPointer(p.PrivateIPEnabled, false)
 }
+
+var ErrPrivateIPInterfaceNotSet = errors.New("PRIVATEIP_INTERFACE must be set when the privateip fetcher is enabled")
 
 func (p PubIP) Validate() (err error) {
 	err = p.validateHTTPIPProviders()
@@ -59,6 +65,10 @@ func (p PubIP) Validate() (err error) {
 	err = p.validateDNSProviders()
 	if err != nil {
 		return fmt.Errorf("DNS providers: %w", err)
+	}
+
+	if *p.PrivateIPEnabled && p.PrivateIPInterface == "" {
+		return fmt.Errorf("private IP fetching: %w", ErrPrivateIPInterfaceNotSet)
 	}
 
 	return nil
@@ -99,6 +109,9 @@ func (p *PubIP) toLinesNode() (node *gotree.Node) {
 	}
 
 	node.Appendf("Private IP enabled: %s", gosettings.BoolToYesNo(p.PrivateIPEnabled))
+	if *p.PrivateIPEnabled {
+		node.Appendf("Private IP interface: %s", p.PrivateIPInterface)
+	}
 
 	return node
 }
@@ -118,7 +131,8 @@ func (p *PubIP) ToHTTPOptions() (options []http.Option) {
 // ToPrivateIPSettings assumes the settings have been validated.
 func (p *PubIP) ToPrivateIPSettings() privateip.Settings {
 	return privateip.Settings{
-		Enabled: *p.PrivateIPEnabled,
+		Enabled:   *p.PrivateIPEnabled,
+		Interface: p.PrivateIPInterface,
 	}
 }
 
@@ -252,6 +266,7 @@ func (p *PubIP) read(r *reader.Reader, warner Warner) (err error) {
 	}
 
 	p.PrivateIPEnabled = gosettings.DefaultPointer(p.PrivateIPEnabled, false)
+	p.PrivateIPInterface = r.String("PRIVATEIP_INTERFACE", reader.ForceLowercase(false))
 
 	p.HTTPIPProviders = r.CSV("PUBLICIP_HTTP_PROVIDERS",
 		reader.RetroKeys("IP_METHOD"))
@@ -325,7 +340,6 @@ func getFetchers(reader *reader.Reader) (http, dns, privateIP *bool, err error) 
 		case "all":
 			*http = true
 			*dns = true
-			*privateIP = true
 		case "http":
 			*http = true
 		case "dns":

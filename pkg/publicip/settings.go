@@ -26,5 +26,6 @@ type HTTPSettings struct {
 }
 
 type PrivateIPSettings struct {
-	Enabled bool
+	Enabled   bool
+	Interface string
 }

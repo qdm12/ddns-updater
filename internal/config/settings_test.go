@@ -33,7 +33,7 @@ func Test_Settings_String(t *testing.T) {
 |   ├── DNS timeout: 3s
 |   ├── DNS over TLS providers
 |   |   └── all
-|   └── Private IP enabled: yes
+|   └── Private IP enabled: no
 ├── Resolver: use Go default resolver
 ├── Server
 |   ├── Listening address: :8000

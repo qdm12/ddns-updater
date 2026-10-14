@@ -15,31 +15,21 @@ func (p *Provider) waitAction(ctx context.Context, client *http.Client, id uint6
 		return fmt.Errorf("%w: action id is zero", errors.ErrReceivedNoResult)
 	}
 
-	const sleepDuration = time.Second
-	const tries = 3
-	for range tries {
-		url := fmt.Sprintf("https://api.hetzner.cloud/v1/zones/actions/%d", id)
-		request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-		if err != nil {
-			return fmt.Errorf("creating http request: %w", err)
-		}
-		p.setHeaders(request)
+	// Zone actions can take several seconds after the DNS records have changed.
+	// Bound the entire wait, including HTTP requests, while respecting the caller.
+	const maxWait = time.Minute
+	ctx, cancel := context.WithTimeout(ctx, maxWait)
+	defer cancel()
 
-		response, err := client.Do(request)
+	const sleepDuration = time.Second
+	for {
+		err := ctx.Err()
+		if err != nil {
+			return fmt.Errorf("waiting for action id %d: %w", id, err)
+		}
+		parsed, err := p.getAction(ctx, client, id)
 		if err != nil {
 			return err
-		}
-		defer response.Body.Close()
-
-		if response.StatusCode != http.StatusOK {
-			return handleErrorResponse(response)
-		}
-
-		var parsed actionResponse
-		decoder := json.NewDecoder(response.Body)
-		err = decoder.Decode(&parsed)
-		if err != nil {
-			return fmt.Errorf("json decoding response body: %w", err)
 		}
 
 		action := parsed.Action
@@ -51,7 +41,7 @@ func (p *Provider) waitAction(ctx context.Context, client *http.Client, id uint6
 			select {
 			case <-ctx.Done():
 				timer.Stop()
-				return ctx.Err()
+				return fmt.Errorf("waiting for action id %d: %w", id, ctx.Err())
 			case <-timer.C:
 			}
 		case "error":
@@ -66,6 +56,29 @@ func (p *Provider) waitAction(ctx context.Context, client *http.Client, id uint6
 				errors.ErrDNSServerSide, action.Status, action.ID)
 		}
 	}
-	return fmt.Errorf("%w: action id %d did not complete after %d tries",
-		errors.ErrUnsuccessful, id, tries)
+}
+
+func (p *Provider) getAction(ctx context.Context, client *http.Client, id uint64) (parsed actionResponse, err error) {
+	url := fmt.Sprintf("https://api.hetzner.cloud/v1/zones/actions/%d", id)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return parsed, fmt.Errorf("creating http request: %w", err)
+	}
+	p.setHeaders(request)
+
+	response, err := client.Do(request)
+	if err != nil {
+		return parsed, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return parsed, handleErrorResponse(response)
+	}
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&parsed)
+	if err != nil {
+		return parsed, fmt.Errorf("json decoding response body: %w", err)
+	}
+	return parsed, nil
 }

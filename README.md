@@ -377,6 +377,11 @@ If you have a host firewall in place, this container needs the following ports:
 - UDP 53 outbound for outbound DNS resolution
 - TCP 8000 inbound (or other) for the WebUI
 
+## HTTP API
+
+Use [`POST /update`](docs/http-api.md) to trigger an immediate DNS update. Clients
+using the previous `GET /update` endpoint must switch to `POST`.
+
 ## Architecture
 
 At program start and every period (5 minutes by default):

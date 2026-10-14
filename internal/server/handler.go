@@ -56,7 +56,10 @@ func newHandler(ctx context.Context, rootURL string,
 	}
 	router.Get(rootURL+"/", handlers.index)
 
-	router.Get(rootURL+"/update", handlers.update)
+	// Updating DNS records changes external state and must not be triggered by a
+	// safe/idempotent GET request (for example by crawlers or link prefetchers).
+	router.Post(rootURL+"/update", handlers.update)
+	router.Get(rootURL+"/update", handlers.updateMethodNotAllowed)
 
 	router.Handle(rootURL+"/static/*", http.StripPrefix(rootURL+"/static/", http.FileServerFS(staticFolder)))
 

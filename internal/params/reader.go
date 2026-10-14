@@ -6,9 +6,10 @@ import (
 )
 
 type Reader struct {
-	logger    Logger
-	readFile  func(filename string) ([]byte, error)
-	writeFile func(filename string, data []byte, perm fs.FileMode) (err error)
+	logger                   Logger
+	readFile                 func(filename string) ([]byte, error)
+	writeFile                func(filename string, data []byte, perm fs.FileMode) (err error)
+	persistEnvironmentConfig bool
 }
 
 type Logger interface {
@@ -16,10 +17,11 @@ type Logger interface {
 	Debug(s string)
 }
 
-func NewReader(logger Logger) *Reader {
+func NewReader(logger Logger, persistEnvironmentConfig bool) *Reader {
 	return &Reader{
-		logger:    logger,
-		readFile:  os.ReadFile,
-		writeFile: os.WriteFile,
+		logger:                   logger,
+		readFile:                 os.ReadFile,
+		writeFile:                os.WriteFile,
+		persistEnvironmentConfig: persistEnvironmentConfig,
 	}
 }

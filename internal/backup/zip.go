@@ -6,7 +6,12 @@ import (
 	"os"
 )
 
-func zipFiles(outputFilepath string, inputFilepaths ...string) error {
+type archiveFile struct {
+	path string // path of the file to archive
+	name string // name of the file in the archive
+}
+
+func zipFiles(outputFilepath string, files ...archiveFile) error {
 	f, err := os.Create(outputFilepath)
 	if err != nil {
 		return err
@@ -14,8 +19,8 @@ func zipFiles(outputFilepath string, inputFilepaths ...string) error {
 	defer f.Close()
 	w := zip.NewWriter(f)
 	defer w.Close()
-	for _, filepath := range inputFilepaths {
-		err = addFile(w, filepath)
+	for _, file := range files {
+		err = addFile(w, file.path, file.name)
 		if err != nil {
 			return err
 		}
@@ -23,7 +28,7 @@ func zipFiles(outputFilepath string, inputFilepaths ...string) error {
 	return nil
 }
 
-func addFile(w *zip.Writer, filepath string) error {
+func addFile(w *zip.Writer, filepath, name string) error {
 	f, err := os.Open(filepath)
 	if err != nil {
 		return err
@@ -37,9 +42,9 @@ func addFile(w *zip.Writer, filepath string) error {
 	if err != nil {
 		return err
 	}
-	// Using FileInfoHeader() above only uses the basename of the file. If we want
-	// to preserve the folder structure we can overwrite this with the full path.
-	// header.Name = filepath
+	// Using FileInfoHeader() above only uses the basename of the file,
+	// so set the name to have the same file names in all archives.
+	header.Name = name
 	header.Method = zip.Deflate
 	ioWriter, err := w.CreateHeader(header)
 	if err != nil {

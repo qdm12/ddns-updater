@@ -75,6 +75,7 @@ COPY --from=build --chown=${UID}:${GID} /tmp/data /updater/data
 ENV \
     # Core
     CONFIG= \
+    CONFIG_PERSIST=yes \
     PERIOD=5m \
     UPDATE_COOLDOWN_PERIOD=5m \
     PUBLICIP_FETCHERS=all \
@@ -95,6 +96,8 @@ ENV \
     # Backup
     BACKUP_PERIOD=0 \
     BACKUP_DIRECTORY=/updater/data \
+    BACKUP_INCLUDE_CONFIG= \
+    BACKUP_KEEP=0 \
     # Other
     LOG_LEVEL=info \
     LOG_CALLER=hidden \

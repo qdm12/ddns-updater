@@ -140,6 +140,7 @@ func (p *PubIP) ToDNSPOptions() (options []dns.Option) {
 	for _, provider := range p.DNSProviders {
 		if provider != all {
 			uniqueProviders[provider] = struct{}{}
+			continue
 		}
 
 		allProviders := dns.ListProviders()

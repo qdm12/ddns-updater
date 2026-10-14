@@ -308,7 +308,7 @@ Note that:
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
 | `HEALTH_SERVER_ADDRESS` | `127.0.0.1:9999` | Health server listening address |
 | `HEALTH_HEALTHCHECKSIO_BASE_URL` | `https://hc-ping.com` | Base URL for the [healthchecks.io](https://healthchecks.io) server |
-| `HEALTH_HEALTHCHECKSIO_UUID` | | UUID to idenfity with the [healthchecks.io](https://healthchecks.io) server |
+| `HEALTH_HEALTHCHECKSIO_UUID` | | UUID to identify with the [healthchecks.io](https://healthchecks.io) server |
 | `DATADIR` | `/updater/data` | Directory to read and write data files from internally |
 | `CONFIG_FILEPATH` | `/updater/data/config.json` | Path to the JSON configuration file |
 | `CONFIG_PERSIST` | `true` | Persist configuration supplied through `CONFIG` to `CONFIG_FILEPATH` |

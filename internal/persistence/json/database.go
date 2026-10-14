@@ -133,23 +133,53 @@ func checkHistoryEvents(events []models.HistoryEvent) (err error) {
 }
 
 func (db *Database) write() error {
-	const filePerm = os.FileMode(0o666)
-	file, err := os.OpenFile(db.filepath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, filePerm)
-	if err != nil {
-		return fmt.Errorf("opening file: %w", err)
+	// Preserve explicitly configured permissions when replacing an existing file.
+	// New databases retain the restrictive permissions provided by CreateTemp.
+	fileInfo, err := os.Stat(db.filepath)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("checking database permissions: %w", err)
 	}
 
-	encoder := json.NewEncoder(file)
+	directory := filepath.Dir(db.filepath)
+	tempFile, err := os.CreateTemp(directory, "."+filepath.Base(db.filepath)+".tmp-*")
+	if err != nil {
+		return fmt.Errorf("creating temporary database file: %w", err)
+	}
+	tempPath := tempFile.Name()
+	defer func() {
+		_ = os.Remove(tempPath)
+	}()
+	if fileInfo != nil {
+		err = tempFile.Chmod(fileInfo.Mode().Perm())
+		if err != nil {
+			_ = tempFile.Close()
+			return fmt.Errorf("setting database permissions: %w", err)
+		}
+	}
+
+	encoder := json.NewEncoder(tempFile)
 	encoder.SetIndent("", "  ")
 	err = encoder.Encode(db.data)
 	if err != nil {
-		_ = file.Close()
+		_ = tempFile.Close()
 		return fmt.Errorf("encoding data to file: %w", err)
 	}
 
-	err = file.Close()
+	err = tempFile.Sync()
 	if err != nil {
-		return fmt.Errorf("closing database file: %w", err)
+		_ = tempFile.Close()
+		return fmt.Errorf("syncing temporary database file: %w", err)
 	}
+
+	err = tempFile.Close()
+	if err != nil {
+		return fmt.Errorf("closing temporary database file: %w", err)
+	}
+
+	err = os.Rename(tempPath, db.filepath)
+	if err != nil {
+		return fmt.Errorf("replacing database file: %w", err)
+	}
+
 	return nil
 }

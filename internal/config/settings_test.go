@@ -42,6 +42,7 @@ func Test_Settings_String(t *testing.T) {
 ├── Paths
 |   ├── Data directory: ./data
 |   ├── Config file: ` + filepath.Join("data", "config.json") + `
+|   ├── Persist environment config: true
 |   └── Umask: system default
 ├── Backup: disabled
 └── Logger

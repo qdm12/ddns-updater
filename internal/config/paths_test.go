@@ -4,7 +4,9 @@ import (
 	"io/fs"
 	"testing"
 
+	settingsreader "github.com/qdm12/gosettings/reader"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_parseUmask(t *testing.T) {
@@ -43,4 +45,17 @@ func Test_parseUmask(t *testing.T) {
 			assert.Equal(t, testCase.umask, umask)
 		})
 	}
+}
+
+func TestPathsReadRejectsInvalidConfigPersist(t *testing.T) {
+	t.Setenv("DATADIR", "")
+	t.Setenv("CONFIG_FILEPATH", "")
+	t.Setenv("CONFIG_PERSIST", "invalid")
+	t.Setenv("CONFIG", "")
+	t.Setenv("UMASK", "")
+
+	var paths Paths
+	err := paths.read(settingsreader.New(settingsreader.Settings{}))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "CONFIG_PERSIST")
 }

@@ -28,6 +28,21 @@ func New(provider provider.Provider, events []models.HistoryEvent) Record {
 	}
 }
 
+// SetStatus records a state change. Time is when the state last changed,
+// so setting the same status and message again changes nothing.
+func (r *Record) SetStatus(status models.Status, message string, now time.Time) {
+	if r.Status == status && r.Message == message {
+		return
+	}
+	r.Status, r.Message, r.Time = status, message, now
+}
+
+// IsFailing returns true if the record has no working update to rely on,
+// either because an update failed or its public IP could not be found.
+func (r *Record) IsFailing() bool {
+	return r.Status == constants.FAIL || r.Status == constants.NOIP
+}
+
 func (r *Record) String() string {
 	status := string(r.Status)
 	if r.Message != "" {

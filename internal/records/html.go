@@ -62,6 +62,8 @@ func convertStatus(status models.Status) string {
 		return `<span class="updating">Updating</span>`
 	case constants.UNSET:
 		return `<span class="unset">Unset</span>`
+	case constants.NOIP:
+		return `<span class="error">No IP</span>`
 	default:
 		return "Unknown status"
 	}

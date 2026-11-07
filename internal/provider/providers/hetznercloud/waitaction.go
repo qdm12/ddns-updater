@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 func (p *Provider) waitAction(ctx context.Context, client *http.Client, id uint64) (err error) {
 	if id == 0 {
-		return fmt.Errorf("%w: action id is zero", errors.ErrReceivedNoResult)
+		return fmt.Errorf("%w: action id is zero", ddnserrors.ErrReceivedNoResult)
 	}
 
 	const sleepDuration = time.Second

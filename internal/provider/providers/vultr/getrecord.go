@@ -9,7 +9,7 @@ import (
 	"net/netip"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 // https://www.vultr.com/api/#tag/dns/operation/list-dns-domain-records
@@ -100,5 +100,5 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client,
 		return record.ID, recordIP, nil
 	}
 
-	return "", netip.Addr{}, fmt.Errorf("%w: in %d records", errors.ErrRecordNotFound, len(parsedJSON.Records))
+	return "", netip.Addr{}, fmt.Errorf("%w: in %d records", ddnserrors.ErrRecordNotFound, len(parsedJSON.Records))
 }

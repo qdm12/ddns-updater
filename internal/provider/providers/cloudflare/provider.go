@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -14,7 +14,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -101,9 +101,9 @@ func validateSettings(domain, email, key, userServiceKey, zoneIdentifier string,
 	}
 	switch {
 	case zoneIdentifier == "":
-		return stderrors.New("zone identifier is not set")
+		return errors.New("zone identifier is not set")
 	case ttl == 0:
-		return stderrors.New("TTL is not set")
+		return errors.New("TTL is not set")
 	}
 	return nil
 }
@@ -218,9 +218,9 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 	case len(listRecordsResponse.Errors) > 0:
 		return "", false, fmt.Errorf("unsuccessful result: %s", strings.Join(listRecordsResponse.Errors, ","))
 	case !listRecordsResponse.Success:
-		return "", false, stderrors.New("unsuccessful result")
+		return "", false, errors.New("unsuccessful result")
 	case len(listRecordsResponse.Result) == 0:
-		return "", false, fmt.Errorf("%w", errors.ErrReceivedNoResult)
+		return "", false, fmt.Errorf("%w", ddnserrors.ErrReceivedNoResult)
 	case len(listRecordsResponse.Result) > 1:
 		return "", false, fmt.Errorf("wrong number of results received: %d instead of 1", len(listRecordsResponse.Result))
 	case listRecordsResponse.Result[0].Content == newIP.String(): // up to date
@@ -321,7 +321,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	identifier, upToDate, err := p.getRecordID(ctx, client, ip)
 
 	switch {
-	case stderrors.Is(err, errors.ErrReceivedNoResult):
+	case errors.Is(err, ddnserrors.ErrReceivedNoResult):
 		identifier, err = p.createRecord(ctx, client, ip)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("creating record: %w", err)

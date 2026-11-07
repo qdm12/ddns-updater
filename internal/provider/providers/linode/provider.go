@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	goerrors "errors"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +13,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -60,7 +60,7 @@ func validateSettings(domain, token string) (err error) {
 	}
 
 	if token == "" {
-		return goerrors.New("token is not set")
+		return errors.New("token is not set")
 	}
 	return nil
 }
@@ -116,7 +116,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	recordID, err := p.getRecordID(ctx, client, domainID, recordType)
-	if goerrors.Is(err, errors.ErrRecordNotFound) {
+	if errors.Is(err, ddnserrors.ErrRecordNotFound) {
 		err := p.createRecord(ctx, client, domainID, recordType, ip)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
@@ -189,18 +189,18 @@ func (p *Provider) getDomainID(ctx context.Context, client *http.Client) (domain
 	domains := obj.Data
 	switch len(domains) {
 	case 0:
-		return 0, goerrors.New("ID not found in domain record")
+		return 0, errors.New("ID not found in domain record")
 	case 1:
 	default:
 		return 0, fmt.Errorf("wrong number of results received: %d records instead of 1", len(domains))
 	}
 
 	if domains[0].Status == "disabled" {
-		return 0, goerrors.New("record disabled")
+		return 0, errors.New("record disabled")
 	}
 
 	if domains[0].ID == nil {
-		return 0, goerrors.New("ID not found in domain record")
+		return 0, errors.New("ID not found in domain record")
 	}
 
 	return *domains[0].ID, nil
@@ -252,7 +252,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 		}
 	}
 
-	return 0, fmt.Errorf("%w", errors.ErrRecordNotFound)
+	return 0, fmt.Errorf("%w", ddnserrors.ErrRecordNotFound)
 }
 
 func (p *Provider) createRecord(ctx context.Context, client *http.Client,

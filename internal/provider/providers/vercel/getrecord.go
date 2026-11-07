@@ -8,7 +8,7 @@ import (
 	"net/netip"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
@@ -70,5 +70,5 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, recordTyp
 		}
 	}
 
-	return "", netip.Addr{}, fmt.Errorf("%w", errors.ErrRecordNotFound)
+	return "", netip.Addr{}, fmt.Errorf("%w", ddnserrors.ErrRecordNotFound)
 }

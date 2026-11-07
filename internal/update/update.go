@@ -10,7 +10,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/models"
-	settingserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 type Updater struct {
@@ -51,7 +51,7 @@ func (u *Updater) Update(ctx context.Context, id uint, ip netip.Addr) (err error
 	newIP, err := record.Provider.Update(ctx, u.client, ip)
 	if err != nil {
 		record.Message = err.Error()
-		if errors.Is(err, settingserrors.ErrBannedAbuse) {
+		if errors.Is(err, ddnserrors.ErrBannedAbuse) {
 			lastBan := time.Unix(u.timeNow().Unix(), 0)
 			record.LastBan = &lastBan
 			domainName := record.Provider.BuildDomainName()

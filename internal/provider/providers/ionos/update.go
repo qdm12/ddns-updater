@@ -9,7 +9,7 @@ import (
 	"net/netip"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
@@ -66,7 +66,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 		return fmt.Errorf("bad authentication: %s",
 			decodeErrorMessage(response.Body))
 	case http.StatusNotFound:
-		return fmt.Errorf("%w: %s", errors.ErrRecordNotFound,
+		return fmt.Errorf("%w: %s", ddnserrors.ErrRecordNotFound,
 			decodeErrorMessage(response.Body))
 	default:
 		return fmt.Errorf("HTTP status is not valid: %s: %s",

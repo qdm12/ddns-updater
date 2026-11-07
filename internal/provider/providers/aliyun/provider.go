@@ -3,14 +3,14 @@ package aliyun
 import (
 	"context"
 	"encoding/json"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -67,9 +67,9 @@ func validateSettings(domain, accessKeyID, accessSecret string) (err error) {
 
 	switch {
 	case accessKeyID == "":
-		return stderrors.New("access key id is not set")
+		return errors.New("access key id is not set")
 	case accessSecret == "":
-		return stderrors.New("key secret is not set")
+		return errors.New("key secret is not set")
 	}
 	return nil
 }
@@ -126,7 +126,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	recordID, err := p.getRecordID(ctx, client, recordType)
-	if stderrors.Is(err, errors.ErrRecordNotFound) {
+	if errors.Is(err, ddnserrors.ErrRecordNotFound) {
 		recordID, err = p.createRecord(ctx, client, ip)
 		if err != nil {
 			return newIP, fmt.Errorf("creating record: %w", err)

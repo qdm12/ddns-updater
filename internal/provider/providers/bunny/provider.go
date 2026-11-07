@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,7 +15,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -68,7 +68,7 @@ func validateSettings(domain, apiKey string, ttl uint32) (err error) {
 	const minTTL, maxTTL = 60, 3600
 	switch {
 	case apiKey == "":
-		return stderrors.New("API key is not set")
+		return errors.New("API key is not set")
 	case ttl != 0 && ttl < minTTL:
 		return fmt.Errorf("TTL is too low: %d", ttl)
 	case ttl > maxTTL:
@@ -145,7 +145,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	record, err := p.getRecord(ctx, client, zoneID, recordType)
 	if err != nil {
-		if !stderrors.Is(err, errors.ErrRecordNotFound) {
+		if !errors.Is(err, ddnserrors.ErrRecordNotFound) {
 			return netip.Addr{}, fmt.Errorf("getting record: %w", err)
 		}
 
@@ -285,7 +285,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 
 	switch len(records) {
 	case 0:
-		return dnsRecord{}, fmt.Errorf("%w", errors.ErrRecordNotFound)
+		return dnsRecord{}, fmt.Errorf("%w", ddnserrors.ErrRecordNotFound)
 	case 1:
 		return records[0], nil
 	default:

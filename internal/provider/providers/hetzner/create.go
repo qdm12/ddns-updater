@@ -10,7 +10,7 @@ import (
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
@@ -81,7 +81,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	}
 
 	if parsedJSON.Record.ID == "" {
-		return fmt.Errorf("%w", errors.ErrReceivedNoResult)
+		return fmt.Errorf("%w", ddnserrors.ErrReceivedNoResult)
 	}
 
 	return nil

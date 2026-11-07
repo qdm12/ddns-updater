@@ -9,7 +9,7 @@ import (
 	"net/netip"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 )
 
@@ -46,7 +46,7 @@ func (p *Provider) getRRSet(ctx context.Context, client *http.Client, fqdn, reco
 		return nil, err
 	case response.StatusCode == http.StatusNotFound:
 		errMessage := decodeError(response.Body)
-		return nil, fmt.Errorf("%w: %s", errors.ErrRecordResourceSetNotFound, errMessage)
+		return nil, fmt.Errorf("%w: %s", ddnserrors.ErrRecordResourceSetNotFound, errMessage)
 	case response.StatusCode >= http.StatusOK &&
 		response.StatusCode < http.StatusMultipleChoices:
 		rrSet = new(recordResourceSet)

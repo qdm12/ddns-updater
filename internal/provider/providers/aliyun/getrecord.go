@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
@@ -43,7 +43,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusNotFound:
-		return "", fmt.Errorf("%w", errors.ErrRecordNotFound)
+		return "", fmt.Errorf("%w", ddnserrors.ErrRecordNotFound)
 	case http.StatusBadRequest:
 		bodyBytes, err := io.ReadAll(response.Body)
 		if err != nil {
@@ -59,7 +59,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 				utils.ToSingleLine(string(bodyBytes)))
 		}
 
-		return "", fmt.Errorf("%w", errors.ErrRecordNotFound)
+		return "", fmt.Errorf("%w", ddnserrors.ErrRecordNotFound)
 	default:
 		return "", fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode,
 			utils.BodyToSingleLine(response.Body))
@@ -80,7 +80,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 
 	switch len(data.DomainRecords.Record) {
 	case 0:
-		return "", fmt.Errorf("%w", errors.ErrRecordNotFound)
+		return "", fmt.Errorf("%w", ddnserrors.ErrRecordNotFound)
 	case 1:
 	default:
 		return "", fmt.Errorf("wrong number of results received: %d records found instead of 1",

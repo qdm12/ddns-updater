@@ -64,6 +64,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - Dynu
   - DynV6
   - EasyDNS
+  - enum
   - FreeDNS
   - Gandi
   - GCP
@@ -242,6 +243,7 @@ Check the documentation for your DNS provider:
 - [Dynu](docs/dynu.md)
 - [DynV6](docs/dynv6.md)
 - [EasyDNS](docs/easydns.md)
+- [enum](docs/enum.md)
 - [FreeDNS](docs/freedns.md)
 - [Gandi](docs/gandi.md)
 - [GCP](docs/gcp.md)

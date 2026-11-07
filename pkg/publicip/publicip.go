@@ -18,6 +18,9 @@ type ipFetcher interface {
 type Fetcher struct {
 	settings settings
 	fetchers []ipFetcher
+	// names has the same length and order as fetchers and holds
+	// a human readable name for each fetcher ("DNS" or "HTTP").
+	names []string
 	// Cycling effect if both are enabled
 	counter *uint32 // 32 bit for 32 bit systems
 }
@@ -41,6 +44,7 @@ func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f *Fetcher,
 			return nil, err
 		}
 		fetcher.fetchers = append(fetcher.fetchers, subFetcher)
+		fetcher.names = append(fetcher.names, MethodDNS)
 	}
 
 	if settings.http.Enabled {
@@ -49,6 +53,7 @@ func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f *Fetcher,
 			return nil, err
 		}
 		fetcher.fetchers = append(fetcher.fetchers, subFetcher)
+		fetcher.names = append(fetcher.names, MethodHTTP)
 	}
 
 	if len(fetcher.fetchers) == 0 {

@@ -36,7 +36,9 @@ func Test_Settings_String(t *testing.T) {
 ├── Resolver: use Go default resolver
 ├── Server
 |   ├── Listening address: :8000
-|   └── Root URL: /
+|   ├── Root URL: /
+|   ├── Configuration editor: yes
+|   └── Basic authentication: disabled
 ├── Health
 |   └── Server is disabled
 ├── Paths

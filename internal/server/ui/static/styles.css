@@ -183,3 +183,78 @@ footer a:hover {
     content: attr(data-label);
   }
 }
+
+/* toolbar, buttons and pages added for the public IP check and the configuration editor */
+main {
+  max-width: 1900px;
+  margin: 0 auto;
+  padding-bottom: 6rem; /* room for the fixed footer */
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-width: 1900px;
+  margin: 0 auto 0.75rem;
+}
+
+.button,
+button {
+  font: inherit;
+  color: var(--link-color);
+  background: var(--table-background);
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.button:hover,
+button:hover:not(:disabled) {
+  color: var(--link-color-hover);
+  background: var(--background-hover);
+  text-decoration: none;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.editor {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 55vh;
+  margin: 0 0 0.75rem;
+  padding: 0.7rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--text-color);
+  background: var(--table-background);
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+  resize: vertical;
+  white-space: pre;
+  overflow: auto;
+}
+
+.box {
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+  background: var(--table-background);
+  font-weight: bold;
+}
+
+pre {
+  overflow-x: auto;
+}
+
+#message,
+#status {
+  min-height: 1.4em;
+}

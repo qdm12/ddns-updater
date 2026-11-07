@@ -257,3 +257,12 @@ func extractFromDomainField(domainField string) (domainRegistered string,
 	}
 	return domainRegistered, owners, nil
 }
+
+// ValidateJSON checks that jsonBytes is a valid configuration, exactly like
+// it is checked when the program starts, but without any side effect.
+// It returns the warnings found, if any, and an error if the configuration
+// is invalid.
+func ValidateJSON(jsonBytes []byte) (warnings []string, err error) {
+	_, warnings, err = extractAllSettings(jsonBytes)
+	return warnings, err
+}

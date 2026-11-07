@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <title>Public IP prüfen – DDNS Updater</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="static/favicon.svg" sizes="any" type="image/svg+xml">
+  <link rel="icon" href="static/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="static/styles.css" type="text/css">
+</head>
+
+<body>
+  <main>
+    <h1>Public IP prüfen</h1>
+    <nav class="toolbar">
+      <button type="button" id="run">Erneut prüfen</button>
+      <a class="button" href="./">Zurück zur Übersicht</a>
+    </nav>
+
+    <p id="status" role="status">Prüfung läuft …</p>
+
+    <table role="table" id="result" hidden>
+      <thead>
+        <tr>
+          <th>Methode</th>
+          <th>IPv4</th>
+          <th>IPv6</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <details>
+      <summary>Aktive Einstellungen der Public-IP-Ermittlung</summary>
+      <pre>{{.Settings}}</pre>
+    </details>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+      var runButton = document.getElementById("run");
+      var statusEl = document.getElementById("status");
+      var table = document.getElementById("result");
+      var rows = document.getElementById("rows");
+
+      function setStatus(text, cssClass) {
+        statusEl.textContent = text;
+        statusEl.className = cssClass || "";
+      }
+
+      // Cells only ever get textContent: error messages can contain
+      // text received from remote servers.
+      function lookupCell(label, lookup) {
+        var td = document.createElement("td");
+        td.setAttribute("data-label", label);
+        var main = document.createElement("span");
+        if (lookup.error) {
+          main.className = "error";
+          main.textContent = lookup.error;
+        } else {
+          main.className = "success";
+          main.textContent = lookup.ip;
+        }
+        td.appendChild(main);
+        var duration = document.createElement("small");
+        duration.textContent = " (" + lookup.durationMs + " ms)";
+        td.appendChild(duration);
+        return td;
+      }
+
+      function methodCell(method) {
+        var td = document.createElement("td");
+        td.setAttribute("data-label", "Methode");
+        td.textContent = method === "DNS" ? "DNS (DNS over TLS)" : "HTTP (HTTPS)";
+        return td;
+      }
+
+      function distinct(values) {
+        return values.filter(function (v, i) { return v && values.indexOf(v) === i; });
+      }
+
+      function render(body) {
+        rows.textContent = "";
+        body.results.forEach(function (result) {
+          var tr = document.createElement("tr");
+          tr.appendChild(methodCell(result.method));
+          tr.appendChild(lookupCell("IPv4", result.ipv4));
+          tr.appendChild(lookupCell("IPv6", result.ipv6));
+          rows.appendChild(tr);
+        });
+        table.hidden = false;
+
+        var hints = [];
+        var v4 = distinct(body.results.map(function (r) { return r.ipv4.ip; }));
+        var v6 = distinct(body.results.map(function (r) { return r.ipv6.ip; }));
+        if (v4.length > 1) { hints.push("Die Methoden liefern unterschiedliche IPv4-Adressen."); }
+        if (v6.length > 1) { hints.push("Die Methoden liefern unterschiedliche IPv6-Adressen."); }
+        var when = new Date(body.checkedAt).toLocaleString("de-DE");
+        setStatus("Geprüft am " + when + (hints.length ? " – Achtung: " + hints.join(" ") : ""),
+          hints.length ? "unset" : "");
+      }
+
+      function check() {
+        runButton.disabled = true;
+        setStatus("Prüfung läuft …", "updating");
+        fetch("publicip/check", { method: "POST", headers: { "Accept": "application/json" } })
+          .then(function (res) {
+            return res.json().catch(function () { return {}; }).then(function (body) {
+              if (!res.ok) { throw new Error(body.error || res.statusText); }
+              return body;
+            });
+          })
+          .then(render)
+          .catch(function (err) {
+            table.hidden = true;
+            setStatus("Fehler: " + err.message, "error");
+          })
+          .then(function () { runButton.disabled = false; });
+      }
+
+      runButton.addEventListener("click", check);
+      check();
+    })();
+  </script>
+</body>
+
+</html>

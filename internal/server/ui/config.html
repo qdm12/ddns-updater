@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <title>Konfiguration – DDNS Updater</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="static/favicon.svg" sizes="any" type="image/svg+xml">
+  <link rel="icon" href="static/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="static/styles.css" type="text/css">
+</head>
+
+<body>
+  <main>
+    <h1>Konfiguration</h1>
+    <p>Datei: <code>{{.Path}}</code></p>
+
+    {{if .FromEnv}}
+    <p class="box unset">Die Umgebungsvariable <code>CONFIG</code> ist gesetzt. Die Datei wird bei jedem Start daraus
+      überschrieben, deshalb ist Speichern hier deaktiviert. Ändere die Einstellung stattdessen in der Variable.</p>
+    {{end}}
+    {{if .ReadError}}
+    <p class="box error">Die Datei konnte nicht gelesen werden: {{.ReadError}}</p>
+    {{end}}
+
+    <textarea id="content" class="editor" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off"
+      aria-label="Inhalt der Konfigurationsdatei" {{if .FromEnv}}readonly{{end}}>{{.Content}}</textarea>
+
+    <nav class="toolbar">
+      <button type="button" id="validate">Prüfen</button>
+      <button type="button" id="save" {{if .FromEnv}}disabled{{end}}>Speichern</button>
+      <button type="button" id="reset">Zurücksetzen</button>
+      <a class="button" href="./">Zurück zur Übersicht</a>
+    </nav>
+
+    <p id="message" role="status"></p>
+
+    <p><small>Gespeicherte Änderungen werden erst nach einem Neustart von DDNS Updater wirksam. Die vorherige Version
+        bleibt als <code>{{.Path}}.bak</code> erhalten. Die Datei enthält Zugangsdaten – zeige diese Seite nur
+        vertrauenswürdigen Personen.</small></p>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+      var editor = document.getElementById("content");
+      var message = document.getElementById("message");
+      var buttons = ["validate", "save", "reset"].map(function (id) { return document.getElementById(id); });
+      var original = editor.value;
+      var saveButtonWasDisabled = document.getElementById("save").disabled;
+
+      function setMessage(text, cssClass) {
+        message.textContent = text;
+        message.className = cssClass || "";
+      }
+
+      function setBusy(busy) {
+        buttons.forEach(function (b) { b.disabled = busy; });
+        if (!busy && saveButtonWasDisabled) { document.getElementById("save").disabled = true; }
+      }
+
+      function send(method, url, okText) {
+        setBusy(true);
+        setMessage("Bitte warten …", "updating");
+        return fetch(url, {
+          method: method,
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({ content: editor.value })
+        })
+          .then(function (res) {
+            return res.json().catch(function () { return {}; }).then(function (body) {
+              if (!res.ok) { throw new Error(body.error || res.statusText); }
+              return body;
+            });
+          })
+          .then(function (body) {
+            var text = okText;
+            if (body.warnings && body.warnings.length) {
+              text += " Hinweise: " + body.warnings.join(" | ");
+            }
+            setMessage(text, body.warnings && body.warnings.length ? "unset" : "success");
+            return true;
+          })
+          .catch(function (err) {
+            setMessage("Fehler: " + err.message, "error");
+            return false;
+          })
+          .then(function (ok) { setBusy(false); return ok; });
+      }
+
+      document.getElementById("validate").addEventListener("click", function () {
+        send("POST", "config/validate", "Die Konfiguration ist gültig.");
+      });
+
+      document.getElementById("save").addEventListener("click", function () {
+        send("PUT", "config", "Gespeichert. Die Änderungen gelten nach einem Neustart von DDNS Updater.")
+          .then(function (ok) { if (ok) { original = editor.value; } });
+      });
+
+      document.getElementById("reset").addEventListener("click", function () {
+        editor.value = original;
+        setMessage("", "");
+      });
+
+      window.addEventListener("beforeunload", function (event) {
+        if (editor.value !== original) {
+          event.preventDefault();
+          event.returnValue = "";
+        }
+      });
+    })();
+  </script>
+</body>
+
+</html>

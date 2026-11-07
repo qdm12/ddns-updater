@@ -11,6 +11,12 @@
 </head>
 
 <body>
+  {{if or .PublicIPCheck .ConfigEditor}}
+  <nav class="toolbar">
+    {{if .PublicIPCheck}}<a class="button" href="publicip">Public IP prüfen</a>{{end}}
+    {{if .ConfigEditor}}<a class="button" href="config">Konfiguration</a>{{end}}
+  </nav>
+  {{end}}
   <table role="table">
     <thead>
       <tr>

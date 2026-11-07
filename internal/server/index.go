@@ -12,7 +12,16 @@ func (h *handlers) index(w http.ResponseWriter, _ *http.Request) {
 		row := record.HTML(h.timeNow())
 		htmlData.Rows = append(htmlData.Rows, row)
 	}
-	err := h.indexTemplate.ExecuteTemplate(w, "index.html", htmlData)
+	data := struct {
+		models.HTMLData
+		PublicIPCheck bool
+		ConfigEditor  bool
+	}{
+		HTMLData:      htmlData,
+		PublicIPCheck: h.publicIPChecker != nil,
+		ConfigEditor:  h.configStore != nil,
+	}
+	err := h.indexTemplate.ExecuteTemplate(w, "index.html", data)
 	if err != nil {
 		httpError(w, http.StatusInternalServerError, "failed generating webpage: "+err.Error())
 	}

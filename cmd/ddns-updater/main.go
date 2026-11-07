@@ -14,6 +14,7 @@ import (
 	_ "github.com/breml/rootcerts"
 	"github.com/qdm12/ddns-updater/internal/backup"
 	"github.com/qdm12/ddns-updater/internal/config"
+	"github.com/qdm12/ddns-updater/internal/configfile"
 	"github.com/qdm12/ddns-updater/internal/data"
 	"github.com/qdm12/ddns-updater/internal/health"
 	"github.com/qdm12/ddns-updater/internal/healthchecksio"
@@ -217,7 +218,17 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		return fmt.Errorf("creating health server: %w", err)
 	}
 
-	server, err := createServer(ctx, config.Server, logger, db, updaterService)
+	serverFeatures := server.Features{
+		PublicIPChecker:   ipGetter,
+		PublicIPSettings:  config.PubIP.String(),
+		BasicAuthUsername: config.Server.AuthUsername,
+		BasicAuthPassword: config.Server.AuthPassword,
+	}
+	if *config.Server.ConfigEditor {
+		serverFeatures.ConfigStore = configfile.New(*config.Paths.Config, jsonparams.ValidateJSON)
+	}
+
+	server, err := createServer(ctx, config.Server, logger, db, updaterService, serverFeatures)
 	if err != nil {
 		return fmt.Errorf("creating server: %w", err)
 	}
@@ -370,13 +381,18 @@ func createHealthServer(db health.AllSelecter, resolver health.LookupIPer,
 //nolint:ireturn
 func createServer(ctx context.Context, config config.Server,
 	logger log.LoggerInterface, db server.Database,
-	updaterService server.UpdateForcer) (
+	updaterService server.UpdateForcer, features server.Features) (
 	service goservices.Service, err error,
 ) {
 	if !*config.Enabled {
 		return noop.New("server"), nil
 	}
 	serverLogger := logger.New(log.SetComponent("http server"))
+	if features.ConfigStore != nil && features.BasicAuthPassword == "" {
+		serverLogger.Warn("the configuration editor is enabled without authentication: " +
+			"anyone who can reach the web UI can read and change your DNS provider credentials. " +
+			"Set SERVER_AUTH_USERNAME and SERVER_AUTH_PASSWORD, or SERVER_CONFIG_EDITOR=no")
+	}
 	return server.New(ctx, config.ListeningAddress, config.RootURL,
-		db, serverLogger, updaterService)
+		db, serverLogger, updaterService, features)
 }

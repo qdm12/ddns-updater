@@ -306,6 +306,9 @@ Note that:
 | `SERVER_ENABLED` | `yes` | Enable the web server and web UI |
 | `LISTENING_ADDRESS` | `:8000` | Internal TCP listening port for the web UI |
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
+| `SERVER_CONFIG_EDITOR` | `yes` | Enable the **Konfiguration** page of the web UI to view and edit the JSON configuration file. Changes apply after a restart. |
+| `SERVER_AUTH_USERNAME` | | Username for HTTP basic authentication of the whole web UI. Must be set together with `SERVER_AUTH_PASSWORD`. |
+| `SERVER_AUTH_PASSWORD` | | Password for HTTP basic authentication of the whole web UI. Authentication is disabled if empty. Use it behind HTTPS only. |
 | `HEALTH_SERVER_ADDRESS` | `127.0.0.1:9999` | Health server listening address |
 | `HEALTH_HEALTHCHECKSIO_BASE_URL` | `https://hc-ping.com` | Base URL for the [healthchecks.io](https://healthchecks.io) server |
 | `HEALTH_HEALTHCHECKSIO_UUID` | | UUID to idenfity with the [healthchecks.io](https://healthchecks.io) server |

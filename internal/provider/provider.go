@@ -66,6 +66,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/spaceship"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/spdyn"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/strato"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/synology"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/variomedia"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/vercel"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/vultr"
@@ -204,6 +205,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return spdyn.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Strato:
 		return strato.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.Synology:
+		return synology.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Variomedia:
 		return variomedia.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Vercel:

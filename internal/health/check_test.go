@@ -276,6 +276,29 @@ func Test_isHealthy(t *testing.T) {
 	}
 }
 
+func Test_isHealthy_noIP(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	const hostname = "record0.example.com"
+	dbMock := NewMockAllSelecter(ctrl)
+	providerMock := NewMockProvider(ctrl)
+	providerMock.EXPECT().String().Return(hostname)
+
+	dbMock.EXPECT().SelectAll().Return([]records.Record{{
+		Provider: providerMock,
+		History: []models.HistoryEvent{
+			{IP: netip.MustParseAddr("1.2.3.4"), Time: time.Date(2025, time.May, 1, 12, 0, 0, 0, time.UTC)},
+		},
+		Status: constants.NOIP,
+	}})
+
+	err := isHealthy(t.Context(), dbMock, NewMockLookupIPer(ctrl), time.Time{})
+
+	assert.ErrorIs(t, err, ErrRecordUpdateFailed)
+	assert.ErrorContains(t, err, hostname)
+}
+
 func Test_MakeIsHealthy(t *testing.T) {
 	t.Parallel()
 

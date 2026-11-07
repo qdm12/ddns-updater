@@ -288,8 +288,7 @@ func setInitialUpToDateStatus(db Database, id uint, updateIP netip.Addr, now tim
 	if err != nil {
 		return err
 	}
-	record.Status = constants.UPTODATE
-	record.Time = now
+	record.SetStatus(constants.UPTODATE, "", now)
 	if !record.History.GetCurrentIP().IsValid() {
 		record.History = append(record.History, models.HistoryEvent{
 			IP:   updateIP,
@@ -304,9 +303,7 @@ func setInitialPublicIPFailStatus(db Database, id uint, now time.Time) error {
 	if err != nil {
 		return err
 	}
-	record.Status = constants.FAIL
-	record.Message = "public IP address not found"
-	record.Time = now
+	record.SetStatus(constants.NOIP, "public IP address not found", now)
 	return db.Update(id, record)
 }
 
@@ -323,7 +320,7 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 	recordIDs := s.getRecordIDsToUpdate(ctx, records, ip, ipv4, ipv6)
 
 	// Current time is used to set initial states for records already
-	// up to date or in the fail state due to the public IP not found.
+	// up to date or in the no IP state due to the public IP not found.
 	// No need to have it queried within the next for loop since each
 	// iteration is fast and has no IO involved.
 	now := s.timeNow()
@@ -331,7 +328,7 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 	for i, record := range records {
 		id := uint(i)
 		_, requireUpdate := recordIDs[id]
-		if requireUpdate || record.Status != constants.UNSET {
+		if requireUpdate || (record.Status != constants.UNSET && record.Status != constants.NOIP) {
 			continue
 		}
 

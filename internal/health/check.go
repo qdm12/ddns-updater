@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
@@ -38,7 +37,7 @@ func isHealthy(ctx context.Context, db AllSelecter, resolver LookupIPer,
 ) (err error) {
 	records := db.SelectAll()
 	for _, record := range records {
-		if record.Status == constants.FAIL {
+		if record.IsFailing() {
 			return fmt.Errorf("%w: %s", ErrRecordUpdateFailed, record.String())
 		} else if record.Provider.Proxied() {
 			continue

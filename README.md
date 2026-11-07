@@ -295,7 +295,8 @@ Note that:
 | --- | --- | --- |
 | `CONFIG` | | One line JSON object containing the entire config (takes precedence over config.json file) if specified |
 | `PERIOD` | `5m` | Default period of IP address check, following [this format](https://golang.org/pkg/time/#ParseDuration) |
-| `PUBLICIP_FETCHERS` | `all` | Comma separated fetcher types to obtain the public IP address from `http` and `dns` |
+| `PUBLICIP_FETCHERS` | `all` | Comma separated fetcher types to obtain the IP address from: `http`, `dns` and `privateip`. `all` means `http` and `dns` only, `privateip` must be listed explicitly, see the [Private IP section](#private-ip) |
+| `PRIVATEIP_INTERFACE` | | Exact (case sensitive) name of the network interface to read the private IPv4 address from. Required if `privateip` is in `PUBLICIP_FETCHERS`. See the [Private IP section](#private-ip) |
 | `PUBLICIP_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IP address (ipv4 or ipv6). See the [Public IP section](#public-ip) |
 | `PUBLICIPV4_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IPv4 address only. See the [Public IP section](#public-ip) |
 | `PUBLICIPV6_HTTP_PROVIDERS` | `all` | Comma separated providers to obtain the public IPv6 address only. See the [Public IP section](#public-ip) |
@@ -365,6 +366,23 @@ You can otherwise customize it with the following:
 - `PUBLICIP_DNS_PROVIDERS` gets your public IPv4 address only or IPv6 address only or one of them (see [#136](https://github.com/qdm12/ddns-updater/issues/136)). It can be one or more of the following:
   - `cloudflare`
   - `opendns`
+
+#### Private IP
+
+The `privateip` fetcher publishes the IPv4 address of one of your own network interfaces (for example a LAN address) instead of your public address. It is never part of `all` or of the default fetchers, so you must enable it explicitly and name the interface:
+
+```sh
+PUBLICIP_FETCHERS=privateip
+PRIVATEIP_INTERFACE=enp2s0
+```
+
+- `PRIVATEIP_INTERFACE` is required when `privateip` is enabled and the program refuses to start without it. The name is case sensitive (`Enp2s0` does not match `enp2s0`), and surrounding spaces are ignored.
+- Only that interface is used. If it does not exist, is down, is a loopback interface or has no usable address, there is **no fallback** to another interface (Docker bridges, VPNs, ...) nor to a previously found address: the update of the records is skipped until a later period finds the address.
+- Only a private IPv4 address (RFC 1918: `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`) is used. IPv6 is not supported by this fetcher. If the interface has more than one private IPv4 address, none is chosen and the update is skipped until only one remains.
+- The address is read again at every period, so a DHCP address change is picked up without restarting the program.
+- Migration: earlier versions of this fork also enabled `privateip` with `PUBLICIP_FETCHERS=all`. `all` now only means `http` and `dns`. Use `PUBLICIP_FETCHERS=privateip` and set `PRIVATEIP_INTERFACE`.
+- ⚠️ Combining `privateip` with `http` and/or `dns` (for example `http,privateip`) is allowed but the fetchers are cycled on every request and a failed fetch is retried, so a **public address can be published even while the private interface fails**. DNS provider records are guaranteed to receive zero writes when the private interface cannot be read only if `privateip` is the only fetcher.
+- On a failed discovery with `privateip` alone, the application `History` of each record is unchanged, but its `Status`, `Message` and `Time` may change (a record with no status yet is marked as failed on the first cycle). Known limitation: if the first fetch after starting fails, records are marked as failed. If the interface then recovers with an address already matching the DNS record, the record keeps its failed status in the web UI and health check until its address next changes.
 
 ### Host firewall
 

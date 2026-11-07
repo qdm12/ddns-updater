@@ -28,7 +28,6 @@ type Provider struct {
 	key            string
 	token          string
 	email          string
-	userServiceKey string
 	zoneIdentifier string
 	proxied        bool
 	ttl            uint32
@@ -42,7 +41,6 @@ func New(data json.RawMessage, domain, owner string,
 		Key            string `json:"key"`
 		Token          string `json:"token"`
 		Email          string `json:"email"`
-		UserServiceKey string `json:"user_service_key"`
 		ZoneIdentifier string `json:"zone_identifier"`
 		Proxied        bool   `json:"proxied"`
 		TTL            uint32 `json:"ttl"`
@@ -52,7 +50,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, err
 	}
 
-	err = validateSettings(domain, extraSettings.Email, extraSettings.Key, extraSettings.UserServiceKey,
+	err = validateSettings(domain, extraSettings.Email, extraSettings.Key, extraSettings.Token,
 		extraSettings.ZoneIdentifier, extraSettings.TTL)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
@@ -66,7 +64,6 @@ func New(data json.RawMessage, domain, owner string,
 		key:            extraSettings.Key,
 		token:          extraSettings.Token,
 		email:          extraSettings.Email,
-		userServiceKey: extraSettings.UserServiceKey,
 		zoneIdentifier: extraSettings.ZoneIdentifier,
 		proxied:        extraSettings.Proxied,
 		ttl:            extraSettings.TTL,
@@ -74,12 +71,11 @@ func New(data json.RawMessage, domain, owner string,
 }
 
 var (
-	keyRegex            = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
-	userServiceKeyRegex = regexp.MustCompile(`^v1\.0.+$`)
-	regexEmail          = regexp.MustCompile(`[a-zA-Z0-9-_.+]+@[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,10}`)
+	keyRegex   = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
+	regexEmail = regexp.MustCompile(`[a-zA-Z0-9-_.+]+@[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,10}`)
 )
 
-func validateSettings(domain, email, key, userServiceKey, zoneIdentifier string, ttl uint32) (err error) {
+func validateSettings(domain, email, key, token, zoneIdentifier string, ttl uint32) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
 		return fmt.Errorf("domain is not valid: %w", err)
@@ -93,11 +89,10 @@ func validateSettings(domain, email, key, userServiceKey, zoneIdentifier string,
 		case !regexEmail.MatchString(email):
 			return fmt.Errorf("email address is not valid: email %q does not match regex %q", email, regexEmail)
 		}
-	case userServiceKey != "": // only user service key
-		if !userServiceKeyRegex.MatchString(userServiceKey) {
-			return fmt.Errorf("user service key is not valid: %q does not match regex %q", userServiceKey, userServiceKeyRegex)
-		}
-	default: // constants.API token only
+	case token == "":
+		return errors.New("token is not set: use an API token (\"token\"), " +
+			"or an email and Global API key (\"email\" and \"key\")")
+	default: // API token only
 	}
 	switch {
 	case zoneIdentifier == "":
@@ -152,8 +147,6 @@ func (p *Provider) setHeaders(request *http.Request) {
 	switch {
 	case p.token != "":
 		headers.SetAuthBearer(request, p.token)
-	case p.userServiceKey != "":
-		request.Header.Set("X-Auth-User-Service-Key", p.userServiceKey)
 	case p.email != "" && p.key != "":
 		request.Header.Set("X-Auth-Email", p.email)
 		request.Header.Set("X-Auth-Key", p.key)

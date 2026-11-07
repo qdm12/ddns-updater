@@ -2,13 +2,14 @@ package namecom
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/netip"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 func parseErrorResponse(response *http.Response) (err error) {
@@ -24,14 +25,14 @@ func parseErrorResponse(response *http.Response) (err error) {
 
 	switch strings.ToLower(errorResponse.Message) {
 	case "not found":
-		return wrapErrorAndDetails(errors.ErrRecordNotFound, errorResponse.Details)
+		return wrapErrorAndDetails(ddnserrors.ErrRecordNotFound, errorResponse.Details)
 	case "permission denied", "unauthenticated":
-		return wrapErrorAndDetails(errors.ErrAuth, errorResponse.Details)
+		return wrapErrorAndDetails(errors.New("bad authentication"), errorResponse.Details)
 	case "invalid argument":
-		return wrapErrorAndDetails(errors.ErrBadRequest, errorResponse.Details)
+		return wrapErrorAndDetails(errors.New("bad request sent"), errorResponse.Details)
 	}
 
-	return fmt.Errorf("%w: %s: %s (status code %d)", errors.ErrUnknownResponse,
+	return fmt.Errorf("unknown response received: %s: %s (status code %d)",
 		errorResponse.Message, errorResponse.Details, response.StatusCode)
 }
 
@@ -47,10 +48,9 @@ func verifySuccessResponseBody(responseBody io.ReadCloser, sentIP netip.Addr) (e
 
 	receivedIP, err := netip.ParseAddr(responseData.Answer)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, responseData.Answer)
+		return fmt.Errorf("malformed IP address received: %s", responseData.Answer)
 	} else if sentIP.Compare(receivedIP) != 0 {
-		return fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, sentIP, receivedIP)
+		return fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", sentIP, receivedIP)
 	}
 	return nil
 }

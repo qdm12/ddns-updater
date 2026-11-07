@@ -60,18 +60,17 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, username, token string, ttl *uint32) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	const minTTL = uint32(300)
 	switch {
 	case username == "":
-		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+		return stderrors.New("username is not set")
 	case token == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+		return stderrors.New("password is not set")
 	case ttl != nil && *ttl < minTTL:
-		return fmt.Errorf("%w: %d must be at least %d",
-			errors.ErrTTLTooLow, *ttl, minTTL)
+		return fmt.Errorf("TTL is too low: %d must be at least %d", *ttl, minTTL)
 	default:
 		return nil
 	}

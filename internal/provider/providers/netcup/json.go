@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 )
 
@@ -62,7 +61,7 @@ func doJSONHTTP(ctx context.Context, client *http.Client,
 	}
 
 	if commonResponse.Status == "error" {
-		return fmt.Errorf("%w: %s (status %d)", errors.ErrHTTPStatusNotValid,
+		return fmt.Errorf("HTTP status is not valid: %s (status %d)",
 			commonResponse.ShortMessage, commonResponse.StatusCode)
 	}
 

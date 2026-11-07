@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
-
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 // https://www.vultr.com/api/#tag/dns/operation/update-dns-domain-record
@@ -63,14 +61,13 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	}
 
 	if response.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode,
+		return fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode,
 			parseJSONErrorOrFullBody(bodyBytes))
 	}
 
 	errorMessage := parseJSONError(bodyBytes)
 	if errorMessage != "" {
-		return fmt.Errorf("%w: %s", errors.ErrUnsuccessful, errorMessage)
+		return fmt.Errorf("unsuccessful result: %s", errorMessage)
 	}
 
 	return nil

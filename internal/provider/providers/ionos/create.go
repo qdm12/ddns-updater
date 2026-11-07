@@ -10,7 +10,6 @@ import (
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
@@ -68,13 +67,13 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 		}
 		return nil
 	case http.StatusBadRequest:
-		return fmt.Errorf("%w: %s", errors.ErrBadRequest,
+		return fmt.Errorf("bad request sent: %s",
 			decodeErrorMessage(response.Body))
 	case http.StatusUnauthorized:
-		return fmt.Errorf("%w: %s", errors.ErrAuth,
+		return fmt.Errorf("bad authentication: %s",
 			decodeErrorMessage(response.Body))
 	default:
-		return fmt.Errorf("%w: %s: %s", errors.ErrHTTPStatusNotValid,
+		return fmt.Errorf("HTTP status is not valid: %s: %s",
 			response.Status, decodeErrorMessage(response.Body))
 	}
 }

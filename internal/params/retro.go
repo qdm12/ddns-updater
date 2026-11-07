@@ -1,7 +1,6 @@
 package params
 
 import (
-	"errors"
 	"fmt"
 	"net/netip"
 	"os"
@@ -18,22 +17,19 @@ func getRetroIPv6Suffix() (suffix netip.Prefix, err error) {
 	return makeIPv6Suffix(prefixBitsString)
 }
 
-var ErrIPv6PrefixFormat = errors.New("IPv6 prefix format is incorrect")
-
 func makeIPv6Suffix(prefixBitsString string) (suffix netip.Prefix, err error) {
 	prefixBitsString = strings.TrimPrefix(prefixBitsString, "/")
 
 	const base, bitSize = 10, 8
 	prefixBits, err := strconv.ParseUint(prefixBitsString, base, bitSize)
 	if err != nil {
-		return netip.Prefix{}, fmt.Errorf("%w: cannot parse %q as uint8",
-			ErrIPv6PrefixFormat, prefixBitsString)
+		return netip.Prefix{}, fmt.Errorf("IPv6 prefix format is incorrect: cannot parse %q as uint8", prefixBitsString)
 	}
 
 	const ipv6Bits = 128
 	if prefixBits > ipv6Bits {
-		return netip.Prefix{}, fmt.Errorf("%w: %d bits cannot be greater than %d",
-			ErrIPv6PrefixFormat, prefixBits, ipv6Bits)
+		return netip.Prefix{}, fmt.Errorf("IPv6 prefix format is incorrect: %d bits cannot be greater than %d",
+			prefixBits, ipv6Bits)
 	}
 
 	suffixBits := ipv6Bits - int(prefixBits)

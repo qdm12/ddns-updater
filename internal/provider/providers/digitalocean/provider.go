@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -54,11 +55,11 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, token string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	if token == "" {
-		return fmt.Errorf("%w", errors.ErrTokenNotSet)
+		return errors.New("token is not set")
 	}
 	return nil
 }
@@ -132,8 +133,7 @@ func (p *Provider) getRecordID(ctx context.Context, recordType string, client *h
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return 0, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -148,9 +148,9 @@ func (p *Provider) getRecordID(ctx context.Context, recordType string, client *h
 	}
 
 	if len(result.DomainRecords) == 0 {
-		return 0, fmt.Errorf("%w", errors.ErrReceivedNoResult)
+		return 0, fmt.Errorf("%w", ddnserrors.ErrReceivedNoResult)
 	} else if result.DomainRecords[0].ID == 0 {
-		return 0, fmt.Errorf("%w", errors.ErrDomainIDNotFound)
+		return 0, errors.New("ID not found in domain record")
 	}
 
 	return result.DomainRecords[0].ID, nil
@@ -203,8 +203,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s",
+			response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -220,10 +220,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	newIP, err = netip.ParseAddr(responseData.DomainRecord.Data)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+		return netip.Addr{}, fmt.Errorf("malformed IP address received: %w", err)
 	} else if newIP.Compare(ip) != 0 {
-		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
+		return netip.Addr{}, fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 	}
 	return newIP, nil
 }

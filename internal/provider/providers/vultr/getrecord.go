@@ -72,16 +72,16 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client,
 	case err != nil:
 		return "", netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
 	case response.StatusCode == http.StatusBadRequest:
-		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrBadRequest, parsedJSON.Error)
+		return "", netip.Addr{}, fmt.Errorf("bad request sent: %s", parsedJSON.Error)
 	case response.StatusCode == http.StatusUnauthorized:
-		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrAuth, parsedJSON.Error)
+		return "", netip.Addr{}, fmt.Errorf("bad authentication: %s", parsedJSON.Error)
 	case response.StatusCode == http.StatusNotFound:
-		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrDomainNotFound, parsedJSON.Error)
+		return "", netip.Addr{}, fmt.Errorf("domain not found: %s", parsedJSON.Error)
 	case response.StatusCode != http.StatusOK:
-		return "", netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, parseJSONErrorOrFullBody(bodyBytes))
+		return "", netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s",
+			response.StatusCode, parseJSONErrorOrFullBody(bodyBytes))
 	case parsedJSON.Error != "":
-		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, parsedJSON.Error)
+		return "", netip.Addr{}, fmt.Errorf("unsuccessful result: %s", parsedJSON.Error)
 	}
 
 	// Status is OK (200) and error field is empty

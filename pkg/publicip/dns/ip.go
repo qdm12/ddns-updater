@@ -4,14 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"net/netip"
 	"sync/atomic"
 
 	"github.com/miekg/dns"
 )
-
-var ErrIPNotFoundForVersion = errors.New("IP addresses found but not for IP version")
 
 func (f *Fetcher) IP(ctx context.Context) (publicIP netip.Addr, err error) {
 	publicIPs, err := f.ip(ctx, "tcp")
@@ -32,7 +29,7 @@ func (f *Fetcher) IP4(ctx context.Context) (publicIP netip.Addr, err error) {
 			return ip, nil
 		}
 	}
-	return netip.Addr{}, fmt.Errorf("%w: ipv4", ErrIPNotFoundForVersion)
+	return netip.Addr{}, errors.New("IP addresses found but not for IP version: ipv4")
 }
 
 func (f *Fetcher) IP6(ctx context.Context) (publicIP netip.Addr, err error) {
@@ -46,7 +43,7 @@ func (f *Fetcher) IP6(ctx context.Context) (publicIP netip.Addr, err error) {
 			return ip, nil
 		}
 	}
-	return netip.Addr{}, fmt.Errorf("%w: ipv6", ErrIPNotFoundForVersion)
+	return netip.Addr{}, errors.New("IP addresses found but not for IP version: ipv6")
 }
 
 func (f *Fetcher) ip(ctx context.Context, network string) (

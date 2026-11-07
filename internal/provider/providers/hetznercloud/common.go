@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
@@ -30,15 +29,14 @@ func (p *Provider) handleActionResponse(ctx context.Context, client *http.Client
 		}
 		return nil
 	case "error":
-		err = fmt.Errorf("%w: action id %d failed",
-			errors.ErrUnsuccessful, parsed.Action.ID)
+		err = fmt.Errorf("unsuccessful result: action id %d failed", parsed.Action.ID)
 		if parsed.Action.Error != nil {
 			err = fmt.Errorf("%w: %v", err, parsed.Action.Error)
 		}
 		return err
 	default:
-		return fmt.Errorf("%w: unexpected action status %q for action id %d",
-			errors.ErrUnknownResponse, parsed.Action.Status, parsed.Action.ID)
+		return fmt.Errorf("unknown response received: unexpected action status %q for action id %d",
+			parsed.Action.Status, parsed.Action.ID)
 	}
 }
 
@@ -48,14 +46,12 @@ func handleErrorResponse(response *http.Response) (err error) {
 	}
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		return fmt.Errorf("%w: %d: unable to read response body: %w",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, err)
+		return fmt.Errorf("HTTP status is not valid: %d: unable to read response body: %w", response.StatusCode, err)
 	}
 	var parsed errorResponse
 	err = json.Unmarshal(data, &parsed)
 	if err != nil {
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(string(data)))
+		return fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, utils.ToSingleLine(string(data)))
 	}
-	return fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, parsed)
+	return fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, parsed)
 }

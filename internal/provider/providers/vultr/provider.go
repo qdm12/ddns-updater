@@ -58,11 +58,11 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, apiKey string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	if apiKey == "" {
-		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
+		return stderrors.New("API key is not set")
 	}
 	return nil
 }

@@ -3,11 +3,12 @@ package namecom
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
@@ -36,7 +37,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusNotFound:
-		return 0, fmt.Errorf("%w", errors.ErrDomainNotFound)
+		return 0, errors.New("domain not found")
 	default:
 		return 0, parseErrorResponse(response)
 	}
@@ -68,5 +69,5 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	}
 
 	return 0, fmt.Errorf("%w: in %d record(s)",
-		errors.ErrRecordNotFound, len(data.Records))
+		ddnserrors.ErrRecordNotFound, len(data.Records))
 }

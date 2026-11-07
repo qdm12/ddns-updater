@@ -1,7 +1,6 @@
 package ipversion
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -27,8 +26,6 @@ func (v IPVersion) String() string {
 	}
 }
 
-var ErrInvalidIPVersion = errors.New("invalid IP version")
-
 func Parse(s string) (version IPVersion, err error) {
 	switch strings.ToLower(s) {
 	case "ipv4 or ipv6":
@@ -38,6 +35,6 @@ func Parse(s string) (version IPVersion, err error) {
 	case "ipv6":
 		return IP6, nil
 	default:
-		return IP4or6, fmt.Errorf("%w: %q", ErrInvalidIPVersion, s)
+		return IP4or6, fmt.Errorf("invalid IP version: %q", s)
 	}
 }

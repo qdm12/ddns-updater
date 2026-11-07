@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -65,11 +65,11 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, token string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	if token == "" {
-		return fmt.Errorf("%w", errors.ErrTokenNotSet)
+		return errors.New("token is not set")
 	}
 
 	return nil
@@ -201,7 +201,7 @@ func handleAPIError(response *http.Response) error {
 		CorrelationID string `json:"correlation_id"`
 	}{}
 	if err := json.Unmarshal(body, &apiError); err != nil {
-		return fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, string(body))
+		return fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, string(body))
 	}
 
 	detail := apiError.Error
@@ -211,14 +211,14 @@ func handleAPIError(response *http.Response) error {
 
 	switch response.StatusCode {
 	case http.StatusUnauthorized, http.StatusForbidden:
-		return fmt.Errorf("%w: %s", errors.ErrAuth, detail)
+		return fmt.Errorf("bad authentication: %s", detail)
 	case http.StatusNotFound:
-		return fmt.Errorf("%w: %s", errors.ErrDomainNotFound, detail)
+		return fmt.Errorf("domain not found: %s", detail)
 	case http.StatusUnprocessableEntity:
-		return fmt.Errorf("%w: %s", errors.ErrBadRequest, detail)
+		return fmt.Errorf("bad request sent: %s", detail)
 	case http.StatusTooManyRequests:
-		return fmt.Errorf("%w: %s", errors.ErrRateLimit, detail)
+		return fmt.Errorf("rate limit exceeded: %s", detail)
 	default:
-		return fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, detail)
+		return fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, detail)
 	}
 }

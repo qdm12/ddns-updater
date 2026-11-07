@@ -62,14 +62,14 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, accessKeyID, accessSecret string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case accessKeyID == "":
-		return fmt.Errorf("%w", errors.ErrAccessKeyIDNotSet)
+		return stderrors.New("access key id is not set")
 	case accessSecret == "":
-		return fmt.Errorf("%w", errors.ErrAccessKeySecretNotSet)
+		return stderrors.New("key secret is not set")
 	}
 	return nil
 }

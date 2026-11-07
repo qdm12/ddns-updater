@@ -63,14 +63,14 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, zoneIdentifier, token string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case zoneIdentifier == "":
-		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
+		return stderrors.New("zone identifier is not set")
 	case token == "":
-		return fmt.Errorf("%w", errors.ErrTokenNotSet)
+		return stderrors.New("token is not set")
 	}
 	return nil
 }

@@ -2,7 +2,6 @@ package healthchecksio
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 )
@@ -22,8 +21,6 @@ type Client struct {
 	baseURL    string
 	uuid       string
 }
-
-var ErrStatusCode = errors.New("bad status code")
 
 type State string
 
@@ -58,7 +55,7 @@ func (c *Client) Ping(ctx context.Context, state State) (err error) {
 	switch response.StatusCode {
 	case http.StatusOK:
 	default:
-		return fmt.Errorf("%w: %d %s", ErrStatusCode, response.StatusCode, response.Status)
+		return fmt.Errorf("bad status code: %d %s", response.StatusCode, response.Status)
 	}
 
 	err = response.Body.Close()

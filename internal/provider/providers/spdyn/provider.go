@@ -3,6 +3,7 @@ package spdyn
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -12,7 +13,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -61,19 +62,19 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, owner, token, user, password string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	if owner == "*" {
-		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
+		return errors.New("owner cannot be \"*\"")
 	}
 
 	if token == "" {
 		switch {
 		case user == "":
-			return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+			return errors.New("username is not set")
 		case password == "":
-			return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+			return errors.New("password is not set")
 		}
 	}
 
@@ -155,25 +156,25 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(bodyString))
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s",
+			response.StatusCode, utils.ToSingleLine(bodyString))
 	}
 
 	switch {
 	case isAny(bodyString, constants.Abuse, "numhost"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBannedAbuse)
+		return netip.Addr{}, fmt.Errorf("%w", ddnserrors.ErrBannedAbuse)
 	case isAny(bodyString, constants.Badauth, "!yours"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
+		return netip.Addr{}, errors.New("bad authentication")
 	case strings.HasPrefix(bodyString, "good"):
 		return ip, nil
 	case bodyString == constants.Notfqdn:
-		return netip.Addr{}, fmt.Errorf("%w: not fqdn", errors.ErrBadRequest)
+		return netip.Addr{}, errors.New("bad request sent: not fqdn")
 	case strings.HasPrefix(bodyString, "nochg"):
 		return ip, nil
 	case isAny(bodyString, "nohost", "fatal"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+		return netip.Addr{}, errors.New("hostname does not exist")
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, bodyString)
+		return netip.Addr{}, fmt.Errorf("unknown response received: %s", bodyString)
 	}
 }
 

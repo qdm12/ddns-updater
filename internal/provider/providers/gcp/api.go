@@ -62,7 +62,7 @@ func (p *Provider) getRRSet(ctx context.Context, client *http.Client, fqdn, reco
 		return rrSet, nil
 	default:
 		errMessage := decodeError(response.Body)
-		return nil, fmt.Errorf("%w: %s", errors.ErrHTTPStatusNotValid, errMessage)
+		return nil, fmt.Errorf("HTTP status is not valid: %s", errMessage)
 	}
 }
 
@@ -98,7 +98,7 @@ func (p *Provider) createRRSet(ctx context.Context, client *http.Client, fqdn, r
 		return response.Body.Close()
 	}
 	errMessage := decodeError(response.Body)
-	return fmt.Errorf("%w: %s", errors.ErrHTTPStatusNotValid, errMessage)
+	return fmt.Errorf("HTTP status is not valid: %s", errMessage)
 }
 
 func (p *Provider) patchRRSet(ctx context.Context, client *http.Client, fqdn, recordType string,
@@ -133,7 +133,7 @@ func (p *Provider) patchRRSet(ctx context.Context, client *http.Client, fqdn, re
 		return response.Body.Close()
 	}
 	errMessage := decodeError(response.Body)
-	return fmt.Errorf("%w: %s", errors.ErrHTTPStatusNotValid, errMessage)
+	return fmt.Errorf("HTTP status is not valid: %s", errMessage)
 }
 
 func makeAPIURL(path string) string {

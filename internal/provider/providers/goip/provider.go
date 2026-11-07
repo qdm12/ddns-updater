@@ -3,6 +3,7 @@ package goip
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -80,17 +80,15 @@ func validateSettings(domain, owner, username, password string) (err error) {
 	const maxDomainLabels = 3 // domain.goip.de
 	switch {
 	case username == "":
-		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+		return errors.New("username is not set")
 	case password == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+		return errors.New("password is not set")
 	case !regexDomain.MatchString(domain):
-		return fmt.Errorf(`%w: %q must match have the effective TLD "goip.de" or "goip.it"`,
-			errors.ErrDomainNotValid, domain)
+		return fmt.Errorf("domain is not valid: %q must match have the effective TLD \"goip.de\" or \"goip.it\"", domain)
 	case strings.Count(owner, ".") > maxDomainLabels-1:
-		return fmt.Errorf("%w: %q has more than %d labels",
-			errors.ErrDomainNotValid, domain, maxDomainLabels)
+		return fmt.Errorf("domain is not valid: %q has more than %d labels", domain, maxDomainLabels)
 	case owner == "*":
-		return fmt.Errorf("%w: %q", errors.ErrOwnerWildcard, owner)
+		return fmt.Errorf("owner cannot be \"*\": %q", owner)
 	}
 	return nil
 }
@@ -166,8 +164,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode,
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode,
 			utils.BodyToSingleLine(response.Body))
 	}
 
@@ -180,8 +177,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case strings.HasPrefix(s, p.BuildDomainName()+" ("+ip.String()+")"):
 		return ip, nil
 	case strings.HasPrefix(s, "zugriff verweigert"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
+		return netip.Addr{}, errors.New("bad authentication")
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("unknown response received: %s", utils.ToSingleLine(s))
 	}
 }

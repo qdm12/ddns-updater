@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 type dnsRecord struct {
@@ -161,7 +159,7 @@ func httpPost[T any](ctx context.Context, client *http.Client,
 
 	if response.StatusCode != http.StatusOK {
 		_ = response.Body.Close()
-		return responseData, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid,
+		return responseData, fmt.Errorf("HTTP status is not valid: %d: %s",
 			response.StatusCode, makeErrorMessage(response.Body))
 	}
 

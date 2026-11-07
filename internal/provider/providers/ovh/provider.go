@@ -3,6 +3,7 @@ package ovh
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -84,26 +84,26 @@ func validateSettings(domain, mode, owner, appKey, consumerKey,
 ) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	if mode == "api" {
 		switch {
 		case appKey == "":
-			return fmt.Errorf("%w", errors.ErrAppKeyNotSet)
+			return errors.New("app key is not set")
 		case consumerKey == "":
-			return fmt.Errorf("%w", errors.ErrConsumerKeyNotSet)
+			return errors.New("consumer key is not set")
 		case appSecret == "":
-			return fmt.Errorf("%w", errors.ErrSecretNotSet)
+			return errors.New("secret is not set")
 		}
 	} else {
 		switch {
 		case username == "":
-			return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+			return errors.New("username is not set")
 		case password == "":
-			return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+			return errors.New("password is not set")
 		case owner == "*":
-			return fmt.Errorf("%w", errors.ErrOwnerWildcard)
+			return errors.New("owner cannot be \"*\"")
 		}
 	}
 	return nil
@@ -179,22 +179,22 @@ func (p *Provider) updateWithDynHost(ctx context.Context, client *http.Client,
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, s)
 	}
 
 	switch {
 	case strings.HasPrefix(s, constants.Notfqdn):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+		return netip.Addr{}, errors.New("hostname does not exist")
 	case strings.HasPrefix(s, "badrequest"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBadRequest)
+		return netip.Addr{}, errors.New("bad request sent")
 	case strings.HasPrefix(s, "nochg"):
 		return ip, nil
 	case strings.HasPrefix(s, "good"):
 		return ip, nil
 	case strings.HasPrefix(s, "nohost"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+		return netip.Addr{}, errors.New("hostname does not exist")
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+		return netip.Addr{}, fmt.Errorf("unknown response received: %s", s)
 	}
 }
 

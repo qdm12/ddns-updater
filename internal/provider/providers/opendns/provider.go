@@ -3,6 +3,7 @@ package opendns
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -57,16 +57,16 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, owner, username, password string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case owner == "*":
-		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
+		return errors.New("owner cannot be \"*\"")
 	case username == "":
-		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+		return errors.New("username is not set")
 	case password == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+		return errors.New("password is not set")
 	}
 	return nil
 }
@@ -138,19 +138,18 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, s)
 	}
 
 	if !strings.HasPrefix(s, "good ") {
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+		return netip.Addr{}, fmt.Errorf("unknown response received: %s", s)
 	}
 	responseIPString := strings.TrimPrefix(s, "good ")
 	newIP, err = netip.ParseAddr(responseIPString)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+		return netip.Addr{}, fmt.Errorf("malformed IP address received: %w", err)
 	} else if newIP.Compare(ip) != 0 {
-		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
+		return netip.Addr{}, fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 	}
 	return ip, nil
 }

@@ -3,6 +3,7 @@ package myaddr
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -51,10 +51,10 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, key string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 	if key == "" {
-		return fmt.Errorf("%w", errors.ErrKeyNotSet)
+		return errors.New("key is not set")
 	}
 	return nil
 }
@@ -121,11 +121,11 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case http.StatusOK:
 		return ip, nil
 	case http.StatusBadRequest:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrBadRequest, utils.BodyToSingleLine(response.Body))
+		return netip.Addr{}, fmt.Errorf("bad request sent: %s", utils.BodyToSingleLine(response.Body))
 	case http.StatusNotFound:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrKeyNotValid, utils.BodyToSingleLine(response.Body))
+		return netip.Addr{}, fmt.Errorf("key is not valid: %s", utils.BodyToSingleLine(response.Body))
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s",
+			response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 }

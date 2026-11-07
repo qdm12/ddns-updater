@@ -3,6 +3,7 @@ package custom
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -71,16 +71,16 @@ func validateSettings(domain string, url *url.URL,
 ) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case url.String() == "":
-		return fmt.Errorf("%w", errors.ErrURLNotSet)
+		return errors.New("url is not set")
 	case url.Scheme != "https":
-		return fmt.Errorf("%w: %s", errors.ErrURLNotHTTPS, url.Scheme)
+		return fmt.Errorf("url is not https: %s", url.Scheme)
 	case successRegex.String() == "":
-		return fmt.Errorf("%w", errors.ErrSuccessRegexNotSet)
+		return errors.New("success regex is not set")
 	default:
 		return nil
 	}
@@ -158,14 +158,13 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	s := string(b)
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	if p.successRegex.MatchString(s) {
 		return ip, nil
 	}
 
-	return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse,
+	return netip.Addr{}, fmt.Errorf("unknown response received: %s",
 		utils.ToSingleLine(s))
 }

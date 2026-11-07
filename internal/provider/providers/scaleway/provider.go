@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -60,11 +60,11 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, secretKey string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	if secretKey == "" {
-		return fmt.Errorf("%w", errors.ErrSecretKeyNotSet)
+		return errors.New("secret key is not set")
 	}
 
 	return nil
@@ -196,10 +196,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 			return netip.Addr{}, fmt.Errorf("json decoding error response body: %w: %s",
 				err, utils.ToSingleLine(string(b)))
 		} else if errorResponse.Type == "denied_authentication" {
-			return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrAuth, errorResponse.Message)
+			return netip.Addr{}, fmt.Errorf("bad authentication: %s", errorResponse.Message)
 		}
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode,
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s: %s", response.StatusCode,
 			errorResponse.Type, errorResponse.Message)
 	}
 
@@ -211,18 +210,18 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
 	}
 	if len(data.Records) == 0 {
-		return netip.Addr{}, fmt.Errorf("%w: no record in response", errors.ErrUnknownResponse)
+		return netip.Addr{}, errors.New("unknown response received: no record in response")
 	}
 	if data.Records[0].TTL != 0 {
 		p.knownTTL.Store(uint32(data.Records[0].TTL))
 	}
 	newIP, err = netip.ParseAddr(data.Records[0].Data)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrIPReceivedMalformed, data.Records[0].Data)
+		return netip.Addr{}, fmt.Errorf("malformed IP address received: %s", data.Records[0].Data)
 	}
 	if newIP != ip {
-		return newIP, fmt.Errorf("%w: IP in response %s does not match IP sent in request %s",
-			errors.ErrIPReceivedMismatch, newIP, ip)
+		return newIP, fmt.Errorf("mismatching IP address received: IP in response %s does not match IP sent in request %s",
+			newIP, ip)
 	}
 	return newIP, nil
 }

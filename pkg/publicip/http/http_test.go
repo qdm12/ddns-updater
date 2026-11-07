@@ -16,7 +16,6 @@ func Test_New(t *testing.T) {
 	testCases := map[string]struct {
 		options    []Option
 		fetcher    *Fetcher
-		err        error
 		errMessage string
 	}{
 		"no options": {
@@ -65,7 +64,6 @@ func Test_New(t *testing.T) {
 			options: []Option{
 				SetProvidersIP(Provider("invalid")),
 			},
-			err:        ErrUnknownProvider,
 			errMessage: "unknown public IP echo HTTP provider: invalid",
 		},
 	}
@@ -76,9 +74,10 @@ func Test_New(t *testing.T) {
 
 			fetcher, err := New(client, testCase.options...)
 
-			assert.ErrorIs(t, err, testCase.err)
-			if testCase.err != nil {
-				assert.EqualError(t, err, testCase.errMessage)
+			if testCase.errMessage == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.ErrorContains(t, err, testCase.errMessage)
 			}
 			assert.Equal(t, testCase.fetcher, fetcher)
 		})

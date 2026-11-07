@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,7 +33,7 @@ func Test_waitAction(t *testing.T) {
 		statusCode int
 		body       string
 		wantPath   string
-		wantErr    error
+		wantErr    string
 	}{
 		// Regression: the action of a set_records/create operation belongs to a
 		// zone, so it must be polled at /v1/zones/actions/{id}.
@@ -50,7 +49,7 @@ func Test_waitAction(t *testing.T) {
 			statusCode: http.StatusOK,
 			body:       `{"action":{"id":43,"status":"error","error":{"code":"failed","message":"boom"}}}`,
 			wantPath:   "/v1/zones/actions/43",
-			wantErr:    errors.ErrUnsuccessful,
+			wantErr:    "unsuccessful result",
 		},
 	}
 
@@ -77,8 +76,8 @@ func Test_waitAction(t *testing.T) {
 			err := provider.waitAction(context.Background(), client, testCase.actionID)
 
 			assert.Equal(t, testCase.wantPath, gotPath)
-			if testCase.wantErr != nil {
-				require.ErrorIs(t, err, testCase.wantErr)
+			if testCase.wantErr != "" {
+				require.ErrorContains(t, err, testCase.wantErr)
 			} else {
 				require.NoError(t, err)
 			}

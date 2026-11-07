@@ -13,7 +13,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -53,12 +52,11 @@ var passwordRegex = regexp.MustCompile(`^[a-f0-9]{32}$`)
 func validateSettings(domain, password string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	if !passwordRegex.MatchString(password) {
-		return fmt.Errorf("%w: password %q does not match regex %q",
-			errors.ErrPasswordNotValid, password, passwordRegex)
+		return fmt.Errorf("password is not valid: password %q does not match regex %q", password, passwordRegex)
 	}
 	return nil
 }
@@ -131,8 +129,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s",
+			response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := xml.NewDecoder(response.Body)
@@ -152,7 +150,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	if parsedXML.Errors.Error != "" {
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, parsedXML.Errors.Error)
+		return netip.Addr{}, fmt.Errorf("unsuccessful result: %s", parsedXML.Errors.Error)
 	}
 
 	if parsedXML.IP == "" {
@@ -163,10 +161,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	newIP, err = netip.ParseAddr(parsedXML.IP)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+		return netip.Addr{}, fmt.Errorf("malformed IP address received: %w", err)
 	} else if ip.Compare(newIP) != 0 {
-		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
+		return netip.Addr{}, fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 	}
 	return newIP, nil
 }

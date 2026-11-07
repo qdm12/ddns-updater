@@ -56,11 +56,11 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, token string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	if token == "" {
-		return fmt.Errorf("%w", errors.ErrTokenNotSet)
+		return goerrors.New("token is not set")
 	}
 	return nil
 }
@@ -169,7 +169,7 @@ func (p *Provider) getDomainID(ctx context.Context, client *http.Client) (domain
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
+		err = fmt.Errorf("HTTP status is not valid: %d", response.StatusCode)
 		return 0, fmt.Errorf("%w: %s", err, p.getErrorMessage(response.Body))
 	}
 
@@ -189,19 +189,18 @@ func (p *Provider) getDomainID(ctx context.Context, client *http.Client) (domain
 	domains := obj.Data
 	switch len(domains) {
 	case 0:
-		return 0, fmt.Errorf("%w", errors.ErrDomainIDNotFound)
+		return 0, goerrors.New("ID not found in domain record")
 	case 1:
 	default:
-		return 0, fmt.Errorf("%w: %d records instead of 1",
-			errors.ErrResultsCountReceived, len(domains))
+		return 0, fmt.Errorf("wrong number of results received: %d records instead of 1", len(domains))
 	}
 
 	if domains[0].Status == "disabled" {
-		return 0, fmt.Errorf("%w", errors.ErrDomainDisabled)
+		return 0, goerrors.New("record disabled")
 	}
 
 	if domains[0].ID == nil {
-		return 0, fmt.Errorf("%w", errors.ErrDomainIDNotFound)
+		return 0, goerrors.New("ID not found in domain record")
 	}
 
 	return *domains[0].ID, nil
@@ -230,7 +229,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
+		err = fmt.Errorf("HTTP status is not valid: %d", response.StatusCode)
 		return 0, fmt.Errorf("%w: %s", err, p.getErrorMessage(response.Body))
 	}
 
@@ -297,7 +296,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
+		err = fmt.Errorf("HTTP status is not valid: %d", response.StatusCode)
 		return fmt.Errorf("%w: %s", err, p.getErrorMessage(response.Body))
 	}
 
@@ -310,10 +309,9 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client,
 
 	newIP, err := netip.ParseAddr(responseData.IP)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+		return fmt.Errorf("malformed IP address received: %w", err)
 	} else if newIP.Compare(ip) != 0 {
-		return fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
+		return fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 	}
 
 	return nil
@@ -354,7 +352,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
+		err = fmt.Errorf("HTTP status is not valid: %d", response.StatusCode)
 		return fmt.Errorf("%w: %s", err, p.getErrorMessage(response.Body))
 	}
 
@@ -367,10 +365,9 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	newIP, err := netip.ParseAddr(data.IP)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+		return fmt.Errorf("malformed IP address received: %w", err)
 	} else if newIP.Compare(ip) != 0 {
-		return fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
+		return fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 	}
 
 	return nil

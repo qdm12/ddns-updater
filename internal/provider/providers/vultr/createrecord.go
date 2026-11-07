@@ -11,7 +11,6 @@ import (
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
@@ -72,19 +71,19 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	switch response.StatusCode {
 	case http.StatusCreated:
 	case http.StatusBadRequest:
-		return fmt.Errorf("%w: %s", errors.ErrBadRequest, parseJSONErrorOrFullBody(bodyBytes))
+		return fmt.Errorf("bad request sent: %s", parseJSONErrorOrFullBody(bodyBytes))
 	case http.StatusUnauthorized, http.StatusForbidden:
-		return fmt.Errorf("%w: %s", errors.ErrAuth, parseJSONErrorOrFullBody(bodyBytes))
+		return fmt.Errorf("bad authentication: %s", parseJSONErrorOrFullBody(bodyBytes))
 	case http.StatusNotFound:
-		return fmt.Errorf("%w: %s", errors.ErrDomainNotFound, parseJSONErrorOrFullBody(bodyBytes))
+		return fmt.Errorf("domain not found: %s", parseJSONErrorOrFullBody(bodyBytes))
 	default:
-		return fmt.Errorf("%w: %s: %s", errors.ErrHTTPStatusNotValid,
+		return fmt.Errorf("HTTP status is not valid: %s: %s",
 			response.Status, parseJSONErrorOrFullBody(bodyBytes))
 	}
 
 	errorMessage := parseJSONError(bodyBytes)
 	if errorMessage != "" {
-		return fmt.Errorf("%w: %s", errors.ErrUnsuccessful, errorMessage)
+		return fmt.Errorf("unsuccessful result: %s", errorMessage)
 	}
 	return nil
 }

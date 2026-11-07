@@ -3,6 +3,7 @@ package zoneedit
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/ipextract"
@@ -58,14 +59,14 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, username, token string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case username == "":
-		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+		return errors.New("username is not set")
 	case token == "":
-		return fmt.Errorf("%w", errors.ErrTokenNotSet)
+		return errors.New("token is not set")
 	}
 	return nil
 }
@@ -142,7 +143,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid,
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s",
 			response.StatusCode, utils.ToSingleLine(s))
 	}
 
@@ -157,22 +158,21 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		}
 		newIP = ips[1]
 		if newIP.Compare(ip) != 0 {
-			return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-				errors.ErrIPReceivedMismatch, ip, newIP)
+			return netip.Addr{}, fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 		}
 		return newIP, nil
 	case s == "":
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoResult)
+		return netip.Addr{}, fmt.Errorf("%w", ddnserrors.ErrReceivedNoResult)
 	case strings.Contains(s, `error code="702"`),
 		strings.Contains(s, "minimum 600 seconds between requests"):
-		return netip.Addr{}, fmt.Errorf("%w: zoneedit requires 10 minutes between each request", errors.ErrBannedAbuse)
+		return netip.Addr{}, fmt.Errorf("%w: zoneedit requires 10 minutes between each request", ddnserrors.ErrBannedAbuse)
 	case strings.Contains(s, `error code="709"`),
 		strings.Contains(s, "invalid hostname"):
-		return netip.Addr{}, fmt.Errorf("%w: invalid request sent", errors.ErrBannedAbuse)
+		return netip.Addr{}, fmt.Errorf("%w: invalid request sent", ddnserrors.ErrBannedAbuse)
 	case strings.Contains(s, `error code="708"`),
 		strings.Contains(s, "failed login"):
-		return netip.Addr{}, fmt.Errorf("%w: for user %s", errors.ErrAuth, p.username)
+		return netip.Addr{}, fmt.Errorf("bad authentication: for user %s", p.username)
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("unknown response received: %s", utils.ToSingleLine(s))
 	}
 }

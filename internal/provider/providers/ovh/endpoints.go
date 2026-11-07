@@ -1,12 +1,9 @@
 package ovh
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 )
-
-var ErrEndpointUnknown = errors.New("short endpoint name unknown")
 
 func convertShortEndpoint(shortEndpoint string) (url *url.URL, err error) {
 	switch shortEndpoint {
@@ -25,5 +22,5 @@ func convertShortEndpoint(shortEndpoint string) (url *url.URL, err error) {
 	case "soyoustart-ca":
 		return url.Parse("https://ca.api.soyoustart.com/1.0")
 	}
-	return nil, fmt.Errorf("%w: %s", ErrEndpointUnknown, shortEndpoint)
+	return nil, fmt.Errorf("short endpoint name unknown: %s", shortEndpoint)
 }

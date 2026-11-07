@@ -2,10 +2,8 @@ package netcup
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net/http"
-
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 func (p *Provider) login(ctx context.Context, client *http.Client) (
@@ -43,7 +41,7 @@ func (p *Provider) login(ctx context.Context, client *http.Client) (
 	session = responseData.Session
 
 	if session == "" {
-		return "", fmt.Errorf("%w", errors.ErrSessionIsEmpty)
+		return "", errors.New("session received is empty")
 	}
 
 	return session, nil

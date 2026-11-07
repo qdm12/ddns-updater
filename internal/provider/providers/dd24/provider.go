@@ -3,6 +3,7 @@ package dd24
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -54,11 +54,11 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, password string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	if password == "" {
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+		return errors.New("password is not set")
 	}
 	return nil
 }
@@ -131,17 +131,16 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	switch {
 	case strings.Contains(s, "authorization failed"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
+		return netip.Addr{}, errors.New("bad authentication")
 	case s == "", strings.Contains(s, "success"):
 		return ip, nil
 	// TODO missing cases
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+		return netip.Addr{}, fmt.Errorf("unknown response received: %s", s)
 	}
 }

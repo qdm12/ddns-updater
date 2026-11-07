@@ -159,11 +159,9 @@ func (p *PubIP) ToDNSPOptions() (options []dns.Option) {
 	}
 }
 
-var ErrNoPublicIPDNSProvider = errors.New("no public IP DNS provider specified")
-
 func (p PubIP) validateDNSProviders() (err error) {
 	if len(p.DNSProviders) == 0 {
-		return fmt.Errorf("%w", ErrNoPublicIPDNSProvider)
+		return errors.New("no public IP DNS provider specified")
 	}
 
 	availableProviders := dns.ListProviders()
@@ -187,16 +185,11 @@ func (p PubIP) validateHTTPIPv6Providers() (err error) {
 	return validateHTTPIPProviders(p.HTTPIPv6Providers, ipversion.IP6)
 }
 
-var (
-	ErrNoPublicIPHTTPProvider = errors.New("no public IP HTTP provider specified")
-	ErrURLIsNotValidHTTPS     = errors.New("URL is not valid or not HTTPS")
-)
-
 func validateHTTPIPProviders(providerStrings []string,
 	version ipversion.IPVersion,
 ) (err error) {
 	if len(providerStrings) == 0 {
-		return fmt.Errorf("%w", ErrNoPublicIPHTTPProvider)
+		return errors.New("no public IP HTTP provider specified")
 	}
 
 	availableProviders := http.ListProvidersForVersion(version)
@@ -219,7 +212,7 @@ func validateHTTPIPProviders(providerStrings []string,
 		if strings.HasPrefix(providerString, "url:") {
 			url, err := url.Parse(providerString[4:])
 			if err != nil || url.Scheme != "https" {
-				return fmt.Errorf("%w: %s", ErrURLIsNotValidHTTPS, providerString)
+				return fmt.Errorf("URL is not valid or not HTTPS: %s", providerString)
 			}
 			continue
 		}
@@ -295,8 +288,6 @@ func (p *PubIP) read(r *reader.Reader, warner Warner) (err error) {
 	return nil
 }
 
-var ErrFetcherNotValid = errors.New("fetcher is not valid")
-
 func getFetchers(reader *reader.Reader) (http, dns *bool, err error) {
 	// TODO change to use reader.BoolPtr with retro-compatibility
 	s := reader.String("PUBLICIP_FETCHERS")
@@ -316,9 +307,8 @@ func getFetchers(reader *reader.Reader) (http, dns *bool, err error) {
 		case "dns":
 			*dns = true
 		default:
-			return nil, nil, fmt.Errorf(
-				"%w: %q at position %d of %d",
-				ErrFetcherNotValid, field, i+1, len(fields))
+			return nil, nil, fmt.Errorf("fetcher is not valid: %q at position %d of %d",
+				field, i+1, len(fields))
 		}
 	}
 

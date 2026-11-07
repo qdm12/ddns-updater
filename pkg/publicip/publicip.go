@@ -22,8 +22,6 @@ type Fetcher struct {
 	counter *uint32 // 32 bit for 32 bit systems
 }
 
-var ErrNoFetchTypeSpecified = errors.New("at least one fetcher type must be specified")
-
 func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f *Fetcher, err error) {
 	settings := settings{
 		dns:  dnsSettings,
@@ -52,7 +50,7 @@ func NewFetcher(dnsSettings DNSSettings, httpSettings HTTPSettings) (f *Fetcher,
 	}
 
 	if len(fetcher.fetchers) == 0 {
-		return nil, ErrNoFetchTypeSpecified
+		return nil, errors.New("at least one fetcher type must be specified")
 	}
 
 	return fetcher, nil

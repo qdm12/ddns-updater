@@ -1,7 +1,6 @@
 package http
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -51,11 +50,6 @@ func ListProvidersForVersion(version ipversion.IPVersion) (providers []Provider)
 	return providers
 }
 
-var (
-	ErrUnknownProvider   = errors.New("unknown public IP echo HTTP provider")
-	ErrProviderIPVersion = errors.New("provider does not support IP version")
-)
-
 func ValidateProvider(provider Provider, version ipversion.IPVersion) error {
 	if strings.HasPrefix(string(provider), "url:https://") { // custom HTTP url
 		return nil
@@ -65,13 +59,12 @@ func ValidateProvider(provider Provider, version ipversion.IPVersion) error {
 		if provider == possible {
 			_, ok := provider.url(version)
 			if !ok {
-				return fmt.Errorf("%w: %q for version %s",
-					ErrProviderIPVersion, provider, version.String())
+				return fmt.Errorf("provider does not support IP version: %q for version %s", provider, version.String())
 			}
 			return nil
 		}
 	}
-	return fmt.Errorf("%w: %s", ErrUnknownProvider, provider)
+	return fmt.Errorf("unknown public IP echo HTTP provider: %s", provider)
 }
 
 func (provider Provider) url(version ipversion.IPVersion) (url string, ok bool) { //nolint:gocyclo

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 func extractAPIError(response *http.Response) (err error) {
@@ -27,6 +25,5 @@ func extractAPIError(response *http.Response) (err error) {
 
 	_ = response.Body.Close()
 
-	return fmt.Errorf("%w: %s: %s: for query ID: %s",
-		errors.ErrHTTPStatusNotValid, response.Status, apiError.Message, queryID)
+	return fmt.Errorf("HTTP status is not valid: %s: %s: for query ID: %s", response.Status, apiError.Message, queryID)
 }

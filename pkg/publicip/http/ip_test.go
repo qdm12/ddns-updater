@@ -294,7 +294,7 @@ func Test_fetcher_ip(t *testing.T) {
 					banned: map[int]string{0: "banned", 1: "banned again"},
 				},
 			},
-			err:        ErrBanned,
+			err:        errBanned,
 			errMessage: "we got banned: banned (a), banned again (b)",
 		},
 		"record banned": {
@@ -316,7 +316,7 @@ func Test_fetcher_ip(t *testing.T) {
 					banned: map[int]string{0: "429 (get out)"},
 				},
 			},
-			err:        ErrBanned,
+			err:        errBanned,
 			errMessage: "we got banned: 429 (get out)",
 		},
 	}

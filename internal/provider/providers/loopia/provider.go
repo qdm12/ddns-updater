@@ -3,6 +3,7 @@ package loopia
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -58,17 +58,17 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, owner, username, password string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	// Loopia says it supports wildcards but cannot get it to work
 	case owner == "*":
-		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
+		return errors.New("owner cannot be \"*\"")
 	case username == "":
-		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+		return errors.New("username is not set")
 	case password == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+		return errors.New("password is not set")
 	}
 	return nil
 }
@@ -147,23 +147,22 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	// have only found 200 returned
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	switch {
 	case strings.HasPrefix(s, "nohost"),
 		strings.HasPrefix(s, constants.Notfqdn):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+		return netip.Addr{}, errors.New("hostname does not exist")
 	case strings.HasPrefix(s, "badrequest"),
 		strings.HasPrefix(s, "911"):
 		// 911 is returned for multiple issues: bad ip, bad request formats, etc
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBadRequest)
+		return netip.Addr{}, errors.New("bad request sent")
 	case strings.HasPrefix(s, "badauth"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
+		return netip.Addr{}, errors.New("bad authentication")
 	case strings.HasPrefix(s, "good"), strings.HasPrefix(s, "nochg"):
 		return ip, nil
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+		return netip.Addr{}, fmt.Errorf("unknown response received: %s", s)
 	}
 }

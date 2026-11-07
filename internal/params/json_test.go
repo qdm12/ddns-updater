@@ -13,7 +13,6 @@ func Test_extractFromDomainField(t *testing.T) {
 		domainField      string
 		domainRegistered string
 		owners           []string
-		errWrapped       error
 		errMessage       string
 	}{
 		"root_domain": {
@@ -43,7 +42,6 @@ func Test_extractFromDomainField(t *testing.T) {
 		},
 		"different_domains": {
 			domainField: "*.example.com,abc.something.com",
-			errWrapped:  ErrMultipleDomainsSpecified,
 			errMessage:  "multiple domains specified: \"example.com\" and \"something.com\"",
 		},
 		"goip.de": {
@@ -64,9 +62,10 @@ func Test_extractFromDomainField(t *testing.T) {
 
 			domainRegistered, owners, err := extractFromDomainField(testCase.domainField)
 
-			assert.ErrorIs(t, err, testCase.errWrapped)
-			if testCase.errWrapped != nil {
-				assert.EqualError(t, err, testCase.errMessage)
+			if testCase.errMessage == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.ErrorContains(t, err, testCase.errMessage)
 			}
 			assert.Equal(t, testCase.domainRegistered, domainRegistered)
 			assert.Equal(t, testCase.owners, owners)

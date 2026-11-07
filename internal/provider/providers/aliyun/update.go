@@ -8,7 +8,6 @@ import (
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
@@ -50,8 +49,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	switch response.StatusCode {
 	case http.StatusOK:
 	default:
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode,
+		return fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode,
 			utils.BodyToSingleLine(response.Body))
 	}
 

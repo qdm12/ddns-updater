@@ -61,8 +61,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode,
+		return fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode,
 			utils.BodyToSingleLine(response.Body))
 	}
 
@@ -78,8 +77,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	if err != nil {
 		return fmt.Errorf("json decoding response body: %w", err)
 	} else if newIP.Compare(ip) != 0 {
-		return fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
+		return fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 	}
 
 	if parsedJSON.Record.ID == "" {

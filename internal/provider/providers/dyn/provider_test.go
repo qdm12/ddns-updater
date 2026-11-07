@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +34,7 @@ func Test_Update(t *testing.T) {
 	testCases := map[string]struct {
 		body       string
 		newIP      netip.Addr
-		errWrapped error
+		errMessage string
 	}{
 		"good": {
 			body:  "good 203.218.80.114",
@@ -47,15 +46,15 @@ func Test_Update(t *testing.T) {
 		},
 		"notfqdn": {
 			body:       "notfqdn",
-			errWrapped: errors.ErrHostnameNotExists,
+			errMessage: "hostname does not exist",
 		},
 		"badrequest": {
 			body:       "badrequest",
-			errWrapped: errors.ErrBadRequest,
+			errMessage: "bad request sent",
 		},
 		"unknown": {
 			body:       "unexpected response",
-			errWrapped: errors.ErrUnknownResponse,
+			errMessage: "unknown response received",
 		},
 	}
 
@@ -83,8 +82,8 @@ func Test_Update(t *testing.T) {
 
 			newIP, err := provider.Update(context.Background(), client, ip)
 
-			if testCase.errWrapped != nil {
-				require.ErrorIs(t, err, testCase.errWrapped)
+			if testCase.errMessage != "" {
+				require.ErrorContains(t, err, testCase.errMessage)
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, testCase.newIP, newIP)

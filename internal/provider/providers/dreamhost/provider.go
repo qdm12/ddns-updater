@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -60,12 +60,11 @@ var keyRegex = regexp.MustCompile(`^[a-zA-Z0-9]{16}$`)
 func validateSettings(domain, key string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	if !keyRegex.MatchString(key) {
-		return fmt.Errorf("%w: key %q does not match regex %s",
-			errors.ErrKeyNotValid, key, keyRegex)
+		return fmt.Errorf("key is not valid: key %q does not match regex %s", key, keyRegex)
 	}
 	return nil
 }
@@ -122,7 +121,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	for _, data := range records.Data {
 		if data.Type == recordType && data.Record == utils.BuildURLQueryHostname(p.owner, p.domain) {
 			if data.Editable == "0" {
-				return netip.Addr{}, fmt.Errorf("%w", errors.ErrRecordNotEditable)
+				return netip.Addr{}, errors.New("record is not editable")
 			}
 			oldIP, err = netip.ParseAddr(data.Value)
 			if err == nil && ip.Compare(oldIP) == 0 { // constants.Success, nothing to change
@@ -202,8 +201,8 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return records, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return records, fmt.Errorf("HTTP status is not valid: %d: %s",
+			response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -213,7 +212,7 @@ func (p *Provider) getRecords(ctx context.Context, client *http.Client) (
 	}
 
 	if records.Result != constants.Success {
-		return records, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, records.Result)
+		return records, fmt.Errorf("unsuccessful result: %s", records.Result)
 	}
 	return records, nil
 }
@@ -248,8 +247,7 @@ func (p *Provider) removeRecord(ctx context.Context, client *http.Client, ip net
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	var dhResponse dreamhostReponse
@@ -260,8 +258,7 @@ func (p *Provider) removeRecord(ctx context.Context, client *http.Client, ip net
 	}
 
 	if dhResponse.Result != constants.Success { // this should not happen
-		return fmt.Errorf("%w: %s - %s",
-			errors.ErrUnsuccessful, dhResponse.Result, dhResponse.Data)
+		return fmt.Errorf("unsuccessful result: %s - %s", dhResponse.Result, dhResponse.Data)
 	}
 	return nil
 }
@@ -296,8 +293,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	var dhResponse dreamhostReponse
@@ -308,8 +304,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	}
 
 	if dhResponse.Result != constants.Success {
-		return fmt.Errorf("%w: %s - %s",
-			errors.ErrUnsuccessful, dhResponse.Result, dhResponse.Data)
+		return fmt.Errorf("unsuccessful result: %s - %s", dhResponse.Result, dhResponse.Data)
 	}
 	return nil
 }

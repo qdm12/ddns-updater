@@ -69,7 +69,7 @@ func (r *Reader) getProvidersFromFile(filePath string) (
 	}
 	r.logger.Debug("config read: " + string(bytes))
 
-	return extractAllSettings(bytes)
+	return extractAllSettings(bytes, r.readFile)
 }
 
 // getProvidersFromEnv obtain the update settings from the environment variable CONFIG.
@@ -86,7 +86,7 @@ func (r *Reader) getProvidersFromEnv(filePath string) (
 
 	b := []byte(s)
 
-	providers, warnings, err = extractAllSettings(b)
+	providers, warnings, err = extractAllSettings(b, r.readFile)
 	if err != nil {
 		return providers, warnings, fmt.Errorf("configuration given: %w", err)
 	}
@@ -110,19 +110,14 @@ var (
 	errUnmarshalRaw    = errors.New("cannot unmarshal raw configuration")
 )
 
-func extractAllSettings(jsonBytes []byte) (
+func extractAllSettings(jsonBytes []byte,
+	readFile func(filename string) ([]byte, error),
+) (
 	allProviders []provider.Provider, warnings []string, err error,
 ) {
-	config := struct {
-		CommonSettings []commonSettings `json:"settings"`
-	}{}
 	rawConfig := struct {
 		Settings []json.RawMessage `json:"settings"`
 	}{}
-	err = json.Unmarshal(jsonBytes, &config)
-	if err != nil {
-		return nil, nil, fmt.Errorf("%w: %w", errUnmarshalCommon, err)
-	}
 	err = json.Unmarshal(jsonBytes, &rawConfig)
 	if err != nil {
 		return nil, nil, fmt.Errorf("%w: %w", errUnmarshalRaw, err)
@@ -133,8 +128,17 @@ func extractAllSettings(jsonBytes []byte) (
 		return nil, nil, fmt.Errorf("getting retro-compatible global IPV6 suffix: %w", err)
 	}
 
-	for i, common := range config.CommonSettings {
-		newProvider, newWarnings, err := makeSettingsFromObject(common, rawConfig.Settings[i],
+	for i, rawSettings := range rawConfig.Settings {
+		rawSettings, err = resolveFileFields(rawSettings, readFile)
+		if err != nil {
+			return nil, warnings, fmt.Errorf("settings %d: %w", i+1, err)
+		}
+		var common commonSettings
+		err = json.Unmarshal(rawSettings, &common)
+		if err != nil {
+			return nil, warnings, fmt.Errorf("%w: %w", errUnmarshalCommon, err)
+		}
+		newProvider, newWarnings, err := makeSettingsFromObject(common, rawSettings,
 			retroIPv6Suffix)
 		warnings = append(warnings, newWarnings...)
 		if err != nil {

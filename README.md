@@ -286,6 +286,20 @@ Note that:
 
 - you can specify multiple owners/hosts for the same domain using a comma separated list. For example with `"domain": "example.com,sub.example.com,sub2.example.com",`.
 ⚠️ this is a bit different for DuckDNS and GoIP, see their respective documentation.
+- any field of a setting can be read from a file by appending `_file` to its name and giving the file path as value, for example `"token_file": "/run/secrets/desec_token"` instead of `"token": "..."`. This keeps secrets such as tokens and passwords out of the configuration, for example with [Docker secrets](https://docs.docker.com/compose/how-tos/use-secrets/). A single trailing newline in the file is ignored, and setting both `token` and `token_file` is an error.
+
+    ```yaml
+    services:
+      ddns-updater:
+        image: qmcgaw/ddns-updater
+        environment:
+          - CONFIG={"settings":[{"provider":"desec","domain":"sub.example.dedyn.io","token_file":"/run/secrets/desec_token"}]}
+        secrets:
+          - desec_token
+    secrets:
+      desec_token:
+        file: ./desec_token.txt
+    ```
 
 ### Environment variables
 

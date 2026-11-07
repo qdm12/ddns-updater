@@ -102,9 +102,6 @@ func (p *Provider) BuildDomainName() string {
 	return utils.BuildDomainName(p.owner, p.domain)
 }
 
-// recordFQDN formats the subdomain as per Aliyun API, keeping "*" for
-// wildcard records. BuildDomainName() replaces "*" with "any", which
-// does not match the wildcard record in API lookups.
 func (p *Provider) recordFQDN() string {
 	if p.owner == "@" {
 		return p.domain

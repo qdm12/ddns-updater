@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -164,7 +166,21 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 
 	logProvidersCount(len(providers), logger)
 
-	client := &http.Client{Timeout: config.Client.Timeout}
+	resolverSettings := resolver.Settings{
+		Address: config.Resolver.Address,
+		Timeout: config.Resolver.Timeout,
+		DOHURL:  config.Resolver.DOHURL,
+	}
+	hostResolver, err := resolver.New(resolverSettings)
+	if err != nil {
+		return fmt.Errorf("creating resolver: %w", err)
+	}
+
+	client, err := newHTTPClient(config.Client.Timeout, hostResolver,
+		*config.Resolver.DOHURL != "")
+	if err != nil {
+		return fmt.Errorf("creating HTTP client: %w", err)
+	}
 	defer client.CloseIdleConnections()
 
 	err = health.CheckHTTP(ctx, client)
@@ -194,24 +210,15 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		return err
 	}
 
-	resolverSettings := resolver.Settings{
-		Address: config.Resolver.Address,
-		Timeout: config.Resolver.Timeout,
-	}
-	resolver, err := resolver.New(resolverSettings)
-	if err != nil {
-		return fmt.Errorf("creating resolver: %w", err)
-	}
-
 	hioClient := healthchecksio.New(client, config.Health.HealthchecksioBaseURL,
 		*config.Health.HealthchecksioUUID)
 
 	debugEnabled := config.Logger.Level == log.LevelDebug.String()
 	updater := update.NewUpdater(db, client, shoutrrrClient, logger, timeNow, debugEnabled)
 	updaterService := update.NewService(db, updater, ipGetter, config.Update.Period,
-		config.Update.Cooldown, logger, resolver, timeNow, hioClient)
+		config.Update.Cooldown, logger, hostResolver, timeNow, hioClient)
 
-	healthServer, err := createHealthServer(db, resolver, logger,
+	healthServer, err := createHealthServer(db, resolver.NewIPResolver(hostResolver), logger,
 		*config.Health.ServerAddress, timeNow)
 	if err != nil {
 		return fmt.Errorf("creating health server: %w", err)
@@ -351,6 +358,67 @@ func exitHealthchecksio(hioClient *healthchecksio.Client,
 	err := hioClient.Ping(ctx, state)
 	if err != nil {
 		logger.Error(err.Error())
+	}
+}
+
+// newHTTPClient creates the HTTP client used to contact the providers.
+// When a DNS over HTTPS resolver is used, the host names are resolved
+// through it, since the local DNS servers may not resolve them, for
+// example when they filter dynamic DNS domains.
+func newHTTPClient(timeout time.Duration, lookupIPer resolver.LookupIPer,
+	useDoH bool,
+) (client *http.Client, err error) {
+	defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		return nil, errors.New("default HTTP transport is not a *http.Transport")
+	}
+
+	transport := defaultTransport.Clone()
+	if useDoH {
+		transport.DialContext = dohDialContext(lookupIPer)
+	}
+
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: transport,
+	}, nil
+}
+
+func dohDialContext(lookupIPer resolver.LookupIPer) (
+	dialContext func(ctx context.Context, network, addr string) (conn net.Conn, err error),
+) {
+	dialer := &net.Dialer{Timeout: 10 * time.Second}
+
+	return func(ctx context.Context, network, addr string) (conn net.Conn, err error) {
+		host, port, err := net.SplitHostPort(addr)
+		if err != nil {
+			return nil, fmt.Errorf("splitting host and port from %s: %w", addr, err)
+		}
+
+		lookupNetwork := "ip"
+		switch network {
+		case "tcp4":
+			lookupNetwork = "ip4"
+		case "tcp6":
+			lookupNetwork = "ip6"
+		}
+
+		addresses, err := lookupIPer.LookupNetIP(ctx, lookupNetwork, host)
+		if err != nil {
+			return nil, fmt.Errorf("resolving %s: %w", host, err)
+		}
+
+		errs := make([]error, 0, len(addresses))
+		for _, address := range addresses {
+			conn, err := dialer.DialContext(ctx, network,
+				net.JoinHostPort(address.String(), port))
+			if err == nil {
+				return conn, nil
+			}
+			errs = append(errs, err)
+		}
+
+		return nil, fmt.Errorf("dialing %s: %w", addr, errors.Join(errs...))
 	}
 }
 

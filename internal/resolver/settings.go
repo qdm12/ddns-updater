@@ -11,12 +11,15 @@ import (
 type Settings struct {
 	Address *string
 	Timeout time.Duration
+	// DOHURL is the DNS over HTTPS server URL to use, if any.
+	DOHURL *string
 }
 
 func (s *Settings) setDefaults() {
 	s.Address = gosettings.DefaultPointer(s.Address, "")
 	const defaultTimeout = 5 * time.Second
 	s.Timeout = gosettings.DefaultComparable(s.Timeout, defaultTimeout)
+	s.DOHURL = gosettings.DefaultPointer(s.DOHURL, "")
 }
 
 func (s Settings) validate() (err error) {

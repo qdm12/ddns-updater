@@ -314,6 +314,7 @@ Note that:
 | `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file |
 | `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`. |
 | `RESOLVER_ADDRESS` | Your network DNS | A plaintext DNS address to use to resolve your domain names defined in your settings only. For example it can be `1.1.1.1:53`. This is useful for split dns, see [#389](https://github.com/qdm12/ddns-updater/issues/389) |
+| `RESOLVER_DOH_URL` | | A [DNS over HTTPS](https://datatracker.ietf.org/doc/html/rfc8484) server URL to resolve the provider and domain names with, for example `https://cloudflare-dns.com/dns-query`. It takes precedence over `RESOLVER_ADDRESS` and the system DNS. This is useful when the local DNS servers do not resolve some names, or when plain DNS on port 53 is blocked on the network |
 | `LOG_LEVEL` | `info` | Level of logging, `debug`, `info`, `warning` or `error` |
 | `LOG_CALLER` | `hidden` | Show caller per log line, `hidden` or `short` |
 | `SHOUTRRR_ADDRESSES` | | (optional) Comma separated list of [Shoutrrr addresses](https://containrrr.dev/shoutrrr/v0.8/services/overview/) (notification services) |

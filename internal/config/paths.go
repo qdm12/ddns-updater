@@ -14,6 +14,9 @@ import (
 type Paths struct {
 	DataDir *string
 	Config  *string
+	// SettingsFile is the path of the JSON settings file, which can be
+	// re-read at runtime, contrary to the environment variables.
+	SettingsFile *string
 	// Umask is the custom umask to use for the system, if different than zero.
 	// If it is set to zero, the system umask is unchanged.
 	// It cannot be nil in the internal state.
@@ -24,6 +27,8 @@ func (p *Paths) setDefaults() {
 	p.DataDir = gosettings.DefaultPointer(p.DataDir, "./data")
 	defaultConfig := filepath.Join(*p.DataDir, "config.json")
 	p.Config = gosettings.DefaultPointer(p.Config, defaultConfig)
+	defaultSettingsFile := filepath.Join(*p.DataDir, "settings.json")
+	p.SettingsFile = gosettings.DefaultPointer(p.SettingsFile, defaultSettingsFile)
 	p.Umask = gosettings.DefaultPointer(p.Umask, fs.FileMode(0))
 }
 
@@ -39,6 +44,7 @@ func (p Paths) toLinesNode() *gotree.Node {
 	node := gotree.New("Paths")
 	node.Appendf("Data directory: %s", *p.DataDir)
 	node.Appendf("Config file: %s", *p.Config)
+	node.Appendf("Settings file: %s", *p.SettingsFile)
 	umaskString := "system default"
 	if *p.Umask != 0 {
 		umaskString = p.Umask.String()
@@ -50,6 +56,7 @@ func (p Paths) toLinesNode() *gotree.Node {
 func (p *Paths) read(reader *reader.Reader) (err error) {
 	p.DataDir = reader.Get("DATADIR")
 	p.Config = reader.Get("CONFIG_FILEPATH")
+	p.SettingsFile = reader.Get("SETTINGS_FILEPATH")
 
 	umaskString := reader.String("UMASK")
 	if umaskString != "" {

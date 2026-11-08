@@ -18,6 +18,7 @@ type handlers struct {
 	// Objects
 	db            Database
 	runner        UpdateForcer
+	reloader      ConfigReloader
 	indexTemplate *template.Template
 	// Mockable functions
 	timeNow func() time.Time
@@ -27,7 +28,7 @@ type handlers struct {
 var uiFS embed.FS
 
 func newHandler(ctx context.Context, rootURL string,
-	db Database, runner UpdateForcer,
+	db Database, runner UpdateForcer, reloader ConfigReloader,
 ) http.Handler {
 	indexTemplate := template.Must(template.ParseFS(uiFS, "ui/index.html"))
 
@@ -41,8 +42,9 @@ func newHandler(ctx context.Context, rootURL string,
 		db:            db,
 		indexTemplate: indexTemplate,
 		// TODO build information
-		timeNow: time.Now,
-		runner:  runner,
+		timeNow:  time.Now,
+		runner:   runner,
+		reloader: reloader,
 	}
 
 	router := chi.NewRouter()
@@ -57,6 +59,8 @@ func newHandler(ctx context.Context, rootURL string,
 	router.Get(rootURL+"/", handlers.index)
 
 	router.Get(rootURL+"/update", handlers.update)
+
+	router.Get(rootURL+"/reload", handlers.reload)
 
 	router.Handle(rootURL+"/static/*", http.StripPrefix(rootURL+"/static/", http.FileServerFS(staticFolder)))
 

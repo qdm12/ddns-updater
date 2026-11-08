@@ -9,10 +9,11 @@ import (
 
 type Service struct {
 	// Injected fields
-	backupPeriod time.Duration
-	dataDir      string
-	outputDir    string
-	logger       Logger
+	backupPeriod   time.Duration
+	dataDir        string
+	outputDir      string
+	configFilepath string
+	logger         Logger
 
 	// Internal fields
 	stopCh chan<- struct{}
@@ -20,13 +21,14 @@ type Service struct {
 }
 
 func New(backupPeriod time.Duration,
-	dataDir, outputDir string, logger Logger,
+	dataDir, outputDir, configFilepath string, logger Logger,
 ) *Service {
 	return &Service{
-		logger:       logger,
-		backupPeriod: backupPeriod,
-		dataDir:      dataDir,
-		outputDir:    outputDir,
+		logger:         logger,
+		backupPeriod:   backupPeriod,
+		dataDir:        dataDir,
+		outputDir:      outputDir,
+		configFilepath: configFilepath,
 	}
 }
 
@@ -46,7 +48,7 @@ func (s *Service) Start(ctx context.Context) (runError <-chan error, startErr er
 	done := make(chan struct{})
 	s.done = done
 	go run(ready, runErrorCh, stopCh, done,
-		s.outputDir, s.dataDir, s.backupPeriod, s.logger)
+		s.outputDir, s.dataDir, s.configFilepath, s.backupPeriod, s.logger)
 	select {
 	case <-ready:
 	case <-ctx.Done():
@@ -56,8 +58,8 @@ func (s *Service) Start(ctx context.Context) (runError <-chan error, startErr er
 }
 
 func run(ready chan<- struct{}, runError chan<- error, stopCh <-chan struct{},
-	done chan<- struct{}, outputDir, dataDir string, backupPeriod time.Duration,
-	logger Logger,
+	done chan<- struct{}, outputDir, dataDir, configFilepath string,
+	backupPeriod time.Duration, logger Logger,
 ) {
 	defer close(done)
 
@@ -81,7 +83,7 @@ func run(ready chan<- struct{}, runError chan<- error, stopCh <-chan struct{},
 		}
 		err := zipFiles(
 			filepath.Join(outputDir, makeZipFileName()),
-			filepath.Join(dataDir, "config.json"),
+			configFilepath,
 			filepath.Join(dataDir, "updates.json"),
 		)
 		if err != nil {

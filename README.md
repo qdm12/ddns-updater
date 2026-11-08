@@ -54,6 +54,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - DDNSS.de
   - deSEC
   - DigitalOcean
+  - DNSExit
   - Domeneshop
   - DonDominio
   - DNSOMatic
@@ -232,6 +233,7 @@ Check the documentation for your DNS provider:
 - [DDNSS.de](docs/ddnss.de.md)
 - [deSEC](docs/desec.md)
 - [DigitalOcean](docs/digitalocean.md)
+- [DNSExit](docs/dnsexit.md)
 - [Domeneshop](docs/domeneshop.md)
 - [DonDominio](docs/dondominio.md)
 - [DNSOMatic](docs/dnsomatic.md)

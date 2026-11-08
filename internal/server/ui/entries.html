@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Records - DDNS Updater</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="{{.RootURL}}/static/favicon.svg" sizes="any" type="image/svg+xml">
+  <link rel="icon" href="{{.RootURL}}/static/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="{{.RootURL}}/static/styles.css" type="text/css">
+</head>
+
+<body>
+  <div class="toolbar">
+    <a class="button-link" href="{{.RootURL}}/">Status</a>
+    <a class="button-link" href="{{.RootURL}}/entries/new">Add a record</a>
+  </div>
+
+  {{if .EditingDisabledReason}}
+  <div class="banner banner-warning" role="status">{{.EditingDisabledReason}}</div>
+  {{end}}
+
+  {{if .Error}}
+  <div class="banner banner-error" role="alert">{{.Error}}</div>
+  {{end}}
+
+  <h1>Records</h1>
+
+  <table role="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Provider</th>
+        <th>Domain</th>
+        <th>IP version</th>
+        <th>IPv6 suffix</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Entries}}
+      <tr>
+        <td data-label="#">{{.Index}}</td>
+        <td data-label="Provider">{{.Provider}}</td>
+        <td data-label="Domain">{{.Domain}}</td>
+        <td data-label="IP version">{{if .IPVersion}}{{.IPVersion}}{{else}}default{{end}}</td>
+        <td data-label="IPv6 suffix">{{.IPv6Suffix}}</td>
+        <td data-label="Actions" class="row-actions">
+          {{if not $.EditingDisabledReason}}
+          <a class="button-link" href="{{$.RootURL}}/entries/{{.Index}}/edit">Edit</a>
+          <form method="post" action="{{$.RootURL}}/entries/{{.Index}}/delete"
+            onsubmit="return confirm('Delete this record?');">
+            <button type="submit" class="danger">Delete</button>
+          </form>
+          {{end}}
+        </td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="6">No records yet. Use <strong>Add a record</strong> to create one.</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+
+  <p class="hint">
+    Records are stored in <code>{{.ConfigPath}}</code>. Changes are validated
+    and applied immediately, no restart is needed.
+  </p>
+</body>
+
+</html>

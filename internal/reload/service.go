@@ -88,10 +88,15 @@ type Result struct {
 // Reload re-reads the records configuration file and the settings file.
 // If the configuration file cannot be read or parsed, the records are
 // left untouched and an error is returned.
-func (s *Service) Reload(ctx context.Context) (result Result, err error) {
+func (s *Service) Reload(_ context.Context) (result Result, err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+	return s.reloadLocked()
+}
 
+// reloadLocked re-reads the records configuration file and the settings
+// file. The caller must hold the service mutex.
+func (s *Service) reloadLocked() (result Result, err error) {
 	providers, warnings, err := s.jsonReader.JSONProviders(s.configFilePath)
 	for _, warning := range warnings {
 		s.logger.Warn(warning)

@@ -219,6 +219,44 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	return providers, warnings, nil
 }
 
+// ErrInvalidEntry is returned when a settings entry is invalid.
+var ErrInvalidEntry = errors.New("invalid settings entry")
+
+// ParseSettings parses the JSON content of a configuration file, or of the
+// CONFIG environment variable, and returns the providers it defines.
+func ParseSettings(jsonBytes []byte) (
+	providers []provider.Provider, warnings []string, err error,
+) {
+	return extractAllSettings(jsonBytes)
+}
+
+// ValidateEntry validates a single settings entry, as found in the
+// "settings" array of the configuration file, and returns the providers it
+// defines, one per owner found in the domain field.
+func ValidateEntry(entry json.RawMessage) (
+	providers []provider.Provider, warnings []string, err error,
+) {
+	var common commonSettings
+	err = json.Unmarshal(entry, &common)
+	if err != nil {
+		return nil, nil, fmt.Errorf("%w: decoding entry: %w", ErrInvalidEntry, err)
+	}
+	if strings.TrimSpace(common.Provider) == "" {
+		return nil, nil, fmt.Errorf("%w: provider is not set", ErrInvalidEntry)
+	}
+
+	retroIPv6Suffix, err := getRetroIPv6Suffix()
+	if err != nil {
+		return nil, nil, fmt.Errorf("getting retro-compatible global IPV6 suffix: %w", err)
+	}
+
+	providers, warnings, err = makeSettingsFromObject(common, entry, retroIPv6Suffix)
+	if err != nil {
+		return nil, warnings, fmt.Errorf("%w: %w", ErrInvalidEntry, err)
+	}
+	return providers, warnings, nil
+}
+
 func extractFromDomainField(domainField string) (domainRegistered string,
 	owners []string, err error,
 ) {

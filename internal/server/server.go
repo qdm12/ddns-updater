@@ -8,9 +8,10 @@ import (
 
 func New(ctx context.Context, address, rootURL string, db Database,
 	logger Logger, runner UpdateForcer, reloader ConfigReloader,
+	entryManager EntryManager,
 ) (server *httpserver.Server, err error) {
 	return httpserver.New(httpserver.Settings{
-		Handler: newHandler(ctx, rootURL, db, runner, reloader),
+		Handler: newHandler(ctx, rootURL, db, runner, reloader, entryManager),
 		Address: &address,
 		Logger:  logger,
 	})

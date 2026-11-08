@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>{{.Title}} - DDNS Updater</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="{{.RootURL}}/static/favicon.svg" sizes="any" type="image/svg+xml">
+  <link rel="icon" href="{{.RootURL}}/static/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="{{.RootURL}}/static/styles.css" type="text/css">
+</head>
+
+<body>
+  <div class="toolbar">
+    <a class="button-link" href="{{.RootURL}}/entries">Back to records</a>
+    <a class="button-link" href="{{.RootURL}}/">Status</a>
+  </div>
+
+  {{if .EditingDisabledReason}}
+  <div class="banner banner-warning" role="status">{{.EditingDisabledReason}}</div>
+  {{end}}
+
+  {{if .Error}}
+  <div class="banner banner-error" role="alert">{{.Error}}</div>
+  {{end}}
+
+  <h1>{{.Title}}</h1>
+
+  <!-- Choosing a provider reloads this page with the provider settings.
+       It is a separate GET form so that no form value ends up in the URL. -->
+  <form method="get" action="{{.LoadAction}}" class="provider-form">
+    <label for="provider-choice">Provider</label>
+    <select id="provider-choice" name="provider" onchange="this.form.submit()">
+      <option value="">Choose a provider...</option>
+      {{range .Providers}}
+      <option value="{{.Name}}"{{if eq .Name $.Selected.Name}} selected{{end}}>{{.Label}} ({{.Name}})</option>
+      {{end}}
+    </select>
+    <noscript><button type="submit">Show provider settings</button></noscript>
+  </form>
+
+  {{if .Selected.Name}}
+  <form method="post" action="{{.Action}}" class="entry-form" autocomplete="off">
+    <input type="hidden" name="provider" value="{{.Selected.Name}}">
+
+    <fieldset{{if .EditingDisabledReason}} disabled{{end}}>
+      <legend>{{.Selected.Label}}</legend>
+      <p class="hint">
+        Provider specific settings are documented in the
+        <a href="{{.Selected.DocsURL}}" target="_blank" rel="noopener noreferrer">{{.Selected.Label}}
+          documentation</a>.
+      </p>
+
+      {{range .Selected.Fields}}
+      <div class="form-row">
+        <label for="field_{{.Key}}">
+          {{.Label}}
+          {{if .Secret}}<span class="badge">secret</span>{{end}}
+          <code>{{.Key}}</code>
+        </label>
+        {{if eq .Kind "bool"}}
+        <input type="checkbox" id="field_{{.Key}}" name="field_{{.Key}}" {{if index $.FieldValues .Key}}checked{{end}}>
+        {{else if eq .Kind "number"}}
+        <input type="number" step="any" id="field_{{.Key}}" name="field_{{.Key}}"
+          value="{{index $.FieldValues .Key}}">
+        {{else if eq .Kind "json"}}
+        <textarea id="field_{{.Key}}" name="field_{{.Key}}" rows="6" spellcheck="false"
+          class="secret-input">{{index $.FieldValues .Key}}</textarea>
+        {{else if .Secret}}
+        <input type="password" id="field_{{.Key}}" name="field_{{.Key}}"
+          value="{{index $.FieldValues .Key}}" class="secret-input" autocomplete="new-password">
+        {{else}}
+        <input type="text" id="field_{{.Key}}" name="field_{{.Key}}"
+          value="{{index $.FieldValues .Key}}">
+        {{end}}
+        {{if .Help}}<small class="help">{{.Help}}</small>{{end}}
+      </div>
+      {{end}}
+    </fieldset>
+
+    <fieldset{{if .EditingDisabledReason}} disabled{{end}}>
+      <legend>Common settings</legend>
+
+      <div class="form-row">
+        <label for="domain">Domain <span class="required">required</span> <code>domain</code></label>
+        <input type="text" id="domain" name="domain" value="{{.Domain}}" required size="40"
+          placeholder="example.com, sub.example.com or *.example.com">
+        <small class="help">
+          Root domain, subdomain or wildcard. Separate several owners with a
+          comma, for example <code>www.example.com,example.com</code>.
+        </small>
+      </div>
+
+      <div class="form-row">
+        <label for="ip_version">IP version <code>ip_version</code></label>
+        <select id="ip_version" name="ip_version">
+          <option value=""{{if eq .IPVersion ""}} selected{{end}}>Default (IPv4 or IPv6)</option>
+          <option value="ipv4"{{if eq .IPVersion "ipv4"}} selected{{end}}>IPv4</option>
+          <option value="ipv6"{{if eq .IPVersion "ipv6"}} selected{{end}}>IPv6</option>
+          <option value="ipv4 or ipv6"{{if eq .IPVersion "ipv4 or ipv6"}} selected{{end}}>IPv4 or IPv6</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label for="ipv6_suffix">IPv6 suffix <code>ipv6_suffix</code></label>
+        <input type="text" id="ipv6_suffix" name="ipv6_suffix" value="{{.IPv6Suffix}}"
+          placeholder="::1234" size="20">
+        <small class="help">
+          Optional. Only used when your public IPv6 prefix changes while the
+          host suffix stays the same.
+        </small>
+      </div>
+    </fieldset>
+
+    <div class="form-actions">
+      <button type="submit" class="primary">{{if .IsEdit}}Save changes{{else}}Add record{{end}}</button>
+      <a class="button-link" href="{{.RootURL}}/entries">Cancel</a>
+      <label class="inline-check">
+        <input type="checkbox" id="show-secrets" onchange="toggleSecrets(this.checked)">
+        Show secret values
+      </label>
+    </div>
+  </form>
+  {{else}}
+  <p class="hint">Choose a provider to see its settings.</p>
+  {{end}}
+
+  <p class="hint">The record is written to <code>{{.ConfigPath}}</code>.</p>
+
+  <script>
+    function toggleSecrets(show) {
+      var inputs = document.querySelectorAll("input.secret-input, textarea.secret-input");
+      for (var i = 0; i < inputs.length; i++) {
+        if (inputs[i].tagName === "INPUT") {
+          inputs[i].type = show ? "text" : "password";
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>

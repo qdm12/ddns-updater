@@ -7,6 +7,7 @@ import (
 	"net/netip"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/constants"
@@ -26,6 +27,14 @@ type Service struct {
 	logger    Logger
 	timeNow   func() time.Time
 	hioClient HealthchecksIOClient
+
+	// settingsMutex guards the period and cooldown fields, which can be
+	// modified at runtime through SetPeriod and SetCooldown.
+	settingsMutex sync.RWMutex
+	// reset is signaled when the period changes, so that the run
+	// goroutine can reset its ticker. It is buffered with a size of one,
+	// so that a reset signal is never lost.
+	reset chan struct{}
 
 	// Service lifecycle
 	runCancel   context.CancelFunc
@@ -50,6 +59,54 @@ func NewService(db Database, updater UpdaterInterface, ipGetter PublicIPFetcher,
 		logger:      logger,
 		timeNow:     timeNow,
 		hioClient:   hioClient,
+		reset:       make(chan struct{}, 1),
+	}
+}
+
+// SetPeriod sets the period between two public IP address checks.
+// A non positive period is ignored, as is a period identical to the
+// current one.
+func (s *Service) SetPeriod(period time.Duration) {
+	s.settingsMutex.Lock()
+	defer s.settingsMutex.Unlock()
+	if period <= 0 || period == s.period {
+		return
+	}
+	s.period = period
+	s.signalReset()
+}
+
+// SetCooldown sets the cooldown duration between two updates for a
+// record. A negative cooldown is ignored, as is a cooldown identical
+// to the current one.
+func (s *Service) SetCooldown(cooldown time.Duration) {
+	s.settingsMutex.Lock()
+	defer s.settingsMutex.Unlock()
+	if cooldown < 0 || cooldown == s.cooldown {
+		return
+	}
+	s.cooldown = cooldown
+}
+
+func (s *Service) getPeriod() time.Duration {
+	s.settingsMutex.RLock()
+	defer s.settingsMutex.RUnlock()
+	return s.period
+}
+
+func (s *Service) getCooldown() time.Duration {
+	s.settingsMutex.RLock()
+	defer s.settingsMutex.RUnlock()
+	return s.cooldown
+}
+
+// signalReset notifies the run goroutine that its ticker must be reset.
+// It never blocks, and a single pending signal is enough since the run
+// goroutine always reads the latest period when resetting its ticker.
+func (s *Service) signalReset() {
+	select {
+	case s.reset <- struct{}{}:
+	default:
 	}
 }
 
@@ -169,11 +226,11 @@ func (s *Service) shouldUpdateRecord(ctx context.Context, record librecords.Reco
 ) (update bool) {
 	now := s.timeNow()
 
-	isWithinCooldown := now.Sub(record.History.GetSuccessTime()) < s.cooldown
+	isWithinCooldown := now.Sub(record.History.GetSuccessTime()) < s.getCooldown()
 	if isWithinCooldown {
 		s.logger.Debug(fmt.Sprintf(
 			"record %s is within cooldown period of %s, skipping update",
-			recordToLogString(record), s.cooldown))
+			recordToLogString(record), s.getCooldown()))
 		return false
 	}
 
@@ -408,7 +465,7 @@ func (s *Service) run(ctx context.Context, ready chan<- struct{},
 	done chan<- struct{},
 ) {
 	defer close(done)
-	ticker := time.NewTicker(s.period)
+	ticker := time.NewTicker(s.getPeriod())
 	close(ready)
 	for {
 		select {
@@ -416,6 +473,8 @@ func (s *Service) run(ctx context.Context, ready chan<- struct{},
 			s.updateNecessary(ctx)
 		case <-s.force:
 			s.forceResult <- s.updateNecessary(ctx)
+		case <-s.reset:
+			ticker.Reset(s.getPeriod())
 		case <-ctx.Done():
 			ticker.Stop()
 			return

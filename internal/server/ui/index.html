@@ -11,6 +11,15 @@
 </head>
 
 <body>
+  <div class="toolbar">
+    <button type="button" id="update-now" onclick="updateNow()">Update now</button>
+    <button type="button" id="reload-config" onclick="reloadConfig()">Reload config</button>
+    <label for="period-input">Period</label>
+    <input type="text" id="period-input" placeholder="e.g. 1m" size="8">
+    <button type="button" id="set-period" onclick="setPeriod()">Set period</button>
+    <button type="button" id="live-toggle" onclick="toggleLive()" title="Automatically refresh the records">Live: off</button>
+    <span id="status" class="status"></span>
+  </div>
   <table role="table">
     <thead>
       <tr>
@@ -51,6 +60,141 @@
     <div>by <a href="https://github.com/qdm12">Quentin McGaw</a> / UI reworked by <a
         href="https://github.com/fuse314">Gottfried Mayer</a></div>
   </footer>
+  <script>
+    const liveInterval = 15000;
+    const liveStorageKey = "ddns-updater-live";
+    let liveTimer = null;
+
+    function setStatus(message, isError) {
+      const status = document.getElementById("status");
+      status.textContent = message;
+      status.className = isError ? "status status-error" : "status";
+    }
+
+    async function request(path) {
+      const response = await fetch(path);
+      const text = await response.text();
+      if (!response.ok) {
+        throw new Error(text || response.statusText);
+      }
+      return text;
+    }
+
+    async function updateNow() {
+      setStatus("Updating...", false);
+      try {
+        const message = await request("update");
+        setStatus(message, false);
+        await refreshTable();
+      } catch (error) {
+        setStatus("Update failed: " + error.message, true);
+      }
+    }
+
+    async function reloadConfig() {
+      setStatus("Reloading...", false);
+      try {
+        const message = await request("reload");
+        setStatus(message, false);
+        window.setTimeout(function () { window.location.reload(); }, 500);
+      } catch (error) {
+        setStatus("Reload failed: " + error.message, true);
+      }
+    }
+
+    async function setPeriod() {
+      const input = document.getElementById("period-input");
+      const period = input.value.trim();
+      if (!period) {
+        setStatus("Please enter a period, for example 1m", true);
+        return;
+      }
+      setStatus("Setting period...", false);
+      try {
+        const message = await request("reload?period=" + encodeURIComponent(period));
+        setStatus(message, false);
+        window.setTimeout(function () { window.location.reload(); }, 500);
+      } catch (error) {
+        setStatus("Failed to set period: " + error.message, true);
+      }
+    }
+
+    function isLiveEnabled() {
+      try {
+        return window.localStorage.getItem(liveStorageKey) === "true";
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function updateLiveButton() {
+      const button = document.getElementById("live-toggle");
+      const enabled = isLiveEnabled();
+      button.textContent = enabled ? "Live: on" : "Live: off";
+      button.classList.toggle("active", enabled);
+      button.setAttribute("aria-pressed", enabled ? "true" : "false");
+    }
+
+    function startLiveRefresh() {
+      stopLiveRefresh();
+      liveTimer = window.setInterval(refreshTable, liveInterval);
+    }
+
+    function stopLiveRefresh() {
+      if (liveTimer !== null) {
+        window.clearInterval(liveTimer);
+        liveTimer = null;
+      }
+    }
+
+    function setLiveEnabled(enabled) {
+      try {
+        window.localStorage.setItem(liveStorageKey, enabled ? "true" : "false");
+      } catch (error) {
+        // the browser may block local storage, the toggle still works for this page
+      }
+      updateLiveButton();
+      if (enabled) {
+        startLiveRefresh();
+        refreshTable();
+      } else {
+        stopLiveRefresh();
+      }
+    }
+
+    function toggleLive() {
+      setLiveEnabled(!isLiveEnabled());
+    }
+
+    // Refresh only the records table, so that the toolbar and the period
+    // input keep their state. The table is only replaced when its content
+    // actually changed, so there is no flicker.
+    async function refreshTable() {
+      try {
+        const response = await fetch(window.location.pathname, { cache: "no-store" });
+        if (!response.ok) {
+          return;
+        }
+        const html = await response.text();
+        const parsed = new DOMParser().parseFromString(html, "text/html");
+        const newRows = parsed.querySelector("tbody");
+        const currentRows = document.querySelector("tbody");
+        if (!newRows || !currentRows) {
+          return;
+        }
+        if (newRows.innerHTML !== currentRows.innerHTML) {
+          currentRows.innerHTML = newRows.innerHTML;
+        }
+      } catch (error) {
+        // ignore the error, the next tick retries
+      }
+    }
+
+    updateLiveButton();
+    if (isLiveEnabled()) {
+      startLiveRefresh();
+    }
+  </script>
 </body>
 
 </html>

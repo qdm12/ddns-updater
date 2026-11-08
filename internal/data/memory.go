@@ -20,3 +20,12 @@ func (db *Database) SelectAll() (records []records.Record) {
 	defer db.RUnlock()
 	return db.data
 }
+
+// SetAll replaces all the records in the database with the ones given.
+// A brand new slice is assigned, so that readers which obtained the
+// previous slice keep a consistent snapshot of it.
+func (db *Database) SetAll(records []records.Record) {
+	db.Lock()
+	defer db.Unlock()
+	db.data = records
+}

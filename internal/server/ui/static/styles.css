@@ -114,6 +114,59 @@ footer a:hover {
   font-size: 1.4em;
 }
 
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  font-size: 0.9em;
+}
+
+.toolbar button {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--link-color);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-color);
+  cursor: pointer;
+  font: inherit;
+}
+
+.toolbar button:hover {
+  color: var(--link-color-hover);
+  border-color: var(--link-color-hover);
+}
+
+.toolbar button.active {
+  background: var(--link-color);
+  border-color: var(--link-color);
+  color: var(--page-background);
+}
+
+.toolbar button.active:hover {
+  background: var(--link-color-hover);
+  border-color: var(--link-color-hover);
+  color: var(--page-background);
+}
+
+.toolbar input {
+  padding: 0.3rem;
+  border: 1px solid var(--link-color);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-color);
+  font: inherit;
+}
+
+.status {
+  color: var(--success-color);
+}
+
+.status-error {
+  color: var(--error-color);
+}
+
 .success, .error, .uptodate, .updating, .unset {
   font-weight: bold;
 }

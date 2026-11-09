@@ -8,12 +8,17 @@ import (
 	"net/http"
 	"net/netip"
 	"sync/atomic"
+	"time"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
+
+// defaultActionPollPeriod is the interval between two Zone action status
+// polls in waitAction.
+const defaultActionPollPeriod = 5 * time.Second
 
 type Provider struct {
 	domain     string
@@ -27,6 +32,10 @@ type Provider struct {
 	ttl uint32
 	// knownTTL is the record TTL observed from API responses, used when ttl is unset.
 	knownTTL atomic.Uint32
+	// actionPollPeriod is the interval between two Zone action status polls.
+	// It defaults to defaultActionPollPeriod and is only set to a shorter
+	// period in tests.
+	actionPollPeriod time.Duration
 }
 
 func New(data json.RawMessage, domain, owner string,
@@ -48,12 +57,13 @@ func New(data json.RawMessage, domain, owner string,
 	}
 
 	return &Provider{
-		domain:     domain,
-		owner:      owner,
-		ipVersion:  ipVersion,
-		ipv6Suffix: ipv6Suffix,
-		token:      extraSettings.Token,
-		ttl:        extraSettings.TTL,
+		domain:           domain,
+		owner:            owner,
+		ipVersion:        ipVersion,
+		ipv6Suffix:       ipv6Suffix,
+		token:            extraSettings.Token,
+		ttl:              extraSettings.TTL,
+		actionPollPeriod: defaultActionPollPeriod,
 	}, nil
 }
 

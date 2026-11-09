@@ -14,6 +14,7 @@ const (
 	DdnssDe      models.Provider = "ddnss"
 	DeSEC        models.Provider = "desec"
 	DigitalOcean models.Provider = "digitalocean"
+	DNSExit      models.Provider = "dnsexit"
 	DNSOMatic    models.Provider = "dnsomatic"
 	DNSPod       models.Provider = "dnspod"
 	Domeneshop   models.Provider = "domeneshop"
@@ -77,6 +78,7 @@ func ProviderChoices() []models.Provider {
 		DdnssDe,
 		DeSEC,
 		DigitalOcean,
+		DNSExit,
 		DNSOMatic,
 		DNSPod,
 		Domeneshop,

@@ -19,6 +19,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/ddnss"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/desec"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/digitalocean"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/dnsexit"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/dnsomatic"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/dnspod"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/domeneshop"
@@ -109,6 +110,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return desec.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.DigitalOcean:
 		return digitalocean.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.DNSExit:
+		return dnsexit.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.DNSOMatic:
 		return dnsomatic.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.DNSPod:

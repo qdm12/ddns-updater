@@ -166,6 +166,10 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	} else { // extract owner(s) from domain(s)
 		domain, owners, err = extractFromDomainField(common.Domain)
 		if err != nil {
+			if common.Provider == string(constants.OpenDNS) {
+				return nil, nil, fmt.Errorf("the OpenDNS network name goes in the hostname setting "+
+					"and domain must be a domain name such as example.com: %w", err)
+			}
 			return nil, nil, fmt.Errorf("extracting owners from domains: %w", err)
 		}
 	}

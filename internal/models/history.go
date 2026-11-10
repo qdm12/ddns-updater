@@ -17,15 +17,19 @@ type HistoryEvent struct { // current and previous ips
 }
 
 // GetPreviousIPs returns an antichronological list of previous
-// IP addresses if there is any.
+// IP addresses if there is any. Consecutive repeats of the same
+// IP address are collapsed into a single entry.
 func (h History) GetPreviousIPs() (previousIPs []netip.Addr) {
 	if len(h) <= 1 {
 		return nil
 	}
-	previousIPs = make([]netip.Addr, len(h)-1)
-	mostRecentPreviousIPIndex := len(h) - 2 //nolint:mnd
-	for i := range previousIPs {
-		previousIPs[i] = h[mostRecentPreviousIPIndex-i].IP
+	lastIP := h[len(h)-1].IP
+	for i := len(h) - 2; i >= 0; i-- { //nolint:mnd
+		if h[i].IP == lastIP {
+			continue
+		}
+		lastIP = h[i].IP
+		previousIPs = append(previousIPs, lastIP)
 	}
 	return previousIPs
 }

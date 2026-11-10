@@ -42,6 +42,31 @@ func Test_GetPreviousIPs(t *testing.T) {
 				netip.MustParseAddr("1.2.3.4"),
 			},
 		},
+		"repeats_of_current_ip_only": {
+			h: History{
+				{IP: netip.MustParseAddr("1.2.3.4")},
+				{IP: netip.MustParseAddr("1.2.3.4")},
+				{IP: netip.MustParseAddr("1.2.3.4")}, // last one
+			},
+		},
+		"consecutive_repeats_collapsed": {
+			h: History{
+				{IP: netip.MustParseAddr("1.1.1.1")},
+				{IP: netip.MustParseAddr("1.1.1.1")},
+				{IP: netip.MustParseAddr("1.1.1.1")},
+				{IP: netip.MustParseAddr("1.1.1.1")},
+				{IP: netip.MustParseAddr("1.1.1.1")},
+				{IP: netip.MustParseAddr("2.2.2.2")},
+				{IP: netip.MustParseAddr("2.2.2.2")},
+				{IP: netip.MustParseAddr("1.1.1.1")},
+				{IP: netip.MustParseAddr("1.1.1.1")},
+				{IP: netip.MustParseAddr("1.1.1.1")}, // last one
+			},
+			previousIPs: []netip.Addr{
+				netip.MustParseAddr("2.2.2.2"),
+				netip.MustParseAddr("1.1.1.1"),
+			},
+		},
 	}
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {

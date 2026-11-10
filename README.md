@@ -408,7 +408,7 @@ The web server also serves the records status as JSON, for dashboards and monito
 ```
 
 - `previous_ips` lists up to 10 previous IP addresses, most recent first, and `previous_ips_total` gives how many there are
-- `summary.healthy` is `false` if any record has the status `failure` or `unset`. For example, an [Uptime Kuma](https://github.com/louislam/uptime-kuma) monitor of type *HTTP(s) - Json Query* can use the query `summary.healthy` with the expected value `true`.
+- `summary.healthy` is `false` if any record has the status `failure` or `unset`. Unlike the health server, it does not check the records resolve to the expected IP address. For example, an [Uptime Kuma](https://github.com/louislam/uptime-kuma) monitor of type *HTTP(s) - Json Query* can use the query `summary.healthy` with the expected value `true`.
 
 ## Architecture
 

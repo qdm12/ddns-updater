@@ -82,9 +82,9 @@ func makeAPIRecordsResponse(recordsList []records.Record) apiRecordsResponse {
 func toAPIRecord(record records.Record) apiRecord {
 	const maxPreviousIPs = 10
 	previousIPs := record.History.GetPreviousIPs()
-	previousIPStrings := make([]string, 0, min(len(previousIPs), maxPreviousIPs))
-	for _, previousIP := range previousIPs[:min(len(previousIPs), maxPreviousIPs)] {
-		previousIPStrings = append(previousIPStrings, previousIP.String())
+	previousIPStrings := make([]string, min(len(previousIPs), maxPreviousIPs))
+	for i := range previousIPStrings {
+		previousIPStrings[i] = previousIPs[i].String()
 	}
 
 	return apiRecord{

@@ -28,6 +28,7 @@ linters:
           - containedctx
           - dupl
           - err113
+          - goconst
         path: _test\.go
       - linters:
           - contextcheck

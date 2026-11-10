@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	"github.com/miekg/dns"
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -92,34 +92,34 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, server, tsigKeyName, tsigSecret, tsigAlgorithm string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch tsigAlgorithm {
 	case dns.HmacSHA1, dns.HmacSHA224, dns.HmacSHA256, dns.HmacSHA384, dns.HmacSHA512:
 	default:
-		return fmt.Errorf("%w: %s", errors.ErrAlgorithmNotValid, tsigAlgorithm)
+		return fmt.Errorf("TSIG algorithm is not valid: %s", tsigAlgorithm)
 	}
 
 	if server == "" {
-		return fmt.Errorf("%w", errors.ErrServerNotSet)
+		return errors.New("server is not set")
 	}
 	_, _, err = net.SplitHostPort(server)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrServerNotValid, err)
+		return fmt.Errorf("server is not valid: %w", err)
 	}
 
 	switch {
 	case tsigKeyName == "" && tsigSecret != "":
-		return fmt.Errorf("%w", errors.ErrKeyNotSet)
+		return errors.New("TSIG key name is not set")
 	case tsigKeyName != "" && tsigSecret == "":
-		return fmt.Errorf("%w", errors.ErrSecretNotSet)
+		return errors.New("TSIG secret is not set")
 	}
 
 	if tsigSecret != "" {
 		_, err = base64.StdEncoding.DecodeString(tsigSecret)
 		if err != nil {
-			return fmt.Errorf("%w: %w", errors.ErrSecretNotValid, err)
+			return fmt.Errorf("TSIG secret is not valid: %w", err)
 		}
 	}
 
@@ -222,16 +222,16 @@ func (p *Provider) newUpdateMessage(ip netip.Addr) (message *dns.Msg) {
 func rcodeToError(rcode int) (err error) {
 	switch rcode {
 	case dns.RcodeNotAuth:
-		return fmt.Errorf("%w", errors.ErrAuth)
+		return errors.New("not authorized for the zone")
 	case dns.RcodeRefused:
-		return fmt.Errorf("%w", errors.ErrBadRequest)
+		return errors.New("update refused")
 	case dns.RcodeNotZone, dns.RcodeNameError:
-		return fmt.Errorf("%w", errors.ErrZoneNotFound)
+		return errors.New("zone not found")
 	case dns.RcodeFormatError:
-		return fmt.Errorf("%w", errors.ErrBadRequest)
+		return errors.New("bad request sent")
 	case dns.RcodeServerFailure:
-		return fmt.Errorf("%w", errors.ErrDNSServerSide)
+		return errors.New("server side DNS error")
 	default:
-		return fmt.Errorf("%w", errors.ErrUnknownResponse)
+		return fmt.Errorf("unknown response code: %s", dns.RcodeToString[rcode])
 	}
 }

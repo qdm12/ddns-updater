@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/miekg/dns"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,9 +20,9 @@ func Test_New(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		data             string
-		expectedProvider *Provider
-		expectedErr      error
+		data               string
+		expectedProvider   *Provider
+		expectedErrMessage string
 	}{
 		"defaults": {
 			data: `{"server":"` + testServerAddress + `"}`,
@@ -53,28 +52,28 @@ func Test_New(t *testing.T) {
 			},
 		},
 		"server not set": {
-			data:        `{}`,
-			expectedErr: errors.ErrServerNotSet,
+			data:               `{}`,
+			expectedErrMessage: "server is not set",
 		},
 		"server without a port": {
-			data:        `{"server":"ns1.example.com"}`,
-			expectedErr: errors.ErrServerNotValid,
+			data:               `{"server":"ns1.example.com"}`,
+			expectedErrMessage: "server is not valid",
 		},
 		"tsig key without secret": {
-			data:        `{"server":"` + testServerAddress + `","tsig_key_name":"ddns-key"}`,
-			expectedErr: errors.ErrSecretNotSet,
+			data:               `{"server":"` + testServerAddress + `","tsig_key_name":"ddns-key"}`,
+			expectedErrMessage: "TSIG secret is not set",
 		},
 		"tsig secret without key": {
-			data:        `{"server":"` + testServerAddress + `","tsig_secret":"c2VjcmV0"}`,
-			expectedErr: errors.ErrKeyNotSet,
+			data:               `{"server":"` + testServerAddress + `","tsig_secret":"c2VjcmV0"}`,
+			expectedErrMessage: "TSIG key name is not set",
 		},
 		"tsig secret not base64": {
-			data:        `{"server":"` + testServerAddress + `","tsig_key_name":"k","tsig_secret":"not base64!"}`,
-			expectedErr: errors.ErrSecretNotValid,
+			data:               `{"server":"` + testServerAddress + `","tsig_key_name":"k","tsig_secret":"not base64!"}`,
+			expectedErrMessage: "TSIG secret is not valid",
 		},
 		"unsupported algorithm": {
-			data:        `{"server":"` + testServerAddress + `","tsig_algorithm":"hmac-md5"}`,
-			expectedErr: errors.ErrAlgorithmNotValid,
+			data:               `{"server":"` + testServerAddress + `","tsig_algorithm":"hmac-md5"}`,
+			expectedErrMessage: "TSIG algorithm is not valid",
 		},
 	}
 
@@ -85,8 +84,8 @@ func Test_New(t *testing.T) {
 			provider, err := New(json.RawMessage(testCase.data), "example.com", "home",
 				ipversion.IP4or6, netip.Prefix{})
 
-			if testCase.expectedErr != nil {
-				require.ErrorIs(t, err, testCase.expectedErr)
+			if testCase.expectedErrMessage != "" {
+				require.ErrorContains(t, err, testCase.expectedErrMessage)
 				return
 			}
 

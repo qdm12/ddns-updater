@@ -15,7 +15,6 @@ import (
 	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
-	"github.com/qdm12/ddns-updater/pkg/ipextract"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
 
@@ -167,20 +166,9 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	if !strings.Contains(s, "nochg") && !strings.Contains(s, "good") {
 		return netip.Addr{}, fmt.Errorf("unknown response received: %s", s)
 	}
-	var ips []netip.Addr
-	if ip.Is4() {
-		ips = ipextract.IPv4(s)
-	} else {
-		ips = ipextract.IPv6(s)
-	}
 
-	if len(ips) == 0 {
-		return netip.Addr{}, errors.New("received no IP address in response")
-	}
-
-	newIP = ips[0]
-	if ip.Compare(newIP) != 0 {
-		return netip.Addr{}, fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
-	}
-	return newIP, nil
+	// All-Inkl does not write back the IP address in the response body, only the
+	// good or nochg status, so the new IP address is the one sent.
+	// See https://github.com/qdm12/ddns-updater/issues/1229.
+	return ip, nil
 }

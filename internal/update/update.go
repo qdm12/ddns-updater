@@ -41,14 +41,16 @@ func (u *Updater) Update(ctx context.Context, id uint, ip netip.Addr) (err error
 	if err != nil {
 		return err
 	}
-	record.SetStatus(constants.UPDATING, "", u.timeNow())
+	record.Time = u.timeNow()
+	record.Status = constants.UPDATING
 	err = u.db.Update(id, record)
 	if err != nil {
 		return err
 	}
+	record.Status = constants.FAIL
 	newIP, err := record.Provider.Update(ctx, u.client, ip)
 	if err != nil {
-		record.SetStatus(constants.FAIL, err.Error(), u.timeNow())
+		record.Message = err.Error()
 		if errors.Is(err, settingserrors.ErrBannedAbuse) {
 			lastBan := time.Unix(u.timeNow().Unix(), 0)
 			record.LastBan = &lastBan
@@ -65,7 +67,8 @@ func (u *Updater) Update(ctx context.Context, id uint, ip netip.Addr) (err error
 		}
 		return err
 	}
-	record.SetStatus(constants.SUCCESS, "changed to "+ip.String(), u.timeNow())
+	record.Status = constants.SUCCESS
+	record.Message = "changed to " + ip.String()
 	record.History = append(record.History, models.HistoryEvent{
 		IP:   newIP,
 		Time: u.timeNow(),

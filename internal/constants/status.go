@@ -8,7 +8,9 @@ const (
 	UPTODATE models.Status = "up to date"
 	UPDATING models.Status = "updating"
 	UNSET    models.Status = "unset"
-	// NOIP is the status of a record for which no update was attempted
-	// yet, because its public IP address could not be found.
-	NOIP models.Status = "no IP"
+	// PUBLICIPUNKNOWN is the status of a record for which no update could be
+	// attempted because its public IP address could not be found. Contrary to
+	// FAIL it is not the result of an update: it is re-evaluated at every
+	// update cycle until the public IP address is found.
+	PUBLICIPUNKNOWN models.Status = "public IP unknown"
 )

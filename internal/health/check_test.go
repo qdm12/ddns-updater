@@ -37,6 +37,12 @@ type testRecord struct {
 	lookupErr error
 }
 
+// failingStatus returns true when the record status alone makes the program
+// unhealthy, without any IP address look up.
+func (tr testRecord) failingStatus() bool {
+	return tr.status == constants.FAIL || tr.status == constants.PUBLICIPUNKNOWN
+}
+
 func Test_isHealthy(t *testing.T) {
 	t.Parallel()
 
@@ -68,6 +74,13 @@ func Test_isHealthy(t *testing.T) {
 			},
 			wantErr:     ErrRecordUpdateFailed,
 			wantErrPart: "record0.example.com",
+		},
+		"record_public_ip_unknown": {
+			records: []testRecord{
+				{status: constants.PUBLICIPUNKNOWN},
+			},
+			wantErr:     ErrPublicIPNotFound,
+			wantErrPart: "public IP unknown",
 		},
 		"proxied_record_skipped": {
 			records: []testRecord{
@@ -247,7 +260,7 @@ func Test_isHealthy(t *testing.T) {
 				hostname := fmt.Sprintf("record%d.%s", i, hostnameSuffix)
 
 				switch {
-				case recordCase.status == constants.FAIL:
+				case recordCase.failingStatus():
 					providerMock.EXPECT().String().Return(hostname)
 				case recordCase.proxied:
 					providerMock.EXPECT().Proxied().Return(true)
@@ -274,29 +287,6 @@ func Test_isHealthy(t *testing.T) {
 			}
 		})
 	}
-}
-
-func Test_isHealthy_noIP(t *testing.T) {
-	t.Parallel()
-
-	ctrl := gomock.NewController(t)
-	const hostname = "record0.example.com"
-	dbMock := NewMockAllSelecter(ctrl)
-	providerMock := NewMockProvider(ctrl)
-	providerMock.EXPECT().String().Return(hostname)
-
-	dbMock.EXPECT().SelectAll().Return([]records.Record{{
-		Provider: providerMock,
-		History: []models.HistoryEvent{
-			{IP: netip.MustParseAddr("1.2.3.4"), Time: time.Date(2025, time.May, 1, 12, 0, 0, 0, time.UTC)},
-		},
-		Status: constants.NOIP,
-	}})
-
-	err := isHealthy(t.Context(), dbMock, NewMockLookupIPer(ctrl), time.Time{})
-
-	assert.ErrorIs(t, err, ErrRecordUpdateFailed)
-	assert.ErrorContains(t, err, hostname)
 }
 
 func Test_MakeIsHealthy(t *testing.T) {

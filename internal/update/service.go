@@ -288,7 +288,8 @@ func setInitialUpToDateStatus(db Database, id uint, updateIP netip.Addr, now tim
 	if err != nil {
 		return err
 	}
-	record.SetStatus(constants.UPTODATE, "", now)
+	record.Status = constants.UPTODATE
+	record.Time = now
 	if !record.History.GetCurrentIP().IsValid() {
 		record.History = append(record.History, models.HistoryEvent{
 			IP:   updateIP,
@@ -298,12 +299,13 @@ func setInitialUpToDateStatus(db Database, id uint, updateIP netip.Addr, now tim
 	return db.Update(id, record)
 }
 
-func setInitialPublicIPFailStatus(db Database, id uint, now time.Time) error {
+func setInitialPublicIPUnknownStatus(db Database, id uint, now time.Time) error {
 	record, err := db.Select(id)
 	if err != nil {
 		return err
 	}
-	record.SetStatus(constants.NOIP, "public IP address not found", now)
+	record.Status = constants.PUBLICIPUNKNOWN
+	record.Time = now
 	return db.Update(id, record)
 }
 
@@ -320,15 +322,21 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 	recordIDs := s.getRecordIDsToUpdate(ctx, records, ip, ipv4, ipv6)
 
 	// Current time is used to set initial states for records already
-	// up to date or in the no IP state due to the public IP not found.
-	// No need to have it queried within the next for loop since each
-	// iteration is fast and has no IO involved.
+	// up to date or in the public IP unknown state due to the public IP
+	// not found. No need to have it queried within the next for loop since
+	// each iteration is fast and has no IO involved.
 	now := s.timeNow()
 
 	for i, record := range records {
 		id := uint(i)
 		_, requireUpdate := recordIDs[id]
-		if requireUpdate || (record.Status != constants.UNSET && record.Status != constants.NOIP) {
+		// The unset and public IP unknown statuses are initial ones, waiting for the
+		// status of a real update. The public IP unknown one is re-evaluated at every
+		// cycle, otherwise the health check would report the program as unhealthy
+		// forever, although its records are correct.
+		initialStatus := record.Status == constants.UNSET ||
+			record.Status == constants.PUBLICIPUNKNOWN
+		if requireUpdate || !initialStatus {
 			continue
 		}
 
@@ -336,9 +344,14 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, ipVersion)
 		if !updateIP.IsValid() {
 			// warning was already logged in getRecordIDsToUpdate
-			err := setInitialPublicIPFailStatus(s.db, id, now)
+			if record.Status == constants.PUBLICIPUNKNOWN {
+				// Still no public IP address: keeping the time of the first cycle
+				// where it could not be found, and avoiding a database update.
+				continue
+			}
+			err := setInitialPublicIPUnknownStatus(s.db, id, now)
 			if err != nil {
-				err = fmt.Errorf("setting initial public IP fail status: %w", err)
+				err = fmt.Errorf("setting initial public IP unknown status: %w", err)
 				errors = append(errors, err)
 				s.logger.Error(err.Error())
 			}

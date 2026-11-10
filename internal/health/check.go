@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/qdm12/ddns-updater/internal/constants"
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
@@ -26,6 +27,10 @@ var (
 	ErrRecordUpdateFailed = errors.New("record update failed")
 	ErrRecordIPNotSet     = errors.New("record IP not set")
 	ErrLookupMismatch     = errors.New("lookup IP addresses do not match")
+	// ErrPublicIPNotFound is returned when a record could not be evaluated
+	// because its public IP address was never obtained, for example right
+	// after a restart when the network is not up yet.
+	ErrPublicIPNotFound = errors.New("public IP address not found")
 )
 
 // isHealthy checks all the records were updated successfully and returns an
@@ -37,9 +42,14 @@ func isHealthy(ctx context.Context, db AllSelecter, resolver LookupIPer,
 ) (err error) {
 	records := db.SelectAll()
 	for _, record := range records {
-		if record.IsFailing() {
+		switch record.Status {
+		case constants.FAIL:
 			return fmt.Errorf("%w: %s", ErrRecordUpdateFailed, record.String())
-		} else if record.Provider.Proxied() {
+		case constants.PUBLICIPUNKNOWN:
+			return fmt.Errorf("%w: %s", ErrPublicIPNotFound, record.String())
+		}
+
+		if record.Provider.Proxied() {
 			continue
 		}
 

@@ -96,7 +96,10 @@ func Test_Service_updateNecessary(t *testing.T) {
 					"network is unreachable, network is unreachable, network is unreachable")
 				mocks.logger.EXPECT().Debug("your public IP address are: v4 or v6: invalid IP, " +
 					"v4: invalid IP, v6: invalid IP")
-				mocks.logger.EXPECT().Warn("Skipping update for ddns.example.com because ipv4 address was not found")
+				// The record is already in the public IP unknown state, so the message is
+				// logged at the debug level only: warning again at every cycle would
+				// spam the logs during a network outage.
+				mocks.logger.EXPECT().Debug("Skipping update for ddns.example.com because ipv4 address was not found")
 				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Fail).Return(nil)
 			},
 		},

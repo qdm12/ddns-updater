@@ -209,8 +209,15 @@ func (s *Service) shouldUpdateRecord(ctx context.Context, record librecords.Reco
 	publicIP := getIPMatchingVersion(ip, ipv4, ipv6, ipVersion)
 
 	if !publicIP.IsValid() {
-		s.logger.Warn(fmt.Sprintf("Skipping update for %s because %s address was not found",
-			hostname, ipVersionToIPKind(ipVersion)))
+		message := fmt.Sprintf("Skipping update for %s because %s address was not found",
+			hostname, ipVersionToIPKind(ipVersion))
+		if record.Status == constants.PUBLICIPUNKNOWN {
+			// The record is already known to have no public IP address, warning
+			// again at every cycle would spam the logs during a network outage.
+			s.logger.Debug(message)
+		} else {
+			s.logger.Warn(message)
+		}
 		return updatePublicIPUnknown
 	} else if publicIP.Is6() {
 		publicIP = ipv6WithSuffix(publicIP, record.Provider.IPv6Suffix())

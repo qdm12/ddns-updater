@@ -3,13 +3,14 @@ package netcup
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -58,16 +59,16 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, customerNumber, apiKey, password string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case customerNumber == "":
-		return fmt.Errorf("%w", errors.ErrCustomerNumberNotSet)
+		return errors.New("customer number is not set")
 	case apiKey == "":
-		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
+		return errors.New("API key is not set")
 	case password == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+		return errors.New("password is not set")
 	}
 	return nil
 }
@@ -143,18 +144,16 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	if !found {
 		return netip.Addr{}, fmt.Errorf("%w: in %d records from update response data",
-			errors.ErrRecordNotFound, len(updateResponse.DNSRecords))
+			ddnserrors.ErrRecordNotFound, len(updateResponse.DNSRecords))
 	}
 
 	newIP, err = netip.ParseAddr(record.Destination)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %s",
-			errors.ErrIPReceivedMalformed, record.Destination)
+		return netip.Addr{}, fmt.Errorf("malformed IP address received: %s", record.Destination)
 	}
 
 	if ip.Compare(newIP) != 0 {
-		return netip.Addr{}, fmt.Errorf("%w: expected %s but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
+		return netip.Addr{}, fmt.Errorf("mismatching IP address received: expected %s but received %s", ip, newIP)
 	}
 
 	return newIP, nil

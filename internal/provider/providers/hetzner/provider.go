@@ -3,14 +3,14 @@ package hetzner
 import (
 	"context"
 	"encoding/json"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -63,14 +63,14 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, zoneIdentifier, token string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case zoneIdentifier == "":
-		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
+		return errors.New("zone identifier is not set")
 	case token == "":
-		return fmt.Errorf("%w", errors.ErrTokenNotSet)
+		return errors.New("token is not set")
 	}
 	return nil
 }
@@ -120,7 +120,7 @@ func (p *Provider) TTL() (ttl *uint32) {
 func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error) {
 	recordID, upToDate, err := p.getRecordID(ctx, client, ip)
 	switch {
-	case stderrors.Is(err, errors.ErrReceivedNoResult):
+	case errors.Is(err, ddnserrors.ErrReceivedNoResult):
 		err = p.createRecord(ctx, client, ip)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("creating record: %w", err)

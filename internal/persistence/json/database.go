@@ -82,23 +82,14 @@ func NewDatabase(dataDir string) (*Database, error) {
 	}, nil
 }
 
-var (
-	ErrDomainEmpty         = errors.New("domain is empty")
-	ErrOwnerNotSet         = errors.New("owner is not set")
-	ErrIPRecordsMisordered = errors.New("IP records are not ordered correctly by time")
-	ErrIPEmpty             = errors.New("IP is empty")
-	ErrIPTimeEmpty         = errors.New("time of IP is empty")
-)
-
 func checkData(data dataModel) (err error) {
 	for i, record := range data.Records {
 		switch {
 		case record.Domain == "":
-			return fmt.Errorf("%w: for record %d of %d", ErrDomainEmpty,
+			return fmt.Errorf("domain is empty: for record %d of %d",
 				i+1, len(data.Records))
 		case record.Owner == "":
-			return fmt.Errorf("%w: for record %d of %d with domain %s",
-				ErrOwnerNotSet, i+1, len(data.Records), record.Domain)
+			return fmt.Errorf("owner is not set: for record %d of %d with domain %s", i+1, len(data.Records), record.Domain)
 		}
 
 		err = checkHistoryEvents(record.Events)
@@ -116,16 +107,13 @@ func checkHistoryEvents(events []models.HistoryEvent) (err error) {
 	for i, event := range events {
 		switch {
 		case event.Time.IsZero():
-			return fmt.Errorf("%w: for event %d of %d (IP %s)",
-				ErrIPTimeEmpty, i+1, len(events), event.IP)
+			return fmt.Errorf("time of IP is empty: for event %d of %d (IP %s)", i+1, len(events), event.IP)
 		case event.Time.Before(previousEventTime):
-			return fmt.Errorf("%w: event %d of %d (IP %s and time %s) "+
-				" is before event %d of %d (IP %s and time %s)",
-				ErrIPRecordsMisordered, i+1, len(events), event.IP, event.Time,
+			return fmt.Errorf("IP records are not ordered correctly by time: event %d of %d (IP %s and time %s) "+
+				" is before event %d of %d (IP %s and time %s)", i+1, len(events), event.IP, event.Time,
 				i, len(events), events[i-1].IP, events[i-1].Time)
 		case !event.IP.IsValid():
-			return fmt.Errorf("%w: for event %d of %d",
-				ErrIPEmpty, i+1, len(events))
+			return fmt.Errorf("IP is empty: for event %d of %d", i+1, len(events))
 		}
 		previousEventTime = event.Time
 	}

@@ -1,7 +1,6 @@
 package resolver
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -20,12 +19,6 @@ func (s *Settings) setDefaults() {
 	s.Timeout = gosettings.DefaultComparable(s.Timeout, defaultTimeout)
 }
 
-var (
-	ErrAddressHostEmpty = errors.New("address host is empty")
-	ErrAddressPortEmpty = errors.New("address port is empty")
-	ErrTimeoutTooLow    = errors.New("timeout is too low")
-)
-
 func (s Settings) validate() (err error) {
 	if *s.Address != "" {
 		host, port, err := net.SplitHostPort(*s.Address)
@@ -35,16 +28,15 @@ func (s Settings) validate() (err error) {
 
 		switch {
 		case host == "":
-			return fmt.Errorf("%w: in %s", ErrAddressHostEmpty, *s.Address)
+			return fmt.Errorf("address host is empty: in %s", *s.Address)
 		case port == "":
-			return fmt.Errorf("%w: in %s", ErrAddressPortEmpty, *s.Address)
+			return fmt.Errorf("address port is empty: in %s", *s.Address)
 		}
 	}
 
 	const minTimeout = 10 * time.Millisecond
 	if s.Timeout < minTimeout {
-		return fmt.Errorf("%w: %s is below the minimum %s",
-			ErrTimeoutTooLow, s.Timeout, minTimeout)
+		return fmt.Errorf("timeout is too low: %s is below the minimum %s", s.Timeout, minTimeout)
 	}
 
 	return nil

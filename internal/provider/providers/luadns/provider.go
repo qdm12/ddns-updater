@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -61,15 +62,14 @@ var regexEmail = regexp.MustCompile(`[a-zA-Z0-9-_.+]+@[a-zA-Z0-9-_.]+\.[a-zA-Z]{
 func validateSettings(domain, email, token string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case !regexEmail.MatchString(email):
-		return fmt.Errorf("%w: email %q does not match regex %s",
-			errors.ErrEmailNotValid, email, regexEmail)
+		return fmt.Errorf("email address is not valid: email %q does not match regex %s", email, regexEmail)
 	case token == "":
-		return fmt.Errorf("%w", errors.ErrTokenNotSet)
+		return errors.New("token is not set")
 	}
 	return nil
 }
@@ -177,7 +177,7 @@ func (p *Provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 	}
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
+		err = fmt.Errorf("HTTP status is not valid: %d", response.StatusCode)
 		var errorObj luaDNSError
 		if jsonErr := json.Unmarshal(b, &errorObj); jsonErr != nil {
 			return 0, fmt.Errorf("%w: %s", err, utils.ToSingleLine(string(b)))
@@ -199,7 +199,7 @@ func (p *Provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 			return zone.ID, nil
 		}
 	}
-	return 0, fmt.Errorf("%w", errors.ErrZoneNotFound)
+	return 0, errors.New("zone not found")
 }
 
 func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID int, ip netip.Addr) (
@@ -230,7 +230,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 	}
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
+		err = fmt.Errorf("HTTP status is not valid: %d", response.StatusCode)
 		var errorObj luaDNSError
 		if jsonErr := json.Unmarshal(b, &errorObj); jsonErr != nil {
 			return record, fmt.Errorf("%w: %s", err, utils.ToSingleLine(string(b)))
@@ -255,7 +255,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 		}
 	}
 	return record, fmt.Errorf("%w: %s record in zone %d",
-		errors.ErrRecordNotFound, recordType, zoneID)
+		ddnserrors.ErrRecordNotFound, recordType, zoneID)
 }
 
 func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
@@ -294,7 +294,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	}
 
 	if response.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
+		err = fmt.Errorf("HTTP status is not valid: %d", response.StatusCode)
 		var errorObj luaDNSError
 		if jsonErr := json.Unmarshal(b, &errorObj); jsonErr != nil {
 			return fmt.Errorf("%w: %s", err, utils.ToSingleLine(string(b)))
@@ -309,8 +309,8 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	}
 
 	if updatedRecord.Content != newRecord.Content {
-		return fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, newRecord.Content, updatedRecord.Content)
+		return fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s",
+			newRecord.Content, updatedRecord.Content)
 	}
 	return nil
 }

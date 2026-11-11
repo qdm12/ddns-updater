@@ -10,7 +10,6 @@ import (
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
@@ -63,8 +62,7 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return ip, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode,
+		return ip, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode,
 			utils.BodyToSingleLine(response.Body))
 	}
 
@@ -81,10 +79,9 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client,
 
 	newIP = parsedJSON.Record.Value
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+		return netip.Addr{}, fmt.Errorf("malformed IP address received: %w", err)
 	} else if newIP.Compare(ip) != 0 {
-		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
+		return netip.Addr{}, fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 	}
 	return newIP, nil
 }

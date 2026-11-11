@@ -3,7 +3,7 @@ package porkbun
 import (
 	"context"
 	"encoding/json"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -12,7 +12,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -62,14 +62,14 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, apiKey, secretAPIKey string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case apiKey == "":
-		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
+		return errors.New("API key is not set")
 	case secretAPIKey == "":
-		return fmt.Errorf("%w", errors.ErrAPISecretNotSet)
+		return errors.New("API secret is not set")
 	}
 	return nil
 }
@@ -187,7 +187,7 @@ func (p *Provider) deleteDefaultConflictingRecordsIfNeeded(ctx context.Context, 
 		}
 
 		err = p.deleteSingleMatchingRecord(ctx, client, constants.ALIAS, "@", porkbunParkedDomain)
-		if err == nil || stderrors.Is(err, errors.ErrConflictingRecord) {
+		if err == nil || errors.Is(err, ddnserrors.ErrConflictingRecord) {
 			// allow conflict ALIAS records to be set to something besides the parked domain
 			return nil
 		}
@@ -212,10 +212,10 @@ func (p *Provider) deleteSingleMatchingRecord(ctx context.Context, client *http.
 	case len(records) == 0:
 		return nil
 	case len(records) > 1:
-		return fmt.Errorf("%w: %d %s records are already set", errors.ErrConflictingRecord, len(records), recordType)
+		return fmt.Errorf("%w: %d %s records are already set", ddnserrors.ErrConflictingRecord, len(records), recordType)
 	case records[0].Content != expectedContent:
 		return fmt.Errorf("%w: %s record has content %q mismatching expected content %q",
-			errors.ErrConflictingRecord, recordType, records[0].Content, expectedContent)
+			ddnserrors.ErrConflictingRecord, recordType, records[0].Content, expectedContent)
 	}
 
 	// Single record with content matching expected content.

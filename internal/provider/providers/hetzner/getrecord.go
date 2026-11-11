@@ -9,7 +9,7 @@ import (
 	"net/url"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
@@ -51,10 +51,10 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip neti
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusNotFound:
-		return "", false, fmt.Errorf("%w", errors.ErrReceivedNoResult)
+		return "", false, fmt.Errorf("%w", ddnserrors.ErrReceivedNoResult)
 	default:
-		return "", false, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return "", false, fmt.Errorf("HTTP status is not valid: %d: %s",
+			response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -71,10 +71,9 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, ip neti
 
 	switch {
 	case len(listRecordsResponse.Records) == 0:
-		return "", false, fmt.Errorf("%w", errors.ErrReceivedNoResult)
+		return "", false, fmt.Errorf("%w", ddnserrors.ErrReceivedNoResult)
 	case len(listRecordsResponse.Records) > 1:
-		return "", false, fmt.Errorf("%w: %d instead of 1",
-			errors.ErrResultsCountReceived, len(listRecordsResponse.Records))
+		return "", false, fmt.Errorf("wrong number of results received: %d instead of 1", len(listRecordsResponse.Records))
 	}
 	identifier = listRecordsResponse.Records[0].ID
 	upToDate = listRecordsResponse.Records[0].Value.Compare(ip) == 0

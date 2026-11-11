@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -83,16 +83,16 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, accessKey, secretKey, zoneID string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case accessKey == "":
-		return fmt.Errorf("%w", errors.ErrAccessKeyNotSet)
+		return errors.New("access key is not set")
 	case secretKey == "":
-		return fmt.Errorf("%w", errors.ErrSecretKeyNotSet)
+		return errors.New("secret key is not set")
 	case zoneID == "":
-		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
+		return errors.New("zone identifier is not set")
 	}
 	return nil
 }
@@ -181,8 +181,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("XML decoding response body: %w", err)
 	}
-	return netip.Addr{}, fmt.Errorf("%w: %d: request %s %s/%s: %s",
-		errors.ErrHTTPStatusNotValid, response.StatusCode,
+	return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: request %s %s/%s: %s", response.StatusCode,
 		errorResponse.RequestID, errorResponse.Error.Type,
 		errorResponse.Error.Code, errorResponse.Error.Message)
 }

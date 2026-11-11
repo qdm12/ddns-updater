@@ -8,7 +8,7 @@ import (
 	"net/netip"
 	"strings"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
@@ -33,14 +33,12 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, recordTyp
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusBadRequest:
-		return "", netip.Addr{}, fmt.Errorf("%w: %s",
-			errors.ErrBadRequest, utils.BodyToSingleLine(response.Body))
+		return "", netip.Addr{}, fmt.Errorf("bad request sent: %s", utils.BodyToSingleLine(response.Body))
 	case http.StatusUnauthorized, http.StatusForbidden:
-		return "", netip.Addr{}, fmt.Errorf("%w: %s",
-			errors.ErrAuth, utils.BodyToSingleLine(response.Body))
+		return "", netip.Addr{}, fmt.Errorf("bad authentication: %s", utils.BodyToSingleLine(response.Body))
 	default:
-		return "", netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return "", netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s",
+			response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -72,5 +70,5 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, recordTyp
 		}
 	}
 
-	return "", netip.Addr{}, fmt.Errorf("%w", errors.ErrRecordNotFound)
+	return "", netip.Addr{}, fmt.Errorf("%w", ddnserrors.ErrRecordNotFound)
 }

@@ -2,6 +2,7 @@ package spaceship
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -10,7 +11,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -60,19 +61,19 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, apiKey, apiSecret string, ttl uint32) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	const minTTL, maxTTL = 60, 3600
 	switch {
 	case apiKey == "":
-		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
+		return errors.New("API key is not set")
 	case apiSecret == "":
-		return fmt.Errorf("%w", errors.ErrAPISecretNotSet)
+		return errors.New("API secret is not set")
 	case ttl != 0 && ttl < minTTL:
-		return fmt.Errorf("%w: ttl must be at least %d seconds", errors.ErrTTLTooLow, minTTL)
+		return fmt.Errorf("TTL is too low: ttl must be at least %d seconds", minTTL)
 	case ttl > maxTTL:
-		return fmt.Errorf("%w: ttl must be at most %d seconds", errors.ErrTTLTooHigh, maxTTL)
+		return fmt.Errorf("TTL is too high: ttl must be at most %d seconds", maxTTL)
 	}
 	return nil
 }
@@ -128,21 +129,21 @@ func (p *Provider) setHeaders(request *http.Request) {
 func (p *Provider) handleAPIError(response *http.Response) error {
 	var apiError apiError
 	if err := json.NewDecoder(response.Body).Decode(&apiError); err != nil {
-		return fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
+		return fmt.Errorf("HTTP status is not valid: %d", response.StatusCode)
 	}
 
 	errorCode := response.Header.Get("Spaceship-Error-Code")
 
 	switch response.StatusCode {
 	case http.StatusUnauthorized:
-		return fmt.Errorf("%w: %s", errors.ErrAuth, errorCode)
+		return fmt.Errorf("bad authentication: %s", errorCode)
 	case http.StatusForbidden:
-		return fmt.Errorf("%w: possibly missing dnsRecords:write permission", errors.ErrAuth)
+		return errors.New("bad authentication: possibly missing dnsRecords:write permission")
 	case http.StatusNotFound:
 		if apiError.Detail == "SOA record for domain "+p.domain+" not found." {
-			return fmt.Errorf("%w: domain must be configured in Spaceship first", errors.ErrDomainNotFound)
+			return errors.New("domain not found: domain must be configured in Spaceship first")
 		}
-		return fmt.Errorf("%w: %s", errors.ErrRecordResourceSetNotFound, apiError.Detail)
+		return fmt.Errorf("%w: %s", ddnserrors.ErrRecordResourceSetNotFound, apiError.Detail)
 	case http.StatusBadRequest:
 		var errorDetails string
 		if errorCode != "" {
@@ -159,16 +160,15 @@ func (p *Provider) handleAPIError(response *http.Response) error {
 		if len(fieldDetails) > 0 {
 			errorDetails += " - " + strings.Join(fieldDetails, "; ")
 		}
-		return fmt.Errorf("%w: %s", errors.ErrBadRequest, errorDetails)
+		return fmt.Errorf("bad request sent: %s", errorDetails)
 	case http.StatusTooManyRequests:
-		return fmt.Errorf("%w: rate limit exceeded (300 requests/300 seconds) for this domain", errors.ErrRateLimit)
+		return errors.New("rate limit exceeded (300 requests/300 seconds) for this domain")
 	default:
 		var detail string
 		if errorCode != "" {
 			detail = "(code " + errorCode + "): "
 		}
 		detail += apiError.Detail
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, detail)
+		return fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, detail)
 	}
 }

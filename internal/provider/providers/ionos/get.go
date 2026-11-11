@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"path"
 	"strings"
-
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 func (p *Provider) getZones(ctx context.Context, client *http.Client) (
@@ -64,10 +62,10 @@ func (p *Provider) get(ctx context.Context, client *http.Client,
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusUnauthorized:
-		return fmt.Errorf("%w: %s", errors.ErrAuth,
+		return fmt.Errorf("bad authentication: %s",
 			decodeErrorMessage(response.Body))
 	default:
-		return fmt.Errorf("%w: %s: %s", errors.ErrHTTPStatusNotValid,
+		return fmt.Errorf("HTTP status is not valid: %s: %s",
 			response.Status, decodeErrorMessage(response.Body))
 	}
 

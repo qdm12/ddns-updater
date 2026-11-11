@@ -60,7 +60,7 @@ func Test_fetch(t *testing.T) {
 		},
 		"no answer": {
 			response: &dns.Msg{},
-			err:      ErrAnswerNotReceived,
+			err:      errors.New("response answer not received"),
 		},
 		"wrong answer type": {
 			response: &dns.Msg{

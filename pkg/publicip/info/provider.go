@@ -2,7 +2,6 @@ package info
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -23,13 +22,11 @@ func ListProviders() []Provider {
 	}
 }
 
-var ErrUnknownProvider = errors.New("unknown public IP information provider")
-
 func ValidateProvider(provider Provider) error {
 	if slices.Contains(ListProviders(), provider) {
 		return nil
 	}
-	return fmt.Errorf("%w: %s", ErrUnknownProvider, provider)
+	return fmt.Errorf("unknown public IP information provider: %s", provider)
 }
 
 type provider interface {

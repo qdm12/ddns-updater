@@ -3,6 +3,7 @@ package dynu
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -64,16 +65,16 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, owner, username, password string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case owner == "*":
-		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
+		return errors.New("owner cannot be \"*\"")
 	case username == "":
-		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+		return errors.New("username is not set")
 	case password == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+		return errors.New("password is not set")
 	}
 	return nil
 }
@@ -152,22 +153,21 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	switch {
 	case strings.Contains(s, constants.Badauth):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
+		return netip.Addr{}, errors.New("bad authentication")
 	case strings.Contains(s, constants.Notfqdn):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+		return netip.Addr{}, errors.New("hostname does not exist")
 	case strings.Contains(s, constants.Abuse):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBannedAbuse)
+		return netip.Addr{}, fmt.Errorf("%w", ddnserrors.ErrBannedAbuse)
 	case strings.Contains(s, "good"):
 		return ip, nil
 	case strings.Contains(s, "nochg"): // Updated but not changed
 		return ip, nil
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("unknown response received: %s", utils.ToSingleLine(s))
 	}
 }

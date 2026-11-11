@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,7 +15,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -62,17 +62,17 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, apiKey string, ttl uint32) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	const minTTL, maxTTL = 60, 3600
 	switch {
 	case apiKey == "":
-		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
+		return errors.New("API key is not set")
 	case ttl != 0 && ttl < minTTL:
-		return fmt.Errorf("%w: %d", errors.ErrTTLTooLow, ttl)
+		return fmt.Errorf("TTL is too low: %d", ttl)
 	case ttl > maxTTL:
-		return fmt.Errorf("%w: %d > %d", errors.ErrTTLTooHigh, ttl, maxTTL)
+		return fmt.Errorf("TTL is too high: %d > %d", ttl, maxTTL)
 	}
 	return nil
 }
@@ -145,7 +145,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	record, err := p.getRecord(ctx, client, zoneID, recordType)
 	if err != nil {
-		if !stderrors.Is(err, errors.ErrRecordNotFound) {
+		if !errors.Is(err, ddnserrors.ErrRecordNotFound) {
 			return netip.Addr{}, fmt.Errorf("getting record: %w", err)
 		}
 
@@ -216,7 +216,7 @@ func (p *Provider) getZoneID(ctx context.Context, client *http.Client) (zoneID i
 		}
 	}
 
-	return 0, fmt.Errorf("%w: %s", errors.ErrZoneNotFound, p.domain)
+	return 0, fmt.Errorf("zone not found: %s", p.domain)
 }
 
 type dnsRecord struct {
@@ -272,7 +272,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 
 		ip, err := netip.ParseAddr(record.Value)
 		if err != nil {
-			return dnsRecord{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+			return dnsRecord{}, fmt.Errorf("malformed IP address received: %w", err)
 		}
 
 		records = append(records, dnsRecord{
@@ -285,11 +285,11 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, zoneID in
 
 	switch len(records) {
 	case 0:
-		return dnsRecord{}, fmt.Errorf("%w", errors.ErrRecordNotFound)
+		return dnsRecord{}, fmt.Errorf("%w", ddnserrors.ErrRecordNotFound)
 	case 1:
 		return records[0], nil
 	default:
-		return dnsRecord{}, fmt.Errorf("%w: %d", errors.ErrResultsCountReceived, len(records))
+		return dnsRecord{}, fmt.Errorf("wrong number of results received: %d", len(records))
 	}
 }
 
@@ -421,13 +421,13 @@ func statusCodeToError(statusCode int, bodyBytes []byte) (err error) {
 	message := parseErrorMessage(bodyBytes)
 	switch statusCode {
 	case http.StatusBadRequest:
-		return fmt.Errorf("%w: %s", errors.ErrBadRequest, message)
+		return fmt.Errorf("bad request sent: %s", message)
 	case http.StatusUnauthorized, http.StatusForbidden:
-		return fmt.Errorf("%w: %s", errors.ErrAuth, message)
+		return fmt.Errorf("bad authentication: %s", message)
 	case http.StatusNotFound:
-		return fmt.Errorf("%w: %s", errors.ErrZoneNotFound, message)
+		return fmt.Errorf("zone not found: %s", message)
 	default:
-		return fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, statusCode, message)
+		return fmt.Errorf("HTTP status is not valid: %d: %s", statusCode, message)
 	}
 }
 

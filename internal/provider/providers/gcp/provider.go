@@ -2,14 +2,13 @@ package gcp
 
 import (
 	"encoding/json"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"net/netip"
 	"strings"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 	"golang.org/x/oauth2/google"
@@ -63,16 +62,16 @@ func validateSettings(domain, project, zone string, credentials json.RawMessage)
 ) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return "", fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case project == "":
-		return "", fmt.Errorf("%w", errors.ErrGCPProjectNotSet)
+		return "", errors.New("GCP project is not set")
 	case zone == "":
-		return "", fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
+		return "", errors.New("zone identifier is not set")
 	case len(credentials) == 0:
-		return "", fmt.Errorf("%w", errors.ErrCredentialsNotSet)
+		return "", errors.New("credentials are not set")
 	}
 	var creds struct {
 		Type string `json:"type"`
@@ -80,9 +79,9 @@ func validateSettings(domain, project, zone string, credentials json.RawMessage)
 	err = json.Unmarshal(credentials, &creds)
 	switch {
 	case err != nil:
-		return "", fmt.Errorf("%w: json malformed: %w", errors.ErrCredentialsNotValid, err)
+		return "", fmt.Errorf("credentials are not valid: json malformed: %w", err)
 	case creds.Type == "":
-		return "", fmt.Errorf("%w: missing 'type' field in credentials JSON", errors.ErrCredentialsNotValid)
+		return "", errors.New("credentials are not valid: missing 'type' field in credentials JSON")
 	}
 	googleCredType, err = parseCredentialsType(creds.Type)
 	if err != nil {
@@ -90,8 +89,6 @@ func validateSettings(domain, project, zone string, credentials json.RawMessage)
 	}
 	return googleCredType, nil
 }
-
-var errCredentialsTypeNotValid = stderrors.New("credentials type not valid")
 
 func parseCredentialsType(s string) (credentialsType google.CredentialsType, err error) {
 	available := [...]google.CredentialsType{
@@ -107,7 +104,7 @@ func parseCredentialsType(s string) (credentialsType google.CredentialsType, err
 			return credType, nil
 		}
 	}
-	return "", fmt.Errorf("%w: %q", errCredentialsTypeNotValid, s)
+	return "", fmt.Errorf("credentials type not valid: %q", s)
 }
 
 func (p *Provider) String() string {

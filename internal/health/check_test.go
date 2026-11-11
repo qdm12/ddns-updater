@@ -51,6 +51,8 @@ func Test_isHealthy(t *testing.T) {
 	ttlValue := uint32(ttlSeconds)
 	lookupError := errors.New("lookup error")
 
+	const lookupMismatchMessage = "lookup IP addresses do not match"
+
 	currentHistory := []models.HistoryEvent{
 		{IP: oldIPv4, Time: lastUpdate.Add(-24 * time.Hour)},
 		{IP: newIPv4, Time: lastUpdate},
@@ -59,7 +61,7 @@ func Test_isHealthy(t *testing.T) {
 	testCases := map[string]struct {
 		records     []testRecord
 		now         time.Time
-		wantErr     error
+		wantErr     string
 		wantErrPart string
 	}{
 		"no_records": {},
@@ -67,14 +69,14 @@ func Test_isHealthy(t *testing.T) {
 			records: []testRecord{
 				{status: constants.FAIL, history: []models.HistoryEvent{{IP: newIPv4, Time: lastUpdate}}},
 			},
-			wantErr:     ErrRecordUpdateFailed,
+			wantErr:     "record update failed",
 			wantErrPart: "record0.example.com",
 		},
 		"record_public_ip_unknown": {
 			records: []testRecord{
 				{status: constants.PUBLICIPUNKNOWN},
 			},
-			wantErr:     ErrPublicIPNotFound,
+			wantErr:     "public IP address not found",
 			wantErrPart: "public IP unknown",
 		},
 		"proxied_record_skipped": {
@@ -86,14 +88,14 @@ func Test_isHealthy(t *testing.T) {
 			records: []testRecord{
 				{status: constants.SUCCESS},
 			},
-			wantErr:     ErrRecordIPNotSet,
+			wantErr:     "record IP not set",
 			wantErrPart: "record0.example.com",
 		},
 		"lookup_error": {
 			records: []testRecord{
 				{status: constants.SUCCESS, history: currentHistory, lookupErr: lookupError},
 			},
-			wantErr: lookupError,
+			wantErr: "lookup error",
 		},
 		"lookup_current_ipv4_found": {
 			records: []testRecord{
@@ -124,7 +126,7 @@ func Test_isHealthy(t *testing.T) {
 					lookupIPs: []net.IP{net.ParseIP(oldIPv4.String())},
 				},
 			},
-			wantErr:     ErrLookupMismatch,
+			wantErr:     lookupMismatchMessage,
 			wantErrPart: "1.2.3.4 instead of 5.6.7.8",
 		},
 		"lookup_previous_ip_within_ttl": {
@@ -150,7 +152,7 @@ func Test_isHealthy(t *testing.T) {
 				},
 			},
 			now:         lastUpdate.Add(ttlSeconds * time.Second),
-			wantErr:     ErrLookupMismatch,
+			wantErr:     lookupMismatchMessage,
 			wantErrPart: "1.2.3.4 instead of 5.6.7.8",
 		},
 		"lookup_previous_ip_outside_ttl": {
@@ -164,7 +166,7 @@ func Test_isHealthy(t *testing.T) {
 				},
 			},
 			now:         lastUpdate.Add(2 * time.Hour),
-			wantErr:     ErrLookupMismatch,
+			wantErr:     lookupMismatchMessage,
 			wantErrPart: "1.2.3.4 instead of 5.6.7.8",
 		},
 		"lookup_previous_ip_ttl_unknown": {
@@ -177,7 +179,7 @@ func Test_isHealthy(t *testing.T) {
 				},
 			},
 			now:         lastUpdate.Add(2 * time.Minute),
-			wantErr:     ErrLookupMismatch,
+			wantErr:     lookupMismatchMessage,
 			wantErrPart: "1.2.3.4 instead of 5.6.7.8",
 		},
 		"lookup_previous_and_current_ip_found": {
@@ -204,7 +206,7 @@ func Test_isHealthy(t *testing.T) {
 					history: []models.HistoryEvent{{IP: newIPv4, Time: lastUpdate}},
 				},
 			},
-			wantErr:     ErrRecordUpdateFailed,
+			wantErr:     "record update failed",
 			wantErrPart: "record1.example.com",
 		},
 		"multiple_records_healthy": {
@@ -273,10 +275,10 @@ func Test_isHealthy(t *testing.T) {
 			dbMock.EXPECT().SelectAll().Return(healthRecords)
 
 			err := isHealthy(ctx, dbMock, resolverMock, testCase.now)
-			if testCase.wantErr == nil {
+			if testCase.wantErr == "" {
 				assert.NoError(t, err)
 			} else {
-				assert.ErrorIs(t, err, testCase.wantErr)
+				assert.ErrorContains(t, err, testCase.wantErr)
 				if testCase.wantErrPart != "" {
 					assert.ErrorContains(t, err, testCase.wantErrPart)
 				}
@@ -340,6 +342,6 @@ func Test_MakeIsHealthy_publicIPUnknown(t *testing.T) {
 	healthcheck := MakeIsHealthy(dbMock, NewMockLookupIPer(ctrl), func() time.Time { return now })
 
 	err := healthcheck(ctx)
-	assert.ErrorIs(t, err, ErrPublicIPNotFound)
+	assert.ErrorContains(t, err, "public IP address not found")
 	assert.ErrorContains(t, err, "record0.example.com")
 }

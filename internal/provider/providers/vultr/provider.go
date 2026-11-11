@@ -3,7 +3,7 @@ package vultr
 import (
 	"context"
 	"encoding/json"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -11,7 +11,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -58,11 +58,11 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, apiKey string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	if apiKey == "" {
-		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
+		return errors.New("API key is not set")
 	}
 	return nil
 }
@@ -134,7 +134,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	recordID, existingIP, err := p.getRecord(ctx, client, recordType)
 	if err != nil {
-		if !stderrors.Is(err, errors.ErrRecordNotFound) {
+		if !errors.Is(err, ddnserrors.ErrRecordNotFound) {
 			return netip.Addr{}, fmt.Errorf("error getting records for %s: %w", p.domain, err)
 		}
 		err = p.createRecord(ctx, client, ip)

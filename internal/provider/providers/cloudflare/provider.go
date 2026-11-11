@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -14,7 +14,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -28,7 +28,6 @@ type Provider struct {
 	key            string
 	token          string
 	email          string
-	userServiceKey string
 	zoneIdentifier string
 	proxied        bool
 	ttl            uint32
@@ -42,7 +41,6 @@ func New(data json.RawMessage, domain, owner string,
 		Key            string `json:"key"`
 		Token          string `json:"token"`
 		Email          string `json:"email"`
-		UserServiceKey string `json:"user_service_key"`
 		ZoneIdentifier string `json:"zone_identifier"`
 		Proxied        bool   `json:"proxied"`
 		TTL            uint32 `json:"ttl"`
@@ -52,7 +50,7 @@ func New(data json.RawMessage, domain, owner string,
 		return nil, err
 	}
 
-	err = validateSettings(domain, extraSettings.Email, extraSettings.Key, extraSettings.UserServiceKey,
+	err = validateSettings(domain, extraSettings.Email, extraSettings.Key, extraSettings.Token,
 		extraSettings.ZoneIdentifier, extraSettings.TTL)
 	if err != nil {
 		return nil, fmt.Errorf("validating provider specific settings: %w", err)
@@ -66,7 +64,6 @@ func New(data json.RawMessage, domain, owner string,
 		key:            extraSettings.Key,
 		token:          extraSettings.Token,
 		email:          extraSettings.Email,
-		userServiceKey: extraSettings.UserServiceKey,
 		zoneIdentifier: extraSettings.ZoneIdentifier,
 		proxied:        extraSettings.Proxied,
 		ttl:            extraSettings.TTL,
@@ -74,39 +71,34 @@ func New(data json.RawMessage, domain, owner string,
 }
 
 var (
-	keyRegex            = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
-	userServiceKeyRegex = regexp.MustCompile(`^v1\.0.+$`)
-	regexEmail          = regexp.MustCompile(`[a-zA-Z0-9-_.+]+@[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,10}`)
+	keyRegex   = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
+	regexEmail = regexp.MustCompile(`[a-zA-Z0-9-_.+]+@[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,10}`)
 )
 
-func validateSettings(domain, email, key, userServiceKey, zoneIdentifier string, ttl uint32) (err error) {
+func validateSettings(domain, email, key, token, zoneIdentifier string, ttl uint32) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case email != "", key != "": // email and key must be provided
 		switch {
 		case !keyRegex.MatchString(key):
-			return fmt.Errorf("%w: key %q does not match regex %q",
-				errors.ErrKeyNotValid, key, keyRegex)
+			return fmt.Errorf("key is not valid: key %q does not match regex %q", key, keyRegex)
 		case !regexEmail.MatchString(email):
-			return fmt.Errorf("%w: email %q does not match regex %q",
-				errors.ErrEmailNotValid, email, regexEmail)
+			return fmt.Errorf("email address is not valid: email %q does not match regex %q", email, regexEmail)
 		}
-	case userServiceKey != "": // only user service key
-		if !userServiceKeyRegex.MatchString(userServiceKey) {
-			return fmt.Errorf("%w: %q does not match regex %q",
-				errors.ErrUserServiceKeyNotValid, userServiceKey, userServiceKeyRegex)
-		}
-	default: // constants.API token only
+	case token == "":
+		return errors.New("token is not set: use an API token (\"token\"), " +
+			"or an email and Global API key (\"email\" and \"key\")")
+	default: // API token only
 	}
 	switch {
 	case zoneIdentifier == "":
-		return fmt.Errorf("%w", errors.ErrZoneIdentifierNotSet)
+		return errors.New("zone identifier is not set")
 	case ttl == 0:
-		return fmt.Errorf("%w", errors.ErrTTLNotSet)
+		return errors.New("TTL is not set")
 	}
 	return nil
 }
@@ -155,8 +147,6 @@ func (p *Provider) setHeaders(request *http.Request) {
 	switch {
 	case p.token != "":
 		headers.SetAuthBearer(request, p.token)
-	case p.userServiceKey != "":
-		request.Header.Set("X-Auth-User-Service-Key", p.userServiceKey)
 	case p.email != "" && p.key != "":
 		request.Header.Set("X-Auth-Email", p.email)
 		request.Header.Set("X-Auth-Key", p.key)
@@ -199,8 +189,8 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return "", false, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return "", false, fmt.Errorf("HTTP status is not valid: %d: %s",
+			response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -219,15 +209,13 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client, newIP n
 
 	switch {
 	case len(listRecordsResponse.Errors) > 0:
-		return "", false, fmt.Errorf("%w: %s",
-			errors.ErrUnsuccessful, strings.Join(listRecordsResponse.Errors, ","))
+		return "", false, fmt.Errorf("unsuccessful result: %s", strings.Join(listRecordsResponse.Errors, ","))
 	case !listRecordsResponse.Success:
-		return "", false, fmt.Errorf("%w", errors.ErrUnsuccessful)
+		return "", false, errors.New("unsuccessful result")
 	case len(listRecordsResponse.Result) == 0:
-		return "", false, fmt.Errorf("%w", errors.ErrReceivedNoResult)
+		return "", false, fmt.Errorf("%w", ddnserrors.ErrReceivedNoResult)
 	case len(listRecordsResponse.Result) > 1:
-		return "", false, fmt.Errorf("%w: %d instead of 1",
-			errors.ErrResultsCountReceived, len(listRecordsResponse.Result))
+		return "", false, fmt.Errorf("wrong number of results received: %d instead of 1", len(listRecordsResponse.Result))
 	case listRecordsResponse.Result[0].Content == newIP.String(): // up to date
 		return "", true, nil
 	}
@@ -282,8 +270,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 	defer response.Body.Close()
 
 	if response.StatusCode > http.StatusUnsupportedMediaType {
-		return "", fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return "", fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -307,7 +294,7 @@ func (p *Provider) createRecord(ctx context.Context, client *http.Client, ip net
 		for _, e := range parsedJSON.Errors {
 			fmt.Fprintf(&sb, "error %d: %s; ", e.Code, e.Message)
 		}
-		return "", fmt.Errorf("%w: %s", errors.ErrUnsuccessful, sb.String())
+		return "", fmt.Errorf("unsuccessful result: %s", sb.String())
 	}
 
 	return parsedJSON.Result.ID, nil
@@ -327,7 +314,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	identifier, upToDate, err := p.getRecordID(ctx, client, ip)
 
 	switch {
-	case stderrors.Is(err, errors.ErrReceivedNoResult):
+	case errors.Is(err, ddnserrors.ErrReceivedNoResult):
 		identifier, err = p.createRecord(ctx, client, ip)
 		if err != nil {
 			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
@@ -379,8 +366,8 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	defer response.Body.Close()
 
 	if response.StatusCode > http.StatusUnsupportedMediaType {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s",
+			response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -404,15 +391,14 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		for _, e := range parsedJSON.Errors {
 			fmt.Fprintf(&sb, "error %d: %s; ", e.Code, e.Message)
 		}
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, sb.String())
+		return netip.Addr{}, fmt.Errorf("unsuccessful result: %s", sb.String())
 	}
 
 	newIP, err = netip.ParseAddr(parsedJSON.Result.Content)
 	if err != nil {
-		return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+		return netip.Addr{}, fmt.Errorf("malformed IP address received: %w", err)
 	} else if newIP.Compare(ip) != 0 {
-		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
+		return netip.Addr{}, fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 	}
 	return newIP, nil
 }

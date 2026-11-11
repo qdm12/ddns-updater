@@ -9,7 +9,7 @@ import (
 	"net/netip"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 // https://www.vultr.com/api/#tag/dns/operation/list-dns-domain-records
@@ -72,16 +72,16 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client,
 	case err != nil:
 		return "", netip.Addr{}, fmt.Errorf("json decoding response body: %w", err)
 	case response.StatusCode == http.StatusBadRequest:
-		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrBadRequest, parsedJSON.Error)
+		return "", netip.Addr{}, fmt.Errorf("bad request sent: %s", parsedJSON.Error)
 	case response.StatusCode == http.StatusUnauthorized:
-		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrAuth, parsedJSON.Error)
+		return "", netip.Addr{}, fmt.Errorf("bad authentication: %s", parsedJSON.Error)
 	case response.StatusCode == http.StatusNotFound:
-		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrDomainNotFound, parsedJSON.Error)
+		return "", netip.Addr{}, fmt.Errorf("domain not found: %s", parsedJSON.Error)
 	case response.StatusCode != http.StatusOK:
-		return "", netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, parseJSONErrorOrFullBody(bodyBytes))
+		return "", netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s",
+			response.StatusCode, parseJSONErrorOrFullBody(bodyBytes))
 	case parsedJSON.Error != "":
-		return "", netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnsuccessful, parsedJSON.Error)
+		return "", netip.Addr{}, fmt.Errorf("unsuccessful result: %s", parsedJSON.Error)
 	}
 
 	// Status is OK (200) and error field is empty
@@ -100,5 +100,5 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client,
 		return record.ID, recordIP, nil
 	}
 
-	return "", netip.Addr{}, fmt.Errorf("%w: in %d records", errors.ErrRecordNotFound, len(parsedJSON.Records))
+	return "", netip.Addr{}, fmt.Errorf("%w: in %d records", ddnserrors.ErrRecordNotFound, len(parsedJSON.Records))
 }

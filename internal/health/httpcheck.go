@@ -2,12 +2,9 @@ package health
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 )
-
-var ErrHTTPStatusCodeNotOK = errors.New("status code is not OK")
 
 func CheckHTTP(ctx context.Context, client *http.Client) (err error) {
 	const url = "https://github.com"
@@ -23,7 +20,7 @@ func CheckHTTP(ctx context.Context, client *http.Client) (err error) {
 	_ = response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: %d", ErrHTTPStatusCodeNotOK, response.StatusCode)
+		return fmt.Errorf("status code is not OK: %d", response.StatusCode)
 	}
 
 	return nil

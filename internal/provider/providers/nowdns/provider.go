@@ -3,6 +3,7 @@ package nowdns
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -55,14 +56,14 @@ func New(data json.RawMessage, domain string,
 func validateSettings(domain, username, password string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case username == "":
-		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+		return errors.New("username is not set")
 	case password == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+		return errors.New("password is not set")
 	}
 	return nil
 }
@@ -139,34 +140,32 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		case strings.Contains(s, "good"):
 			newIP, err = netip.ParseAddr(ip.String())
 			if err != nil {
-				return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+				return netip.Addr{}, fmt.Errorf("malformed IP address received: %w", err)
 			} else if ip.Compare(newIP) != 0 {
-				return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-					errors.ErrIPReceivedMismatch, ip, newIP)
+				return netip.Addr{}, fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 			}
 			return ip, nil
 		case strings.Contains(s, "nochg"):
 			newIP, err = netip.ParseAddr(ip.String())
 			if err != nil {
-				return netip.Addr{}, fmt.Errorf("%w: in response %q", errors.ErrReceivedNoResult, s)
+				return netip.Addr{}, fmt.Errorf("%w: in response %q", ddnserrors.ErrReceivedNoResult, s)
 			} else if ip.Compare(newIP) != 0 {
-				return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-					errors.ErrIPReceivedMismatch, ip, newIP)
+				return netip.Addr{}, fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 			}
 			return ip, nil
 		default:
-			return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+			return netip.Addr{}, fmt.Errorf("unknown response received: %s", s)
 		}
 	case http.StatusBadRequest:
 		switch s {
 		case constants.Nohost:
-			return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+			return netip.Addr{}, errors.New("hostname does not exist")
 		case constants.Badauth:
-			return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
+			return netip.Addr{}, errors.New("bad authentication")
 		default:
-			return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+			return netip.Addr{}, fmt.Errorf("unknown response received: %s", s)
 		}
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, s)
 	}
 }

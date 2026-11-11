@@ -3,7 +3,7 @@ package namesilo
 import (
 	"context"
 	"encoding/json"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -15,7 +15,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -76,7 +76,7 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, key string, ttl *uint32) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	const (
@@ -85,11 +85,11 @@ func validateSettings(domain, key string, ttl *uint32) (err error) {
 	)
 	switch {
 	case key == "":
-		return fmt.Errorf("%w", errors.ErrAPIKeyNotSet)
+		return errors.New("API key is not set")
 	case ttl != nil && *ttl < minTTL:
-		return fmt.Errorf("%w: %d must be at least %d", errors.ErrTTLTooLow, *ttl, minTTL)
+		return fmt.Errorf("TTL is too low: %d must be at least %d", *ttl, minTTL)
 	case ttl != nil && *ttl > maxTTL:
-		return fmt.Errorf("%w: %d must be at most %d", errors.ErrTTLTooHigh, *ttl, maxTTL)
+		return fmt.Errorf("TTL is too high: %d must be at most %d", *ttl, maxTTL)
 	}
 	return nil
 }
@@ -154,7 +154,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, newIP netip.
 
 	recordID, currentIP, err := p.getRecord(ctx, client, recordType)
 
-	if stderrors.Is(err, errors.ErrRecordNotFound) {
+	if errors.Is(err, ddnserrors.ErrRecordNotFound) {
 		if err := p.createRecord(ctx, client, recordType, newIP); err != nil {
 			return netip.Addr{}, fmt.Errorf("creating record: %w", err)
 		}
@@ -201,7 +201,7 @@ func (p *Provider) getRecord(ctx context.Context, client *http.Client, recordTyp
 		return &record.ID, ip, nil
 	}
 
-	return nil, netip.Addr{}, fmt.Errorf("%w", errors.ErrRecordNotFound)
+	return nil, netip.Addr{}, fmt.Errorf("%w", ddnserrors.ErrRecordNotFound)
 }
 
 // https://www.namesilo.com/api-reference#dns/dns-add-record
@@ -289,8 +289,7 @@ func (p *Provider) sendAPIRequest(ctx context.Context, client *http.Client, url 
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(string(data)))
+		return nil, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, utils.ToSingleLine(string(data)))
 	}
 
 	var parsedResponse apiResponse
@@ -316,14 +315,14 @@ func (p *Provider) validateResponseCode(code json.Number, detail string) error {
 	}
 
 	codeToError := map[int64]error{
-		300: nil,                          // Successful API operation
-		110: errors.ErrKeyNotValid,        // Invalid API key
-		112: errors.ErrFeatureUnavailable, // API not available to Sub-Accounts
-		113: errors.ErrBannedAbuse,        // API account cannot be accessed from your IP
-		200: errors.ErrDomainDisabled,     // Domain is not active, or does not belong to this user
-		201: errors.ErrDNSServerSide,      // Internal system error
-		210: errors.ErrUnsuccessful,       // General error (details in response)
-		280: errors.ErrBadRequest,         // DNS modification error
+		300: nil,                                                // Successful API operation
+		110: errors.New("key is not valid"),                     // Invalid API key
+		112: errors.New("feature is not available to the user"), // API not available to Sub-Accounts
+		113: ddnserrors.ErrBannedAbuse,                          // API account cannot be accessed from your IP
+		200: errors.New("record disabled"),                      // Domain is not active, or does not belong to this user
+		201: errors.New("server side DNS error"),                // Internal system error
+		210: errors.New("unsuccessful result"),                  // General error (details in response)
+		280: errors.New("bad request sent"),                     // DNS modification error
 	}
 
 	if err, exists := codeToError[parsedCode]; exists {
@@ -333,5 +332,5 @@ func (p *Provider) validateResponseCode(code json.Number, detail string) error {
 		return fmt.Errorf("%w: %d: %s", err, parsedCode, detail)
 	}
 
-	return fmt.Errorf("%w: %d: %s", errors.ErrUnknownResponse, parsedCode, detail)
+	return fmt.Errorf("unknown response received: %d: %s", parsedCode, detail)
 }

@@ -3,14 +3,14 @@ package aliyun
 import (
 	"context"
 	"encoding/json"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
 )
@@ -62,14 +62,14 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, accessKeyID, accessSecret string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case accessKeyID == "":
-		return fmt.Errorf("%w", errors.ErrAccessKeyIDNotSet)
+		return errors.New("access key id is not set")
 	case accessSecret == "":
-		return fmt.Errorf("%w", errors.ErrAccessKeySecretNotSet)
+		return errors.New("key secret is not set")
 	}
 	return nil
 }
@@ -102,6 +102,13 @@ func (p *Provider) BuildDomainName() string {
 	return utils.BuildDomainName(p.owner, p.domain)
 }
 
+func (p *Provider) recordFQDN() string {
+	if p.owner == "@" {
+		return p.domain
+	}
+	return p.owner + "." + p.domain
+}
+
 func (p *Provider) HTML() models.HTMLRow {
 	return models.HTMLRow{
 		Domain:    fmt.Sprintf("<a href=\"http://%s\">%s</a>", p.BuildDomainName(), p.BuildDomainName()),
@@ -119,7 +126,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	recordID, err := p.getRecordID(ctx, client, recordType)
-	if stderrors.Is(err, errors.ErrRecordNotFound) {
+	if errors.Is(err, ddnserrors.ErrRecordNotFound) {
 		recordID, err = p.createRecord(ctx, client, ip)
 		if err != nil {
 			return newIP, fmt.Errorf("creating record: %w", err)

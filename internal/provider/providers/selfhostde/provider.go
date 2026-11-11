@@ -3,6 +3,7 @@ package selfhostde
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -57,16 +58,16 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, owner, username, password string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case owner == "*":
-		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
+		return errors.New("owner cannot be \"*\"")
 	case username == "":
-		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+		return errors.New("username is not set")
 	case password == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+		return errors.New("password is not set")
 	}
 	return nil
 }
@@ -138,20 +139,20 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	case http.StatusNoContent: // no change
 		return ip, nil
 	case http.StatusUnauthorized:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
+		return netip.Addr{}, errors.New("bad authentication")
 	case http.StatusConflict:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrZoneNotFound)
+		return netip.Addr{}, errors.New("zone not found")
 	case http.StatusGone:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAccountInactive)
+		return netip.Addr{}, errors.New("account is inactive")
 	case http.StatusLengthRequired:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrIPSentMalformed, ip)
+		return netip.Addr{}, fmt.Errorf("malformed IP address sent: %s", ip)
 	case http.StatusPreconditionFailed:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrPrivateIPSent, ip)
+		return netip.Addr{}, fmt.Errorf("private IP cannot be routed: %s", ip)
 	case http.StatusServiceUnavailable:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrDNSServerSide)
+		return netip.Addr{}, errors.New("server side DNS error")
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s",
+			response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	s, err := utils.ReadAndCleanBody(response.Body)
@@ -161,14 +162,14 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	switch {
 	case strings.HasPrefix(s, constants.Notfqdn):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+		return netip.Addr{}, errors.New("hostname does not exist")
 	case strings.HasPrefix(s, "abuse"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBannedAbuse)
+		return netip.Addr{}, fmt.Errorf("%w", ddnserrors.ErrBannedAbuse)
 	case strings.HasPrefix(s, "badrequest"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBadRequest)
+		return netip.Addr{}, errors.New("bad request sent")
 	case strings.HasPrefix(s, "good"), strings.HasPrefix(s, "nochg"):
 		return ip, nil
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+		return netip.Addr{}, fmt.Errorf("unknown response received: %s", s)
 	}
 }

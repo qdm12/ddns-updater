@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -84,8 +83,6 @@ type Provider interface {
 	IPv6Suffix() netip.Prefix
 	Update(ctx context.Context, client *http.Client, ip netip.Addr) (newIP netip.Addr, err error)
 }
-
-var ErrProviderUnknown = errors.New("unknown provider")
 
 //nolint:gocyclo,maintidx
 func New(providerName models.Provider, data json.RawMessage, domain, owner string, //nolint:ireturn
@@ -213,6 +210,6 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 	case constants.Zoneedit:
 		return zoneedit.New(data, domain, owner, ipVersion, ipv6Suffix)
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrProviderUnknown, providerName)
+		return nil, fmt.Errorf("unknown provider: %s", providerName)
 	}
 }

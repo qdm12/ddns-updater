@@ -28,8 +28,10 @@ See [this issue comment for context](https://github.com/qdm12/ddns-updater/issue
 - `"ttl"` integer value for record TTL in seconds (specify 1 for automatic)
 - One of the following ([how to find API keys](https://developers.cloudflare.com/fundamentals/api/get-started/)):
   - Email `"email"` and Global API Key `"key"`
-  - User service key `"user_service_key"`
   - API Token `"token"`, configured with DNS edit permissions for your DNS name's zone
+
+⚠️ The `"user_service_key"` option is no longer supported and is ignored: Cloudflare [removed service key authentication](https://developers.cloudflare.com/fundamentals/api/reference/deprecations/) on 2026-09-30.
+Remove that field from your configuration and set `"token"` instead, otherwise the program fails at startup complaining that the token is not set.
 
 ### Optional parameters
 

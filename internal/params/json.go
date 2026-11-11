@@ -45,8 +45,6 @@ func (r *Reader) JSONProviders(filePath string) (
 	return r.getProvidersFromFile(filePath)
 }
 
-var errWriteConfigToFile = errors.New("cannot write configuration to file")
-
 // getProvidersFromFile obtain the update settings from config.json.
 func (r *Reader) getProvidersFromFile(filePath string) (
 	providers []provider.Provider, warnings []string, err error,
@@ -63,7 +61,7 @@ func (r *Reader) getProvidersFromFile(filePath string) (
 		const filePerm = fs.FileMode(0o666)
 		err = r.writeFile(filePath, []byte(`{}`), filePerm)
 		if err != nil {
-			err = fmt.Errorf("%w: %w", errWriteConfigToFile, err)
+			err = fmt.Errorf("cannot write configuration to file: %w", err)
 		}
 		return nil, nil, err
 	}
@@ -94,21 +92,16 @@ func (r *Reader) getProvidersFromEnv(filePath string) (
 	buffer := bytes.NewBuffer(nil)
 	err = json.Indent(buffer, b, "", "  ")
 	if err != nil {
-		return providers, warnings, fmt.Errorf("%w: %w", errWriteConfigToFile, err)
+		return providers, warnings, fmt.Errorf("cannot write configuration to file: %w", err)
 	}
 	const filePerm = fs.FileMode(0o666)
 	err = r.writeFile(filePath, buffer.Bytes(), filePerm)
 	if err != nil {
-		return providers, warnings, fmt.Errorf("%w: %w", errWriteConfigToFile, err)
+		return providers, warnings, fmt.Errorf("cannot write configuration to file: %w", err)
 	}
 
 	return providers, warnings, nil
 }
-
-var (
-	errUnmarshalCommon = errors.New("cannot unmarshal common settings")
-	errUnmarshalRaw    = errors.New("cannot unmarshal raw configuration")
-)
 
 func extractAllSettings(jsonBytes []byte) (
 	allProviders []provider.Provider, warnings []string, err error,
@@ -121,11 +114,11 @@ func extractAllSettings(jsonBytes []byte) (
 	}{}
 	err = json.Unmarshal(jsonBytes, &config)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: %w", errUnmarshalCommon, err)
+		return nil, nil, fmt.Errorf("cannot unmarshal common settings: %w", err)
 	}
 	err = json.Unmarshal(jsonBytes, &rawConfig)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: %w", errUnmarshalRaw, err)
+		return nil, nil, fmt.Errorf("cannot unmarshal raw configuration: %w", err)
 	}
 	// TODO(v3): remove retro compatibility with IPV6_PREFIX
 	retroIPv6Suffix, err := getRetroIPv6Suffix()
@@ -146,17 +139,12 @@ func extractAllSettings(jsonBytes []byte) (
 	return allProviders, warnings, nil
 }
 
-var (
-	ErrProviderNoLongerSupported = errors.New("provider no longer supported")
-	ErrProviderMultipleDomains   = errors.New("provider does not support multiple domains")
-)
-
 func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	retroGlobalIPv6Suffix netip.Prefix) (
 	providers []provider.Provider, warnings []string, err error,
 ) {
 	if common.Provider == "google" {
-		return nil, nil, fmt.Errorf("%w: %s", ErrProviderNoLongerSupported, common.Provider)
+		return nil, nil, fmt.Errorf("provider no longer supported: %s", common.Provider)
 	}
 
 	if common.Owner == "" { // retro compatibility
@@ -178,13 +166,17 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	} else { // extract owner(s) from domain(s)
 		domain, owners, err = extractFromDomainField(common.Domain)
 		if err != nil {
+			if common.Provider == string(constants.OpenDNS) {
+				return nil, nil, fmt.Errorf("the OpenDNS network name goes in the hostname setting "+
+					"and domain must be a domain name such as example.com: %w", err)
+			}
 			return nil, nil, fmt.Errorf("extracting owners from domains: %w", err)
 		}
 	}
 
 	if common.Provider == string(constants.Myaddr) && len(owners) > 1 {
-		return nil, nil, fmt.Errorf("%w: %s for parent domain %q",
-			ErrProviderMultipleDomains, common.Provider, domain)
+		return nil, nil, fmt.Errorf("provider does not support multiple domains: %s for parent domain %q",
+			common.Provider, domain)
 	}
 
 	if common.IPVersion == "" {
@@ -231,8 +223,6 @@ func makeSettingsFromObject(common commonSettings, rawSettings json.RawMessage,
 	return providers, warnings, nil
 }
 
-var ErrMultipleDomainsSpecified = errors.New("multiple domains specified")
-
 func extractFromDomainField(domainField string) (domainRegistered string,
 	owners []string, err error,
 ) {
@@ -246,8 +236,7 @@ func extractFromDomainField(domainField string) (domainRegistered string,
 		case domainRegistered == "":
 			domainRegistered = newDomainRegistered
 		case domainRegistered != newDomainRegistered:
-			return "", nil, fmt.Errorf("%w: %q and %q",
-				ErrMultipleDomainsSpecified, domainRegistered, newDomainRegistered)
+			return "", nil, fmt.Errorf("multiple domains specified: %q and %q", domainRegistered, newDomainRegistered)
 		}
 		if domain == domainRegistered {
 			owners[i] = "@"

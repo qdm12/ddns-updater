@@ -3,6 +3,7 @@ package noip
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/ipextract"
@@ -58,19 +59,19 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, owner, username, password string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	const maxUsernameLength = 50
 	switch {
 	case owner == "*":
-		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
+		return errors.New("owner cannot be \"*\"")
 	case username == "":
-		return fmt.Errorf("%w", errors.ErrUsernameNotSet)
+		return errors.New("username is not set")
 	case len(username) > maxUsernameLength:
-		return fmt.Errorf("%w: longer than 50 characters", errors.ErrUsernameNotValid)
+		return errors.New("username is not valid: longer than 50 characters")
 	case password == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+		return errors.New("password is not set")
 	}
 	return nil
 }
@@ -146,25 +147,25 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 
 	switch s {
 	case "":
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoResult)
+		return netip.Addr{}, fmt.Errorf("%w", ddnserrors.ErrReceivedNoResult)
 	case constants.Nineoneone:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrDNSServerSide)
+		return netip.Addr{}, errors.New("server side DNS error")
 	case constants.Abuse:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBannedAbuse)
+		return netip.Addr{}, fmt.Errorf("%w", ddnserrors.ErrBannedAbuse)
 	case "!donator":
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrFeatureUnavailable)
+		return netip.Addr{}, errors.New("feature is not available to the user")
 	case constants.Badagent:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBannedUserAgent)
+		return netip.Addr{}, errors.New("user agent is banned")
 	case constants.Badauth:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
+		return netip.Addr{}, errors.New("bad authentication")
 	case constants.Nohost:
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+		return netip.Addr{}, errors.New("hostname does not exist")
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, s)
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, s)
 	} else if !strings.Contains(s, "nochg") && !strings.Contains(s, "good") {
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+		return netip.Addr{}, fmt.Errorf("unknown response received: %s", s)
 	}
 
 	var ips []netip.Addr
@@ -175,13 +176,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	if len(ips) == 0 {
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoIP)
+		return netip.Addr{}, errors.New("received no IP address in response")
 	}
 
 	newIP = ips[0]
 	if ip.Compare(newIP) != 0 {
-		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
+		return netip.Addr{}, fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 	}
 	return newIP, nil
 }

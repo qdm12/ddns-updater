@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -61,15 +61,14 @@ var keyRegex = regexp.MustCompile(`^[A-Za-z0-9]{8,14}\_[A-Za-z0-9]{21,22}$`)
 func validateSettings(domain, key, secret string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case !keyRegex.MatchString(key):
-		return fmt.Errorf("%w: key %q does not match regex %s",
-			errors.ErrKeyNotValid, key, keyRegex)
+		return fmt.Errorf("key is not valid: key %q does not match regex %s", key, keyRegex)
 	case secret == "":
-		return fmt.Errorf("%w", errors.ErrSecretNotSet)
+		return errors.New("secret is not set")
 	}
 	return nil
 }
@@ -159,7 +158,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		return netip.Addr{}, fmt.Errorf("reading response body: %w", err)
 	}
 
-	err = fmt.Errorf("%w: %d", errors.ErrHTTPStatusNotValid, response.StatusCode)
+	err = fmt.Errorf("HTTP status is not valid: %d", response.StatusCode)
 	var parsedJSON struct {
 		Message string `json:"message"`
 	}

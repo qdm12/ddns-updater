@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"errors"
 	"fmt"
 	"net/netip"
 	"slices"
@@ -23,13 +22,11 @@ func ListProviders() []Provider {
 	}
 }
 
-var ErrUnknownProvider = errors.New("unknown public IP echo DNS provider")
-
 func ValidateProvider(provider Provider) error {
 	if slices.Contains(ListProviders(), provider) {
 		return nil
 	}
-	return fmt.Errorf("%w: %s", ErrUnknownProvider, provider)
+	return fmt.Errorf("unknown public IP echo DNS provider: %s", provider)
 }
 
 type providerData struct {

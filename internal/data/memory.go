@@ -1,19 +1,16 @@
 package data
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/qdm12/ddns-updater/internal/records"
 )
 
-var ErrRecordNotFound = errors.New("record not found")
-
 func (db *Database) Select(id uint) (record records.Record, err error) {
 	db.RLock()
 	defer db.RUnlock()
 	if id > uint(len(db.data))-1 {
-		return record, fmt.Errorf("%w: for id %d", ErrRecordNotFound, id)
+		return record, fmt.Errorf("record not found: for id %d", id)
 	}
 	return db.data[id], nil
 }

@@ -2,7 +2,6 @@ package health
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/netip"
 	"slices"
@@ -23,16 +22,6 @@ func MakeIsHealthy(db AllSelecter, resolver LookupIPer,
 	}
 }
 
-var (
-	ErrRecordUpdateFailed = errors.New("record update failed")
-	ErrRecordIPNotSet     = errors.New("record IP not set")
-	ErrLookupMismatch     = errors.New("lookup IP addresses do not match")
-	// ErrPublicIPNotFound is returned when a record could not be evaluated
-	// because its public IP address was never obtained, for example right
-	// after a restart when the network is not up yet.
-	ErrPublicIPNotFound = errors.New("public IP address not found")
-)
-
 // isHealthy checks all the records were updated successfully and returns an
 // error if not. Within a record TTL after its last update, previous IP
 // addresses are also accepted since resolvers may not have propagated the
@@ -44,9 +33,9 @@ func isHealthy(ctx context.Context, db AllSelecter, resolver LookupIPer,
 	for _, record := range records {
 		switch record.Status {
 		case constants.FAIL:
-			return fmt.Errorf("%w: %s", ErrRecordUpdateFailed, record.String())
+			return fmt.Errorf("record update failed: %s", record.String())
 		case constants.PUBLICIPUNKNOWN:
-			return fmt.Errorf("%w: %s", ErrPublicIPNotFound, record.String())
+			return fmt.Errorf("public IP address not found: %s", record.String())
 		}
 
 		if record.Provider.Proxied() {
@@ -57,7 +46,7 @@ func isHealthy(ctx context.Context, db AllSelecter, resolver LookupIPer,
 
 		currentIP := record.History.GetCurrentIP()
 		if !currentIP.IsValid() {
-			return fmt.Errorf("%w: for hostname %s", ErrRecordIPNotSet, hostname)
+			return fmt.Errorf("record IP not set: for hostname %s", hostname)
 		}
 
 		acceptedIPs := []netip.Addr{currentIP}
@@ -89,8 +78,8 @@ func isHealthy(ctx context.Context, db AllSelecter, resolver LookupIPer,
 			lookedUpIPsString[i] = ip.String()
 		}
 		if !found {
-			return fmt.Errorf("%w: %s instead of %s for %s",
-				ErrLookupMismatch, strings.Join(lookedUpIPsString, ","), currentIP, hostname)
+			return fmt.Errorf("lookup IP addresses do not match: %s instead of %s for %s",
+				strings.Join(lookedUpIPsString, ","), currentIP, hostname)
 		}
 	}
 	return nil

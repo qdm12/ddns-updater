@@ -2,7 +2,6 @@ package update
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/netip"
 	"strconv"
@@ -12,8 +11,6 @@ import (
 )
 
 type getIPFunc func(ctx context.Context) (ip netip.Addr, err error)
-
-var ErrIPv6NotSupported = errors.New("IPv6 is not supported on this system")
 
 func tryAndRepeatGettingIP(ctx context.Context, getIPFunc getIPFunc,
 	logger Logger, version ipversion.IPVersion,
@@ -52,7 +49,7 @@ func tryAndRepeatGettingIP(ctx context.Context, getIPFunc getIPFunc,
 
 	err = &joinedErrors{errs: errs}
 	if allErrorsAreIPv6NotSupported {
-		return ip, fmt.Errorf("%w: after %d tries, errors were: %w", ErrIPv6NotSupported, tries, err)
+		return ip, fmt.Errorf("IPv6 is not supported on this system: after %d tries, errors were: %w", tries, err)
 	}
 	return ip, fmt.Errorf("%s: after %d tries, errors were: %w", logMessagePrefix, tries, err)
 }

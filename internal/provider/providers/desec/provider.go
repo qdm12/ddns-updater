@@ -3,6 +3,7 @@ package desec
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -57,11 +57,11 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, token string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	if token == "" {
-		return fmt.Errorf("%w", errors.ErrTokenNotSet)
+		return errors.New("token is not set")
 	}
 	return nil
 }
@@ -142,22 +142,22 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusUnauthorized:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrAuth, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("bad authentication: %s", utils.ToSingleLine(s))
 	case http.StatusNotFound:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrHostnameNotExists, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("hostname does not exist: %s", utils.ToSingleLine(s))
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid,
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s",
 			response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	switch {
 	case strings.HasPrefix(s, constants.Notfqdn):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+		return netip.Addr{}, errors.New("hostname does not exist")
 	case strings.HasPrefix(s, "badrequest"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrBadRequest)
+		return netip.Addr{}, errors.New("bad request sent")
 	case strings.HasPrefix(s, "good"):
 		return ip, nil
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("unknown response received: %s", utils.ToSingleLine(s))
 	}
 }

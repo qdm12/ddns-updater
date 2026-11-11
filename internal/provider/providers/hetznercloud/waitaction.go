@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 )
 
 func (p *Provider) waitAction(ctx context.Context, client *http.Client, id uint64) (err error) {
 	if id == 0 {
-		return fmt.Errorf("%w: action id is zero", errors.ErrReceivedNoResult)
+		return fmt.Errorf("%w: action id is zero", ddnserrors.ErrReceivedNoResult)
 	}
 
 	const sleepDuration = time.Second
@@ -55,17 +55,14 @@ func (p *Provider) waitAction(ctx context.Context, client *http.Client, id uint6
 			case <-timer.C:
 			}
 		case "error":
-			err = fmt.Errorf("%w: action id %d failed",
-				errors.ErrUnsuccessful, action.ID)
+			err = fmt.Errorf("unsuccessful result: action id %d failed", action.ID)
 			if action.Error != nil {
 				err = fmt.Errorf("%w: %v", err, action.Error)
 			}
 			return err
 		default:
-			return fmt.Errorf("%w: unknown action status %q for action id %d",
-				errors.ErrDNSServerSide, action.Status, action.ID)
+			return fmt.Errorf("server side DNS error: unknown action status %q for action id %d", action.Status, action.ID)
 		}
 	}
-	return fmt.Errorf("%w: action id %d did not complete after %d tries",
-		errors.ErrUnsuccessful, id, tries)
+	return fmt.Errorf("unsuccessful result: action id %d did not complete after %d tries", id, tries)
 }

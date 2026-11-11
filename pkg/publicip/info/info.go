@@ -67,7 +67,7 @@ func (i *Info) Get(ctx context.Context, ip netip.Addr) (result Result, err error
 			// try next provider
 			index++
 			failed++
-			if errors.Is(err, ErrTooManyRequests) {
+			if errors.Is(err, errTooManyRequests) {
 				i.ban(provider)
 			}
 			continue

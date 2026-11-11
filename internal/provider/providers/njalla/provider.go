@@ -3,6 +3,7 @@ package njalla
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -53,11 +53,11 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, key string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	if key == "" {
-		return fmt.Errorf("%w", errors.ErrKeyNotSet)
+		return errors.New("key is not set")
 	}
 	return nil
 }
@@ -145,7 +145,7 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	switch response.StatusCode {
 	case http.StatusOK:
 		if respBody.Message != "record updated" {
-			return netip.Addr{}, fmt.Errorf("%w: message received: %s", errors.ErrUnknownResponse, respBody.Message)
+			return netip.Addr{}, fmt.Errorf("unknown response received: message received: %s", respBody.Message)
 		}
 		ipString := respBody.Value.A
 		if updatingIP6 {
@@ -153,17 +153,16 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		}
 		newIP, err = netip.ParseAddr(ipString)
 		if err != nil {
-			return netip.Addr{}, fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+			return netip.Addr{}, fmt.Errorf("malformed IP address received: %w", err)
 		} else if ip.Compare(newIP) != 0 {
-			return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-				errors.ErrIPReceivedMismatch, ip, newIP)
+			return netip.Addr{}, fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 		}
 		return newIP, nil
 	case http.StatusUnauthorized:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrAuth, respBody.Message)
+		return netip.Addr{}, fmt.Errorf("bad authentication: %s", respBody.Message)
 	case http.StatusInternalServerError:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrBadRequest, respBody.Message)
+		return netip.Addr{}, fmt.Errorf("bad request sent: %s", respBody.Message)
 	}
 
-	return netip.Addr{}, fmt.Errorf("%w: %d: %s", errors.ErrHTTPStatusNotValid, response.StatusCode, respBody.Message)
+	return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, respBody.Message)
 }

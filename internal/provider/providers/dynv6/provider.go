@@ -3,6 +3,7 @@ package dynv6
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/publicip/ipversion"
@@ -53,14 +53,14 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, owner, token string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	switch {
 	case owner == "*":
-		return fmt.Errorf("%w", errors.ErrOwnerWildcard)
+		return errors.New("owner cannot be \"*\"")
 	case token == "":
-		return fmt.Errorf("%w", errors.ErrTokenNotSet)
+		return errors.New("token is not set")
 	}
 	return nil
 }
@@ -140,6 +140,6 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	if response.StatusCode == http.StatusOK {
 		return ip, nil
 	}
-	return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-		errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+	return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s",
+		response.StatusCode, utils.BodyToSingleLine(response.Body))
 }

@@ -3,6 +3,7 @@ package gigahostno
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/ipextract"
@@ -65,7 +65,7 @@ func New(data json.RawMessage, domain, owner string,
 func validateSettings(domain, email, password, apiKey string) (err error) {
 	err = utils.CheckDomain(domain)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrDomainNotValid, err)
+		return fmt.Errorf("domain is not valid: %w", err)
 	}
 
 	// Authentication is done either with an API key or with the
@@ -76,12 +76,11 @@ func validateSettings(domain, email, password, apiKey string) (err error) {
 
 	switch {
 	case email == "" && password == "":
-		return fmt.Errorf("%w: API key, or email and password, must be set",
-			errors.ErrCredentialsNotSet)
+		return errors.New("credentials are not set: API key, or email and password, must be set")
 	case email == "":
-		return fmt.Errorf("%w", errors.ErrEmailNotSet)
+		return errors.New("email is not set")
 	case password == "":
-		return fmt.Errorf("%w", errors.ErrPasswordNotSet)
+		return errors.New("password is not set")
 	}
 	return nil
 }
@@ -169,18 +168,17 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		// success, handled below
 	case response.StatusCode == http.StatusUnauthorized,
 		strings.HasPrefix(s, constants.Badauth):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
+		return netip.Addr{}, errors.New("bad authentication")
 	case strings.HasPrefix(s, constants.Nohost), strings.HasPrefix(s, constants.Notfqdn):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrHostnameNotExists)
+		return netip.Addr{}, errors.New("hostname does not exist")
 	case strings.HasPrefix(s, constants.Badagent):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrIPSentMalformed)
+		return netip.Addr{}, errors.New("malformed IP address sent")
 	case strings.HasPrefix(s, "dnserr"):
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrDNSServerSide)
+		return netip.Addr{}, errors.New("server side DNS error")
 	case response.StatusCode != http.StatusOK:
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, utils.ToSingleLine(s))
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("unknown response received: %s", utils.ToSingleLine(s))
 	}
 
 	var ips []netip.Addr
@@ -190,13 +188,12 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 		ips = ipextract.IPv6(s)
 	}
 	if len(ips) == 0 {
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoIP)
+		return netip.Addr{}, errors.New("received no IP address in response")
 	}
 
 	newIP = ips[0]
 	if newIP.Compare(ip) != 0 {
-		return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-			errors.ErrIPReceivedMismatch, ip, newIP)
+		return netip.Addr{}, fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 	}
 	return newIP, nil
 }

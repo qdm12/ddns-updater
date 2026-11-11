@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
@@ -20,9 +20,8 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 		Host:   "dns.aliyuncs.com",
 	}
 	values := newURLValues(p.accessKeyID)
-	values.Set("Action", "DescribeDomainRecords")
-	values.Set("DomainName", p.domain)
-	values.Set("RRKeyWord", p.owner)
+	values.Set("Action", "DescribeSubDomainRecords")
+	values.Set("SubDomain", p.recordFQDN())
 	values.Set("Type", recordType)
 
 	sign(http.MethodGet, values, p.accessSecret)
@@ -44,7 +43,7 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 	switch response.StatusCode {
 	case http.StatusOK:
 	case http.StatusNotFound:
-		return "", fmt.Errorf("%w", errors.ErrRecordNotFound)
+		return "", fmt.Errorf("%w", ddnserrors.ErrRecordNotFound)
 	case http.StatusBadRequest:
 		bodyBytes, err := io.ReadAll(response.Body)
 		if err != nil {
@@ -56,15 +55,13 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 		}
 		err = json.Unmarshal(bodyBytes, &data)
 		if err != nil || data.Code != "InvalidDomainName.NoExist" {
-			return "", fmt.Errorf("%w: %d: %s",
-				errors.ErrHTTPStatusNotValid, response.StatusCode,
+			return "", fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode,
 				utils.ToSingleLine(string(bodyBytes)))
 		}
 
-		return "", fmt.Errorf("%w", errors.ErrRecordNotFound)
+		return "", fmt.Errorf("%w", ddnserrors.ErrRecordNotFound)
 	default:
-		return "", fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode,
+		return "", fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode,
 			utils.BodyToSingleLine(response.Body))
 	}
 
@@ -83,11 +80,11 @@ func (p *Provider) getRecordID(ctx context.Context, client *http.Client,
 
 	switch len(data.DomainRecords.Record) {
 	case 0:
-		return "", fmt.Errorf("%w", errors.ErrRecordNotFound)
+		return "", fmt.Errorf("%w", ddnserrors.ErrRecordNotFound)
 	case 1:
 	default:
-		return "", fmt.Errorf("%w: %d records found instead of 1",
-			errors.ErrResultsCountReceived, len(data.DomainRecords.Record))
+		return "", fmt.Errorf("wrong number of results received: %d records found instead of 1",
+			len(data.DomainRecords.Record))
 	}
 
 	return data.DomainRecords.Record[0].RecordID, nil

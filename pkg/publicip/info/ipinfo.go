@@ -42,11 +42,11 @@ func (p *ipinfo) get(ctx context.Context, ip netip.Addr) (
 	case http.StatusForbidden, http.StatusTooManyRequests:
 		bodyString := bodyToSingleLine(response.Body)
 		_ = response.Body.Close()
-		return result, fmt.Errorf("%w (%s)", ErrTooManyRequests, bodyString)
+		return result, fmt.Errorf("%w (%s)", errTooManyRequests, bodyString)
 	default:
 		bodyString := bodyToSingleLine(response.Body)
 		_ = response.Body.Close()
-		return result, fmt.Errorf("%w: %d %s (%s)", ErrBadHTTPStatus,
+		return result, fmt.Errorf("bad HTTP status received: %d %s (%s)",
 			response.StatusCode, response.Status, bodyString)
 	}
 

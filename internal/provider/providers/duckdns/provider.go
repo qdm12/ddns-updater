@@ -3,6 +3,7 @@ package duckdns
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/netip"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/qdm12/ddns-updater/internal/models"
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/headers"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 	"github.com/qdm12/ddns-updater/pkg/ipextract"
@@ -81,16 +81,13 @@ func validateSettings(domain, owner, token string) (err error) {
 	const maxDomainLabels = 3 // domain.duckdns.org
 	switch {
 	case !regexDomain.MatchString(domain):
-		return fmt.Errorf(`%w: %q must have the effective TLD "duckdns.org"`,
-			errors.ErrDomainNotValid, domain)
+		return fmt.Errorf("domain is not valid: %q must have the effective TLD \"duckdns.org\"", domain)
 	case strings.Count(owner, ".") > maxDomainLabels-1:
-		return fmt.Errorf("%w: %q has more than %d labels",
-			errors.ErrDomainNotValid, domain, maxDomainLabels)
+		return fmt.Errorf("domain is not valid: %q has more than %d labels", domain, maxDomainLabels)
 	case owner == "*":
-		return fmt.Errorf("%w: %s", errors.ErrOwnerWildcard, owner)
+		return fmt.Errorf("owner cannot be \"*\": %s", owner)
 	case !tokenRegex.MatchString(token):
-		return fmt.Errorf("%w: token %q does not match regex %q",
-			errors.ErrTokenNotValid, token, tokenRegex)
+		return fmt.Errorf("token is not valid: token %q does not match regex %q", token, tokenRegex)
 	}
 	return nil
 }
@@ -167,16 +164,15 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return netip.Addr{}, fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.ToSingleLine(s))
+		return netip.Addr{}, fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, utils.ToSingleLine(s))
 	}
 
 	const minChars = 2
 	switch {
 	case len(s) < minChars:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrResponseTooShort, s)
+		return netip.Addr{}, fmt.Errorf("response is too short: %s", s)
 	case s[0:minChars] == "ko":
-		return netip.Addr{}, fmt.Errorf("%w", errors.ErrAuth)
+		return netip.Addr{}, errors.New("bad authentication")
 	case s[0:minChars] == "ok":
 		var ips []netip.Addr
 		if ip.Is6() {
@@ -185,15 +181,14 @@ func (p *Provider) Update(ctx context.Context, client *http.Client, ip netip.Add
 			ips = ipextract.IPv4(s)
 		}
 		if len(ips) == 0 {
-			return netip.Addr{}, fmt.Errorf("%w", errors.ErrReceivedNoIP)
+			return netip.Addr{}, errors.New("received no IP address in response")
 		}
 		newIP = ips[0]
 		if newIP.Compare(ip) != 0 {
-			return netip.Addr{}, fmt.Errorf("%w: sent ip %s to update but received %s",
-				errors.ErrIPReceivedMismatch, ip, newIP)
+			return netip.Addr{}, fmt.Errorf("mismatching IP address received: sent ip %s to update but received %s", ip, newIP)
 		}
 		return newIP, nil
 	default:
-		return netip.Addr{}, fmt.Errorf("%w: %s", errors.ErrUnknownResponse, s)
+		return netip.Addr{}, fmt.Errorf("unknown response received: %s", s)
 	}
 }

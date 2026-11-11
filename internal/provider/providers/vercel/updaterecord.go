@@ -9,7 +9,7 @@ import (
 	"net/netip"
 
 	"github.com/qdm12/ddns-updater/internal/provider/constants"
-	"github.com/qdm12/ddns-updater/internal/provider/errors"
+	ddnserrors "github.com/qdm12/ddns-updater/internal/provider/errors"
 	"github.com/qdm12/ddns-updater/internal/provider/utils"
 )
 
@@ -63,17 +63,14 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client, record
 	switch response.StatusCode {
 	case http.StatusOK, http.StatusCreated:
 	case http.StatusBadRequest:
-		return fmt.Errorf("%w: %s",
-			errors.ErrBadRequest, utils.BodyToSingleLine(response.Body))
+		return fmt.Errorf("bad request sent: %s", utils.BodyToSingleLine(response.Body))
 	case http.StatusUnauthorized, http.StatusForbidden:
-		return fmt.Errorf("%w: %s",
-			errors.ErrAuth, utils.BodyToSingleLine(response.Body))
+		return fmt.Errorf("bad authentication: %s", utils.BodyToSingleLine(response.Body))
 	case http.StatusNotFound:
 		return fmt.Errorf("%w: %s",
-			errors.ErrRecordNotFound, utils.BodyToSingleLine(response.Body))
+			ddnserrors.ErrRecordNotFound, utils.BodyToSingleLine(response.Body))
 	default:
-		return fmt.Errorf("%w: %d: %s",
-			errors.ErrHTTPStatusNotValid, response.StatusCode, utils.BodyToSingleLine(response.Body))
+		return fmt.Errorf("HTTP status is not valid: %d: %s", response.StatusCode, utils.BodyToSingleLine(response.Body))
 	}
 
 	var data struct {
@@ -87,12 +84,11 @@ func (p *Provider) updateRecord(ctx context.Context, client *http.Client, record
 
 	receivedIP, err := netip.ParseAddr(data.Value)
 	if err != nil {
-		return fmt.Errorf("%w: %w", errors.ErrIPReceivedMalformed, err)
+		return fmt.Errorf("malformed IP address received: %w", err)
 	}
 
 	if receivedIP != ip {
-		return fmt.Errorf("%w: sent %s and received %s",
-			errors.ErrIPReceivedMismatch, ip, receivedIP)
+		return fmt.Errorf("mismatching IP address received: sent %s and received %s", ip, receivedIP)
 	}
 
 	return nil

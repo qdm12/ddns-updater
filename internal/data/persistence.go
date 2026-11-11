@@ -10,7 +10,7 @@ func (db *Database) Update(id uint, record records.Record) (err error) {
 	db.Lock()
 	defer db.Unlock()
 	if id > uint(len(db.data))-1 {
-		return fmt.Errorf("%w: for id %d", ErrRecordNotFound, id)
+		return fmt.Errorf("record not found: for id %d", id)
 	}
 	currentCount := len(db.data[id].History)
 	newCount := len(record.History)

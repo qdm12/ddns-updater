@@ -40,7 +40,7 @@ func (f *Fetcher) ip(ctx context.Context, ring *urlsRing, version ipversion.IPVe
 		if banned == len(ring.urls) {
 			banString := ring.banString()
 			ring.mutex.Unlock()
-			return netip.Addr{}, fmt.Errorf("%w: %s", ErrBanned, banString)
+			return netip.Addr{}, fmt.Errorf("%w: %s", errBanned, banString)
 		}
 	}
 
@@ -53,9 +53,9 @@ func (f *Fetcher) ip(ctx context.Context, ring *urlsRing, version ipversion.IPVe
 
 	publicIP, err = fetch(ctx, f.client, url, version)
 	if err != nil {
-		if errors.Is(err, ErrBanned) {
+		if errors.Is(err, errBanned) {
 			ring.mutex.Lock()
-			ring.banned[index] = strings.ReplaceAll(err.Error(), ErrBanned.Error()+": ", "")
+			ring.banned[index] = strings.ReplaceAll(err.Error(), errBanned.Error()+": ", "")
 			ring.mutex.Unlock()
 		}
 		return netip.Addr{}, err

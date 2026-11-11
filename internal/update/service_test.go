@@ -266,9 +266,11 @@ func Test_Service_updateNecessary(t *testing.T) {
 
 			const period = 10 * time.Minute
 			const cooldown = time.Duration(0)
-			cycleTime := time.Date(2026, time.October, 30, 3, 25, 34, 0, time.UTC)
+			timeFunc := func() time.Time {
+				return time.Date(2026, time.October, 30, 3, 25, 34, 0, time.UTC)
+			}
 			service := NewService(mocks.db, mocks.updater, mocks.fetcher, period, cooldown,
-				mocks.logger, mocks.resolver, func() time.Time { return cycleTime }, mocks.hio)
+				mocks.logger, mocks.resolver, timeFunc, mocks.hio)
 
 			errs := service.updateNecessary(ctx)
 

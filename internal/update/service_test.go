@@ -19,6 +19,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+//nolint:maintidx
 func Test_Service_updateNecessary(t *testing.T) {
 	t.Parallel()
 
@@ -95,6 +96,77 @@ func Test_Service_updateNecessary(t *testing.T) {
 				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Fail).Return(nil)
 			},
 		},
+		// The network goes down after a record was up to date, so the record can
+		// no longer be verified and goes the public IP unknown state.
+		"public_ip_not_found_after_being_up_to_date": {
+			initialState: recordState{
+				status:  constants.UPTODATE,
+				message: "no IP change for 1 hour",
+				time:    time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC),
+				history: []models.HistoryEvent{
+					{IP: netip.MustParseAddr("203.0.113.45"), Time: time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC)},
+				},
+			},
+			wantErrs: []string{
+				"obtaining ipv4 address: after 3 tries, errors were: network is unreachable, " +
+					"network is unreachable, network is unreachable",
+			},
+			configure: func(ctx context.Context, mocks *serviceMocks, initialRecord records.Record) {
+				mocks.db.EXPECT().SelectAll().Return([]records.Record{initialRecord})
+				mocks.provider.EXPECT().IPVersion().Times(3).Return(ipversion.IP4)
+				mocks.provider.EXPECT().BuildDomainName().Return("ddns.example.com")
+				mocks.fetcher.EXPECT().IP4(ctx).Times(3).
+					Return(netip.Addr{}, errors.New("network is unreachable"))
+				mocks.logger.EXPECT().Debug("configured to fetch IP: v4 or v6: false, v4: true, v6: false")
+				mocks.logger.EXPECT().Debug("obtaining ipv4 address: try 1 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Debug("obtaining ipv4 address: try 2 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Debug("obtaining ipv4 address: try 3 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Error("obtaining ipv4 address: after 3 tries, errors were: " +
+					"network is unreachable, network is unreachable, network is unreachable")
+				mocks.logger.EXPECT().Debug("your public IP address are: v4 or v6: invalid IP, " +
+					"v4: invalid IP, v6: invalid IP")
+				mocks.logger.EXPECT().Warn("Skipping update for ddns.example.com because ipv4 address was not found")
+				mocks.db.EXPECT().Select(uint(0)).Return(initialRecord, nil)
+				mocks.db.EXPECT().Update(uint(0), recordMatcher{want: recordState{
+					status: constants.PUBLICIPUNKNOWN,
+					time:   time.Date(2026, time.October, 30, 3, 25, 34, 0, time.UTC),
+					history: []models.HistoryEvent{
+						{IP: netip.MustParseAddr("203.0.113.45"), Time: time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC)},
+					},
+				}}).Return(nil)
+				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Fail).Return(nil)
+			},
+		},
+		// A failed update is kept, because its message tells why the record is
+		// not up to date, whereas the public IP unknown state would not.
+		"public_ip_not_found_after_update_failure": {
+			initialState: recordState{
+				status:  constants.FAIL,
+				message: "HTTP error 500",
+				time:    time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC),
+			},
+			wantErrs: []string{
+				"obtaining ipv4 address: after 3 tries, errors were: network is unreachable, " +
+					"network is unreachable, network is unreachable",
+			},
+			configure: func(ctx context.Context, mocks *serviceMocks, initialRecord records.Record) {
+				mocks.db.EXPECT().SelectAll().Return([]records.Record{initialRecord})
+				mocks.provider.EXPECT().IPVersion().Times(3).Return(ipversion.IP4)
+				mocks.provider.EXPECT().BuildDomainName().Return("ddns.example.com")
+				mocks.fetcher.EXPECT().IP4(ctx).Times(3).
+					Return(netip.Addr{}, errors.New("network is unreachable"))
+				mocks.logger.EXPECT().Debug("configured to fetch IP: v4 or v6: false, v4: true, v6: false")
+				mocks.logger.EXPECT().Debug("obtaining ipv4 address: try 1 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Debug("obtaining ipv4 address: try 2 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Debug("obtaining ipv4 address: try 3 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Error("obtaining ipv4 address: after 3 tries, errors were: " +
+					"network is unreachable, network is unreachable, network is unreachable")
+				mocks.logger.EXPECT().Debug("your public IP address are: v4 or v6: invalid IP, " +
+					"v4: invalid IP, v6: invalid IP")
+				mocks.logger.EXPECT().Warn("Skipping update for ddns.example.com because ipv4 address was not found")
+				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Fail).Return(nil)
+			},
+		},
 		"public_ip_found_and_up_to_date": {
 			initialState: recordState{
 				status: constants.UNSET,
@@ -135,7 +207,7 @@ func Test_Service_updateNecessary(t *testing.T) {
 			publicIPv4: netip.MustParseAddr("203.0.113.45"),
 			configure: func(ctx context.Context, mocks *serviceMocks, initialRecord records.Record) {
 				mocks.db.EXPECT().SelectAll().Return([]records.Record{initialRecord})
-				mocks.provider.EXPECT().IPVersion().Times(3).Return(ipversion.IP4)
+				mocks.provider.EXPECT().IPVersion().Times(4).Return(ipversion.IP4)
 				mocks.provider.EXPECT().BuildDomainName().Return("ddns.example.com")
 				mocks.provider.EXPECT().Proxied().Return(true)
 				mocks.fetcher.EXPECT().IP4(ctx).Return(netip.MustParseAddr("203.0.113.45"), nil)
@@ -164,7 +236,7 @@ func Test_Service_updateNecessary(t *testing.T) {
 			publicIPv4: netip.MustParseAddr("203.0.113.45"),
 			configure: func(ctx context.Context, mocks *serviceMocks, initialRecord records.Record) {
 				mocks.db.EXPECT().SelectAll().Return([]records.Record{initialRecord})
-				mocks.provider.EXPECT().IPVersion().Times(2).Return(ipversion.IP4)
+				mocks.provider.EXPECT().IPVersion().Times(3).Return(ipversion.IP4)
 				mocks.provider.EXPECT().BuildDomainName().Return("ddns.example.com")
 				mocks.provider.EXPECT().Proxied().Return(true)
 				mocks.fetcher.EXPECT().IP4(ctx).Return(netip.MustParseAddr("203.0.113.45"), nil)

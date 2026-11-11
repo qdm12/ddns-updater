@@ -32,6 +32,7 @@ func Test_Service_updateNecessary(t *testing.T) {
 		// publicIPv4 is the address returned by the public IP address fetcher.
 		// An invalid address makes the fetch fail.
 		publicIPv4 netip.Addr
+		cooldown   time.Duration
 		wantErrs   []string
 		// configure sets the mock expectations of the cycle, written out for
 		// each test case so the subtest body has no logic.
@@ -225,9 +226,10 @@ func Test_Service_updateNecessary(t *testing.T) {
 				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Ok).Return(nil)
 			},
 		},
-		// A failed update is not a transient state: the failure is kept until
-		// the record is updated again.
-		"update_failure_not_re_evaluated": {
+		// A failed update is not a transient state, but the record has just been
+		// checked against the public IP address and found to match it, so the
+		// failure is replaced by the up to date status.
+		"update_failure_cleared_when_matching_public_ip": {
 			initialState: recordState{
 				status:  constants.FAIL,
 				message: "HTTP error 500",
@@ -248,6 +250,39 @@ func Test_Service_updateNecessary(t *testing.T) {
 					"v4: 203.0.113.45, v6: invalid IP")
 				mocks.logger.EXPECT().Debug("Last ipv4 address stored for ddns.example.com is " +
 					"203.0.113.45 and your ipv4 address is 203.0.113.45, skipping update")
+				mocks.db.EXPECT().Select(uint(0)).Return(initialRecord, nil)
+				mocks.db.EXPECT().Update(uint(0), recordMatcher{want: recordState{
+					status: constants.UPTODATE,
+					time:   time.Date(2026, time.October, 30, 3, 25, 34, 0, time.UTC),
+					history: []models.HistoryEvent{
+						{IP: netip.MustParseAddr("203.0.113.45"), Time: time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC)},
+					},
+				}}).Return(nil)
+				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Ok).Return(nil)
+			},
+		},
+		// The record is not checked against the public IP address during its
+		// cooldown period, so the failure and its message are kept.
+		"update_failure_kept_within_cooldown_period": {
+			initialState: recordState{
+				status:  constants.FAIL,
+				message: "HTTP error 500",
+				time:    time.Date(2026, time.October, 30, 3, 20, 34, 0, time.UTC),
+				history: []models.HistoryEvent{
+					{IP: netip.MustParseAddr("203.0.113.45"), Time: time.Date(2026, time.October, 30, 3, 20, 34, 0, time.UTC)},
+				},
+			},
+			publicIPv4: netip.MustParseAddr("203.0.113.45"),
+			cooldown:   10 * time.Minute,
+			configure: func(ctx context.Context, mocks *serviceMocks, initialRecord records.Record) {
+				mocks.db.EXPECT().SelectAll().Return([]records.Record{initialRecord})
+				mocks.provider.EXPECT().IPVersion().Times(3).Return(ipversion.IP4)
+				mocks.provider.EXPECT().BuildDomainName().Return("ddns.example.com")
+				mocks.fetcher.EXPECT().IP4(ctx).Return(netip.MustParseAddr("203.0.113.45"), nil)
+				mocks.logger.EXPECT().Debug("configured to fetch IP: v4 or v6: false, v4: true, v6: false")
+				mocks.logger.EXPECT().Debug("your public IP address are: v4 or v6: invalid IP, " +
+					"v4: 203.0.113.45, v6: invalid IP")
+				mocks.logger.EXPECT().Debug("record ddns.example.com (ipv4) is within cooldown period of 10m0s, skipping update")
 				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Ok).Return(nil)
 			},
 		},
@@ -265,7 +300,7 @@ func Test_Service_updateNecessary(t *testing.T) {
 			testCase.configure(ctx, mocks, initialRecord)
 
 			const period = 10 * time.Minute
-			const cooldown = time.Duration(0)
+			cooldown := testCase.cooldown
 			timeFunc := func() time.Time {
 				return time.Date(2026, time.October, 30, 3, 25, 34, 0, time.UTC)
 			}

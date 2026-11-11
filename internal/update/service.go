@@ -301,12 +301,15 @@ func getIPsMatchingVersion(ip, ipv4, ipv6 []netip.Addr, ipVersion ipversion.IPVe
 	}
 }
 
-func setInitialUpToDateStatus(db Database, id uint, updateIP netip.Addr, now time.Time) error {
+func setUpToDateStatus(db Database, id uint, updateIP netip.Addr, now time.Time) error {
 	record, err := db.Select(id)
 	if err != nil {
 		return err
 	}
 	record.Status = constants.UPTODATE
+	// The message of the previous status does not apply anymore, for example it
+	// could be the reason of a previous update failure.
+	record.Message = ""
 	record.Time = now
 	if !record.History.GetCurrentIP().IsValid() {
 		record.History = append(record.History, models.HistoryEvent{
@@ -350,7 +353,8 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 
 	for i, record := range records {
 		id := uint(i)
-		if verdicts[i] == updateNeeded {
+		verdict := verdicts[i]
+		if verdict == updateNeeded {
 			continue
 		}
 		ipVersion := record.Provider.IPVersion()
@@ -379,16 +383,20 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 		// although its records are correct.
 		transientStatus := record.Status == constants.UNSET ||
 			record.Status == constants.PUBLICIPUNKNOWN
-		if !transientStatus {
+		// A failure is only cleared when the record has just been checked against
+		// the public IP address and found to match it. Otherwise the reason of the
+		// failure would disappear although the record is still not up to date.
+		repairedFailure := record.Status == constants.FAIL && verdict == updateMatchesPublicIP
+		if !transientStatus && !repairedFailure {
 			continue
 		}
 		if updateIP.Is6() {
 			updateIP = ipv6WithSuffix(updateIP, record.Provider.IPv6Suffix())
 		}
 
-		err := setInitialUpToDateStatus(s.db, id, updateIP, now)
+		err := setUpToDateStatus(s.db, id, updateIP, now)
 		if err != nil {
-			err = fmt.Errorf("setting initial up to date status: %w", err)
+			err = fmt.Errorf("setting up to date status: %w", err)
 			errors = append(errors, err)
 			s.logger.Error(err.Error())
 		}

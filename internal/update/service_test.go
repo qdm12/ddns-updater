@@ -1,10 +1,11 @@
 package update
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"net/netip"
 	"slices"
+	"strconv"
 	"testing"
 	"time"
 
@@ -18,97 +19,162 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// Test_Service_updateNecessary checks the statuses set by an update cycle,
-// and in particular that a record in the public IP unknown state is
-// re-evaluated at each cycle, and does not generate a database update while
-// its public IP address still cannot be found.
 func Test_Service_updateNecessary(t *testing.T) {
 	t.Parallel()
-
-	const (
-		hostname = "ddns.example.com"
-		period   = 10 * time.Minute
-		cooldown = time.Duration(0)
-		// fetchTries mirrors the constant of tryAndRepeatGettingIP.
-		fetchTries = 3
-		ipv4Kind   = "ipv4"
-	)
-	cycleTime := time.Date(2026, time.October, 30, 3, 25, 34, 0, time.UTC)
-	publicIPv4 := netip.MustParseAddr("203.0.113.45")
-	staleIPv4 := netip.MustParseAddr("198.51.100.5")
-	historyTime := cycleTime.Add(-time.Hour)
-	fetchError := errors.New("network is unreachable")
-	fetchErrorMessage := fmt.Sprintf(
-		"obtaining %s address: after %d tries, errors were: %s",
-		ipv4Kind, fetchTries, fetchError.Error()+", "+fetchError.Error()+", "+fetchError.Error())
 
 	testCases := map[string]struct {
 		// initialState is the record held by the database before the cycle.
 		initialState recordState
-		// publicIPv4 is the fetched public IP address. An invalid address
-		// makes the public IP fetch fail.
+		// publicIPv4 is the address returned by the public IP address fetcher.
+		// An invalid address makes the fetch fail.
 		publicIPv4 netip.Addr
-		// wantState is the record written back to the database, nil when the
-		// cycle must not write anything.
-		wantState *recordState
-		// wantUpdateIP is the IP address the record must be updated to, an
-		// invalid address meaning no update must be made.
-		wantUpdateIP netip.Addr
-		wantErrs     []string
+		wantErrs   []string
+		// configure sets the mock expectations of the cycle, written out for
+		// each test case so the subtest body has no logic.
+		configure func(ctx context.Context, mocks *serviceMocks, initialRecord records.Record)
 	}{
+		// The network is not up yet, for example just after a container start,
+		// so the record goes to the public IP unknown state.
 		"public_ip_not_found_and_never_updated": {
 			initialState: recordState{
 				status: constants.UNSET,
 			},
-			wantState: &recordState{
-				status: constants.PUBLICIPUNKNOWN,
-				time:   cycleTime,
+			wantErrs: []string{
+				"obtaining ipv4 address: after 3 tries, errors were: network is unreachable, " +
+					"network is unreachable, network is unreachable",
 			},
-			wantErrs: []string{fetchErrorMessage},
+			configure: func(ctx context.Context, mocks *serviceMocks, initialRecord records.Record) {
+				mocks.db.EXPECT().SelectAll().Return([]records.Record{initialRecord})
+				mocks.provider.EXPECT().IPVersion().Times(3).Return(ipversion.IP4)
+				mocks.provider.EXPECT().BuildDomainName().Return("ddns.example.com")
+				mocks.fetcher.EXPECT().IP4(ctx).Times(3).
+					Return(netip.Addr{}, errors.New("network is unreachable"))
+				mocks.logger.EXPECT().Debug("configured to fetch IP: v4 or v6: false, v4: true, v6: false")
+				mocks.logger.EXPECT().Debug("obtaining ipv4 address: try 1 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Debug("obtaining ipv4 address: try 2 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Debug("obtaining ipv4 address: try 3 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Error("obtaining ipv4 address: after 3 tries, errors were: " +
+					"network is unreachable, network is unreachable, network is unreachable")
+				mocks.logger.EXPECT().Debug("your public IP address are: v4 or v6: invalid IP, " +
+					"v4: invalid IP, v6: invalid IP")
+				mocks.logger.EXPECT().Warn("Skipping update for ddns.example.com because ipv4 address was not found")
+				mocks.db.EXPECT().Select(uint(0)).Return(initialRecord, nil)
+				mocks.db.EXPECT().Update(uint(0), recordMatcher{want: recordState{
+					status: constants.PUBLICIPUNKNOWN,
+					time:   time.Date(2026, time.October, 30, 3, 25, 34, 0, time.UTC),
+				}}).Return(nil)
+				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Fail).Return(nil)
+			},
 		},
+		// The public IP unknown state is re-evaluated at every cycle. Here the
+		// public IP address is still not found and nothing is written.
 		"public_ip_not_found_and_already_unknown": {
 			initialState: recordState{
 				status: constants.PUBLICIPUNKNOWN,
-				time:   cycleTime.Add(-period),
+				time:   time.Date(2026, time.October, 30, 3, 15, 34, 0, time.UTC),
 			},
-			wantErrs: []string{fetchErrorMessage},
+			wantErrs: []string{
+				"obtaining ipv4 address: after 3 tries, errors were: network is unreachable, " +
+					"network is unreachable, network is unreachable",
+			},
+			configure: func(ctx context.Context, mocks *serviceMocks, initialRecord records.Record) {
+				mocks.db.EXPECT().SelectAll().Return([]records.Record{initialRecord})
+				mocks.provider.EXPECT().IPVersion().Times(3).Return(ipversion.IP4)
+				mocks.provider.EXPECT().BuildDomainName().Return("ddns.example.com")
+				mocks.fetcher.EXPECT().IP4(ctx).Times(3).
+					Return(netip.Addr{}, errors.New("network is unreachable"))
+				mocks.logger.EXPECT().Debug("configured to fetch IP: v4 or v6: false, v4: true, v6: false")
+				mocks.logger.EXPECT().Debug("obtaining ipv4 address: try 1 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Debug("obtaining ipv4 address: try 2 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Debug("obtaining ipv4 address: try 3 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Error("obtaining ipv4 address: after 3 tries, errors were: " +
+					"network is unreachable, network is unreachable, network is unreachable")
+				mocks.logger.EXPECT().Debug("your public IP address are: v4 or v6: invalid IP, " +
+					"v4: invalid IP, v6: invalid IP")
+				mocks.logger.EXPECT().Warn("Skipping update for ddns.example.com because ipv4 address was not found")
+				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Fail).Return(nil)
+			},
 		},
 		"public_ip_found_and_up_to_date": {
 			initialState: recordState{
 				status: constants.UNSET,
 				history: []models.HistoryEvent{
-					{IP: publicIPv4, Time: historyTime},
+					{IP: netip.MustParseAddr("203.0.113.45"), Time: time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC)},
 				},
 			},
-			publicIPv4: publicIPv4,
-			wantState: &recordState{
-				status: constants.UPTODATE,
-				time:   cycleTime,
-				history: []models.HistoryEvent{
-					{IP: publicIPv4, Time: historyTime},
-				},
+			publicIPv4: netip.MustParseAddr("203.0.113.45"),
+			configure: func(ctx context.Context, mocks *serviceMocks, initialRecord records.Record) {
+				mocks.db.EXPECT().SelectAll().Return([]records.Record{initialRecord})
+				mocks.provider.EXPECT().IPVersion().Times(3).Return(ipversion.IP4)
+				mocks.provider.EXPECT().BuildDomainName().Return("ddns.example.com")
+				mocks.provider.EXPECT().Proxied().Return(true)
+				mocks.fetcher.EXPECT().IP4(ctx).Return(netip.MustParseAddr("203.0.113.45"), nil)
+				mocks.logger.EXPECT().Debug("configured to fetch IP: v4 or v6: false, v4: true, v6: false")
+				mocks.logger.EXPECT().Debug("your public IP address are: v4 or v6: invalid IP, " +
+					"v4: 203.0.113.45, v6: invalid IP")
+				mocks.logger.EXPECT().Debug("Last ipv4 address stored for ddns.example.com is " +
+					"203.0.113.45 and your ipv4 address is 203.0.113.45, skipping update")
+				mocks.db.EXPECT().Select(uint(0)).Return(initialRecord, nil)
+				mocks.db.EXPECT().Update(uint(0), recordMatcher{want: recordState{
+					status: constants.UPTODATE,
+					time:   time.Date(2026, time.October, 30, 3, 25, 34, 0, time.UTC),
+					history: []models.HistoryEvent{
+						{IP: netip.MustParseAddr("203.0.113.45"), Time: time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC)},
+					},
+				}}).Return(nil)
+				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Ok).Return(nil)
 			},
 		},
 		"public_ip_found_and_update_required": {
 			initialState: recordState{
 				status: constants.UNSET,
 				history: []models.HistoryEvent{
-					{IP: staleIPv4, Time: historyTime},
+					{IP: netip.MustParseAddr("198.51.100.5"), Time: time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC)},
 				},
 			},
-			publicIPv4:   publicIPv4,
-			wantUpdateIP: publicIPv4,
+			publicIPv4: netip.MustParseAddr("203.0.113.45"),
+			configure: func(ctx context.Context, mocks *serviceMocks, initialRecord records.Record) {
+				mocks.db.EXPECT().SelectAll().Return([]records.Record{initialRecord})
+				mocks.provider.EXPECT().IPVersion().Times(3).Return(ipversion.IP4)
+				mocks.provider.EXPECT().BuildDomainName().Return("ddns.example.com")
+				mocks.provider.EXPECT().Proxied().Return(true)
+				mocks.fetcher.EXPECT().IP4(ctx).Return(netip.MustParseAddr("203.0.113.45"), nil)
+				mocks.logger.EXPECT().Debug("configured to fetch IP: v4 or v6: false, v4: true, v6: false")
+				mocks.logger.EXPECT().Debug("your public IP address are: v4 or v6: invalid IP, " +
+					"v4: 203.0.113.45, v6: invalid IP")
+				mocks.logger.EXPECT().Info("Last ipv4 address stored for ddns.example.com is " +
+					"198.51.100.5 and your ipv4 address is 203.0.113.45")
+				mocks.provider.EXPECT().String().Return("ddns.example.com")
+				mocks.logger.EXPECT().Info("Updating record ddns.example.com to use 203.0.113.45")
+				mocks.updater.EXPECT().Update(ctx, uint(0), netip.MustParseAddr("203.0.113.45")).Return(nil)
+				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Ok).Return(nil)
+			},
 		},
+		// A failed update is not a transient state: the failure is kept until
+		// the record is updated again.
 		"update_failure_not_re_evaluated": {
 			initialState: recordState{
 				status:  constants.FAIL,
 				message: "HTTP error 500",
-				time:    historyTime,
+				time:    time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC),
 				history: []models.HistoryEvent{
-					{IP: publicIPv4, Time: historyTime},
+					{IP: netip.MustParseAddr("203.0.113.45"), Time: time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC)},
 				},
 			},
-			publicIPv4: publicIPv4,
+			publicIPv4: netip.MustParseAddr("203.0.113.45"),
+			configure: func(ctx context.Context, mocks *serviceMocks, initialRecord records.Record) {
+				mocks.db.EXPECT().SelectAll().Return([]records.Record{initialRecord})
+				mocks.provider.EXPECT().IPVersion().Times(2).Return(ipversion.IP4)
+				mocks.provider.EXPECT().BuildDomainName().Return("ddns.example.com")
+				mocks.provider.EXPECT().Proxied().Return(true)
+				mocks.fetcher.EXPECT().IP4(ctx).Return(netip.MustParseAddr("203.0.113.45"), nil)
+				mocks.logger.EXPECT().Debug("configured to fetch IP: v4 or v6: false, v4: true, v6: false")
+				mocks.logger.EXPECT().Debug("your public IP address are: v4 or v6: invalid IP, " +
+					"v4: 203.0.113.45, v6: invalid IP")
+				mocks.logger.EXPECT().Debug("Last ipv4 address stored for ddns.example.com is " +
+					"203.0.113.45 and your ipv4 address is 203.0.113.45, skipping update")
+				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Ok).Return(nil)
+			},
 		},
 	}
 
@@ -119,84 +185,15 @@ func Test_Service_updateNecessary(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			ctx := t.Context()
 
-			fetchFailed := !testCase.publicIPv4.IsValid()
-			updateRequired := testCase.wantUpdateIP.IsValid()
-			initialState := testCase.initialState
-			initialStatus := initialState.status == constants.UNSET ||
-				initialState.status == constants.PUBLICIPUNKNOWN
+			mocks := newServiceMocks(ctrl)
+			initialRecord := testCase.initialState.record(mocks.provider)
+			testCase.configure(ctx, mocks, initialRecord)
 
-			dbMock := NewMockDatabase(ctrl)
-			loggerMock := NewMockLogger(ctrl)
-			updaterMock := NewMockUpdaterInterface(ctrl)
-			fetcherMock := NewMockPublicIPFetcher(ctrl)
-			resolverMock := NewMockLookupIPer(ctrl)
-			hioMock := NewMockHealthchecksIOClient(ctrl)
-			providerMock := NewMockProvider(ctrl)
-
-			initialRecord := initialState.record(providerMock)
-
-			dbMock.EXPECT().SelectAll().Return([]records.Record{initialRecord})
-			providerMock.EXPECT().IPVersion().
-				Times(ipVersionCalls(initialStatus, updateRequired)).
-				Return(ipversion.IP4)
-			providerMock.EXPECT().BuildDomainName().Return(hostname)
-			loggerMock.EXPECT().Debug(
-				"configured to fetch IP: v4 or v6: false, v4: true, v6: false")
-
-			publicIPv4 := testCase.publicIPv4
-			if fetchFailed {
-				fetcherMock.EXPECT().IP4(ctx).Times(fetchTries).
-					Return(netip.Addr{}, fetchError)
-				for try := 1; try <= fetchTries; try++ {
-					loggerMock.EXPECT().Debug(fmt.Sprintf(
-						"obtaining %s address: try %d of %d failed: %s",
-						ipv4Kind, try, fetchTries, fetchError.Error()))
-				}
-			} else {
-				fetcherMock.EXPECT().IP4(ctx).Return(publicIPv4, nil)
-			}
-			loggerMock.EXPECT().Debug(fmt.Sprintf(
-				"your public IP address are: v4 or v6: %s, v4: %s, v6: %s",
-				netip.Addr{}, publicIPv4, netip.Addr{}))
-			if fetchFailed {
-				loggerMock.EXPECT().Error(fetchErrorMessage)
-				loggerMock.EXPECT().Warn(fmt.Sprintf(
-					"Skipping update for %s because %s address was not found",
-					hostname, ipv4Kind))
-			} else {
-				providerMock.EXPECT().Proxied().Return(true)
-				lastIP := models.History(initialState.history).GetCurrentIP()
-				if updateRequired {
-					loggerMock.EXPECT().Info(fmt.Sprintf(
-						"Last %s address stored for %s is %s and your %s address is %s",
-						ipv4Kind, hostname, lastIP, ipv4Kind, publicIPv4))
-				} else {
-					loggerMock.EXPECT().Debug(fmt.Sprintf(
-						"Last %s address stored for %s is %s and your %s address"+
-							" is %s, skipping update",
-						ipv4Kind, hostname, lastIP, ipv4Kind, publicIPv4))
-				}
-			}
-
-			if testCase.wantState != nil {
-				dbMock.EXPECT().Select(uint(0)).Return(initialRecord, nil)
-				dbMock.EXPECT().Update(uint(0), recordMatcher{want: *testCase.wantState}).Return(nil)
-			}
-			if updateRequired {
-				providerMock.EXPECT().String().Return(hostname)
-				loggerMock.EXPECT().Info(fmt.Sprintf("Updating record %s to use %s",
-					hostname, publicIPv4))
-				updaterMock.EXPECT().Update(ctx, uint(0), publicIPv4).Return(nil)
-			}
-
-			healthchecksIOState := healthchecksio.Ok
-			if len(testCase.wantErrs) > 0 {
-				healthchecksIOState = healthchecksio.Fail
-			}
-			hioMock.EXPECT().Ping(ctx, healthchecksIOState).Return(nil)
-
-			service := NewService(dbMock, updaterMock, fetcherMock, period, cooldown,
-				loggerMock, resolverMock, func() time.Time { return cycleTime }, hioMock)
+			const period = 10 * time.Minute
+			const cooldown = time.Duration(0)
+			cycleTime := time.Date(2026, time.October, 30, 3, 25, 34, 0, time.UTC)
+			service := NewService(mocks.db, mocks.updater, mocks.fetcher, period, cooldown,
+				mocks.logger, mocks.resolver, func() time.Time { return cycleTime }, mocks.hio)
 
 			errs := service.updateNecessary(ctx)
 
@@ -205,6 +202,29 @@ func Test_Service_updateNecessary(t *testing.T) {
 				assert.ErrorContains(t, errs[i], wantErrMessage)
 			}
 		})
+	}
+}
+
+// serviceMocks holds the generated mocks of a [Service].
+type serviceMocks struct {
+	db       *MockDatabase
+	updater  *MockUpdaterInterface
+	fetcher  *MockPublicIPFetcher
+	logger   *MockLogger
+	resolver *MockLookupIPer
+	hio      *MockHealthchecksIOClient
+	provider *MockProvider
+}
+
+func newServiceMocks(ctrl *gomock.Controller) *serviceMocks {
+	return &serviceMocks{
+		db:       NewMockDatabase(ctrl),
+		updater:  NewMockUpdaterInterface(ctrl),
+		fetcher:  NewMockPublicIPFetcher(ctrl),
+		logger:   NewMockLogger(ctrl),
+		resolver: NewMockLookupIPer(ctrl),
+		hio:      NewMockHealthchecksIOClient(ctrl),
+		provider: NewMockProvider(ctrl),
 	}
 }
 
@@ -244,22 +264,8 @@ func (m recordMatcher) Matches(argument any) bool {
 }
 
 func (m recordMatcher) String() string {
-	return fmt.Sprintf("record with status %q, message %q, time %s and %d history event(s)",
-		string(m.want.status), m.want.message, m.want.time, len(m.want.history))
-}
-
-// ipVersionCalls returns the number of times the provider IPVersion method is
-// called during an update cycle: once to know which public IP addresses to
-// fetch, once to decide whether the record must be updated, plus once per
-// record processing either by the initial status setting or by the update.
-func ipVersionCalls(initialStatus, updateRequired bool) (calls int) {
-	const baseCalls = 2
-	calls = baseCalls
-	if initialStatus && !updateRequired {
-		calls++
-	}
-	if updateRequired {
-		calls++
-	}
-	return calls
+	return "record with status " + string(m.want.status) +
+		", message " + m.want.message +
+		", time " + m.want.time.String() +
+		" and " + strconv.Itoa(len(m.want.history)) + " history event(s)"
 }

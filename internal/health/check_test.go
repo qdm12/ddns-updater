@@ -322,26 +322,27 @@ func Test_MakeIsHealthy(t *testing.T) {
 
 	healthcheck := MakeIsHealthy(dbMock, resolverMock, func() time.Time { return now })
 	assert.NoError(t, healthcheck(ctx))
-}
 
-func Test_MakeIsHealthy_publicIPUnknown(t *testing.T) {
-	t.Parallel()
+	// The time of the record does not matter, only its status does.
+	t.Run("public_ip_unknown", func(t *testing.T) {
+		t.Parallel()
 
-	ctrl := gomock.NewController(t)
-	ctx := t.Context()
+		ctrl := gomock.NewController(t)
+		ctx := t.Context()
 
-	providerMock := NewMockProvider(ctrl)
-	providerMock.EXPECT().String().Return("record0.example.com")
+		providerMock := NewMockProvider(ctrl)
+		providerMock.EXPECT().String().Return("record0.example.com")
 
-	dbMock := NewMockAllSelecter(ctrl)
-	dbMock.EXPECT().SelectAll().Return([]records.Record{
-		{Provider: providerMock, Status: constants.PUBLICIPUNKNOWN},
+		dbMock := NewMockAllSelecter(ctrl)
+		dbMock.EXPECT().SelectAll().Return([]records.Record{
+			{Provider: providerMock, Status: constants.PUBLICIPUNKNOWN},
+		})
+
+		healthcheck := MakeIsHealthy(dbMock, NewMockLookupIPer(ctrl),
+			func() time.Time { return time.Unix(0, 0) })
+
+		err := healthcheck(ctx)
+		assert.ErrorContains(t, err, "public IP address not found")
+		assert.ErrorContains(t, err, "record0.example.com")
 	})
-
-	now := time.Date(2026, time.October, 30, 3, 25, 34, 0, time.UTC)
-	healthcheck := MakeIsHealthy(dbMock, NewMockLookupIPer(ctrl), func() time.Time { return now })
-
-	err := healthcheck(ctx)
-	assert.ErrorContains(t, err, "public IP address not found")
-	assert.ErrorContains(t, err, "record0.example.com")
 }

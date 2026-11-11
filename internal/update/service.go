@@ -299,13 +299,15 @@ func setInitialUpToDateStatus(db Database, id uint, updateIP netip.Addr, now tim
 	return db.Update(id, record)
 }
 
-func setInitialPublicIPFailStatus(db Database, id uint, now time.Time) error {
+func setPublicIPUnknownStatus(db Database, id uint, now time.Time) error {
 	record, err := db.Select(id)
 	if err != nil {
 		return err
 	}
-	record.Status = constants.FAIL
-	record.Message = "public IP address not found"
+	record.Status = constants.PUBLICIPUNKNOWN
+	// The message of the previous status does not apply anymore, for example
+	// it could be a no IP change message from the up to date status.
+	record.Message = ""
 	record.Time = now
 	return db.Update(id, record)
 }
@@ -322,31 +324,45 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 
 	recordIDs := s.getRecordIDsToUpdate(ctx, records, ip, ipv4, ipv6)
 
-	// Current time is used to set initial states for records already
-	// up to date or in the fail state due to the public IP not found.
-	// No need to have it queried within the next for loop since each
-	// iteration is fast and has no IO involved.
+	// Current time is used to set the status of records whose public IP address
+	// is missing, or which are already up to date. No need to have it queried
+	// within the next for loop since each iteration is fast and has no IO
+	// involved.
 	now := s.timeNow()
 
 	for i, record := range records {
 		id := uint(i)
 		_, requireUpdate := recordIDs[id]
-		if requireUpdate || record.Status != constants.UNSET {
-			continue
-		}
-
 		ipVersion := record.Provider.IPVersion()
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, ipVersion)
 		if !updateIP.IsValid() {
 			// warning was already logged in getRecordIDsToUpdate
-			err := setInitialPublicIPFailStatus(s.db, id, now)
+			// The record cannot be verified against a public IP address, for example
+			// because the network is down. A failure is kept because it tells why the
+			// record is not up to date, and the public IP unknown state keeps the
+			// time of the first cycle where the address was missing.
+			if record.Status == constants.FAIL || record.Status == constants.PUBLICIPUNKNOWN {
+				continue
+			}
+			err := setPublicIPUnknownStatus(s.db, id, now)
 			if err != nil {
-				err = fmt.Errorf("setting initial public IP fail status: %w", err)
+				err = fmt.Errorf("setting public IP unknown status: %w", err)
 				errors = append(errors, err)
 				s.logger.Error(err.Error())
 			}
 			continue
-		} else if updateIP.Is6() {
+		}
+
+		// The unset and public IP unknown statuses are transient ones, waiting for
+		// the status of a real update. They are re-evaluated at every cycle,
+		// otherwise the health check would report the program as unhealthy forever,
+		// although its records are correct.
+		transientStatus := record.Status == constants.UNSET ||
+			record.Status == constants.PUBLICIPUNKNOWN
+		if requireUpdate || !transientStatus {
+			continue
+		}
+		if updateIP.Is6() {
 			updateIP = ipv6WithSuffix(updateIP, record.Provider.IPv6Suffix())
 		}
 

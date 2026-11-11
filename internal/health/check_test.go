@@ -37,6 +37,7 @@ type testRecord struct {
 	lookupErr error
 }
 
+//nolint:maintidx
 func Test_isHealthy(t *testing.T) {
 	t.Parallel()
 
@@ -70,6 +71,13 @@ func Test_isHealthy(t *testing.T) {
 			},
 			wantErr:     "record update failed",
 			wantErrPart: "record0.example.com",
+		},
+		"record_public_ip_unknown": {
+			records: []testRecord{
+				{status: constants.PUBLICIPUNKNOWN},
+			},
+			wantErr:     "public IP address not found",
+			wantErrPart: "public IP unknown",
 		},
 		"proxied_record_skipped": {
 			records: []testRecord{
@@ -249,7 +257,8 @@ func Test_isHealthy(t *testing.T) {
 				hostname := fmt.Sprintf("record%d.%s", i, hostnameSuffix)
 
 				switch {
-				case recordCase.status == constants.FAIL:
+				case recordCase.status == constants.FAIL,
+					recordCase.status == constants.PUBLICIPUNKNOWN:
 					providerMock.EXPECT().String().Return(hostname)
 				case recordCase.proxied:
 					providerMock.EXPECT().Proxied().Return(true)
@@ -313,4 +322,27 @@ func Test_MakeIsHealthy(t *testing.T) {
 
 	healthcheck := MakeIsHealthy(dbMock, resolverMock, func() time.Time { return now })
 	assert.NoError(t, healthcheck(ctx))
+
+	// The time of the record does not matter, only its status does.
+	t.Run("public_ip_unknown", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		ctx := t.Context()
+
+		providerMock := NewMockProvider(ctrl)
+		providerMock.EXPECT().String().Return("record0.example.com")
+
+		dbMock := NewMockAllSelecter(ctrl)
+		dbMock.EXPECT().SelectAll().Return([]records.Record{
+			{Provider: providerMock, Status: constants.PUBLICIPUNKNOWN},
+		})
+
+		healthcheck := MakeIsHealthy(dbMock, NewMockLookupIPer(ctrl),
+			func() time.Time { return time.Unix(0, 0) })
+
+		err := healthcheck(ctx)
+		assert.ErrorContains(t, err, "public IP address not found")
+		assert.ErrorContains(t, err, "record0.example.com")
+	})
 }

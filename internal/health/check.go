@@ -31,9 +31,14 @@ func isHealthy(ctx context.Context, db AllSelecter, resolver LookupIPer,
 ) (err error) {
 	records := db.SelectAll()
 	for _, record := range records {
-		if record.Status == constants.FAIL {
+		switch record.Status {
+		case constants.FAIL:
 			return fmt.Errorf("record update failed: %s", record.String())
-		} else if record.Provider.Proxied() {
+		case constants.PUBLICIPUNKNOWN:
+			return fmt.Errorf("public IP address not found: %s", record.String())
+		}
+
+		if record.Provider.Proxied() {
 			continue
 		}
 

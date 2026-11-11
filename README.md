@@ -374,6 +374,42 @@ If you have a host firewall in place, this container needs the following ports:
 - UDP 53 outbound for outbound DNS resolution
 - TCP 8000 inbound (or other) for the WebUI
 
+### HTTP API
+
+The web server also serves the records status as JSON, for dashboards and monitoring tools:
+
+- `GET /api/v1/records` returns all records
+- `GET /api/v1/records/{fqdn}`, for example `/api/v1/records/sub.example.com`, returns the records for that domain name only, and a `404` if there is none
+
+```json
+{
+  "records": [
+    {
+      "domain": "example.com",
+      "owner": "sub",
+      "fqdn": "sub.example.com",
+      "ip_version": "ipv4",
+      "proxied": false,
+      "status": "up to date",
+      "current_ip": "203.0.113.4",
+      "previous_ips": ["203.0.113.2"],
+      "previous_ips_total": 1,
+      "last_attempt": "2026-08-14T09:00:00Z",
+      "last_success": "2026-08-12T22:13:07Z",
+      "last_ban": null
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "healthy": true,
+    "by_status": { "up to date": 1 }
+  }
+}
+```
+
+- `previous_ips` lists up to 10 previous IP addresses, most recent first, and `previous_ips_total` gives how many there are
+- `summary.healthy` is `false` if any record has the status `failure` or `unset`. Unlike the health server, it does not check the records resolve to the expected IP address. For example, an [Uptime Kuma](https://github.com/louislam/uptime-kuma) monitor of type *HTTP(s) - Json Query* can use the query `summary.healthy` with the expected value `true`.
+
 ## Architecture
 
 At program start and every period (5 minutes by default):

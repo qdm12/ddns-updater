@@ -210,7 +210,7 @@ func Test_Service_updateNecessary(t *testing.T) {
 			publicIPv4: netip.MustParseAddr("203.0.113.45"),
 			configure: func(ctx context.Context, mocks *serviceMocks, initialRecord records.Record) {
 				mocks.db.EXPECT().SelectAll().Return([]records.Record{initialRecord})
-				mocks.provider.EXPECT().IPVersion().Times(4).Return(ipversion.IP4)
+				mocks.provider.EXPECT().IPVersion().Times(3).Return(ipversion.IP4)
 				mocks.provider.EXPECT().BuildDomainName().Return("ddns.example.com")
 				mocks.provider.EXPECT().Proxied().Return(true)
 				mocks.fetcher.EXPECT().IP4(ctx).Return(netip.MustParseAddr("203.0.113.45"), nil)
@@ -362,25 +362,26 @@ func Test_Service_shouldUpdateRecord(t *testing.T) {
 	testCases := map[string]struct {
 		lastIP           netip.Addr
 		publicIP         netip.Addr
-		update           bool
+		wantVerdict      recordVerdict
 		expectedInfoLog  string
 		expectedDebugLog string
 	}{
 		"no_history_yet": {
 			publicIP:        netip.MustParseAddr("203.0.113.45"),
-			update:          true,
+			wantVerdict:     updateNeeded,
 			expectedInfoLog: "Last ipv4 address stored for sub.example.com is invalid IP and your ipv4 address is 203.0.113.45",
 		},
 		"unchanged_ip": {
-			lastIP:   netip.MustParseAddr("203.0.113.45"),
-			publicIP: netip.MustParseAddr("203.0.113.45"),
+			lastIP:      netip.MustParseAddr("203.0.113.45"),
+			publicIP:    netip.MustParseAddr("203.0.113.45"),
+			wantVerdict: updateMatchesPublicIP,
 			expectedDebugLog: "Last ipv4 address stored for sub.example.com is 203.0.113.45 and your ipv4 " +
 				"address is 203.0.113.45, skipping update",
 		},
 		"changed_ip": {
-			lastIP:   netip.MustParseAddr("203.0.113.44"),
-			publicIP: netip.MustParseAddr("203.0.113.45"),
-			update:   true,
+			lastIP:      netip.MustParseAddr("203.0.113.44"),
+			publicIP:    netip.MustParseAddr("203.0.113.45"),
+			wantVerdict: updateNeeded,
 			expectedInfoLog: "Last ipv4 address stored for sub.example.com is 203.0.113.44 and your ipv4 " +
 				"address is 203.0.113.45",
 		},
@@ -429,9 +430,9 @@ func Test_Service_shouldUpdateRecord(t *testing.T) {
 			}
 
 			publicIP := testCase.publicIP
-			update := s.shouldUpdateRecord(t.Context(), record, publicIP, publicIP, netip.Addr{})
+			verdict := s.shouldUpdateRecord(t.Context(), record, publicIP, publicIP, netip.Addr{})
 
-			assert.Equal(t, testCase.update, update)
+			assert.Equal(t, testCase.wantVerdict, verdict)
 		})
 	}
 }

@@ -150,23 +150,41 @@ func (s *Service) getNewIPs(ctx context.Context, doIP, doIPv4, doIPv6 bool) (
 	return ip, ipv4, ipv6, errors
 }
 
-func (s *Service) getRecordIDsToUpdate(ctx context.Context, records []librecords.Record,
+// recordVerdict tells why a record is updated, or is not updated, during an
+// update cycle.
+type recordVerdict uint8
+
+const (
+	// updateNeeded means the record must be updated to the public IP address
+	// of the program.
+	updateNeeded recordVerdict = iota
+	// updateMatchesPublicIP means the record was checked against the public IP
+	// address of the program and already uses it.
+	updateMatchesPublicIP
+	// updateNotChecked means the record was not checked against the public IP
+	// address of the program, because it is within its cooldown or ban period,
+	// or because the update cycle was canceled.
+	updateNotChecked
+	// updatePublicIPUnknown means the record could not be checked because no
+	// public IP address matching its IP version was found.
+	updatePublicIPUnknown
+)
+
+// getRecordVerdicts returns the verdict of every record, in the same order as
+// the records given.
+func (s *Service) getRecordVerdicts(ctx context.Context, records []librecords.Record,
 	ip, ipv4, ipv6 netip.Addr,
-) (recordIDs map[uint]struct{}) {
-	recordIDs = make(map[uint]struct{})
+) (verdicts []recordVerdict) {
+	verdicts = make([]recordVerdict, len(records))
 	for i, record := range records {
-		shouldUpdate := s.shouldUpdateRecord(ctx, record, ip, ipv4, ipv6)
-		if shouldUpdate {
-			id := uint(i)
-			recordIDs[id] = struct{}{}
-		}
+		verdicts[i] = s.shouldUpdateRecord(ctx, record, ip, ipv4, ipv6)
 	}
-	return recordIDs
+	return verdicts
 }
 
 func (s *Service) shouldUpdateRecord(ctx context.Context, record librecords.Record,
 	ip, ipv4, ipv6 netip.Addr,
-) (update bool) {
+) (verdict recordVerdict) {
 	now := s.timeNow()
 
 	isWithinCooldown := now.Sub(record.History.GetSuccessTime()) < s.cooldown
@@ -174,7 +192,7 @@ func (s *Service) shouldUpdateRecord(ctx context.Context, record librecords.Reco
 		s.logger.Debug(fmt.Sprintf(
 			"record %s is within cooldown period of %s, skipping update",
 			recordToLogString(record), s.cooldown))
-		return false
+		return updateNotChecked
 	}
 
 	const banPeriod = time.Hour
@@ -183,7 +201,7 @@ func (s *Service) shouldUpdateRecord(ctx context.Context, record librecords.Reco
 		s.logger.Info(fmt.Sprintf(
 			"record %s is within ban period of %s started at %s, skipping update",
 			recordToLogString(record), banPeriod, *record.LastBan))
-		return false
+		return updateNotChecked
 	}
 
 	hostname := record.Provider.BuildDomainName()
@@ -193,7 +211,7 @@ func (s *Service) shouldUpdateRecord(ctx context.Context, record librecords.Reco
 	if !publicIP.IsValid() {
 		s.logger.Warn(fmt.Sprintf("Skipping update for %s because %s address was not found",
 			hostname, ipVersionToIPKind(ipVersion)))
-		return false
+		return updatePublicIPUnknown
 	} else if publicIP.Is6() {
 		publicIP = ipv6WithSuffix(publicIP, record.Provider.IPv6Suffix())
 	}
@@ -207,26 +225,26 @@ func (s *Service) shouldUpdateRecord(ctx context.Context, record librecords.Reco
 
 func (s *Service) shouldUpdateRecordNoLookup(hostname string, ipVersion ipversion.IPVersion,
 	lastIP, publicIP netip.Addr,
-) (update bool) {
+) (verdict recordVerdict) {
 	ipKind := ipVersionToIPKind(ipVersion)
 	if publicIP.IsValid() && publicIP.Compare(lastIP) != 0 {
 		s.logInfoNoLookupUpdate(hostname, ipKind, lastIP, publicIP)
-		return true
+		return updateNeeded
 	}
 	s.logDebugNoLookupSkip(hostname, ipKind, lastIP, publicIP)
-	return false
+	return updateMatchesPublicIP
 }
 
 func (s *Service) shouldUpdateRecordWithLookup(ctx context.Context, hostname string,
 	ipVersion ipversion.IPVersion, publicIP netip.Addr,
-) (update bool) {
+) (verdict recordVerdict) {
 	const tries = 5
 	recordIPv4s, recordIPv6s, err := s.lookupIPsResilient(ctx, hostname, tries)
 	if err != nil {
 		ctxErr := ctx.Err()
 		if ctxErr != nil {
 			s.logger.Warn("DNS resolution of " + hostname + ": " + ctxErr.Error())
-			return false
+			return updateNotChecked
 		}
 		s.logger.Warn("cannot DNS resolve " + hostname + " after " +
 			strconv.Itoa(tries) + " tries: " + err.Error()) // update anyway
@@ -242,10 +260,10 @@ func (s *Service) shouldUpdateRecordWithLookup(ctx context.Context, hostname str
 	if publicIP.IsValid() && !ipsContainsIP(recordIPs, publicIP) {
 		// Note if the recordIP is not valid (not found), we want to update.
 		s.logInfoLookupUpdate(hostname, ipKind, recordIPs, publicIP)
-		return true
+		return updateNeeded
 	}
 	s.logDebugLookupSkip(hostname, ipKind, recordIPs, publicIP)
-	return false
+	return updateMatchesPublicIP
 }
 
 func ipsContainsIP(ips []netip.Addr, ip netip.Addr) bool {
@@ -322,7 +340,7 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 		s.logger.Error(err.Error())
 	}
 
-	recordIDs := s.getRecordIDsToUpdate(ctx, records, ip, ipv4, ipv6)
+	verdicts := s.getRecordVerdicts(ctx, records, ip, ipv4, ipv6)
 
 	// Current time is used to set the status of records whose public IP address
 	// is missing, or which are already up to date. No need to have it queried
@@ -332,11 +350,13 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 
 	for i, record := range records {
 		id := uint(i)
-		_, requireUpdate := recordIDs[id]
+		if verdicts[i] == updateNeeded {
+			continue
+		}
 		ipVersion := record.Provider.IPVersion()
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, ipVersion)
 		if !updateIP.IsValid() {
-			// warning was already logged in getRecordIDsToUpdate
+			// warning was already logged in [Service.getRecordVerdicts]
 			// The record cannot be verified against a public IP address, for example
 			// because the network is down. A failure is kept because it tells why the
 			// record is not up to date, and the public IP unknown state keeps the
@@ -359,7 +379,7 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 		// although its records are correct.
 		transientStatus := record.Status == constants.UNSET ||
 			record.Status == constants.PUBLICIPUNKNOWN
-		if requireUpdate || !transientStatus {
+		if !transientStatus {
 			continue
 		}
 		if updateIP.Is6() {
@@ -373,7 +393,11 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 			s.logger.Error(err.Error())
 		}
 	}
-	for id := range recordIDs {
+	for i, verdict := range verdicts {
+		if verdict != updateNeeded {
+			continue
+		}
+		id := uint(i)
 		record := records[id]
 		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Provider.IPVersion())
 		// Note: each record id has a matching valid public IP address.

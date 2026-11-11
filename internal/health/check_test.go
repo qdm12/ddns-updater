@@ -37,12 +37,7 @@ type testRecord struct {
 	lookupErr error
 }
 
-// failingStatus returns true when the record status alone makes the program
-// unhealthy, without any IP address look up.
-func (tr testRecord) failingStatus() bool {
-	return tr.status == constants.FAIL || tr.status == constants.PUBLICIPUNKNOWN
-}
-
+//nolint:maintidx
 func Test_isHealthy(t *testing.T) {
 	t.Parallel()
 
@@ -260,7 +255,8 @@ func Test_isHealthy(t *testing.T) {
 				hostname := fmt.Sprintf("record%d.%s", i, hostnameSuffix)
 
 				switch {
-				case recordCase.failingStatus():
+				case recordCase.status == constants.FAIL,
+					recordCase.status == constants.PUBLICIPUNKNOWN:
 					providerMock.EXPECT().String().Return(hostname)
 				case recordCase.proxied:
 					providerMock.EXPECT().Proxied().Return(true)

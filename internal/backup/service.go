@@ -71,6 +71,12 @@ func run(ready chan<- struct{}, runError chan<- error, stopCh <-chan struct{},
 
 	logger.Info("each " + backupPeriod.String() +
 		"; writing zip files to directory " + outputDir)
+	updatesFilepath := filepath.Join(dataDir, "updates.json")
+	inputFilepaths := []string{configFilepath, updatesFilepath}
+	if configFilepath == "" {
+		logger.Info("the configuration file is not backed up")
+		inputFilepaths = []string{updatesFilepath}
+	}
 	timer := time.NewTimer(backupPeriod)
 	close(ready)
 
@@ -81,11 +87,7 @@ func run(ready chan<- struct{}, runError chan<- error, stopCh <-chan struct{},
 			_ = timer.Stop()
 			return
 		}
-		err := zipFiles(
-			filepath.Join(outputDir, makeZipFileName()),
-			configFilepath,
-			filepath.Join(dataDir, "updates.json"),
-		)
+		err := zipFiles(filepath.Join(outputDir, makeZipFileName()), inputFilepaths...)
 		if err != nil {
 			runError <- err
 			return

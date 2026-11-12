@@ -75,6 +75,7 @@ COPY --from=build --chown=${UID}:${GID} /tmp/data /updater/data
 ENV \
     # Core
     CONFIG= \
+    CONFIG_PERSIST=yes \
     PERIOD=5m \
     UPDATE_COOLDOWN_PERIOD=5m \
     PUBLICIP_FETCHERS=all \

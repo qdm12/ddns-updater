@@ -10,13 +10,16 @@ import (
 )
 
 // Record contains all the information to update and display a DNS record.
+// Only the provider and the history are persisted to disk. The status, message,
+// time and last ban fields live in memory only and are reset when the program
+// restarts, which is why a restart clears a stale status on its own.
 type Record struct { // internal
 	Provider provider.Provider // fixed
-	History  models.History    // past information
-	Status   models.Status
-	Message  string
-	Time     time.Time
-	LastBan  *time.Time // nil means no last ban
+	History  models.History    // past information, persisted
+	Status   models.Status     // in memory only
+	Message  string            // in memory only, describes Status
+	Time     time.Time         // in memory only, time of Status
+	LastBan  *time.Time        // in memory only, nil means no last ban
 }
 
 // New returns a new Record with provider and some history.

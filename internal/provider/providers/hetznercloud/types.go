@@ -25,7 +25,7 @@ type errorResponse struct {
 	} `json:"error"`
 }
 
-func (e *errorResponse) String() string {
+func (e errorResponse) String() string {
 	const maxParts = 3
 	parts := make([]string, 0, maxParts)
 	parts = append(parts, "code: "+e.Error.Code)

@@ -35,6 +35,12 @@
     },
     {
       "pattern": "^https://www.namesilo.com"
+    },
+    {
+      "pattern": "^https://dynv6.com/keys"
+    },
+    {
+      "pattern": "^https://vercel.com/dashboard$"
     }
   ],
   "timeout": "20s",

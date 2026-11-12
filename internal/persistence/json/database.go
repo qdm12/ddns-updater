@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/qdm12/ddns-updater/internal/models"
@@ -121,23 +123,104 @@ func checkHistoryEvents(events []models.HistoryEvent) (err error) {
 }
 
 func (db *Database) write() error {
+	data, err := json.MarshalIndent(db.data, "", "  ")
+	if err != nil {
+		return fmt.Errorf("encoding data: %w", err)
+	}
+	data = append(data, '\n')
+
+	replaced, err := replaceFile(db.filepath, data)
+	switch {
+	case err != nil:
+		return fmt.Errorf("replacing database file: %w", err)
+	case replaced:
+		return nil
+	}
+
 	const filePerm = os.FileMode(0o666)
-	file, err := os.OpenFile(db.filepath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, filePerm)
+	err = os.WriteFile(db.filepath, data, filePerm)
 	if err != nil {
-		return fmt.Errorf("opening file: %w", err)
+		return fmt.Errorf("writing database file: %w", err)
+	}
+	return nil
+}
+
+// replaceFile replaces the file at the path given with a file containing the
+// data given, so that the file is never partially written. The data is
+// written to a temporary file in the same directory, which is then renamed.
+// It returns false without touching the file if the file does not exist or
+// cannot be replaced by renaming a file, for the caller to write it in place.
+func replaceFile(path string, data []byte) (replaced bool, err error) {
+	// The file a symbolic link points to is replaced, not the symbolic link.
+	path, err = filepath.EvalSymlinks(path)
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
+		return false, nil
+	case err != nil:
+		return false, fmt.Errorf("resolving path: %w", err)
 	}
 
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-	err = encoder.Encode(db.data)
+	fileInfo, err := os.Stat(path)
 	if err != nil {
-		_ = file.Close()
-		return fmt.Errorf("encoding data to file: %w", err)
+		return false, fmt.Errorf("stating file: %w", err)
 	}
 
-	err = file.Close()
+	temporaryFile, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".*.tmp")
+	switch {
+	case isRenameUnsupported(err):
+		return false, nil
+	case err != nil:
+		return false, fmt.Errorf("creating temporary file: %w", err)
+	}
+	temporaryPath := temporaryFile.Name()
+
+	err = writeTemporaryFile(temporaryFile, data, fileInfo.Mode().Perm())
 	if err != nil {
-		return fmt.Errorf("closing database file: %w", err)
+		_ = os.Remove(temporaryPath)
+		return false, fmt.Errorf("writing temporary file: %w", err)
+	}
+
+	err = os.Rename(temporaryPath, path)
+	if err != nil {
+		_ = os.Remove(temporaryPath)
+		if isRenameUnsupported(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("renaming temporary file: %w", err)
+	}
+	return true, nil
+}
+
+// isRenameUnsupported returns true if the error means a file cannot be
+// replaced by renaming another file, although it may be writable in place.
+// This is the case of a bind mounted file, or of a file in a read only or
+// non writable directory.
+func isRenameUnsupported(err error) bool {
+	return errors.Is(err, fs.ErrPermission) || errors.Is(err, syscall.EROFS) ||
+		errors.Is(err, syscall.EBUSY) || errors.Is(err, syscall.EXDEV)
+}
+
+func writeTemporaryFile(temporaryFile *os.File, data []byte, perm fs.FileMode) (err error) {
+	defer func() {
+		closeErr := temporaryFile.Close()
+		if err == nil && closeErr != nil {
+			err = fmt.Errorf("closing file: %w", closeErr)
+		}
+	}()
+
+	err = temporaryFile.Chmod(perm)
+	if err != nil {
+		return fmt.Errorf("setting file permissions: %w", err)
+	}
+
+	_, err = temporaryFile.Write(data)
+	if err != nil {
+		return fmt.Errorf("writing data: %w", err)
+	}
+
+	err = temporaryFile.Sync()
+	if err != nil {
+		return fmt.Errorf("syncing file: %w", err)
 	}
 	return nil
 }

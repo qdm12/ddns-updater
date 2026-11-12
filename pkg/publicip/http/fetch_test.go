@@ -26,6 +26,7 @@ func Test_fetch(t *testing.T) {
 		ctx         context.Context
 		url         string
 		version     ipversion.IPVersion
+		httpStatus  int
 		httpContent []byte
 		httpErr     error
 		publicIP    netip.Addr
@@ -43,6 +44,14 @@ func Test_fetch(t *testing.T) {
 			version: ipversion.IP4or6,
 			httpErr: errDummy,
 			err:     errors.New(`Get "https://opendns.com/ip": dummy`),
+		},
+		"unexpected_status": {
+			ctx:         t.Context(),
+			url:         "https://opendns.com/ip",
+			version:     ipversion.IP4or6,
+			httpStatus:  http.StatusInternalServerError,
+			httpContent: []byte(`1.67.201.251`),
+			err:         errors.New("unexpected HTTP status: 500 (1.67.201.251)"),
 		},
 		"empty response": {
 			ctx:     context.Background(),
@@ -154,8 +163,12 @@ func Test_fetch(t *testing.T) {
 					} else if tc.httpErr != nil {
 						return nil, tc.httpErr
 					}
+					httpStatus := http.StatusOK
+					if tc.httpStatus != 0 {
+						httpStatus = tc.httpStatus
+					}
 					return &http.Response{
-						StatusCode: http.StatusOK,
+						StatusCode: httpStatus,
 						Body:       io.NopCloser(bytes.NewReader(tc.httpContent)),
 					}, nil
 				}),

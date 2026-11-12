@@ -358,6 +358,46 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 	// involved.
 	now := s.timeNow()
 
+	errors = append(errors, s.setStatuses(records, verdicts, ip, ipv4, ipv6, now)...)
+
+	for i, verdict := range verdicts {
+		if verdict != updateNeeded {
+			continue
+		}
+		id := uint(i)
+		record := records[id]
+		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Provider.IPVersion())
+		// Note: each record id has a matching valid public IP address.
+		if updateIP.Is6() {
+			updateIP = ipv6WithSuffix(updateIP, record.Provider.IPv6Suffix())
+		}
+		s.logger.Info("Updating record " + record.Provider.String() + " to use " + updateIP.String())
+		err := s.updater.Update(ctx, id, updateIP)
+		if err != nil {
+			errors = append(errors, err)
+			s.logger.Error(err.Error())
+		}
+	}
+
+	healthchecksIOState := healthchecksio.Ok
+	if len(errors) > 0 {
+		healthchecksIOState = healthchecksio.Fail
+	}
+
+	err := s.hioClient.Ping(ctx, healthchecksIOState)
+	if err != nil {
+		s.logger.Error("pinging healthchecks.io failed: " + err.Error())
+	}
+
+	return errors
+}
+
+// setStatuses writes the status of every record that is not updated during this
+// cycle: the ones already using the public IP address of the program, and the
+// ones that cannot be verified because their public IP address is missing.
+func (s *Service) setStatuses(records []librecords.Record, verdicts []recordVerdict,
+	ip, ipv4, ipv6 netip.Addr, now time.Time,
+) (errors []error) {
 	for i, record := range records {
 		id := uint(i)
 		verdict := verdicts[i]
@@ -407,34 +447,6 @@ func (s *Service) updateNecessary(ctx context.Context) (errors []error) {
 			errors = append(errors, err)
 			s.logger.Error(err.Error())
 		}
-	}
-	for i, verdict := range verdicts {
-		if verdict != updateNeeded {
-			continue
-		}
-		id := uint(i)
-		record := records[id]
-		updateIP := getIPMatchingVersion(ip, ipv4, ipv6, record.Provider.IPVersion())
-		// Note: each record id has a matching valid public IP address.
-		if updateIP.Is6() {
-			updateIP = ipv6WithSuffix(updateIP, record.Provider.IPv6Suffix())
-		}
-		s.logger.Info("Updating record " + record.Provider.String() + " to use " + updateIP.String())
-		err := s.updater.Update(ctx, id, updateIP)
-		if err != nil {
-			errors = append(errors, err)
-			s.logger.Error(err.Error())
-		}
-	}
-
-	healthchecksIOState := healthchecksio.Ok
-	if len(errors) > 0 {
-		healthchecksIOState = healthchecksio.Fail
-	}
-
-	err := s.hioClient.Ping(ctx, healthchecksIOState)
-	if err != nil {
-		s.logger.Error("pinging healthchecks.io failed: " + err.Error())
 	}
 
 	return errors

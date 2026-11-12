@@ -65,6 +65,15 @@ func Test_isHealthy(t *testing.T) {
 		wantErrPart string
 	}{
 		"no_records": {},
+		// Every offending record is reported, not only the first one found.
+		"two_records_failing": {
+			records: []testRecord{
+				{status: constants.FAIL, history: []models.HistoryEvent{{IP: newIPv4, Time: lastUpdate}}},
+				{status: constants.PUBLICIPUNKNOWN, history: []models.HistoryEvent{{IP: newIPv4, Time: lastUpdate}}},
+			},
+			wantErr:     "record update failed",
+			wantErrPart: "record1.example.com",
+		},
 		"record_update_failed": {
 			records: []testRecord{
 				{status: constants.FAIL, history: []models.HistoryEvent{{IP: newIPv4, Time: lastUpdate}}},

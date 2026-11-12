@@ -1,0 +1,12 @@
+{
+  "_comment": "Replace the values below with your own provider credentials, then press the 'Reload config' button in the web UI. See docs/ and the README for the provider list. Each entry needs at least a provider and a domain.",
+  "settings": [
+    {
+      "provider": "duckdns",
+      "domain": "example.duckdns.org",
+      "token": "00000000-0000-0000-0000-000000000000",
+      "ip_version": "ipv4",
+      "ipv6_suffix": ""
+    }
+  ]
+}

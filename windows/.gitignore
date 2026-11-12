@@ -1,0 +1,3 @@
+# Build output and compiled installers are produced locally, not tracked.
+ddns-updater.exe
+output/

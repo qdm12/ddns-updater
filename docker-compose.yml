@@ -10,6 +10,7 @@ services:
       - ./data:/updater/data
     environment:
       - CONFIG=
+      - CONFIG_PERSIST=yes
       - PERIOD=5m
       - UPDATE_COOLDOWN_PERIOD=5m
       - PUBLICIP_FETCHERS=all
@@ -27,6 +28,7 @@ services:
       # Backup
       - BACKUP_PERIOD=0 # 0 to disable
       - BACKUP_DIRECTORY=/updater/data
+      - BACKUP_KEEP=0 # 0 to keep all backups
 
       # Other
       - LOG_LEVEL=info

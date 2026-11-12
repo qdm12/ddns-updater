@@ -151,7 +151,8 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 		return err
 	}
 
-	jsonReader := jsonparams.NewReader(logger)
+	environmentConfig := os.Getenv("CONFIG")
+	jsonReader := jsonparams.NewReader(logger, environmentConfig, *config.Paths.ConfigPersist)
 	providers, warnings, err := jsonReader.JSONProviders(*config.Paths.Config)
 	for _, w := range warnings {
 		logger.Warn(w)
@@ -224,8 +225,13 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 
 	var backupService goservices.Service
 	backupLogger := logger.New(log.SetComponent("backup"))
+	backupConfigFilepath := *config.Paths.Config
+	if environmentConfig != "" && !*config.Paths.ConfigPersist {
+		// The configuration file does not hold the configuration given with CONFIG.
+		backupConfigFilepath = ""
+	}
 	backupService = backup.New(*config.Backup.Period, *config.Paths.DataDir,
-		*config.Backup.Directory, backupLogger)
+		backupConfigFilepath, *config.Backup.Directory, backupLogger, *config.Backup.Keep)
 	backupService, err = goservices.NewRestarter(goservices.RestarterSettings{Service: backupService})
 	if err != nil {
 		return fmt.Errorf("creating backup restarter: %w", err)

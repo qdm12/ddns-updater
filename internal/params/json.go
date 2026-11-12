@@ -38,9 +38,8 @@ type commonSettings struct {
 func (r *Reader) JSONProviders(filePath string) (
 	providers []provider.Provider, warnings []string, err error,
 ) {
-	providers, warnings, err = r.getProvidersFromEnv(filePath)
-	if providers != nil || warnings != nil || err != nil {
-		return providers, warnings, err
+	if r.environmentConfig != "" {
+		return r.getProvidersFromEnv(filePath)
 	}
 	return r.getProvidersFromFile(filePath)
 }
@@ -71,14 +70,11 @@ func (r *Reader) getProvidersFromFile(filePath string) (
 }
 
 // getProvidersFromEnv obtain the update settings from the environment variable CONFIG.
-// If the settings are valid, they are written to the filePath.
+// If the settings are valid and are to be persisted, they are written to the filePath.
 func (r *Reader) getProvidersFromEnv(filePath string) (
 	providers []provider.Provider, warnings []string, err error,
 ) {
-	s := os.Getenv("CONFIG")
-	if s == "" {
-		return nil, nil, nil
-	}
+	s := r.environmentConfig
 	r.logger.Info("reading JSON config from environment variable CONFIG")
 	r.logger.Debug("config read: " + s)
 
@@ -87,6 +83,10 @@ func (r *Reader) getProvidersFromEnv(filePath string) (
 	providers, warnings, err = extractAllSettings(b)
 	if err != nil {
 		return providers, warnings, fmt.Errorf("configuration given: %w", err)
+	}
+
+	if !r.persistEnvironmentConfig {
+		return providers, warnings, nil
 	}
 
 	buffer := bytes.NewBuffer(nil)

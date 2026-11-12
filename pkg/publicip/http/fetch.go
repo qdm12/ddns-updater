@@ -34,6 +34,9 @@ func fetch(ctx context.Context, client *http.Client, url string,
 	case http.StatusForbidden, http.StatusTooManyRequests:
 		return netip.Addr{}, fmt.Errorf("%w: %d (%s)", errBanned,
 			response.StatusCode, bodyToSingleLine(response.Body))
+	default:
+		return netip.Addr{}, fmt.Errorf("unexpected HTTP status: %d (%s)",
+			response.StatusCode, bodyToSingleLine(response.Body))
 	}
 
 	b, err := io.ReadAll(response.Body)

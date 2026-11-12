@@ -308,11 +308,13 @@ Note that:
 | `ROOT_URL` | `/` | URL path to append to all paths to the webUI (i.e. `/ddns` for accessing `https://example.com/ddns` through a proxy) |
 | `HEALTH_SERVER_ADDRESS` | `127.0.0.1:9999` | Health server listening address |
 | `HEALTH_HEALTHCHECKSIO_BASE_URL` | `https://hc-ping.com` | Base URL for the [healthchecks.io](https://healthchecks.io) server |
-| `HEALTH_HEALTHCHECKSIO_UUID` | | UUID to idenfity with the [healthchecks.io](https://healthchecks.io) server |
+| `HEALTH_HEALTHCHECKSIO_UUID` | | UUID to identify with the [healthchecks.io](https://healthchecks.io) server |
 | `DATADIR` | `/updater/data` | Directory to read and write data files from internally |
 | `CONFIG_FILEPATH` | `/updater/data/config.json` | Path to the JSON configuration file |
-| `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file |
+| `CONFIG_PERSIST` | `yes` | Set to `no` to not write the configuration given with `CONFIG` to the JSON configuration file. The configuration file is then not included in backups. |
+| `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of the JSON configuration file and data/updates.json in a zip file |
 | `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`. |
+| `BACKUP_KEEP` | `0` | Number of backup zip files to keep in `BACKUP_DIRECTORY`, the oldest ones being removed after each backup. `0` keeps all of them. |
 | `RESOLVER_ADDRESS` | Your network DNS | A plaintext DNS address to use to resolve your domain names defined in your settings only. For example it can be `1.1.1.1:53`. This is useful for split dns, see [#389](https://github.com/qdm12/ddns-updater/issues/389) |
 | `LOG_LEVEL` | `info` | Level of logging, `debug`, `info`, `warning` or `error` |
 | `LOG_CALLER` | `hidden` | Show caller per log line, `hidden` or `short` |

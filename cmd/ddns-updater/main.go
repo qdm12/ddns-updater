@@ -225,7 +225,7 @@ func _main(ctx context.Context, reader *reader.Reader, args []string, logger log
 	var backupService goservices.Service
 	backupLogger := logger.New(log.SetComponent("backup"))
 	backupService = backup.New(*config.Backup.Period, *config.Paths.DataDir,
-		*config.Backup.Directory, backupLogger)
+		*config.Paths.Config, *config.Backup.Directory, backupLogger)
 	backupService, err = goservices.NewRestarter(goservices.RestarterSettings{Service: backupService})
 	if err != nil {
 		return fmt.Errorf("creating backup restarter: %w", err)

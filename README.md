@@ -311,7 +311,7 @@ Note that:
 | `HEALTH_HEALTHCHECKSIO_UUID` | | UUID to idenfity with the [healthchecks.io](https://healthchecks.io) server |
 | `DATADIR` | `/updater/data` | Directory to read and write data files from internally |
 | `CONFIG_FILEPATH` | `/updater/data/config.json` | Path to the JSON configuration file |
-| `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of data/config.json and data/updates.json in a zip file |
+| `BACKUP_PERIOD` | `0` | Set to a period (i.e. `72h15m`) to enable zip backups of the JSON configuration file and data/updates.json in a zip file |
 | `BACKUP_DIRECTORY` | `/updater/data` | Directory to write backup zip files to if `BACKUP_PERIOD` is not `0`. |
 | `RESOLVER_ADDRESS` | Your network DNS | A plaintext DNS address to use to resolve your domain names defined in your settings only. For example it can be `1.1.1.1:53`. This is useful for split dns, see [#389](https://github.com/qdm12/ddns-updater/issues/389) |
 | `LOG_LEVEL` | `info` | Level of logging, `debug`, `info`, `warning` or `error` |

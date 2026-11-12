@@ -229,6 +229,63 @@ func Test_Service_updateNecessary(t *testing.T) {
 				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Ok).Return(nil)
 			},
 		},
+		// One address family can be down while the other one works, for example
+		// when an IPv6 connection is lost: only the record of the missing family
+		// goes the public IP unknown state, the other record is left alone.
+		"dual_stack_with_only_ipv4_available": {
+			initialState: recordState{
+				status: constants.UPTODATE,
+				time:   time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC),
+				history: []models.HistoryEvent{
+					{IP: netip.MustParseAddr("203.0.113.45"), Time: time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC)},
+				},
+			},
+			publicIPv4: netip.MustParseAddr("203.0.113.45"),
+			wantErrs: []string{
+				"obtaining ipv6 address: after 3 tries, errors were: network is unreachable, " +
+					"network is unreachable, network is unreachable",
+			},
+			configure: func(ctx context.Context, mocks *serviceMocks, ipv4Record records.Record) {
+				ipv6Record := recordState{
+					status: constants.UPTODATE,
+					time:   time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC),
+					history: []models.HistoryEvent{
+						{IP: netip.MustParseAddr("2001:db8::0001"), Time: time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC)},
+					},
+				}.record(mocks.provider2)
+				mocks.db.EXPECT().SelectAll().Return([]records.Record{ipv4Record, ipv6Record})
+				mocks.provider.EXPECT().IPVersion().Times(3).Return(ipversion.IP4)
+				mocks.provider.EXPECT().BuildDomainName().Return("ddns4.example.com")
+				mocks.provider.EXPECT().Proxied().Return(true)
+				mocks.provider2.EXPECT().IPVersion().Times(3).Return(ipversion.IP6)
+				mocks.provider2.EXPECT().BuildDomainName().Return("ddns6.example.com")
+				mocks.fetcher.EXPECT().IP4(ctx).Return(netip.MustParseAddr("203.0.113.45"), nil)
+				mocks.fetcher.EXPECT().IP6(ctx).Times(3).
+					Return(netip.Addr{}, errors.New("network is unreachable"))
+				mocks.logger.EXPECT().Debug("configured to fetch IP: v4 or v6: false, v4: true, v6: true")
+				mocks.logger.EXPECT().Debug("obtaining ipv6 address: try 1 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Debug("obtaining ipv6 address: try 2 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Debug("obtaining ipv6 address: try 3 of 3 failed: network is unreachable")
+				mocks.logger.EXPECT().Error("obtaining ipv6 address: after 3 tries, errors were: " +
+					"network is unreachable, network is unreachable, network is unreachable")
+				mocks.logger.EXPECT().Debug("your public IP address are: v4 or v6: invalid IP, " +
+					"v4: 203.0.113.45, v6: invalid IP")
+				mocks.logger.EXPECT().Debug("Last ipv4 address stored for ddns4.example.com is " +
+					"203.0.113.45 and your ipv4 address is 203.0.113.45, skipping update")
+				mocks.logger.EXPECT().Warn("Skipping update for ddns6.example.com because ipv6 address was not found")
+				// Only the record of the missing address family is written, the other one
+				// is already up to date and is left untouched.
+				mocks.db.EXPECT().Select(uint(1)).Return(ipv6Record, nil)
+				mocks.db.EXPECT().Update(uint(1), recordMatcher{want: recordState{
+					status: constants.PUBLICIPUNKNOWN,
+					time:   time.Date(2026, time.October, 30, 3, 25, 34, 0, time.UTC),
+					history: []models.HistoryEvent{
+						{IP: netip.MustParseAddr("2001:db8::0001"), Time: time.Date(2026, time.October, 30, 2, 25, 34, 0, time.UTC)},
+					},
+				}}).Return(nil)
+				mocks.hio.EXPECT().Ping(ctx, healthchecksio.Fail).Return(nil)
+			},
+		},
 		// A failed update is not a transient state, but the record has just been
 		// checked against the public IP address and found to match it, so the
 		// failure is replaced by the up to date status.
@@ -329,17 +386,21 @@ type serviceMocks struct {
 	resolver *MockLookupIPer
 	hio      *MockHealthchecksIOClient
 	provider *MockProvider
+	// provider2 is the provider of a second record, for test cases running
+	// over more than one record.
+	provider2 *MockProvider
 }
 
 func newServiceMocks(ctrl *gomock.Controller) *serviceMocks {
 	return &serviceMocks{
-		db:       NewMockDatabase(ctrl),
-		updater:  NewMockUpdaterInterface(ctrl),
-		fetcher:  NewMockPublicIPFetcher(ctrl),
-		logger:   NewMockLogger(ctrl),
-		resolver: NewMockLookupIPer(ctrl),
-		hio:      NewMockHealthchecksIOClient(ctrl),
-		provider: NewMockProvider(ctrl),
+		db:        NewMockDatabase(ctrl),
+		updater:   NewMockUpdaterInterface(ctrl),
+		fetcher:   NewMockPublicIPFetcher(ctrl),
+		logger:    NewMockLogger(ctrl),
+		resolver:  NewMockLookupIPer(ctrl),
+		hio:       NewMockHealthchecksIOClient(ctrl),
+		provider:  NewMockProvider(ctrl),
+		provider2: NewMockProvider(ctrl),
 	}
 }
 

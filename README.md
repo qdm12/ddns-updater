@@ -49,6 +49,7 @@ This readme and the [docs/](docs/) directory are **versioned** to match the prog
   - AllInkl
   - Bunny
   - ChangeIP
+  - ClouDNS
   - Cloudflare
   - DD24
   - DDNSS.de
@@ -227,6 +228,7 @@ Check the documentation for your DNS provider:
 - [Allinkl](docs/allinkl.md)
 - [Bunny](docs/bunny.md)
 - [ChangeIP](docs/changeip.md)
+- [ClouDNS](docs/cloudns.md)
 - [Cloudflare](docs/cloudflare.md)
 - [DD24](docs/dd24.md)
 - [DDNSS.de](docs/ddnss.de.md)

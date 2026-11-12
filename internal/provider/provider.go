@@ -14,6 +14,7 @@ import (
 	"github.com/qdm12/ddns-updater/internal/provider/providers/bunny"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/changeip"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/cloudflare"
+	"github.com/qdm12/ddns-updater/internal/provider/providers/cloudns"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/custom"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/dd24"
 	"github.com/qdm12/ddns-updater/internal/provider/providers/ddnss"
@@ -97,6 +98,8 @@ func New(providerName models.Provider, data json.RawMessage, domain, owner strin
 		return bunny.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Changeip:
 		return changeip.New(data, domain, owner, ipVersion, ipv6Suffix)
+	case constants.ClouDNS:
+		return cloudns.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Cloudflare:
 		return cloudflare.New(data, domain, owner, ipVersion, ipv6Suffix)
 	case constants.Custom:

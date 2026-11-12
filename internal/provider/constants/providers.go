@@ -8,6 +8,7 @@ const (
 	AllInkl      models.Provider = "allinkl"
 	Bunny        models.Provider = "bunny"
 	Changeip     models.Provider = "changeip"
+	ClouDNS      models.Provider = "cloudns"
 	Cloudflare   models.Provider = "cloudflare"
 	Custom       models.Provider = "custom"
 	Dd24         models.Provider = "dd24"
@@ -72,6 +73,7 @@ func ProviderChoices() []models.Provider {
 		AllInkl,
 		Bunny,
 		Changeip,
+		ClouDNS,
 		Cloudflare,
 		Dd24,
 		DdnssDe,

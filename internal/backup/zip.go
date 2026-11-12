@@ -6,11 +6,18 @@ import (
 	"os"
 )
 
-func zipFiles(outputFilepath string, inputFilepaths ...string) error {
+func zipFiles(outputFilepath string, inputFilepaths ...string) (err error) {
 	f, err := os.Create(outputFilepath)
 	if err != nil {
 		return err
 	}
+	// A zip file which failed to be written is removed, so that
+	// it is not later counted as a backup to keep.
+	defer func() {
+		if err != nil {
+			_ = os.Remove(outputFilepath)
+		}
+	}()
 	defer f.Close()
 	w := zip.NewWriter(f)
 	defer w.Close()

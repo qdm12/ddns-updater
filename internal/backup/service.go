@@ -14,6 +14,7 @@ type Service struct {
 	configFilepath string
 	outputDir      string
 	logger         Logger
+	keep           uint
 
 	// Internal fields
 	stopCh chan<- struct{}
@@ -21,7 +22,7 @@ type Service struct {
 }
 
 func New(backupPeriod time.Duration,
-	dataDir, configFilepath, outputDir string, logger Logger,
+	dataDir, configFilepath, outputDir string, logger Logger, keep uint,
 ) *Service {
 	return &Service{
 		logger:         logger,
@@ -29,6 +30,7 @@ func New(backupPeriod time.Duration,
 		dataDir:        dataDir,
 		configFilepath: configFilepath,
 		outputDir:      outputDir,
+		keep:           keep,
 	}
 }
 
@@ -36,8 +38,13 @@ func (s *Service) String() string {
 	return "backup"
 }
 
+const (
+	zipFileNamePrefix = "ddns-updater-backup-"
+	zipFileNameSuffix = ".zip"
+)
+
 func makeZipFileName() string {
-	return "ddns-updater-backup-" + strconv.Itoa(int(time.Now().UnixNano())) + ".zip"
+	return zipFileNamePrefix + strconv.Itoa(int(time.Now().UnixNano())) + zipFileNameSuffix
 }
 
 func (s *Service) Start(ctx context.Context) (runError <-chan error, startErr error) {
@@ -48,7 +55,7 @@ func (s *Service) Start(ctx context.Context) (runError <-chan error, startErr er
 	done := make(chan struct{})
 	s.done = done
 	go run(ready, runErrorCh, stopCh, done,
-		s.outputDir, s.dataDir, s.configFilepath, s.backupPeriod, s.logger)
+		s.outputDir, s.dataDir, s.configFilepath, s.backupPeriod, s.logger, s.keep)
 	select {
 	case <-ready:
 	case <-ctx.Done():
@@ -59,7 +66,7 @@ func (s *Service) Start(ctx context.Context) (runError <-chan error, startErr er
 
 func run(ready chan<- struct{}, runError chan<- error, stopCh <-chan struct{},
 	done chan<- struct{}, outputDir, dataDir, configFilepath string,
-	backupPeriod time.Duration, logger Logger,
+	backupPeriod time.Duration, logger Logger, keep uint,
 ) {
 	defer close(done)
 
@@ -91,6 +98,10 @@ func run(ready chan<- struct{}, runError chan<- error, stopCh <-chan struct{},
 		if err != nil {
 			runError <- err
 			return
+		}
+		err = pruneBackups(outputDir, keep)
+		if err != nil {
+			logger.Warn("pruning backups: " + err.Error())
 		}
 		timer.Reset(backupPeriod)
 	}

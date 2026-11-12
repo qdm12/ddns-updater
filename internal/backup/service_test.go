@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"testing/synctest"
 	"time"
@@ -16,22 +17,51 @@ import (
 func Test_run(t *testing.T) {
 	t.Parallel()
 
+	const backupPeriod = time.Hour
+
 	testCases := map[string]struct {
 		// configFilePath is the configuration file path, relative to a
 		// temporary directory. No configuration file is given if it is empty.
 		configFilePath string
-		zippedNames    []string
+		keep           uint
+		// duration is how long the backups run for.
+		duration time.Duration
+		// remaining lists the backups expected to remain, each as the
+		// duration after which it was written.
+		remaining []time.Duration
+		// zippedNames are the names of the files in each remaining backup.
+		zippedNames []string
 	}{
 		"no_config_file": {
+			duration:    backupPeriod,
+			remaining:   []time.Duration{backupPeriod},
 			zippedNames: []string{"updates.json"},
 		},
 		"config_file_in_data_directory": {
 			configFilePath: filepath.Join("data", "config.json"),
+			duration:       backupPeriod,
+			remaining:      []time.Duration{backupPeriod},
 			zippedNames:    []string{"config.json", "updates.json"},
 		},
 		"config_file_outside_data_directory": {
 			configFilePath: filepath.Join("config", "custom.json"),
+			duration:       backupPeriod,
+			remaining:      []time.Duration{backupPeriod},
 			zippedNames:    []string{"custom.json", "updates.json"},
+		},
+		"all_backups_kept": {
+			configFilePath: filepath.Join("data", "config.json"),
+			keep:           0,
+			duration:       3 * backupPeriod,
+			remaining:      []time.Duration{backupPeriod, 2 * backupPeriod, 3 * backupPeriod},
+			zippedNames:    []string{"config.json", "updates.json"},
+		},
+		"oldest_backups_removed": {
+			configFilePath: filepath.Join("data", "config.json"),
+			keep:           2,
+			duration:       3 * backupPeriod,
+			remaining:      []time.Duration{2 * backupPeriod, 3 * backupPeriod},
+			zippedNames:    []string{"config.json", "updates.json"},
 		},
 	}
 
@@ -39,7 +69,8 @@ func Test_run(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			// The fake clock of synctest makes the backup period instant.
+			// The fake clock of synctest makes the backup periods instant
+			// and the timestamps in the backup file names predictable.
 			synctest.Test(t, func(t *testing.T) {
 				ctrl := gomock.NewController(t)
 
@@ -67,31 +98,45 @@ func Test_run(t *testing.T) {
 					logger.EXPECT().Info("the configuration file is not backed up")
 				}
 
-				const backupPeriod = time.Hour
+				start := time.Now()
 				ready := make(chan struct{})
 				runError := make(chan error)
 				stopCh := make(chan struct{})
 				done := make(chan struct{})
-				go run(ready, runError, stopCh, done, outputDir, dataDir, configFilepath, backupPeriod, logger)
+				go run(ready, runError, stopCh, done, outputDir, dataDir, configFilepath,
+					backupPeriod, logger, testCase.keep)
 				<-ready
 
-				timer := time.NewTimer(backupPeriod)
+				timer := time.NewTimer(testCase.duration)
 				<-timer.C
 				synctest.Wait()
 				close(stopCh)
 				<-done
 
+				remaining := make([]string, len(testCase.remaining))
+				for i, duration := range testCase.remaining {
+					timestamp := start.Add(duration).UnixNano()
+					remaining[i] = "ddns-updater-backup-" + strconv.Itoa(int(timestamp)) + ".zip"
+				}
 				entries, err := os.ReadDir(outputDir)
 				require.NoError(t, err)
-				require.Len(t, entries, 1)
-				reader, err := zip.OpenReader(filepath.Join(outputDir, entries[0].Name()))
-				require.NoError(t, err)
-				defer reader.Close()
-				zippedNames := make([]string, len(reader.File))
-				for i, file := range reader.File {
-					zippedNames[i] = file.Name
+				names := make([]string, len(entries))
+				for i, entry := range entries {
+					names[i] = entry.Name()
 				}
-				assert.Equal(t, testCase.zippedNames, zippedNames)
+				require.ElementsMatch(t, remaining, names)
+
+				for _, name := range names {
+					reader, err := zip.OpenReader(filepath.Join(outputDir, name))
+					require.NoError(t, err)
+					zippedNames := make([]string, len(reader.File))
+					for i, file := range reader.File {
+						zippedNames[i] = file.Name
+					}
+					err = reader.Close()
+					require.NoError(t, err)
+					assert.Equal(t, testCase.zippedNames, zippedNames)
+				}
 			})
 		})
 	}

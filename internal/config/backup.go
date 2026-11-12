@@ -11,11 +11,14 @@ import (
 type Backup struct {
 	Period    *time.Duration
 	Directory *string
+	// Keep is the number of backups to keep, where zero keeps all backups.
+	Keep *uint
 }
 
 func (b *Backup) setDefaults() {
 	b.Period = gosettings.DefaultPointer(b.Period, 0)
 	b.Directory = gosettings.DefaultPointer(b.Directory, "./data")
+	b.Keep = gosettings.DefaultPointer(b.Keep, 0)
 }
 
 func (b Backup) Validate() (err error) {
@@ -33,6 +36,11 @@ func (b Backup) toLinesNode() *gotree.Node {
 	node := gotree.New("Backup")
 	node.Appendf("Period: %s", b.Period)
 	node.Appendf("Directory: %s", *b.Directory)
+	if *b.Keep == 0 {
+		node.Appendf("Keep: all backups")
+	} else {
+		node.Appendf("Keep: %d backups", *b.Keep)
+	}
 	return node
 }
 
@@ -43,5 +51,7 @@ func (b *Backup) read(reader *reader.Reader) (err error) {
 	}
 
 	b.Directory = reader.Get("BACKUP_DIRECTORY")
-	return nil
+
+	b.Keep, err = reader.UintPtr("BACKUP_KEEP")
+	return err
 }

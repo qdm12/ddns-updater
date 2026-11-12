@@ -50,3 +50,15 @@ func (mr *MockLoggerMockRecorder) Info(message any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockLogger)(nil).Info), message)
 }
+
+// Warn mocks base method.
+func (m *MockLogger) Warn(message string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Warn", message)
+}
+
+// Warn indicates an expected call of Warn.
+func (mr *MockLoggerMockRecorder) Warn(message any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Warn", reflect.TypeOf((*MockLogger)(nil).Warn), message)
+}

@@ -96,6 +96,7 @@ ENV \
     # Backup
     BACKUP_PERIOD=0 \
     BACKUP_DIRECTORY=/updater/data \
+    BACKUP_KEEP=0 \
     # Other
     LOG_LEVEL=info \
     LOG_CALLER=hidden \

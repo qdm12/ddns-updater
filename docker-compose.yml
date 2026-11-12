@@ -28,6 +28,7 @@ services:
       # Backup
       - BACKUP_PERIOD=0 # 0 to disable
       - BACKUP_DIRECTORY=/updater/data
+      - BACKUP_KEEP=0 # 0 to keep all backups
 
       # Other
       - LOG_LEVEL=info

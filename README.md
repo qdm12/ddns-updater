@@ -410,7 +410,8 @@ We could do an API call to get the record IP address every period, but that woul
 
 ## Testing
 
-- The automated healthcheck verifies all your records are up to date [using DNS lookups](internal/health/check.go#L59). For the duration of the record TTL (when known by the provider) after a successful update, the previous IP address is also accepted since resolvers may not have propagated the update yet.
+- The automated healthcheck verifies all your records are up to date [using DNS lookups](internal/health/check.go#L72). For the duration of the record TTL (when known by the provider) after a successful update, the previous IP address is also accepted since resolvers may not have propagated the update yet.
+- The healthcheck also reports the container unhealthy while your public IP address cannot be obtained, for example when your internet connection is down. It becomes healthy again on its own once the address is available, no restart required.
 - You can also manually check, by:
     1. Going to your DNS management webpage
     1. Setting your record to `127.0.0.1`

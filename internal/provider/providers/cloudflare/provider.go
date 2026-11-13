@@ -103,8 +103,12 @@ func validateSettings(domain, email, key, token, zoneIdentifier string, ttl uint
 	return nil
 }
 
+func (p *Provider) Name() models.Provider {
+	return constants.Cloudflare
+}
+
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.Cloudflare, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, p.Name(), p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

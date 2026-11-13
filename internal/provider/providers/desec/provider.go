@@ -66,8 +66,12 @@ func validateSettings(domain, token string) (err error) {
 	return nil
 }
 
+func (p *Provider) Name() models.Provider {
+	return constants.DeSEC
+}
+
 func (p *Provider) String() string {
-	return utils.ToString(p.domain, p.owner, constants.DeSEC, p.ipVersion)
+	return utils.ToString(p.domain, p.owner, p.Name(), p.ipVersion)
 }
 
 func (p *Provider) Domain() string {

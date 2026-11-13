@@ -53,6 +53,7 @@ const (
 	OpenDNS      models.Provider = "opendns"
 	OVH          models.Provider = "ovh"
 	Porkbun      models.Provider = "porkbun"
+	PowerDNS     models.Provider = "powerdns"
 	Route53      models.Provider = "route53"
 	Scaleway     models.Provider = "scaleway"
 	SelfhostDe   models.Provider = "selfhost.de"
@@ -115,6 +116,7 @@ func ProviderChoices() []models.Provider {
 		OpenDNS,
 		OVH,
 		Porkbun,
+		PowerDNS,
 		Route53,
 		Scaleway,
 		SelfhostDe,
